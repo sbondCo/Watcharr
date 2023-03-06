@@ -4,12 +4,25 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/uptrace/bun"
 )
 
-func addContentRoutes(rg *gin.Engine) {
-	content := rg.Group("/content")
+type BaseRouter struct {
+	db *bun.DB
+	rg *gin.Engine
+}
+
+func newBaseRouter(db *bun.DB, rg *gin.Engine) *BaseRouter {
+	return &BaseRouter{
+		db: db,
+		rg: rg,
+	}
+}
+
+func (b *BaseRouter) addContentRoutes() {
+	content := b.rg.Group("/content")
 
 	content.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, getContent())
+		c.JSON(http.StatusOK, getContent(b.db))
 	})
 }
