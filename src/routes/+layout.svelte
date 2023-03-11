@@ -12,18 +12,41 @@
   }
 
   :global(body) {
-    font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue';
+    font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
   }
 
   :global(h1, h2, h3, h4, h5) {
-    font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont;
+  }
+
+  :global(input) {
+    padding: 5px 10px;
+    border: 2px solid black;
+    border-radius: 5px;
+    width: 100%;
+  }
+
+  :global(button) {
+    padding: 5px 10px;
+    border: 2px solid black;
+    border-radius: 5px;
+    background-color: white;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  :global(button:hover, button:focus-visible) {
+    background-color: black;
+    color: white;
   }
 
   nav {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-bottom: 12px;
 
     h1 {
       color: white;
