@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -20,8 +21,13 @@ func main() {
 
 	db := bun.NewDB(sqldb, sqlitedialect.New())
 
+	// Create tables if they don't exist
+	db.NewCreateTable().Model((*User)(nil)).IfNotExists().Exec(context.TODO())
+	db.NewCreateTable().Model((*List)(nil)).IfNotExists().Exec(context.TODO())
+
 	gin := gin.Default()
 	br := newBaseRouter(db, gin)
+	br.addAuthRoutes()
 	br.addContentRoutes()
 
 	gin.Run("localhost:3080")

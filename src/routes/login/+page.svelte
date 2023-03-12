@@ -17,8 +17,8 @@
     <label for="password">Password</label>
     <input type="text" name="password" placeholder="Password" />
 
-    <button
-      >{#if login}
+    <button>
+      {#if login}
         Login
       {:else}
         Sign Up

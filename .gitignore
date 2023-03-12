@@ -20,6 +20,9 @@
 # Go workspace file
 go.work
 
+# Database
+*.db
+
 # web
 .DS_Store
 node_modules
