@@ -27,19 +27,29 @@
   }
 
   :global(button) {
+    cursor: pointer;
+  }
+
+  :global(button:not(.plain)) {
     padding: 5px 10px;
     border: 2px solid black;
     border-radius: 5px;
     background-color: white;
     color: black;
     font-weight: bold;
-    cursor: pointer;
     width: 100%;
+
+    &:hover,
+    &:focus-visible {
+      background-color: black;
+      color: white;
+    }
   }
 
-  :global(button:hover, button:focus-visible) {
-    background-color: black;
-    color: white;
+  :global(button.plain) {
+    background-color: transparent;
+    color: black;
+    border: 0;
   }
 
   nav {
