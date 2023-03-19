@@ -36,7 +36,19 @@ func (b *BaseRouter) addAuthRoutes() {
 
 	// Login
 	content.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, getContent(b.db))
+		var user User
+		if c.ShouldBindJSON(&user) == nil {
+			println(user.Username)
+			println(user.Password)
+			response, err := login(&user, b.db)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.Status(400)
 	})
 
 	// Register

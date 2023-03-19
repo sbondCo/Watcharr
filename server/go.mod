@@ -7,6 +7,7 @@ require (
 	github.com/uptrace/bun v1.1.12
 	github.com/uptrace/bun/dialect/sqlitedialect v1.1.12
 	github.com/uptrace/bun/driver/sqliteshim v1.1.12
+	golang.org/x/crypto v0.7.0
 )
 
 require (
@@ -36,7 +37,6 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
