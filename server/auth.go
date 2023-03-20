@@ -24,7 +24,7 @@ type User struct {
 	Password string `bun:"password,notnull" json:"password" binding:"required"`
 }
 
-type RegisterResponse struct {
+type AuthResponse struct {
 	Token string `json:"token"`
 }
 
@@ -36,7 +36,7 @@ type ArgonParams struct {
 	keyLength   uint32
 }
 
-func register(user *User, db *bun.DB) (RegisterResponse, error) {
+func register(user *User, db *bun.DB) (AuthResponse, error) {
 	println("Registering", user.Username)
 	hash, err := hashPassword(user.Password, &ArgonParams{
 		memory:      64 * 1024,
@@ -57,7 +57,7 @@ func register(user *User, db *bun.DB) (RegisterResponse, error) {
 		// If error is because unique contraint failed.. user already exists
 		if strings.Contains(err.Error(), "UNIQUE") {
 			println(err.Error())
-			return RegisterResponse{}, errors.New("User already exists")
+			return AuthResponse{}, errors.New("User already exists")
 		}
 		panic(err)
 	}
@@ -66,43 +66,43 @@ func register(user *User, db *bun.DB) (RegisterResponse, error) {
 	// just ensure it actually has.
 	if user.ID == 0 {
 		fmt.Println("user.ID not filled out after registration", user.ID)
-		return RegisterResponse{}, errors.New("failed to get user id, try login")
+		return AuthResponse{}, errors.New("failed to get user id, try login")
 	}
 
 	token, err := signJWT(user)
 	if err != nil {
 		fmt.Println("Failed to sign new jwt:", err)
-		return RegisterResponse{}, errors.New("failed to get auth token")
+		return AuthResponse{}, errors.New("failed to get auth token")
 	}
-	return RegisterResponse{Token: token}, nil
+	return AuthResponse{Token: token}, nil
 }
 
-func login(user *User, db *bun.DB) (RegisterResponse, error) {
+func login(user *User, db *bun.DB) (AuthResponse, error) {
 	fmt.Println("Logging in", user.Username)
 	dbUser := new(User)
 	err := db.NewSelect().Model(dbUser).Where("username = ?", user.Username).Scan(context.TODO())
 	if err != nil {
 		fmt.Println("Failed to select user from database for login:", err)
-		return RegisterResponse{}, errors.New("User does not exist")
+		return AuthResponse{}, errors.New("User does not exist")
 	}
 	fmt.Println(dbUser.ID, dbUser.Username, dbUser.Password)
 
 	match, err := compareHash(user.Password, dbUser.Password)
 	if err != nil {
 		fmt.Println("Failed to compare pass to hash for login:", err)
-		return RegisterResponse{}, errors.New("failed to login")
+		return AuthResponse{}, errors.New("failed to login")
 	}
 	if !match {
 		fmt.Println("User failed to provide correct password for login:", match)
-		return RegisterResponse{}, errors.New("incorrect details")
+		return AuthResponse{}, errors.New("incorrect details")
 	}
 
 	token, err := signJWT(dbUser)
 	if err != nil {
 		fmt.Println("Failed to sign new jwt:", err)
-		return RegisterResponse{}, errors.New("failed to get auth token")
+		return AuthResponse{}, errors.New("failed to get auth token")
 	}
-	return RegisterResponse{Token: token}, nil
+	return AuthResponse{Token: token}, nil
 }
 
 func signJWT(user *User) (token string, err error) {
