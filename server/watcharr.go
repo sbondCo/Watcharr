@@ -4,8 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/driver/sqliteshim"
@@ -13,6 +16,12 @@ import (
 
 func main() {
 	fmt.Println("Watcharr Starting")
+
+	err := godotenv.Load()
+	if err != nil {
+		panic("Failed to load vars from .env file")
+	}
+	ensureEnv()
 
 	sqldb, err := sql.Open(sqliteshim.ShimName, "./watcharr.db")
 	if err != nil {
@@ -31,4 +40,11 @@ func main() {
 	br.addContentRoutes()
 
 	gin.Run("localhost:3080")
+}
+
+// Ensure all required environment variables are set.
+func ensureEnv() {
+	if os.Getenv("JWT_SECRET") == "" {
+		log.Fatal("JWT_SECRET env var missing!")
+	}
 }

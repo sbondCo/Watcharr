@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/uptrace/bun"
 	"golang.org/x/crypto/argon2"
 )
@@ -60,7 +62,19 @@ func register(user *User, db *bun.DB) (RegisterResponse, error) {
 		panic(err)
 	}
 
-	return RegisterResponse{Token: "My JWT token"}, nil
+	// Bun fills our user obj with the ID from db after insert,
+	// just ensure it actually has.
+	if user.ID == 0 {
+		fmt.Println("user.ID not filled out after registration", user.ID)
+		return RegisterResponse{}, errors.New("failed to get user id, try login")
+	}
+
+	token, err := signJWT(user)
+	if err != nil {
+		fmt.Println("Failed to sign new jwt:", err)
+		return RegisterResponse{}, errors.New("failed to get auth token")
+	}
+	return RegisterResponse{Token: token}, nil
 }
 
 func login(user *User, db *bun.DB) (RegisterResponse, error) {
@@ -83,7 +97,23 @@ func login(user *User, db *bun.DB) (RegisterResponse, error) {
 		return RegisterResponse{}, errors.New("incorrect details")
 	}
 
-	return RegisterResponse{Token: "My JWT token"}, nil
+	token, err := signJWT(dbUser)
+	if err != nil {
+		fmt.Println("Failed to sign new jwt:", err)
+		return RegisterResponse{}, errors.New("failed to get auth token")
+	}
+	return RegisterResponse{Token: token}, nil
+}
+
+func signJWT(user *User) (token string, err error) {
+	// Create new jwt with claim data
+	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"userId":   user.ID,
+		"username": user.Username,
+	})
+
+	// Sign and get the complete encoded token as a string using the secret
+	return jwt.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
 func hashPassword(password string, p *ArgonParams) (encodedHash string, err error) {
