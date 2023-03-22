@@ -35,7 +35,7 @@ func (b *BaseRouter) addAuthRoutes() {
 	auth := b.rg.Group("/auth")
 
 	// Login
-	auth.GET("/", func(c *gin.Context) {
+	auth.POST("/", func(c *gin.Context) {
 		var user User
 		if c.ShouldBindJSON(&user) == nil {
 			println(user.Username)
@@ -52,7 +52,7 @@ func (b *BaseRouter) addAuthRoutes() {
 	})
 
 	// Register
-	auth.POST("/", func(c *gin.Context) {
+	auth.POST("/register", func(c *gin.Context) {
 		var user User
 		if c.ShouldBindJSON(&user) == nil {
 			println(user.Username)
