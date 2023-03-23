@@ -1,4 +1,17 @@
-<nav><h1>Watcharr</h1></nav>
+<script lang="ts">
+  import { goto } from "$app/navigation";
+
+  function handleProfileClick() {
+    if (!localStorage.getItem("token")) {
+      goto("/login");
+    }
+  }
+</script>
+
+<nav>
+  <a href="/"><h1>Watcharr</h1></a>
+  <button class="plain" on:click={handleProfileClick}>:)</button>
+</nav>
 
 <slot />
 
@@ -56,12 +69,28 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 12px;
+    margin-bottom: 28px;
+    position: relative;
+
+    a {
+      text-decoration: none;
+    }
 
     h1 {
       color: white;
       -webkit-text-stroke: 1.5px black;
       font-size: 35px;
+    }
+
+    button {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont;
+      font-size: 25px;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      cursor: pointer;
     }
   }
 </style>

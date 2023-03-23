@@ -9,8 +9,6 @@
 </svelte:head>
 
 <div>
-  <div><h1>Watched</h1></div>
-
   <ul>
     {#each data.watched as w}
       <li><Poster content={w} /></li>
