@@ -34,6 +34,7 @@ func main() {
 
 	// Create tables if they don't exist
 	db.NewCreateTable().Model((*User)(nil)).IfNotExists().Exec(context.TODO())
+	db.NewCreateTable().Model((*Content)(nil)).IfNotExists().Exec(context.TODO())
 	db.NewCreateTable().Model((*List)(nil)).IfNotExists().Exec(context.TODO())
 
 	gin := gin.Default()

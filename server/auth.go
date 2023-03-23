@@ -19,9 +19,10 @@ import (
 type User struct {
 	bun.BaseModel `bun:"table:users"`
 
-	ID       int    `bun:"id,pk,autoincrement" json:"id"`
-	Username string `bun:"username,notnull,unique" json:"username" binding:"required"`
-	Password string `bun:"password,notnull" json:"password" binding:"required"`
+	ID       int     `bun:"id,pk,autoincrement" json:"id"`
+	Username string  `bun:"username,notnull,unique" json:"username" binding:"required"`
+	Password string  `bun:"password,notnull" json:"password" binding:"required"`
+	Lists    []*List `bun:"rel:has-many,join:id=user_id"`
 }
 
 type AuthResponse struct {
