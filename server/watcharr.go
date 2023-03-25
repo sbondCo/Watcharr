@@ -27,7 +27,7 @@ func main() {
 		panic("failed to connect to database")
 	}
 
-	db.AutoMigrate(&User{})
+	db.AutoMigrate(&User{}, &Content{}, &Watched{})
 
 	gin := gin.Default()
 	gin.Use(cors.New(cors.Config{
@@ -40,7 +40,8 @@ func main() {
 	}))
 	br := newBaseRouter(db, gin)
 	br.addAuthRoutes()
-	// br.addContentRoutes()
+	br.addContentRoutes()
+	br.addWatchedRoutes()
 
 	gin.Run("localhost:3080")
 }

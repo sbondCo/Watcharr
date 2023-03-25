@@ -26,8 +26,32 @@ func newBaseRouter(db *gorm.DB, rg *gin.Engine) *BaseRouter {
 func (b *BaseRouter) addContentRoutes() {
 	content := b.rg.Group("/content")
 
-	content.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, getContent(b.db))
+	// Get trending content
+	// content.GET("/", func(c *gin.Context) {
+	// 	c.JSON(http.StatusOK, getWatched(b.db))
+	// })
+
+	// Search for content
+	content.GET("/:query", func(c *gin.Context) {
+		println(c.Param("query"))
+		if c.Param("query") == "" {
+			c.Status(400)
+			return
+		}
+		content, err := searchContent(c.Param("query"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
+}
+
+func (b *BaseRouter) addWatchedRoutes() {
+	watched := b.rg.Group("/watched")
+
+	watched.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, getWatched(b.db))
 	})
 }
 

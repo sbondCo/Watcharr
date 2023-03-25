@@ -18,10 +18,10 @@ import (
 type User struct {
 	gorm.Model
 
-	ID       int    `json:"id"`
+	ID       uint   `json:"id"`
 	Username string `gorm:"notNull,unique" json:"username" binding:"required"`
 	Password string `gorm:"notNnull" json:"password" binding:"required"`
-	// Lists    []*List `gorm:"rel:has-many,join:id=user_id"`
+	Watched  []Watched
 }
 
 type AuthResponse struct {
