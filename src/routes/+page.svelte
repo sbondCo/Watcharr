@@ -11,7 +11,7 @@
 <div>
   <ul>
     {#each data.watched as w}
-      <li><Poster content={w} /></li>
+      <li><Poster poster={w.poster} /></li>
     {/each}
   </ul>
 </div>

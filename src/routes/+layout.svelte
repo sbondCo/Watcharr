@@ -1,15 +1,31 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
 
+  let searchTimeout: number;
+
   function handleProfileClick() {
     if (!localStorage.getItem("token")) {
       goto("/login");
     }
   }
+
+  function handleSearch(ev: Event) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const target = ev.target as HTMLInputElement;
+      const query = target?.value;
+      if (query) {
+        goto(`/search/${query}`).then(() => {
+          target?.focus();
+        });
+      }
+    }, 400);
+  }
 </script>
 
 <nav>
   <a href="/"><h1>Watcharr</h1></a>
+  <input type="text" placeholder="Search" on:keydown={handleSearch} />
   <button class="plain" on:click={handleProfileClick}>:)</button>
 </nav>
 
@@ -68,8 +84,9 @@
   nav {
     display: flex;
     align-items: center;
-    justify-content: center;
-    margin-bottom: 28px;
+    justify-content: space-between;
+    margin: 10px 20px 28px 20px;
+    // margin-bottom: 28px;
     position: relative;
 
     a {
@@ -82,10 +99,14 @@
       font-size: 35px;
     }
 
+    input {
+      width: 250px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+    }
+
     button {
-      position: absolute;
-      right: 20px;
-      top: 20px;
       font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont;
       font-size: 25px;
       writing-mode: vertical-rl;

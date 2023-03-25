@@ -1,11 +1,12 @@
 <script lang="ts">
   import type { Content } from "@/types";
 
-  export let content: Content;
+  // export let content: Content;
+  export let poster: string;
 </script>
 
 <div>
-  <img src={content.poster} alt="poster" />
+  <img src={poster} alt="poster" />
   <!-- <span>{content.title}</span> -->
 </div>
 
