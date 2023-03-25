@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
@@ -12,17 +11,17 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/uptrace/bun"
 	"golang.org/x/crypto/argon2"
+	"gorm.io/gorm"
 )
 
 type User struct {
-	bun.BaseModel `bun:"table:users"`
+	gorm.Model
 
-	ID       int     `bun:"id,pk,autoincrement" json:"id"`
-	Username string  `bun:"username,notnull,unique" json:"username" binding:"required"`
-	Password string  `bun:"password,notnull" json:"password" binding:"required"`
-	Lists    []*List `bun:"rel:has-many,join:id=user_id"`
+	ID       int    `json:"id"`
+	Username string `gorm:"notNull,unique" json:"username" binding:"required"`
+	Password string `gorm:"notNnull" json:"password" binding:"required"`
+	// Lists    []*List `gorm:"rel:has-many,join:id=user_id"`
 }
 
 type AuthResponse struct {
@@ -37,7 +36,7 @@ type ArgonParams struct {
 	keyLength   uint32
 }
 
-func register(user *User, db *bun.DB) (AuthResponse, error) {
+func register(user *User, db *gorm.DB) (AuthResponse, error) {
 	println("Registering", user.Username)
 	hash, err := hashPassword(user.Password, &ArgonParams{
 		memory:      64 * 1024,
@@ -53,17 +52,17 @@ func register(user *User, db *bun.DB) (AuthResponse, error) {
 	// Update user obj to replace the plaintext pass with hash
 	user.Password = hash
 
-	_, err = db.NewInsert().Model(user).Exec(context.TODO())
-	if err != nil {
+	res := db.Create(&user)
+	if res.Error != nil {
 		// If error is because unique contraint failed.. user already exists
-		if strings.Contains(err.Error(), "UNIQUE") {
+		if strings.Contains(res.Error.Error(), "UNIQUE") {
 			println(err.Error())
 			return AuthResponse{}, errors.New("User already exists")
 		}
 		panic(err)
 	}
 
-	// Bun fills our user obj with the ID from db after insert,
+	// Gorm fills our user obj with the ID from db after insert,
 	// just ensure it actually has.
 	if user.ID == 0 {
 		fmt.Println("user.ID not filled out after registration", user.ID)
@@ -78,15 +77,14 @@ func register(user *User, db *bun.DB) (AuthResponse, error) {
 	return AuthResponse{Token: token}, nil
 }
 
-func login(user *User, db *bun.DB) (AuthResponse, error) {
+func login(user *User, db *gorm.DB) (AuthResponse, error) {
 	fmt.Println("Logging in", user.Username)
 	dbUser := new(User)
-	err := db.NewSelect().Model(dbUser).Where("username = ?", user.Username).Scan(context.TODO())
-	if err != nil {
-		fmt.Println("Failed to select user from database for login:", err)
+	res := db.Where("username = ?", user.Username).Take(&dbUser)
+	if res.Error != nil {
+		fmt.Println("Failed to select user from database for login:", res.Error)
 		return AuthResponse{}, errors.New("User does not exist")
 	}
-	fmt.Println(dbUser.ID, dbUser.Username, dbUser.Password)
 
 	match, err := compareHash(user.Password, dbUser.Password)
 	if err != nil {

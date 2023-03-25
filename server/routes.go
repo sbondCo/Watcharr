@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/uptrace/bun"
+	"gorm.io/gorm"
 )
 
 type ErrorResponse struct {
@@ -12,11 +12,11 @@ type ErrorResponse struct {
 }
 
 type BaseRouter struct {
-	db *bun.DB
+	db *gorm.DB
 	rg *gin.Engine
 }
 
-func newBaseRouter(db *bun.DB, rg *gin.Engine) *BaseRouter {
+func newBaseRouter(db *gorm.DB, rg *gin.Engine) *BaseRouter {
 	return &BaseRouter{
 		db: db,
 		rg: rg,

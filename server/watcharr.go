@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -11,9 +9,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/sqlitedialect"
-	"github.com/uptrace/bun/driver/sqliteshim"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -25,17 +22,12 @@ func main() {
 	}
 	ensureEnv()
 
-	sqldb, err := sql.Open(sqliteshim.ShimName, "./watcharr.db")
+	db, err := gorm.Open(sqlite.Open("./watcharr.db"), &gorm.Config{})
 	if err != nil {
-		panic(err)
+		panic("failed to connect to database")
 	}
 
-	db := bun.NewDB(sqldb, sqlitedialect.New())
-
-	// Create tables if they don't exist
-	db.NewCreateTable().Model((*User)(nil)).IfNotExists().Exec(context.TODO())
-	db.NewCreateTable().Model((*Content)(nil)).IfNotExists().Exec(context.TODO())
-	db.NewCreateTable().Model((*List)(nil)).IfNotExists().Exec(context.TODO())
+	db.AutoMigrate(&User{})
 
 	gin := gin.Default()
 	gin.Use(cors.New(cors.Config{
@@ -48,7 +40,7 @@ func main() {
 	}))
 	br := newBaseRouter(db, gin)
 	br.addAuthRoutes()
-	br.addContentRoutes()
+	// br.addContentRoutes()
 
 	gin.Run("localhost:3080")
 }

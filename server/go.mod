@@ -11,6 +11,8 @@ require (
 	github.com/uptrace/bun/dialect/sqlitedialect v1.1.12
 	github.com/uptrace/bun/driver/sqliteshim v1.1.12
 	golang.org/x/crypto v0.7.0
+	gorm.io/driver/sqlite v1.4.4
+	gorm.io/gorm v1.24.6
 )
 
 require (
@@ -24,6 +26,7 @@ require (
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect

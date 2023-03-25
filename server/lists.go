@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/uptrace/bun"
+	"gorm.io/gorm"
 )
 
 type Content struct {
@@ -25,13 +23,12 @@ type List struct {
 	Content   *Content `bun:"rel:belongs-to,join:content_id=id" json:"content"`
 }
 
-func getContent(db *bun.DB) List {
-	ctx := context.TODO()
+func getContent(db *gorm.DB) List {
 	list := new(List)
-	err := db.NewSelect().Model(list).Relation("Content").Where("user_id = ?", 8).Scan(ctx)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(list.ID)
+	// err := db.NewSelect().Model(list).Relation("Content").Where("user_id = ?", 8).Scan(ctx)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(list.ID)
 	return *list
 }
