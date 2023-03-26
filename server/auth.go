@@ -9,7 +9,9 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/argon2"
 	"gorm.io/gorm"
@@ -34,6 +36,38 @@ type ArgonParams struct {
 	parallelism uint8
 	saltLength  uint32
 	keyLength   uint32
+}
+
+type TokenClaims struct {
+	UserID   uint   `json:"userId"`
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+}
+
+// Auth middleware
+func AuthRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		println("AuthRequired middleware hit")
+		atoken := c.GetHeader("Authorization")
+		// Make sure auth header isn't empty
+		if atoken == "" {
+			println("Returning 401, Authorization header not provided")
+			c.AbortWithStatus(401)
+			return
+		}
+		// Parse token
+		token, err := jwt.ParseWithClaims(atoken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("JWT_SECRET")), nil
+		})
+		// If token is valid, go to next handler
+		if claims, ok := token.Claims.(*TokenClaims); ok && token.Valid {
+			println("Token valid", claims.Username)
+			c.Set("userId", claims.UserID)
+			c.Next()
+		} else {
+			fmt.Println(err)
+		}
+	}
 }
 
 func register(user *User, db *gorm.DB) (AuthResponse, error) {
@@ -106,9 +140,14 @@ func login(user *User, db *gorm.DB) (AuthResponse, error) {
 
 func signJWT(user *User) (token string, err error) {
 	// Create new jwt with claim data
-	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId":   user.ID,
-		"username": user.Username,
+	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, TokenClaims{
+		user.ID,
+		user.Username,
+		jwt.RegisteredClaims{
+			// ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+			Issuer:   "watcharr",
+		},
 	})
 
 	// Sign and get the complete encoded token as a string using the secret

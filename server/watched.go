@@ -14,9 +14,9 @@ type Watched struct {
 	Content   Content `json:"content"`
 }
 
-func getWatched(db *gorm.DB) Watched {
-	watched := new(Watched)
-	res := db.Where("user_id = ?", 1).Find(&watched)
+func getWatched(db *gorm.DB, userId uint) []Watched {
+	watched := new([]Watched)
+	res := db.Where("user_id = ?", userId).Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}

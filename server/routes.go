@@ -24,7 +24,7 @@ func newBaseRouter(db *gorm.DB, rg *gin.Engine) *BaseRouter {
 }
 
 func (b *BaseRouter) addContentRoutes() {
-	content := b.rg.Group("/content")
+	content := b.rg.Group("/content").Use(AuthRequired())
 
 	// Get trending content
 	// content.GET("/", func(c *gin.Context) {
@@ -48,10 +48,11 @@ func (b *BaseRouter) addContentRoutes() {
 }
 
 func (b *BaseRouter) addWatchedRoutes() {
-	watched := b.rg.Group("/watched")
+	watched := b.rg.Group("/watched").Use(AuthRequired())
 
 	watched.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, getWatched(b.db))
+		userId := c.MustGet("userId").(uint)
+		c.JSON(http.StatusOK, getWatched(b.db, userId))
 	})
 }
 
