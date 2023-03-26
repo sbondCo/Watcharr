@@ -1,5 +1,6 @@
 <script lang="ts">
   import Poster from "@/lib/Poster.svelte";
+  import PosterList from "@/lib/PosterList.svelte";
 
   export let data: import("./$types").PageData;
 </script>
@@ -8,26 +9,8 @@
   <title>Watcharr</title>
 </svelte:head>
 
-<div>
-  <ul>
-    {#each data.watched as w}
-      <li><Poster poster={w.poster} /></li>
-    {/each}
-  </ul>
-</div>
-
-<style lang="scss">
-  div {
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-
-    ul {
-      display: flex;
-      flex-flow: row;
-      gap: 10px;
-      list-style: none;
-      flex-wrap: wrap;
-    }
-  }
-</style>
+<PosterList>
+  {#each data.watched as w}
+    <Poster poster={w.poster} />
+  {/each}
+</PosterList>

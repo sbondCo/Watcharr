@@ -5,10 +5,12 @@
   export let poster: string;
 </script>
 
-<div>
-  <img src={poster} alt="poster" />
-  <!-- <span>{content.title}</span> -->
-</div>
+<li>
+  <div>
+    <img src={poster} alt="poster" />
+    <!-- <span>{content.title}</span> -->
+  </div>
+</li>
 
 <style lang="scss">
   div {
