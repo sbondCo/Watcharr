@@ -18,11 +18,9 @@ import (
 )
 
 type User struct {
-	gorm.Model
-
-	ID       uint   `json:"id"`
-	Username string `gorm:"notNull,unique" json:"username" binding:"required"`
-	Password string `gorm:"notNnull" json:"password" binding:"required"`
+	GormModel
+	Username string `gorm:"notnull,unique" json:"username" binding:"required"`
+	Password string `gorm:"notnull" json:"password" binding:"required"`
 	Watched  []Watched
 }
 

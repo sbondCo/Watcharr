@@ -5,9 +5,7 @@ import (
 )
 
 type Watched struct {
-	gorm.Model
-
-	ID        int     `json:"id"`
+	GormModel
 	Finished  bool    `json:"watched"`
 	UserID    uint    `json:"-"`
 	ContentID int     `json:"-"`
