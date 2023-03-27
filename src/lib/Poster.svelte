@@ -2,9 +2,9 @@
   import type { Content } from "@/types";
 
   // export let content: Content;
-  export let poster: string;
-  export let title: string;
-  export let desc: string;
+  export let poster: string | undefined;
+  export let title: string | undefined;
+  export let desc: string | undefined;
 
   let rating: 1 | 2 | 3 | 4 | 5 | undefined;
 
@@ -33,7 +33,7 @@
 
 <li>
   <div class="container">
-    <img src={poster} alt="poster" />
+    <img loading="lazy" src={poster} alt="poster" />
     <div class="inner">
       <h2>{title}</h2>
       <span>{desc}</span>
@@ -63,6 +63,7 @@
     flex: 1 1;
     border-radius: 5px;
     width: 170px;
+    height: 100%;
     position: relative;
     // aspect-ratio: 2/3;
     transition: all 150ms ease-in;
@@ -72,13 +73,11 @@
       visibility: hidden;
       display: flex;
       flex-flow: column;
-      // gap: 10px;
       top: 0;
       height: 100%;
       width: 100%;
       padding: 10px;
       background-color: transparent;
-      // -webkit-text-stroke: 0.2px black;
 
       h2 {
         font-family: unset;
@@ -87,9 +86,13 @@
 
       span {
         color: white;
-        padding: 5px 0 5px 0;
+        margin: 5px 0 5px 0;
         font-size: 9px;
-        text-shadow: white 0px 0px 10px;
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        hyphens: auto;
+        overflow: hidden;
       }
 
       .rating {

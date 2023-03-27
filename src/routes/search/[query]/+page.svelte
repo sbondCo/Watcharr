@@ -8,6 +8,10 @@
 
 <PosterList>
   {#each data.results as w}
-    <Poster poster={"https://image.tmdb.org/t/p/w500" + w.poster_path} />
+    <Poster
+      poster={"https://image.tmdb.org/t/p/w500" + w.poster_path}
+      title={w.title ?? w.name}
+      desc={w.overview}
+    />
   {/each}
 </PosterList>
