@@ -75,6 +75,17 @@
     }
   }
 
+  :global(button.secondary) {
+    border: 2px solid transparent;
+
+    &:hover,
+    &:focus-visible {
+      background-color: white;
+      color: black;
+      border: 2px solid black;
+    }
+  }
+
   :global(button.plain) {
     background-color: transparent;
     color: black;
@@ -86,7 +97,6 @@
     align-items: center;
     justify-content: space-between;
     margin: 10px 20px 28px 20px;
-    // margin-bottom: 28px;
     position: relative;
 
     a {

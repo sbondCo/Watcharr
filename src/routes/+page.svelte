@@ -1,6 +1,7 @@
 <script lang="ts">
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
+  import WatchedModal from "@/lib/WatchedModal.svelte";
 
   export let data: import("./$types").PageData;
 </script>
@@ -11,6 +12,6 @@
 
 <PosterList>
   {#each data.watched as w}
-    <Poster poster={w.poster} />
+    <Poster poster={w.poster} title={w.title} desc={"ah"} />
   {/each}
 </PosterList>
