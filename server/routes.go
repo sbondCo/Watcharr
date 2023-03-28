@@ -54,6 +54,21 @@ func (b *BaseRouter) addWatchedRoutes() {
 		userId := c.MustGet("userId").(uint)
 		c.JSON(http.StatusOK, getWatched(b.db, userId))
 	})
+
+	watched.POST("/", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var content Content
+		if c.ShouldBindJSON(&content) == nil {
+			response, err := addWatched(b.db, userId, content)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.Status(400)
+	})
 }
 
 func (b *BaseRouter) addAuthRoutes() {
@@ -63,8 +78,6 @@ func (b *BaseRouter) addAuthRoutes() {
 	auth.POST("/", func(c *gin.Context) {
 		var user User
 		if c.ShouldBindJSON(&user) == nil {
-			println(user.Username)
-			println(user.Password)
 			response, err := login(&user, b.db)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
@@ -80,8 +93,6 @@ func (b *BaseRouter) addAuthRoutes() {
 	auth.POST("/register", func(c *gin.Context) {
 		var user User
 		if c.ShouldBindJSON(&user) == nil {
-			println(user.Username)
-			println(user.Password)
 			response, err := register(&user, b.db)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
