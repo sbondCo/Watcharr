@@ -1,8 +1,6 @@
 import { goto } from "$app/navigation";
 import axios from "axios";
 
-// type Endpoint = "/content";
-
 export default async function req(ep: string, method: "GET" | "POST", data?: object) {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -13,7 +11,7 @@ export default async function req(ep: string, method: "GET" | "POST", data?: obj
     url: ep,
     method,
     headers: {
-      Authorization: `Bearer ${token}`
+      Authorization: token
     },
     [method == "GET" ? "params" : "data"]: data
   });

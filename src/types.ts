@@ -9,3 +9,9 @@ export interface Content {
    */
   poster: string;
 }
+
+export interface Watched {
+  watched: boolean;
+  rating: number;
+  content: Content;
+}

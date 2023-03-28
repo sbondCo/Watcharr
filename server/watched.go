@@ -11,6 +11,7 @@ import (
 type Watched struct {
 	GormModel
 	Finished  bool    `json:"watched"`
+	Rating    int8    `json:"rating"`
 	UserID    uint    `json:"-"`
 	ContentID int     `json:"-"`
 	Content   Content `json:"content"`
@@ -41,7 +42,7 @@ func addWatched(db *gorm.DB, userId uint, content Content) (bool, error) {
 	}
 	println(res.RowsAffected)
 
-	watched := Watched{Finished: true, UserID: userId, ContentID: content.ID}
+	watched := Watched{Finished: true, Rating: 5, UserID: userId, ContentID: content.ID}
 	res = db.Create(&watched)
 	if res.Error != nil {
 		println("Error adding watched content to database:", res.Error.Error())
