@@ -18,7 +18,7 @@ type Watched struct {
 
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
-	res := db.Where("user_id = ?", userId).Find(&watched)
+	res := db.Model(&Watched{}).Preload("Content").Where("user_id = ?", userId).Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}
