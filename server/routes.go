@@ -50,7 +50,7 @@ func (b *BaseRouter) addContentRoutes() {
 func (b *BaseRouter) addWatchedRoutes() {
 	watched := b.rg.Group("/watched").Use(AuthRequired())
 
-	watched.GET("/", func(c *gin.Context) {
+	watched.GET("", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		c.JSON(http.StatusOK, getWatched(b.db, userId))
 	})

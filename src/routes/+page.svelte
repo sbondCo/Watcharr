@@ -12,7 +12,7 @@
 <PosterList>
   {#if data?.watched && data.watched.length > 0}
     {#each data.watched as w}
-      <Poster poster={w.poster} title={w.title} desc={"ah"} />
+      <Poster poster={w.content.poster} title={w.content.title} desc={"ah"} />
     {/each}
   {:else}
     You don't have any watched content yet!
