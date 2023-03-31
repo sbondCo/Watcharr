@@ -1,27 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
-	"io"
-	"net/http"
-	"net/url"
 
 	"github.com/lib/pq"
 )
 
 type Content struct {
-	TMDBSearchMultiResults
-}
-
-type TMDBSearchMultiResponse struct {
-	Page         int                      `json:"page"`
-	Results      []TMDBSearchMultiResults `json:"results"`
-	TotalPages   int                      `json:"totalPages"`
-	TotalResults int                      `json:"totalResults"`
-}
-
-type TMDBSearchMultiResults struct {
 	Adult            bool           `json:"adult"`
 	BackdropPath     string         `json:"backdrop_path"`
 	ID               int            `json:"id" gorm:"primaryKey,unique"`
@@ -41,44 +26,6 @@ type TMDBSearchMultiResults struct {
 	OriginalName     string         `json:"original_name,omitempty"`
 	FirstAirDate     string         `json:"first_air_date,omitempty"`
 	OriginCountry    pq.StringArray `json:"origin_country,omitempty" gorm:"type:text[]"`
-}
-
-func tmdbRequest(ep string, p map[string]string, resp interface{}) error {
-	base, err := url.Parse("https://api.themoviedb.org/3")
-	if err != nil {
-		return errors.New("failed to parse api uri")
-	}
-
-	// Path params
-	base.Path += ep
-
-	// Query params
-	params := url.Values{}
-	params.Add("api_key", "")
-	params.Add("language", "en-US")
-	for k, v := range p {
-		params.Add(k, v)
-	}
-
-	// Add params to url
-	base.RawQuery = params.Encode()
-
-	// Run get request
-	res, err := http.Get(base.String())
-	if err != nil {
-		return err
-	}
-	body, err := io.ReadAll(res.Body)
-	res.Body.Close()
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal([]byte(body), &resp)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func searchContent(query string) (TMDBSearchMultiResponse, error) {
