@@ -23,6 +23,9 @@ go.work
 # Database
 *.db
 
+# Server data
+server/data
+
 # web
 .DS_Store
 node_modules

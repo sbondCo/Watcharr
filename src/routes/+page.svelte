@@ -13,9 +13,9 @@
   {#if data?.watched && data.watched.length > 0}
     {#each data.watched as w}
       <Poster
-        poster={w.content.poster_path}
+        poster={"http://localhost:3080/img" + w.content.poster_path}
         title={w.content.title ?? w.content.name}
-        desc={"ah"}
+        desc={w.content.overview}
       />
     {/each}
   {:else}

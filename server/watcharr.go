@@ -49,6 +49,7 @@ func main() {
 	br.addAuthRoutes()
 	br.addContentRoutes()
 	br.addWatchedRoutes()
+	br.rg.Static("/img", "./data/img")
 
 	gin.Run("localhost:3080")
 }
