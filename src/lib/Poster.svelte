@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Content } from "@/types";
+  import Icon from "./Icon.svelte";
 
   // export let content: Content;
   export let poster: string | undefined;
@@ -47,8 +48,9 @@
       </div>
 
       <div class="btn-container">
-        <button class="secondary">Watching</button>
-        <button>Watched</button>
+        <button><Icon i="calendar" /></button>
+        <button><Icon i="clock" /></button>
+        <button><Icon i="check" /></button>
       </div>
     </div>
   </div>
@@ -131,6 +133,11 @@
 
         button {
           font-size: 10px;
+          transition: background-color 100ms ease;
+
+          &:hover {
+            fill: white;
+          }
         }
       }
     }

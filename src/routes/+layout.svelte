@@ -60,6 +60,9 @@
   }
 
   :global(button:not(.plain)) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 5px 10px;
     border: 2px solid black;
     border-radius: 5px;
