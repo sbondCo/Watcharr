@@ -6,6 +6,13 @@ import (
 	"github.com/lib/pq"
 )
 
+type ContentType string
+
+const (
+	MOVIE ContentType = "movie"
+	SHOW  ContentType = "tv"
+)
+
 type Content struct {
 	Adult            bool           `json:"adult"`
 	BackdropPath     string         `json:"backdrop_path"`
