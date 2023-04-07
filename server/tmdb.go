@@ -37,23 +37,18 @@ type TMDBSearchMultiResults struct {
 	OriginCountry    []string `json:"origin_country,omitempty"`
 }
 
-type TMDBMovieDetails struct {
-	Adult               bool   `json:"adult"`
-	BackdropPath        string `json:"backdrop_path"`
-	BelongsToCollection any    `json:"belongs_to_collection"`
-	Budget              int    `json:"budget"`
-	Genres              []struct {
+type TMDBContentDetails struct {
+	ID           int    `json:"id"`
+	BackdropPath string `json:"backdrop_path"`
+	Genres       []struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"genres"`
-	Homepage            string  `json:"homepage"`
-	ID                  int     `json:"id"`
-	ImdbID              string  `json:"imdb_id"`
-	OriginalLanguage    string  `json:"original_language"`
-	OriginalTitle       string  `json:"original_title"`
-	Overview            string  `json:"overview"`
-	Popularity          float64 `json:"popularity"`
 	PosterPath          string  `json:"poster_path"`
+	Homepage            string  `json:"homepage"`
+	Popularity          float64 `json:"popularity"`
+	Overview            string  `json:"overview"`
+	OriginalLanguage    string  `json:"original_language"`
 	ProductionCompanies []struct {
 		ID            int    `json:"id"`
 		LogoPath      string `json:"logo_path"`
@@ -64,38 +59,42 @@ type TMDBMovieDetails struct {
 		Iso31661 string `json:"iso_3166_1"`
 		Name     string `json:"name"`
 	} `json:"production_countries"`
-	ReleaseDate     string `json:"release_date"`
-	Revenue         int    `json:"revenue"`
-	Runtime         int    `json:"runtime"`
+	Status          string  `json:"status"`
+	Tagline         string  `json:"tagline"`
+	VoteAverage     float64 `json:"vote_average"`
+	VoteCount       int     `json:"vote_count"`
 	SpokenLanguages []struct {
-		Iso6391 string `json:"iso_639_1"`
-		Name    string `json:"name"`
+		EnglishName string `json:"english_name"`
+		Iso6391     string `json:"iso_639_1"`
+		Name        string `json:"name"`
 	} `json:"spoken_languages"`
-	Status      string  `json:"status"`
-	Tagline     string  `json:"tagline"`
-	Title       string  `json:"title"`
-	Video       bool    `json:"video"`
-	VoteAverage float64 `json:"vote_average"`
-	VoteCount   int     `json:"vote_count"`
+}
+
+type TMDBMovieDetails struct {
+	TMDBContentDetails
+	Adult               bool   `json:"adult"`
+	BelongsToCollection any    `json:"belongs_to_collection"`
+	Budget              int    `json:"budget"`
+	ImdbID              string `json:"imdb_id"`
+	OriginalTitle       string `json:"original_title"`
+	ReleaseDate         string `json:"release_date"`
+	Revenue             int    `json:"revenue"`
+	Runtime             int    `json:"runtime"`
+	Title               string `json:"title"`
+	Video               bool   `json:"video"`
 }
 
 type TMDBShowDetails struct {
-	BackdropPath string `json:"backdrop_path"`
-	CreatedBy    []struct {
+	TMDBContentDetails
+	CreatedBy []struct {
 		ID          int    `json:"id"`
 		CreditID    string `json:"credit_id"`
 		Name        string `json:"name"`
 		Gender      int    `json:"gender"`
 		ProfilePath string `json:"profile_path"`
 	} `json:"created_by"`
-	EpisodeRunTime []int  `json:"episode_run_time"`
-	FirstAirDate   string `json:"first_air_date"`
-	Genres         []struct {
-		ID   int    `json:"id"`
-		Name string `json:"name"`
-	} `json:"genres"`
-	Homepage         string   `json:"homepage"`
-	ID               int      `json:"id"`
+	EpisodeRunTime   []int    `json:"episode_run_time"`
+	FirstAirDate     string   `json:"first_air_date"`
 	InProduction     bool     `json:"in_production"`
 	Languages        []string `json:"languages"`
 	LastAirDate      string   `json:"last_air_date"`
@@ -119,25 +118,11 @@ type TMDBShowDetails struct {
 		LogoPath      string `json:"logo_path"`
 		OriginCountry string `json:"origin_country"`
 	} `json:"networks"`
-	NumberOfEpisodes    int      `json:"number_of_episodes"`
-	NumberOfSeasons     int      `json:"number_of_seasons"`
-	OriginCountry       []string `json:"origin_country"`
-	OriginalLanguage    string   `json:"original_language"`
-	OriginalName        string   `json:"original_name"`
-	Overview            string   `json:"overview"`
-	Popularity          float64  `json:"popularity"`
-	PosterPath          string   `json:"poster_path"`
-	ProductionCompanies []struct {
-		ID            int    `json:"id"`
-		LogoPath      string `json:"logo_path"`
-		Name          string `json:"name"`
-		OriginCountry string `json:"origin_country"`
-	} `json:"production_companies"`
-	ProductionCountries []struct {
-		Iso31661 string `json:"iso_3166_1"`
-		Name     string `json:"name"`
-	} `json:"production_countries"`
-	Seasons []struct {
+	NumberOfEpisodes int      `json:"number_of_episodes"`
+	NumberOfSeasons  int      `json:"number_of_seasons"`
+	OriginCountry    []string `json:"origin_country"`
+	OriginalName     string   `json:"original_name"`
+	Seasons          []struct {
 		AirDate      string `json:"air_date"`
 		EpisodeCount int    `json:"episode_count"`
 		ID           int    `json:"id"`
@@ -146,22 +131,14 @@ type TMDBShowDetails struct {
 		PosterPath   string `json:"poster_path"`
 		SeasonNumber int    `json:"season_number"`
 	} `json:"seasons"`
-	SpokenLanguages []struct {
-		EnglishName string `json:"english_name"`
-		Iso6391     string `json:"iso_639_1"`
-		Name        string `json:"name"`
-	} `json:"spoken_languages"`
-	Status      string  `json:"status"`
-	Tagline     string  `json:"tagline"`
-	Type        string  `json:"type"`
-	VoteAverage float64 `json:"vote_average"`
-	VoteCount   int     `json:"vote_count"`
+	Type string `json:"type"`
 }
 
-func tmdbRequest(ep string, p map[string]string, resp interface{}) error {
+func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
+	println("tmdbAPIRequest:", ep)
 	base, err := url.Parse("https://api.themoviedb.org/3")
 	if err != nil {
-		return errors.New("failed to parse api uri")
+		return nil, errors.New("failed to parse api uri")
 	}
 
 	// Path params
@@ -181,14 +158,25 @@ func tmdbRequest(ep string, p map[string]string, resp interface{}) error {
 	// Run get request
 	res, err := http.Get(base.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != 200 {
+		println("TMDB non 200 status code:", res.StatusCode)
+		return nil, errors.New(string(body))
+	}
+	return body, nil
+}
+
+func tmdbRequest(ep string, p map[string]string, resp interface{}) error {
+	body, err := tmdbAPIRequest(ep, p)
+	if err != nil {
 		return err
 	}
-
 	err = json.Unmarshal([]byte(body), &resp)
 	if err != nil {
 		return err

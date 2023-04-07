@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -48,39 +50,75 @@ func getWatched(db *gorm.DB, userId uint) []Watched {
 func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 	println(ar.ContentType, ar.ContentID)
 
-	content := new(TMDBMovieDetails)
-	err := tmdbRequest("/"+string(ar.ContentType)+"/"+strconv.Itoa(ar.ContentID), map[string]string{}, &content)
+	resp, err := tmdbAPIRequest("/"+string(ar.ContentType)+"/"+strconv.Itoa(ar.ContentID), map[string]string{})
 	if err != nil {
+		fmt.Printf("addWatched tmdb api request failed: %+v", err)
 		return false, errors.New("failed to find requested media")
 	}
 
-	// // Save the content in our db
-	// res := db.Create(&content)
-	// if res.Error != nil {
-	// 	// Error if anything but unique contraint error
-	// 	if !strings.Contains(res.Error.Error(), "UNIQUE") {
-	// 		println("Error creating content in database:", res.Error.Error())
-	// 		return false, errors.New("failed to cache content in database")
-	// 	}
-	// }
-	// println(res.RowsAffected)
-	// // If row created, download the image
-	// if res.RowsAffected > 0 {
-	// 	err := download("https://image.tmdb.org/t/p/w500"+content.PosterPath, path.Join("./data/img", content.PosterPath))
-	// 	if err != nil {
-	// 		println("Failed to download content image!", err.Error())
-	// 	}
-	// }
+	// Get details from movie/show response and fill out needed vars
 
-	// // Create watched entry in db
-	// watched := Watched{Status: "d", Rating: 5, UserID: userId, ContentID: content.ID}
-	// res = db.Create(&watched)
-	// if res.Error != nil {
-	// 	println("Error adding watched content to database:", res.Error.Error())
-	// 	return false, errors.New("failed adding content to database")
-	// }
-	// println(res.RowsAffected)
-	// fmt.Printf("%+v\n", watched)
+	var (
+		id         int
+		title      string
+		overview   string
+		posterPath string
+	)
+	if ar.ContentType == "movie" {
+		content := new(TMDBMovieDetails)
+		err = json.Unmarshal([]byte(resp), &content)
+		if err != nil {
+			println("Failed to unmarshal movie details:", err)
+			return false, errors.New("failed to process movie details response")
+		}
+		fmt.Printf("%+v\n", content)
+		id = content.ID
+		overview = content.Overview
+		posterPath = content.PosterPath
+		title = content.Title
+	} else {
+		content := new(TMDBShowDetails)
+		err = json.Unmarshal(resp, &content)
+		if err != nil {
+			println("Failed to unmarshal show details:", err)
+			return false, errors.New("failed to process show details response")
+		}
+		id = content.ID
+		overview = content.Overview
+		posterPath = content.PosterPath
+		title = content.Name
+	}
+	// Save the content in our db
+	println("id, etc:", id, title, overview, posterPath, "<-- end")
+	if id == 0 || title == "" {
+		println("addWatched, returned content missing id or title!", id, title)
+		return false, errors.New("content response missing id or title")
+	}
+	res := db.Create(&Content{ID: id, Title: title, Overview: overview, PosterPath: posterPath})
+	if res.Error != nil {
+		// Error if anything but unique contraint error
+		if !strings.Contains(res.Error.Error(), "UNIQUE") {
+			println("Error creating content in database:", res.Error.Error())
+			return false, errors.New("failed to cache content in database")
+		}
+	}
+	// If row created, download the image
+	if res.RowsAffected > 0 {
+		err := download("https://image.tmdb.org/t/p/w500"+posterPath, path.Join("./data/img", posterPath))
+		if err != nil {
+			println("Failed to download content image!", err.Error())
+		}
+	}
+
+	// Create watched entry in db
+	watched := Watched{Status: "WATCHED", Rating: 5, UserID: userId, ContentID: id}
+	res = db.Create(&watched)
+	if res.Error != nil {
+		println("Error adding watched content to database:", res.Error.Error())
+		return false, errors.New("failed adding content to database")
+	}
+	println(res.RowsAffected)
+	fmt.Printf("%+v\n", watched)
 
 	return true, nil
 }
