@@ -16,6 +16,7 @@
         poster={"http://localhost:3080/img" + w.content.poster_path}
         title={w.content.title}
         desc={w.content.overview}
+        rating={w.rating}
       />
     {/each}
   {:else}

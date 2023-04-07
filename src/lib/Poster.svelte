@@ -1,25 +1,24 @@
 <script lang="ts">
-  import type { Content, Rating, WatchedStatus } from "@/types";
+  import type { Rating, WatchedStatus } from "@/types";
+  import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
 
   // export let content: Content;
   export let poster: string | undefined;
   export let title: string | undefined;
   export let desc: string | undefined;
+  export let rating: Rating = undefined;
   export let onBtnClicked: (type: WatchedStatus, rating?: Rating) => void = () => {};
 
-  let rating: Rating;
+  // let rating: Rating;
+  let ratingContainer: HTMLDivElement;
 
-  function handleRating(
-    ev: MouseEvent & {
-      currentTarget: EventTarget & HTMLSpanElement;
-    },
-    r: 1 | 2 | 3 | 4 | 5
-  ) {
+  function handleRating(r: Rating) {
     console.log("handleRating", rating);
     resetRating();
     rating = r;
-    ev.currentTarget.classList.add("lit");
+    const el = ratingContainer.querySelector(`#s${r}`);
+    if (el) el.classList.add("lit");
   }
 
   function resetRating() {
@@ -35,6 +34,11 @@
   function wBtnClicked(type: WatchedStatus) {
     onBtnClicked(type, rating);
   }
+
+  onMount(() => {
+    console.log("onmount", rating);
+    if (typeof rating === "number") handleRating(rating);
+  });
 </script>
 
 <li>
@@ -44,12 +48,17 @@
       <h2>{title}</h2>
       <span>{desc}</span>
 
-      <div id="rating-container" class="rating" on:dblclick={resetRating}>
-        <button class="plain" on:click={(ev) => handleRating(ev, 5)}>*</button>
-        <button class="plain" on:click={(ev) => handleRating(ev, 4)}>*</button>
-        <button class="plain" on:click={(ev) => handleRating(ev, 3)}>*</button>
-        <button class="plain" on:click={(ev) => handleRating(ev, 2)}>*</button>
-        <button class="plain" on:click={(ev) => handleRating(ev, 1)}>*</button>
+      <div
+        id="rating-container"
+        class="rating"
+        on:dblclick={resetRating}
+        bind:this={ratingContainer}
+      >
+        <button class="plain" id="s5" on:click={() => handleRating(5)}>*</button>
+        <button class="plain" id="s4" on:click={() => handleRating(4)}>*</button>
+        <button class="plain" id="s3" on:click={() => handleRating(3)}>*</button>
+        <button class="plain" id="s2" on:click={() => handleRating(2)}>*</button>
+        <button class="plain" id="s1" on:click={() => handleRating(1)}>*</button>
       </div>
 
       <div class="btn-container">
