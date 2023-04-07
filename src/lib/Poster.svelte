@@ -8,9 +8,9 @@
   export let title: string | undefined;
   export let desc: string | undefined;
   export let rating: Rating = undefined;
+  export let status: WatchedStatus | undefined = undefined;
   export let onBtnClicked: (type: WatchedStatus, rating?: Rating) => void = () => {};
 
-  // let rating: Rating;
   let ratingContainer: HTMLDivElement;
 
   function handleRating(r: Rating) {
@@ -62,9 +62,18 @@
       </div>
 
       <div class="btn-container">
-        <button on:click={() => wBtnClicked("PLANNED")}><Icon i="calendar" /></button>
-        <button on:click={() => wBtnClicked("WATCHING")}><Icon i="clock" /></button>
-        <button on:click={() => wBtnClicked("FINISHED")}><Icon i="check" /></button>
+        <button
+          class={status && status !== "PLANNED" ? "not-active" : ""}
+          on:click={() => wBtnClicked("PLANNED")}><Icon i="calendar" /></button
+        >
+        <button
+          class={status && status !== "WATCHING" ? "not-active" : ""}
+          on:click={() => wBtnClicked("WATCHING")}><Icon i="clock" /></button
+        >
+        <button
+          class={status && status !== "FINISHED" ? "not-active" : ""}
+          on:click={() => wBtnClicked("FINISHED")}><Icon i="check" /></button
+        >
       </div>
     </div>
   </div>
@@ -147,7 +156,6 @@
 
         button {
           font-size: 10px;
-          transition: background-color 100ms ease;
 
           &:hover {
             fill: white;

@@ -28,6 +28,7 @@ export interface Watched {
   watched: boolean;
   rating: Rating;
   content: Content;
+  status: WatchedStatus;
 }
 
 export interface WatchedAddRequest {

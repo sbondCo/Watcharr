@@ -17,6 +17,7 @@
         title={w.content.title}
         desc={w.content.overview}
         rating={w.rating}
+        status={w.status}
       />
     {/each}
   {:else}

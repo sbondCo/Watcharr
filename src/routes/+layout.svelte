@@ -70,11 +70,13 @@
     color: black;
     font-weight: bold;
     width: 100%;
+    transition: background-color 100ms ease, opacity 100ms ease;
 
     &:hover,
     &:focus-visible {
       background-color: black;
       color: white;
+      opacity: 1;
     }
   }
 
@@ -93,6 +95,10 @@
     background-color: transparent;
     color: black;
     border: 0;
+  }
+
+  :global(button.not-active) {
+    opacity: 0.5;
   }
 
   nav {
