@@ -1,3 +1,7 @@
+export type Rating = 1 | 2 | 3 | 4 | 5 | undefined;
+export type WatchedStatus = "PLANNED" | "WATCHING" | "FINISHED";
+export type ContentType = "tv" | "movie";
+
 export interface Content {
   adult: boolean;
   backdrop_path: string;
@@ -22,6 +26,13 @@ export interface Content {
 
 export interface Watched {
   watched: boolean;
-  rating: number;
+  rating: Rating;
   content: Content;
+}
+
+export interface WatchedAddRequest {
+  contentId: number;
+  contentType: ContentType;
+  rating: Rating;
+  status: WatchedStatus;
 }

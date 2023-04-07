@@ -55,7 +55,7 @@ func (b *BaseRouter) addWatchedRoutes() {
 		c.JSON(http.StatusOK, getWatched(b.db, userId))
 	})
 
-	watched.POST("/", func(c *gin.Context) {
+	watched.POST("", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		var ar WatchedAddRequest
 		err := c.ShouldBindJSON(&ar)

@@ -1,13 +1,14 @@
 <script lang="ts">
-  import type { Content } from "@/types";
+  import type { Content, Rating, WatchedStatus } from "@/types";
   import Icon from "./Icon.svelte";
 
   // export let content: Content;
   export let poster: string | undefined;
   export let title: string | undefined;
   export let desc: string | undefined;
+  export let onBtnClicked: (type: WatchedStatus, rating?: Rating) => void = () => {};
 
-  let rating: 1 | 2 | 3 | 4 | 5 | undefined;
+  let rating: Rating;
 
   function handleRating(
     ev: MouseEvent & {
@@ -30,6 +31,10 @@
     }
     rating = undefined;
   }
+
+  function wBtnClicked(type: WatchedStatus) {
+    onBtnClicked(type, rating);
+  }
 </script>
 
 <li>
@@ -48,9 +53,9 @@
       </div>
 
       <div class="btn-container">
-        <button><Icon i="calendar" /></button>
-        <button><Icon i="clock" /></button>
-        <button><Icon i="check" /></button>
+        <button on:click={() => wBtnClicked("PLANNED")}><Icon i="calendar" /></button>
+        <button on:click={() => wBtnClicked("WATCHING")}><Icon i="clock" /></button>
+        <button on:click={() => wBtnClicked("FINISHED")}><Icon i="check" /></button>
       </div>
     </div>
   </div>
