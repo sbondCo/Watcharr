@@ -20,7 +20,6 @@
     const el = ratingContainer.querySelector(`#s${r}`);
     if (el) {
       el.classList.add("lit");
-      onRatingChanged(rating);
     }
   }
 
@@ -32,6 +31,12 @@
       stars[i].classList.remove("lit");
     }
     rating = undefined;
+  }
+
+  function handleStarClick(r: Rating) {
+    if (r == rating) return;
+    handleRating(r);
+    onRatingChanged(rating);
   }
 
   function wBtnClicked(type: WatchedStatus) {
@@ -50,17 +55,12 @@
       <h2>{title}</h2>
       <span>{desc}</span>
 
-      <div
-        id="rating-container"
-        class="rating"
-        on:dblclick={resetRating}
-        bind:this={ratingContainer}
-      >
-        <button class="plain" id="s5" on:click={() => handleRating(5)}>*</button>
-        <button class="plain" id="s4" on:click={() => handleRating(4)}>*</button>
-        <button class="plain" id="s3" on:click={() => handleRating(3)}>*</button>
-        <button class="plain" id="s2" on:click={() => handleRating(2)}>*</button>
-        <button class="plain" id="s1" on:click={() => handleRating(1)}>*</button>
+      <div id="rating-container" class="rating" bind:this={ratingContainer}>
+        <button class="plain" id="s5" on:click={() => handleStarClick(5)}>*</button>
+        <button class="plain" id="s4" on:click={() => handleStarClick(4)}>*</button>
+        <button class="plain" id="s3" on:click={() => handleStarClick(3)}>*</button>
+        <button class="plain" id="s2" on:click={() => handleStarClick(2)}>*</button>
+        <button class="plain" id="s1" on:click={() => handleStarClick(1)}>*</button>
       </div>
 
       <div class="btn-container">

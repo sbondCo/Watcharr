@@ -2,9 +2,12 @@
   import req from "@/lib/api";
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
-  import type { Rating, WatchedStatus, WatchedUpdateRequest } from "@/types";
+  import { watchedList } from "@/store";
+  import type { Rating, Watched, WatchedStatus, WatchedUpdateRequest } from "@/types";
 
-  export let data: import("./$types").PageData;
+  let watched: Watched[];
+
+  watchedList.subscribe((wl) => (watched = wl));
 
   function updateWatched(id: number, status?: WatchedStatus, rating?: Rating) {
     if (!status && !rating) return;
@@ -20,8 +23,8 @@
 </svelte:head>
 
 <PosterList>
-  {#if data?.watched && data.watched.length > 0}
-    {#each data.watched as w}
+  {#if watched && watched.length > 0}
+    {#each watched as w (w.id)}
       <Poster
         poster={"http://localhost:3080/img" + w.content.poster_path}
         title={w.content.title}
@@ -30,9 +33,13 @@
         status={w.status}
         onBtnClicked={(type) => {
           updateWatched(w.id, type);
+          w.status = type;
+          $watchedList = watched;
         }}
         onRatingChanged={(rating) => {
           updateWatched(w.id, undefined, rating);
+          w.rating = rating;
+          $watchedList = watched;
         }}
       />
     {/each}
