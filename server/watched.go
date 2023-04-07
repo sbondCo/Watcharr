@@ -26,14 +26,14 @@ type Watched struct {
 	GormModel
 	Status    WatchedStatus `json:"status"`
 	Rating    int8          `json:"rating"`
-	UserID    uint          `json:"-"`
-	ContentID int           `json:"-"`
+	UserID    uint          `json:"-" gorm:"uniqueIndex:usernctnidx"`
+	ContentID int           `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	Content   Content       `json:"content"`
 }
 
 type WatchedAddRequest struct {
 	Status      WatchedStatus `json:"status"`
-	Rating      int8          `json:"rating"`
+	Rating      int8          `json:"rating" binding:"max=5"`
 	ContentID   int           `json:"contentId" binding:"required"`
 	ContentType ContentType   `json:"contentType" binding:"required,oneof=movie tv"`
 }
@@ -56,14 +56,13 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 		return false, errors.New("failed to find requested media")
 	}
 
-	// Get details from movie/show response and fill out needed vars
-
 	var (
 		id         int
 		title      string
 		overview   string
 		posterPath string
 	)
+	// Get details from movie/show response and fill out needed vars
 	if ar.ContentType == "movie" {
 		content := new(TMDBMovieDetails)
 		err = json.Unmarshal([]byte(resp), &content)
@@ -71,7 +70,6 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 			println("Failed to unmarshal movie details:", err)
 			return false, errors.New("failed to process movie details response")
 		}
-		fmt.Printf("%+v\n", content)
 		id = content.ID
 		overview = content.Overview
 		posterPath = content.PosterPath
@@ -111,9 +109,15 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 	}
 
 	// Create watched entry in db
-	watched := Watched{Status: "WATCHED", Rating: 5, UserID: userId, ContentID: id}
+	if ar.Status == "" {
+		ar.Status = FINISHED
+	}
+	watched := Watched{Status: ar.Status, Rating: ar.Rating, UserID: userId, ContentID: id}
 	res = db.Create(&watched)
 	if res.Error != nil {
+		if strings.Contains(res.Error.Error(), "UNIQUE") {
+			return false, errors.New("content already on watched list")
+		}
 		println("Error adding watched content to database:", res.Error.Error())
 		return false, errors.New("failed adding content to database")
 	}
