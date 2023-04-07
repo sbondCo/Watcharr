@@ -70,6 +70,22 @@ func (b *BaseRouter) addWatchedRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	watched.PUT("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ur WatchedUpdateRequest
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			response, err := updateWatched(b.db, userId, ur)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
 }
 
 func (b *BaseRouter) addAuthRoutes() {

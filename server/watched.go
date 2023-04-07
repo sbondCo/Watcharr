@@ -38,6 +38,12 @@ type WatchedAddRequest struct {
 	ContentType ContentType   `json:"contentType" binding:"required,oneof=movie tv"`
 }
 
+type WatchedUpdateRequest struct {
+	ID     uint          `json:"id" binding:"required"`
+	Status WatchedStatus `json:"status" binding:"required_without=Rating"`
+	Rating int8          `json:"rating" binding:"max=5,required_without=Status"`
+}
+
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
 	res := db.Model(&Watched{}).Preload("Content").Where("user_id = ?", userId).Find(&watched)
@@ -124,6 +130,18 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 	println(res.RowsAffected)
 	fmt.Printf("%+v\n", watched)
 
+	return true, nil
+}
+
+func updateWatched(db *gorm.DB, userId uint, ar WatchedUpdateRequest) (bool, error) {
+	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", ar.ID, userId).Updates(Watched{Rating: ar.Rating, Status: ar.Status})
+	if res.Error != nil {
+		println("Watched entry update failed:", ar.ID, res.Error.Error())
+		return false, errors.New("failed to update watched entry")
+	}
+	if res.RowsAffected <= 0 {
+		return false, errors.New("no watched entry found")
+	}
 	return true, nil
 }
 
