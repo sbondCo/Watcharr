@@ -1,7 +1,7 @@
 import { goto } from "$app/navigation";
 import axios from "axios";
 
-export default async function req(ep: string, method: "GET" | "POST", data?: object) {
+export default async function req(ep: string, method: "GET" | "POST" | "PUT", data?: object) {
   const token = localStorage.getItem("token");
   if (!token) {
     goto("/login?again=1");

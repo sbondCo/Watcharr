@@ -25,6 +25,7 @@ export interface Content {
 }
 
 export interface Watched {
+  id: number;
   watched: boolean;
   rating: Rating;
   content: Content;
@@ -36,4 +37,9 @@ export interface WatchedAddRequest {
   contentType: ContentType;
   rating: Rating;
   status: WatchedStatus;
+}
+
+export interface WatchedUpdateRequest {
+  rating?: Rating;
+  status?: WatchedStatus;
 }

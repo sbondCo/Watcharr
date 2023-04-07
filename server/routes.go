@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -71,12 +72,17 @@ func (b *BaseRouter) addWatchedRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
-	watched.PUT("", func(c *gin.Context) {
+	watched.PUT(":id", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.Status(400)
+			return
+		}
 		userId := c.MustGet("userId").(uint)
 		var ur WatchedUpdateRequest
-		err := c.ShouldBindJSON(&ur)
+		err = c.ShouldBindJSON(&ur)
 		if err == nil {
-			response, err := updateWatched(b.db, userId, ur)
+			response, err := updateWatched(b.db, userId, uint(id), ur)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return

@@ -39,7 +39,6 @@ type WatchedAddRequest struct {
 }
 
 type WatchedUpdateRequest struct {
-	ID     uint          `json:"id" binding:"required"`
 	Status WatchedStatus `json:"status" binding:"required_without=Rating"`
 	Rating int8          `json:"rating" binding:"max=5,required_without=Status"`
 }
@@ -133,10 +132,10 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 	return true, nil
 }
 
-func updateWatched(db *gorm.DB, userId uint, ar WatchedUpdateRequest) (bool, error) {
-	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", ar.ID, userId).Updates(Watched{Rating: ar.Rating, Status: ar.Status})
+func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (bool, error) {
+	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(Watched{Rating: ar.Rating, Status: ar.Status})
 	if res.Error != nil {
-		println("Watched entry update failed:", ar.ID, res.Error.Error())
+		println("Watched entry update failed:", id, res.Error.Error())
 		return false, errors.New("failed to update watched entry")
 	}
 	if res.RowsAffected <= 0 {

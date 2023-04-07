@@ -22,6 +22,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Content Search</title>
+</svelte:head>
+
 <PosterList>
   {#each data.results as w}
     <Poster

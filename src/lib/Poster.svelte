@@ -10,15 +10,18 @@
   export let rating: Rating = undefined;
   export let status: WatchedStatus | undefined = undefined;
   export let onBtnClicked: (type: WatchedStatus, rating?: Rating) => void = () => {};
+  export let onRatingChanged: (rating: Rating) => void = () => {};
 
   let ratingContainer: HTMLDivElement;
 
   function handleRating(r: Rating) {
-    console.log("handleRating", rating);
     resetRating();
     rating = r;
     const el = ratingContainer.querySelector(`#s${r}`);
-    if (el) el.classList.add("lit");
+    if (el) {
+      el.classList.add("lit");
+      onRatingChanged(rating);
+    }
   }
 
   function resetRating() {
@@ -36,7 +39,6 @@
   }
 
   onMount(() => {
-    console.log("onmount", rating);
     if (typeof rating === "number") handleRating(rating);
   });
 </script>
