@@ -14,7 +14,7 @@
     let obj = {} as WatchedUpdateRequest;
     if (status) obj.status = status;
     if (rating) obj.rating = rating;
-    req(`/watched/${id}`, "PUT", obj);
+    return req(`/watched/${id}`, "PUT", obj);
   }
 </script>
 
@@ -32,14 +32,24 @@
         rating={w.rating}
         status={w.status}
         onBtnClicked={(type) => {
-          updateWatched(w.id, type);
-          w.status = type;
-          $watchedList = watched;
+          updateWatched(w.id, type)
+            ?.then(() => {
+              w.status = type;
+              $watchedList = watched;
+            })
+            .catch((err) => {
+              console.error(err);
+            });
         }}
         onRatingChanged={(rating) => {
-          updateWatched(w.id, undefined, rating);
-          w.rating = rating;
-          $watchedList = watched;
+          updateWatched(w.id, undefined, rating)
+            ?.then(() => {
+              w.rating = rating;
+              $watchedList = watched;
+            })
+            .catch((err) => {
+              console.error(err);
+            });
         }}
       />
     {/each}

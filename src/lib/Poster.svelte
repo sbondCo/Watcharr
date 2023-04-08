@@ -14,38 +14,14 @@
 
   let ratingContainer: HTMLDivElement;
 
-  function handleRating(r: Rating) {
-    resetRating();
-    rating = r;
-    const el = ratingContainer.querySelector(`#s${r}`);
-    if (el) {
-      el.classList.add("lit");
-    }
-  }
-
-  function resetRating() {
-    let ratingsContainer = document.getElementById("rating-container");
-    const stars = ratingsContainer?.querySelectorAll("button");
-    if (!stars) return;
-    for (let i = 0; i < stars.length; i++) {
-      stars[i].classList.remove("lit");
-    }
-    rating = undefined;
-  }
-
   function handleStarClick(r: Rating) {
     if (r == rating) return;
-    handleRating(r);
-    onRatingChanged(rating);
+    onRatingChanged(r);
   }
 
   function wBtnClicked(type: WatchedStatus) {
     onBtnClicked(type, rating);
   }
-
-  onMount(() => {
-    if (typeof rating === "number") handleRating(rating);
-  });
 </script>
 
 <li>
@@ -56,11 +32,21 @@
       <span>{desc}</span>
 
       <div id="rating-container" class="rating" bind:this={ratingContainer}>
-        <button class="plain" id="s5" on:click={() => handleStarClick(5)}>*</button>
-        <button class="plain" id="s4" on:click={() => handleStarClick(4)}>*</button>
-        <button class="plain" id="s3" on:click={() => handleStarClick(3)}>*</button>
-        <button class="plain" id="s2" on:click={() => handleStarClick(2)}>*</button>
-        <button class="plain" id="s1" on:click={() => handleStarClick(1)}>*</button>
+        <button class="plain{rating === 5 ? ' lit' : ''}" on:click={() => handleStarClick(5)}
+          >*</button
+        >
+        <button class="plain{rating === 4 ? ' lit' : ''}" on:click={() => handleStarClick(4)}
+          >*</button
+        >
+        <button class="plain{rating === 3 ? ' lit' : ''}" on:click={() => handleStarClick(3)}
+          >*</button
+        >
+        <button class="plain{rating === 2 ? ' lit' : ''}" on:click={() => handleStarClick(2)}
+          >*</button
+        >
+        <button class="plain{rating === 1 ? ' lit' : ''}" on:click={() => handleStarClick(1)}
+          >*</button
+        >
       </div>
 
       <div class="btn-container">
