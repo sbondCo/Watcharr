@@ -52,13 +52,13 @@ func getWatched(db *gorm.DB, userId uint) []Watched {
 	return *watched
 }
 
-func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
+func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error) {
 	println(ar.ContentType, ar.ContentID)
 
 	resp, err := tmdbAPIRequest("/"+string(ar.ContentType)+"/"+strconv.Itoa(ar.ContentID), map[string]string{})
 	if err != nil {
 		fmt.Printf("addWatched tmdb api request failed: %+v", err)
-		return false, errors.New("failed to find requested media")
+		return Watched{}, errors.New("failed to find requested media")
 	}
 
 	var (
@@ -73,7 +73,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 		err = json.Unmarshal([]byte(resp), &content)
 		if err != nil {
 			println("Failed to unmarshal movie details:", err)
-			return false, errors.New("failed to process movie details response")
+			return Watched{}, errors.New("failed to process movie details response")
 		}
 		id = content.ID
 		overview = content.Overview
@@ -84,7 +84,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 		err = json.Unmarshal(resp, &content)
 		if err != nil {
 			println("Failed to unmarshal show details:", err)
-			return false, errors.New("failed to process show details response")
+			return Watched{}, errors.New("failed to process show details response")
 		}
 		id = content.ID
 		overview = content.Overview
@@ -95,14 +95,15 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 	println("id, etc:", id, title, overview, posterPath, "<-- end")
 	if id == 0 || title == "" {
 		println("addWatched, returned content missing id or title!", id, title)
-		return false, errors.New("content response missing id or title")
+		return Watched{}, errors.New("content response missing id or title")
 	}
-	res := db.Create(&Content{ID: id, Title: title, Overview: overview, PosterPath: posterPath})
+	content := Content{ID: id, Title: title, Overview: overview, PosterPath: posterPath}
+	res := db.Create(&content)
 	if res.Error != nil {
 		// Error if anything but unique contraint error
 		if !strings.Contains(res.Error.Error(), "UNIQUE") {
 			println("Error creating content in database:", res.Error.Error())
-			return false, errors.New("failed to cache content in database")
+			return Watched{}, errors.New("failed to cache content in database")
 		}
 	}
 	// If row created, download the image
@@ -121,15 +122,16 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (bool, error) {
 	res = db.Create(&watched)
 	if res.Error != nil {
 		if strings.Contains(res.Error.Error(), "UNIQUE") {
-			return false, errors.New("content already on watched list")
+			return Watched{}, errors.New("content already on watched list")
 		}
 		println("Error adding watched content to database:", res.Error.Error())
-		return false, errors.New("failed adding content to database")
+		return Watched{}, errors.New("failed adding content to database")
 	}
 	println(res.RowsAffected)
 	fmt.Printf("%+v\n", watched)
 
-	return true, nil
+	watched.Content = content
+	return watched, nil
 }
 
 func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (bool, error) {
