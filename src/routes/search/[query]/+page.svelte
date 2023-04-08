@@ -3,13 +3,13 @@
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
   import { watchedList } from "@/store";
-  import type { ContentType, Rating, WatchedAddRequest, WatchedStatus } from "@/types";
+  import type { ContentType, Rating, Watched, WatchedAddRequest, WatchedStatus } from "@/types";
   import { get } from "svelte/store";
   import type { ContentSearch } from "./+page";
 
   export let data: ContentSearch;
 
-  let wList = get(watchedList);
+  $: wList = $watchedList;
 
   function addWatched(
     contentId: number,
@@ -22,12 +22,23 @@
       contentType,
       rating,
       status
-    } as WatchedAddRequest);
+    } as WatchedAddRequest)
+      .then((resp) => {
+        console.log("Added watched:", resp.data);
+        $watchedList.push(resp.data as Watched);
+        $watchedList = $watchedList;
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }
 
-  function getWatchedDependedProps(wid: number) {
-    const wel = wList.find((wl) => wl.content.id === wid);
+  // Not passing wList from #each loop caused it not to have reactivity.
+  // Passing it through must allow it to recognize it as a dependency?
+  function getWatchedDependedProps(wid: number, list: Watched[]) {
+    const wel = list.find((wl) => wl.content.id === wid);
     if (!wel) return {};
+    console.log(wel.content.title, wel.status, wel.rating);
     return {
       status: wel.status,
       rating: wel.rating
@@ -46,7 +57,7 @@
       title={w.title ?? w.name}
       desc={w.overview}
       onBtnClicked={(t, r) => addWatched(w.id, w.title ? "movie" : "tv", t, r)}
-      {...getWatchedDependedProps(w.id)}
+      {...getWatchedDependedProps(w.id, wList)}
     />
   {/each}
 </PosterList>
