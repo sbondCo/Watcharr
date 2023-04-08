@@ -5,9 +5,7 @@
   import { watchedList } from "@/store";
   import type { Rating, Watched, WatchedStatus, WatchedUpdateRequest } from "@/types";
 
-  let watched: Watched[];
-
-  watchedList.subscribe((wl) => (watched = wl));
+  $: watched = $watchedList;
 
   function updateWatched(id: number, status?: WatchedStatus, rating?: Rating) {
     if (!status && !rating) return;
