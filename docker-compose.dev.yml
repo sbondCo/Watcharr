@@ -1,0 +1,13 @@
+version: "3"
+
+# To test prod
+services:
+  watcharr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: watcharr
+    ports:
+      - 3000:3000
+    # volumes:
+    #   - ./data:/app/data
