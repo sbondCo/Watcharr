@@ -4,7 +4,6 @@
   import PosterList from "@/lib/PosterList.svelte";
   import { watchedList } from "@/store";
   import type { ContentType, Rating, Watched, WatchedAddRequest, WatchedStatus } from "@/types";
-  import { get } from "svelte/store";
   import type { ContentSearch } from "./+page";
 
   export let data: ContentSearch;
