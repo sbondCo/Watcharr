@@ -8,13 +8,13 @@ COPY ./static ./static
 
 RUN npm install && npm run build
 
-# Backend
-
-
 # Production
 FROM node:19 AS runner
 
-COPY --from=ui /app/package*.json /app/build /.
+WORKDIR /app
+COPY --from=ui /app/package*.json /app/build ./
 RUN npm ci --only=production
+
 EXPOSE 3000
+
 CMD ["node", "index.js"]

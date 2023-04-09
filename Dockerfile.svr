@@ -1,0 +1,17 @@
+# Backend
+FROM golang:1.20 AS server
+
+WORKDIR /server
+COPY server/*.go server/go.* ./
+
+RUN go build
+
+# Production
+FROM scratch AS runner
+
+WORKDIR /server
+COPY --from=server /server/Watcharr ./
+
+EXPOSE 3080
+
+CMD ["./Watcharr"]

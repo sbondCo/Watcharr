@@ -5,9 +5,19 @@ services:
   watcharr:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.ui
     container_name: watcharr
     ports:
       - 3000:3000
+    depends_on:
+      - watcharr-server
+
+  watcharr-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.svr
+    container_name: watcharr-server
+    ports:
+      - 3080:3080
     # volumes:
     #   - ./data:/app/data
