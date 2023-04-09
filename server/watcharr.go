@@ -51,7 +51,7 @@ func main() {
 	br.addWatchedRoutes()
 	br.rg.Static("/img", "./data/img")
 
-	gin.Run("localhost:3080")
+	gin.Run("0.0.0.0:3080")
 }
 
 // Ensure all required environment variables are set.

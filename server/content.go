@@ -23,6 +23,7 @@ func searchContent(query string) (TMDBSearchMultiResponse, error) {
 	resp := new(TMDBSearchMultiResponse)
 	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": "1"}, &resp)
 	if err != nil {
+		println("Failed to complete multi search request!", err.Error())
 		return TMDBSearchMultiResponse{}, errors.New("failed to complete multi search request")
 	}
 	return *resp, nil
