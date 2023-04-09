@@ -4,10 +4,10 @@ FROM golang:1.20 AS server
 WORKDIR /server
 COPY server/*.go server/go.* ./
 
-RUN go mod download && CGO_ENABLED=0 GOOS=linux go build -o ./watcharr
+RUN go mod download && GOOS=linux go build -o ./watcharr
 
 # Production
-FROM scratch AS runner
+FROM debian:11.6 AS runner
 
 COPY --from=server /server/watcharr /
 
