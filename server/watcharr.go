@@ -29,7 +29,7 @@ func main() {
 	}
 	ensureEnv()
 
-	db, err := gorm.Open(sqlite.Open("./watcharr.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("./data/watcharr.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect to database")
 	}
