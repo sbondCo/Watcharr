@@ -4,14 +4,13 @@ FROM golang:1.20 AS server
 WORKDIR /server
 COPY server/*.go server/go.* ./
 
-RUN go build
+RUN go mod download && CGO_ENABLED=0 GOOS=linux go build -o ./watcharr
 
 # Production
 FROM scratch AS runner
 
-WORKDIR /server
-COPY --from=server /server/Watcharr ./
+COPY --from=server /server/watcharr /
 
 EXPOSE 3080
 
-CMD ["./Watcharr"]
+CMD ["/watcharr"]
