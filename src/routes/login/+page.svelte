@@ -48,7 +48,7 @@
       <input type="text" name="username" placeholder="Username" />
 
       <label for="password">Password</label>
-      <input type="text" name="password" placeholder="Password" />
+      <input type="password" name="password" placeholder="Password" />
 
       <button type="submit">
         {#if login}
