@@ -19,8 +19,8 @@ import (
 
 type User struct {
 	GormModel
-	Username string `gorm:"notnull,unique" json:"username" binding:"required"`
-	Password string `gorm:"notnull" json:"password" binding:"required"`
+	Username string `gorm:"unique;not null" json:"username" binding:"required"`
+	Password string `gorm:"not null" json:"password" binding:"required"`
 	Watched  []Watched
 }
 
@@ -88,7 +88,7 @@ func register(user *User, db *gorm.DB) (AuthResponse, error) {
 	if res.Error != nil {
 		// If error is because unique contraint failed.. user already exists
 		if strings.Contains(res.Error.Error(), "UNIQUE") {
-			println(err.Error())
+			println("Unique contraint fail:", res.Error.Error())
 			return AuthResponse{}, errors.New("User already exists")
 		}
 		panic(err)

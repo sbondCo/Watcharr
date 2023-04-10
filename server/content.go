@@ -13,7 +13,7 @@ const (
 
 // For storing cached content, so we can serve the basic local data for watched list to work
 type Content struct {
-	ID         int    `json:"id" gorm:"primaryKey,unique"`
+	ID         int    `json:"id" gorm:"primaryKey"`
 	Title      string `json:"title"`
 	PosterPath string `json:"poster_path"`
 	Overview   string `json:"overview"`
