@@ -1,5 +1,6 @@
 import { goto } from "$app/navigation";
 import axios from "axios";
+const { MODE } = import.meta.env;
 
 export default async function req(ep: string, method: "GET" | "POST" | "PUT", data?: object) {
   const token = localStorage.getItem("token");
@@ -7,7 +8,7 @@ export default async function req(ep: string, method: "GET" | "POST" | "PUT", da
     goto("/login?again=1");
   }
   return await axios({
-    baseURL: "http://127.0.0.1:3080",
+    baseURL: MODE === "development" ? "http://127.0.0.1:3080" : "/api",
     url: ep,
     method,
     headers: {
