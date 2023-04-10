@@ -1,0 +1,5 @@
+0.0.0.0:80 {
+  reverse_proxy 172.17.0.1:3000
+  # reverse_proxy /* 127.0.0.1:3000
+  # reverse_proxy /api/* 127.0.0.1:3080
+}

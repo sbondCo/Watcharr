@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  # Watcharr API
+  watcharr:
+    image: ghcr.io/sbondco/watcharr:latest
+    container_name: watcharr
+    ports:
+      - 3080:3080
+    volumes:
+      - ./server/.env:/.env
+      - ./container_data:/data
+
+  # Watcharr Frontend
+  watcharr-ui:
+    image: ghcr.io/sbondco/watcharr-ui:latest
+    container_name: watcharr-ui
+    ports:
+      - 3000:3000
+    depends_on:
+      - watcharr
+  
+  caddy:
+    image: caddy:2.6
+    container_name: watcharr-caddy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
