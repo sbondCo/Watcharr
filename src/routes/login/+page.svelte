@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import axios from "axios";
+  import req from "@/lib/api";
 
   let error: string;
   let login = true;
@@ -8,14 +8,9 @@
   function handleLogin(ev: SubmitEvent) {
     const fd = new FormData(ev.target! as HTMLFormElement);
 
-    axios({
-      baseURL: "http://127.0.0.1:3080/auth",
-      url: login ? "/" : "/register",
-      method: "POST",
-      data: {
-        username: fd.get("username"),
-        password: fd.get("password")
-      }
+    req(`/auth${login ? "/" : "/register"}`, "POST", {
+      username: fd.get("username"),
+      password: fd.get("password")
     })
       .then((resp) => {
         if (resp.data?.token) {
