@@ -1,0 +1,55 @@
+name: Release Watcharr Containers
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  release-images:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: true
+      # Run for each dockerfile (one for server and one for ui images)
+      matrix:
+        include:
+          - dockerfile: ./Dockerfile.svr
+            image: ${{ env.REGISTRY }}/${{ github.repository }}
+          - dockerfile: ./Dockerfile.ui
+            image: ${{ env.REGISTRY }}/${{ github.repository }}-ui
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ matrix.image }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
