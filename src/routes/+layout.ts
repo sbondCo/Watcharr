@@ -2,9 +2,6 @@ export const prerender = false;
 export const ssr = false;
 export const csr = true;
 
-import { error } from "@sveltejs/kit";
-import type { LayoutLoad } from "./$types";
-import { watchedList } from "@/store";
 import { goto } from "$app/navigation";
 import axios from "axios";
 const { MODE } = import.meta.env;
@@ -40,18 +37,7 @@ axios.interceptors.response.use(
     if (error.response?.status === 401) {
       console.error("Recieved 401 response, going to login.");
       goto("/login?again=1");
-      return;
     }
     return Promise.reject(error);
   }
 );
-
-export const load = (async () => {
-  try {
-    const w = await axios.get("/watched");
-    watchedList.update((wl) => (wl = w.data));
-  } catch (err) {
-    console.error("Error loading watched content:", err);
-    error(500, "Error loading watched content!");
-  }
-}) satisfies LayoutLoad;

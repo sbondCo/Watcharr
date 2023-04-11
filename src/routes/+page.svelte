@@ -2,7 +2,7 @@
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
   import { watchedList } from "@/store";
-  import type { Rating, Watched, WatchedStatus, WatchedUpdateRequest } from "@/types";
+  import type { Rating, WatchedStatus, WatchedUpdateRequest } from "@/types";
   import axios from "axios";
 
   $: watched = $watchedList;
@@ -21,7 +21,7 @@
 </svelte:head>
 
 <PosterList>
-  {#if watched && watched.length > 0}
+  {#if watched?.length > 0}
     {#each watched as w (w.id)}
       <Poster
         poster={"http://localhost:3080/img" + w.content.poster_path}
