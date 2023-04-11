@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Rating, WatchedStatus } from "@/types";
-  import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
 
   // export let content: Content;
@@ -32,21 +31,11 @@
       <span>{desc}</span>
 
       <div id="rating-container" class="rating" bind:this={ratingContainer}>
-        <button class="plain{rating === 5 ? ' lit' : ''}" on:click={() => handleStarClick(5)}
-          >*</button
-        >
-        <button class="plain{rating === 4 ? ' lit' : ''}" on:click={() => handleStarClick(4)}
-          >*</button
-        >
-        <button class="plain{rating === 3 ? ' lit' : ''}" on:click={() => handleStarClick(3)}
-          >*</button
-        >
-        <button class="plain{rating === 2 ? ' lit' : ''}" on:click={() => handleStarClick(2)}
-          >*</button
-        >
-        <button class="plain{rating === 1 ? ' lit' : ''}" on:click={() => handleStarClick(1)}
-          >*</button
-        >
+        <button class="plain{rating === 5 ? ' lit' : ''}" on:click={() => handleStarClick(5)}>*</button>
+        <button class="plain{rating === 4 ? ' lit' : ''}" on:click={() => handleStarClick(4)}>*</button>
+        <button class="plain{rating === 3 ? ' lit' : ''}" on:click={() => handleStarClick(3)}>*</button>
+        <button class="plain{rating === 2 ? ' lit' : ''}" on:click={() => handleStarClick(2)}>*</button>
+        <button class="plain{rating === 1 ? ' lit' : ''}" on:click={() => handleStarClick(1)}>*</button>
       </div>
 
       <div class="btn-container">
