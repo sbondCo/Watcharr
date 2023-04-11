@@ -25,9 +25,15 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		panic("Failed to load vars from .env file")
+		log.Fatal("Failed to load vars from .env file:", err)
 	}
 	ensureEnv()
+
+	// Ensure data dir exists
+	err = ensureDirExists("./data")
+	if err != nil {
+		log.Fatal("Failed to create data dir:", err)
+	}
 
 	db, err := gorm.Open(sqlite.Open("./data/watcharr.db"), &gorm.Config{})
 	if err != nil {
@@ -59,4 +65,12 @@ func ensureEnv() {
 	if os.Getenv("JWT_SECRET") == "" {
 		log.Fatal("JWT_SECRET env var missing!")
 	}
+}
+
+func ensureDirExists(dir string) error {
+	err := os.MkdirAll(dir, 0764)
+	if err != nil {
+		return err
+	}
+	return nil
 }
