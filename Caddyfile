@@ -1,5 +1,9 @@
-0.0.0.0:80 {
+localhost:80 {
+  # Reverse proxy for frontend
   reverse_proxy 172.17.0.1:3000
-  # reverse_proxy /* 127.0.0.1:3000
-  # reverse_proxy /api/* 127.0.0.1:3080
+
+  # Route requests to /api/ to backend
+  handle_path /api/* {
+    reverse_proxy 172.17.0.1:3080
+  }
 }
