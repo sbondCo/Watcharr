@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { Content } from "@/types";
-import req from "@/lib/api";
+import axios from "axios";
 
 export interface ContentSearch {
   page: number;
@@ -40,7 +40,7 @@ export async function load({ params }) {
   }
 
   try {
-    return (await req(`/content/${query}`, "GET")).data as ContentSearch;
+    return (await axios.get(`/content/${query}`)).data as ContentSearch;
   } catch (err: any) {
     if (err.response) {
       error(500, err.response.data.error);

@@ -1,9 +1,9 @@
 <script lang="ts">
-  import req from "@/lib/api";
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
   import { watchedList } from "@/store";
   import type { Rating, Watched, WatchedStatus, WatchedUpdateRequest } from "@/types";
+  import axios from "axios";
 
   $: watched = $watchedList;
 
@@ -12,7 +12,7 @@
     let obj = {} as WatchedUpdateRequest;
     if (status) obj.status = status;
     if (rating) obj.rating = rating;
-    return req(`/watched/${id}`, "PUT", obj);
+    return axios.put(`/watched/${id}`, obj);
   }
 </script>
 

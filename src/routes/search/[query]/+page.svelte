@@ -1,10 +1,10 @@
 <script lang="ts">
-  import req from "@/lib/api";
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
   import { watchedList } from "@/store";
   import type { ContentType, Rating, Watched, WatchedAddRequest, WatchedStatus } from "@/types";
   import type { ContentSearch } from "./+page";
+  import axios from "axios";
 
   export let data: ContentSearch;
 
@@ -16,12 +16,13 @@
     status: WatchedStatus,
     rating: Rating
   ) {
-    req("/watched", "POST", {
-      contentId,
-      contentType,
-      rating,
-      status
-    } as WatchedAddRequest)
+    axios
+      .post("/watched", {
+        contentId,
+        contentType,
+        rating,
+        status
+      } as WatchedAddRequest)
       .then((resp) => {
         console.log("Added watched:", resp.data);
         $watchedList.push(resp.data as Watched);
@@ -50,13 +51,17 @@
 </svelte:head>
 
 <PosterList>
-  {#each data.results as w (w.id)}
-    <Poster
-      poster={"https://image.tmdb.org/t/p/w500" + w.poster_path}
-      title={w.title ?? w.name}
-      desc={w.overview}
-      onBtnClicked={(t, r) => addWatched(w.id, w.title ? "movie" : "tv", t, r)}
-      {...getWatchedDependedProps(w.id, wList)}
-    />
-  {/each}
+  {#if data?.results?.length > 0}
+    {#each data.results as w (w.id)}
+      <Poster
+        poster={"https://image.tmdb.org/t/p/w500" + w.poster_path}
+        title={w.title ?? w.name}
+        desc={w.overview}
+        onBtnClicked={(t, r) => addWatched(w.id, w.title ? "movie" : "tv", t, r)}
+        {...getWatchedDependedProps(w.id, wList)}
+      />
+    {/each}
+  {:else}
+    No Search Results!
+  {/if}
 </PosterList>
