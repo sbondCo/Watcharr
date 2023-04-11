@@ -4,6 +4,9 @@ export const csr = true;
 
 import { goto } from "$app/navigation";
 import axios from "axios";
+import { watchedList } from "@/store";
+import { error } from "@sveltejs/kit";
+import type { LayoutLoad } from "./$types";
 const { MODE } = import.meta.env;
 
 axios.interceptors.request.use(
@@ -41,3 +44,20 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const load = (async () => {
+  try {
+    console.log("load");
+    if (localStorage.getItem("token")) {
+      const w = await axios.get("/watched");
+      if (w?.data?.length > 0) {
+        watchedList.update((wl) => (wl = w.data));
+      }
+    } else {
+      goto("/login?again=1");
+    }
+  } catch (err) {
+    console.error("Error loading watched content:", err);
+    error(500, "Error loading watched content!");
+  }
+}) satisfies LayoutLoad;

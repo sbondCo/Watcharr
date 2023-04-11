@@ -1,34 +1,3 @@
-<script lang="ts">
-  import { goto } from "$app/navigation";
-
-  let searchTimeout: number;
-
-  function handleProfileClick() {
-    if (!localStorage.getItem("token")) {
-      goto("/login");
-    }
-  }
-
-  function handleSearch(ev: Event) {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const target = ev.target as HTMLInputElement;
-      const query = target?.value;
-      if (query) {
-        goto(`/search/${query}`).then(() => {
-          target?.focus();
-        });
-      }
-    }, 400);
-  }
-</script>
-
-<nav>
-  <a href="/"><h1>Watcharr</h1></a>
-  <input type="text" placeholder="Search" on:keydown={handleSearch} />
-  <button class="plain" on:click={handleProfileClick}>:)</button>
-</nav>
-
 <slot />
 
 <style lang="scss">
@@ -99,38 +68,5 @@
 
   :global(button.not-active) {
     opacity: 0.5;
-  }
-
-  nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 10px 20px 28px 20px;
-    position: relative;
-
-    a {
-      text-decoration: none;
-    }
-
-    h1 {
-      color: white;
-      -webkit-text-stroke: 1.5px black;
-      font-size: 35px;
-    }
-
-    input {
-      width: 250px;
-      font-weight: bold;
-      text-align: center;
-      box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
-    }
-
-    button {
-      font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont;
-      font-size: 25px;
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-      cursor: pointer;
-    }
   }
 </style>
