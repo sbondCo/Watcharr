@@ -2,7 +2,6 @@
   import type { Rating, WatchedStatus } from "@/types";
   import Icon from "./Icon.svelte";
 
-  // export let content: Content;
   export let poster: string | undefined;
   export let title: string | undefined;
   export let desc: string | undefined;

@@ -1,19 +1,10 @@
 <script lang="ts">
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
+  import { updateWatched } from "@/lib/api";
   import { watchedList } from "@/store";
-  import type { Rating, WatchedStatus, WatchedUpdateRequest } from "@/types";
-  import axios from "axios";
 
   $: watched = $watchedList;
-
-  function updateWatched(id: number, status?: WatchedStatus, rating?: Rating) {
-    if (!status && !rating) return;
-    let obj = {} as WatchedUpdateRequest;
-    if (status) obj.status = status;
-    if (rating) obj.rating = rating;
-    return axios.put(`/watched/${id}`, obj);
-  }
 </script>
 
 <svelte:head>

@@ -5,6 +5,7 @@
   import type { ContentType, Rating, Watched, WatchedAddRequest, WatchedStatus } from "@/types";
   import type { ContentSearch } from "./+page";
   import axios from "axios";
+  import { updateWatched } from "@/lib/api";
 
   export let data: ContentSearch;
 
@@ -13,9 +14,24 @@
   function addWatched(
     contentId: number,
     contentType: ContentType,
-    status: WatchedStatus,
-    rating: Rating
+    status?: WatchedStatus,
+    rating?: Rating
   ) {
+    // If item is already in watched store, run update request instead
+    const wEntry = wList.find((w) => w.content.id === contentId);
+    if (wEntry?.id) {
+      updateWatched(wEntry.id, status, rating)
+        ?.then(() => {
+          if (status) wEntry.status = status;
+          wEntry.rating = rating;
+          $watchedList = wList;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+      return;
+    }
+    // Add new watched item
     axios
       .post("/watched", {
         contentId,
@@ -58,6 +74,7 @@
         title={w.title ?? w.name}
         desc={w.overview}
         onBtnClicked={(t, r) => addWatched(w.id, w.title ? "movie" : "tv", t, r)}
+        onRatingChanged={(r) => addWatched(w.id, w.title ? "movie" : "tv", undefined, r)}
         {...getWatchedDependedProps(w.id, wList)}
       />
     {/each}

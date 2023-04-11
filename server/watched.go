@@ -116,7 +116,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 
 	// Create watched entry in db
 	if ar.Status == "" {
-		ar.Status = FINISHED
+		ar.Status = WATCHING
 	}
 	watched := Watched{Status: ar.Status, Rating: ar.Rating, UserID: userId, ContentID: id}
 	res = db.Create(&watched)
