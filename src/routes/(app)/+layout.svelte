@@ -2,10 +2,13 @@
   import { goto } from "$app/navigation";
 
   let searchTimeout: number;
+  let subMenuShown = false;
 
   function handleProfileClick() {
     if (!localStorage.getItem("token")) {
       goto("/login");
+    } else {
+      subMenuShown = !subMenuShown;
     }
   }
 
@@ -21,12 +24,23 @@
       }
     }, 400);
   }
+
+  function logout() {
+    localStorage.removeItem("token");
+    goto("/login")
+  }
 </script>
 
 <nav>
   <a href="/"><h1>Watcharr</h1></a>
   <input type="text" placeholder="Search" on:keydown={handleSearch} />
-  <button class="plain" on:click={handleProfileClick}>:)</button>
+  <button class="plain face" on:click={handleProfileClick}>:)</button>
+  {#if subMenuShown}
+  <div>
+    <button class="plain" style="text-decoration: line-through;">Profile</button>
+    <button class="plain" on:click={() => logout()}>Logout</button>
+  </div>
+  {/if}
 </nav>
 
 <slot />
@@ -56,12 +70,38 @@
       box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
     }
 
-    button {
+    button.face {
       font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont;
       font-size: 25px;
       writing-mode: vertical-rl;
       text-orientation: mixed;
       cursor: pointer;
+    }
+
+    div {
+      display: flex;
+      flex-flow: column;
+      position: absolute;
+      right: 0;
+      top: 55px;
+      padding: 10px;
+      border: 3px solid black;
+      border-radius: 10px;
+      background-color: white;
+      list-style: none;
+      z-index: 50;
+
+      button {
+        font-size: 14px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: background-color 200ms ease;
+
+        &:hover {
+          background-color: rgba(0, 0, 0, 1);
+          color: white;
+        }
+      }
     }
   }
 </style>
