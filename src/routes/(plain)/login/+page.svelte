@@ -1,9 +1,9 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from '$app/stores'
-  import axios from "axios";
-  import { afterUpdate } from "svelte";
-
+  import { noAuthAxios } from "@/lib/api";
+  import { onMount, afterUpdate } from "svelte";
+  
   let error: string;
   let login = true;
 
@@ -16,7 +16,7 @@
   function handleLogin(ev: SubmitEvent) {
     const fd = new FormData(ev.target! as HTMLFormElement);
 
-    axios
+    noAuthAxios
       .post(`/auth${login ? "/" : "/register"}`, {
         username: fd.get("username"),
         password: fd.get("password")
