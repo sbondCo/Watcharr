@@ -112,6 +112,20 @@ func (b *BaseRouter) addAuthRoutes() {
 		c.Status(400)
 	})
 
+	auth.POST("/jellyfin", func(c *gin.Context) {
+		var user User
+		if c.ShouldBindJSON(&user) == nil {
+			response, err := loginJellyfin(&user, b.db)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.Status(400)
+	})
+
 	// Register
 	auth.POST("/register", func(c *gin.Context) {
 		var user User

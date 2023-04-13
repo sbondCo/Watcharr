@@ -1,12 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -17,11 +22,37 @@ import (
 	"gorm.io/gorm"
 )
 
+type UserType uint8
+
+var (
+	// Assume watcharr user if none of these...
+	JELLYFIN_USER UserType = 1
+)
+
+// uniqueIndex applied between Username and UserType, so same usernames can exist, but only with different types.
+// This is incase different users with same name from different services try to signup.
 type User struct {
 	GormModel
-	Username string `gorm:"unique;not null" json:"username" binding:"required"`
+	Username string `gorm:"uniqueIndex;not null" json:"username" binding:"required"`
 	Password string `gorm:"not null" json:"password" binding:"required"`
-	Watched  []Watched
+	// The type of user/which auth service they originate from.
+	// Empty if from Watcharr, or the name of the service (eg. jellyfin)
+	Type UserType `gorm:"uniqueIndex" json:"type"`
+	// ID of user from the third party service, this will be used purely for lookup of user at signin.
+	ThirdPartyID string `json:"-"`
+	Watched      []Watched
+}
+
+type JellyfinAuth struct {
+	Username string `json:"Username"`
+	Pw       string `json:"Pw"`
+}
+
+type JellyfinAuthResponse struct {
+	User struct {
+		ID   string `json:"Id"`
+		Name string `json:"Name"`
+	} `json:"User"`
 }
 
 type AuthResponse struct {
@@ -112,7 +143,7 @@ func register(user *User, db *gorm.DB) (AuthResponse, error) {
 func login(user *User, db *gorm.DB) (AuthResponse, error) {
 	fmt.Println("Logging in", user.Username)
 	dbUser := new(User)
-	res := db.Where("username = ?", user.Username).Take(&dbUser)
+	res := db.Where("username = ? AND (type IS NULL OR type = 0)", user.Username).Take(&dbUser)
 	if res.Error != nil {
 		fmt.Println("Failed to select user from database for login:", res.Error)
 		return AuthResponse{}, errors.New("User does not exist")
@@ -126,6 +157,88 @@ func login(user *User, db *gorm.DB) (AuthResponse, error) {
 	if !match {
 		fmt.Println("User failed to provide correct password for login:", match)
 		return AuthResponse{}, errors.New("incorrect details")
+	}
+
+	token, err := signJWT(dbUser)
+	if err != nil {
+		fmt.Println("Failed to sign new jwt:", err)
+		return AuthResponse{}, errors.New("failed to get auth token")
+	}
+	return AuthResponse{Token: token}, nil
+}
+
+func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
+	jellyfinHost := os.Getenv("JELLYFIN_HOST")
+	if jellyfinHost == "" {
+		println("Request made to login via Jellyfin, but JELLYFIN_HOST environment variable is not set.")
+		return AuthResponse{}, errors.New("jellyfin login not enabled")
+	}
+
+	base, err := url.Parse(jellyfinHost + "/Users/AuthenticateByName")
+	if err != nil {
+		println("Failed to parse AuthenticateByName api endpoint url:", err.Error())
+		return AuthResponse{}, errors.New("failed to parse api uri")
+	}
+
+	// Marshall struct as json
+	usrJSON, err := json.Marshal(JellyfinAuth{Username: user.Username, Pw: user.Password})
+	if err != nil {
+		println("Error marshalling JellyfinAuth JSON", err.Error())
+		return AuthResponse{}, errors.New("failed to marshal json")
+	}
+	// Run auth request
+	// res, err := http.Post(base.String(), "application/json", bytes.NewBuffer(usrJSON))
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", base.String(), bytes.NewBuffer(usrJSON))
+	if err != nil {
+		println("creating request to jellyfin for auth failed:", err)
+		return AuthResponse{}, errors.New("request failed")
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-Emby-Authorization", "MediaBrowser Client=\"Watcharr\", Device=\"HTTP\", DeviceId=\"WatcharrFor"+user.Username+"\", Version=\"10.8.0\"")
+	res, err := client.Do(req)
+	if err != nil {
+		println("making request to jellyfin for auth failed:", err)
+		return AuthResponse{}, errors.New("request failed")
+	}
+	body, err := io.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		println("Error reading response", err.Error())
+		return AuthResponse{}, err
+	}
+	if res.StatusCode != 200 {
+		println("Jellyfin auth non 200 status code:", res.StatusCode, string(body))
+		return AuthResponse{}, errors.New("incorrect details")
+	}
+	// Process auth response
+	resp := new(JellyfinAuthResponse)
+	err = json.Unmarshal([]byte(body), &resp)
+	if err != nil {
+		return AuthResponse{}, errors.New("failed to process response")
+	}
+	if resp.User.ID == "" {
+		return AuthResponse{}, errors.New("jellyfin returned empty user id")
+	}
+
+	dbUser := new(User)
+	dbRes := db.Where("third_party_id = ?", resp.User.ID).Take(&dbUser)
+	if dbRes.Error != nil {
+		if errors.Is(dbRes.Error, gorm.ErrRecordNotFound) {
+			// Record not found, so we should create the user
+			// dbUser will be empty, so we can just reuse it for this purpose.
+			dbUser.ThirdPartyID = resp.User.ID
+			dbUser.Username = resp.User.Name
+			dbUser.Type = JELLYFIN_USER
+
+			dbRes = db.Create(&dbUser)
+			if dbRes.Error != nil {
+				println("Failed to create new user in db from jellyfin response:", err.Error())
+				return AuthResponse{}, errors.New("failed to create new user from jellyfin")
+			}
+		} else {
+			return AuthResponse{}, errors.New("error locating user in db")
+		}
 	}
 
 	token, err := signJWT(dbUser)
