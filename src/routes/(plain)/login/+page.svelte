@@ -1,9 +1,17 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { page } from '$app/stores'
   import axios from "axios";
+  import { afterUpdate } from "svelte";
 
   let error: string;
   let login = true;
+
+  afterUpdate(() => {
+    if($page.url.searchParams.get('again')) {
+      error = "Please Login Again"
+    }
+  });
 
   function handleLogin(ev: SubmitEvent) {
     const fd = new FormData(ev.target! as HTMLFormElement);
