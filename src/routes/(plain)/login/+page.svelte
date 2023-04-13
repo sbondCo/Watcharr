@@ -7,6 +7,12 @@
   let error: string;
   let login = true;
 
+  onMount(() => {
+    if (localStorage.getItem("token")) {
+      goto("/");
+    }
+  })
+
   afterUpdate(() => {
     if($page.url.searchParams.get('again')) {
       error = "Please Login Again"

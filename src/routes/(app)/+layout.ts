@@ -39,6 +39,7 @@ axios.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       console.error("Recieved 401 response, going to login.");
+      localStorage.removeItem("token");
       goto("/login?again=1");
     }
     return Promise.reject(error);
