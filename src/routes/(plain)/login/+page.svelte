@@ -81,7 +81,7 @@
       {#if login}
         <span class="login-with" style="font-weight: bold">Login With</span>
         <div class="login-btns">
-          <button type="submit">Watcharr</button>
+          <button type="submit"><span class="watcharr">W</span>Watcharr</button>
           <button type="submit" name="jellyfin"><Icon i="jellyfin" wh={18} />Jellyfin</button>
         </div>
       {:else}
@@ -140,6 +140,12 @@
       display: flex;
       flex-flow: row;
       gap: 10px;
+
+      .watcharr {
+        font-family: "Rampart One";
+        font-size: 18px;
+        line-height: 18px;
+      }
     }
   }
 
