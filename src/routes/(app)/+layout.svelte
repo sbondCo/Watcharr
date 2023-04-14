@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { clearAllStores } from "@/store";
 
   let searchTimeout: number;
   let subMenuShown = false;
@@ -27,7 +28,8 @@
 
   function logout() {
     localStorage.removeItem("token");
-    goto("/login")
+    clearAllStores();
+    goto("/login");
   }
 </script>
 
@@ -36,10 +38,10 @@
   <input type="text" placeholder="Search" on:keydown={handleSearch} />
   <button class="plain face" on:click={handleProfileClick}>:)</button>
   {#if subMenuShown}
-  <div>
-    <button class="plain" style="text-decoration: line-through;">Profile</button>
-    <button class="plain" on:click={() => logout()}>Logout</button>
-  </div>
+    <div>
+      <button class="plain" style="text-decoration: line-through;">Profile</button>
+      <button class="plain" on:click={() => logout()}>Logout</button>
+    </div>
   {/if}
 </nav>
 
