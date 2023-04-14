@@ -15,7 +15,9 @@
   {#if watched?.length > 0}
     {#each watched as w (w.id)}
       <Poster
-        poster={"http://localhost:3080/img" + w.content.poster_path}
+        poster={w.content.poster_path
+          ? "http://localhost:3080/img" + w.content.poster_path
+          : undefined}
         title={w.content.title}
         desc={w.content.overview}
         rating={w.rating}
