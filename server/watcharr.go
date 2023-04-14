@@ -40,7 +40,10 @@ func main() {
 		panic("failed to connect to database")
 	}
 
-	db.AutoMigrate(&User{}, &Content{}, &Watched{})
+	err = db.AutoMigrate(&User{}, &Content{}, &Watched{})
+	if err != nil {
+		log.Fatal("Failed to auto migrate database:", err)
+	}
 
 	gin := gin.Default()
 	gin.Use(cors.New(cors.Config{
