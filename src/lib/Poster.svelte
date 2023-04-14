@@ -88,6 +88,12 @@
     // aspect-ratio: 2/3;
     transition: all 150ms ease-in;
 
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .inner {
       position: absolute;
       visibility: hidden;
@@ -167,9 +173,6 @@
     &:hover,
     &:global(.details-shown) {
       img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
         filter: blur(4px) grayscale(80%);
         // This makes the background very dark,
         // but atleast the text is visible.. may want to change later.
