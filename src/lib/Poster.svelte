@@ -23,33 +23,51 @@
 </script>
 
 <li>
-  <div class="container">
-    <img loading="lazy" src={poster} alt="poster" />
+  <div class={`container${!poster ? " details-shown" : ""}`}>
+    {#if poster}
+      <img loading="lazy" src={poster} alt="poster" />
+    {/if}
     <div class="inner">
       <h2>{title}</h2>
       <span>{desc}</span>
 
       <div id="rating-container" class="rating" bind:this={ratingContainer}>
-        <button class="plain{rating === 5 ? ' lit' : ''}" on:click={() => handleStarClick(5)}>*</button>
-        <button class="plain{rating === 4 ? ' lit' : ''}" on:click={() => handleStarClick(4)}>*</button>
-        <button class="plain{rating === 3 ? ' lit' : ''}" on:click={() => handleStarClick(3)}>*</button>
-        <button class="plain{rating === 2 ? ' lit' : ''}" on:click={() => handleStarClick(2)}>*</button>
-        <button class="plain{rating === 1 ? ' lit' : ''}" on:click={() => handleStarClick(1)}>*</button>
+        <button class="plain{rating === 5 ? ' lit' : ''}" on:click={() => handleStarClick(5)}
+          >*</button
+        >
+        <button class="plain{rating === 4 ? ' lit' : ''}" on:click={() => handleStarClick(4)}
+          >*</button
+        >
+        <button class="plain{rating === 3 ? ' lit' : ''}" on:click={() => handleStarClick(3)}
+          >*</button
+        >
+        <button class="plain{rating === 2 ? ' lit' : ''}" on:click={() => handleStarClick(2)}
+          >*</button
+        >
+        <button class="plain{rating === 1 ? ' lit' : ''}" on:click={() => handleStarClick(1)}
+          >*</button
+        >
       </div>
 
       <div class="btn-container">
         <button
           class={status && status !== "PLANNED" ? "not-active" : ""}
-          on:click={() => wBtnClicked("PLANNED")}><Icon i="calendar" /></button
+          on:click={() => wBtnClicked("PLANNED")}
         >
+          <Icon i="calendar" />
+        </button>
         <button
           class={status && status !== "WATCHING" ? "not-active" : ""}
-          on:click={() => wBtnClicked("WATCHING")}><Icon i="clock" /></button
+          on:click={() => wBtnClicked("WATCHING")}
         >
+          <Icon i="clock" />
+        </button>
         <button
           class={status && status !== "FINISHED" ? "not-active" : ""}
-          on:click={() => wBtnClicked("FINISHED")}><Icon i="check" /></button
+          on:click={() => wBtnClicked("FINISHED")}
         >
+          <Icon i="check" />
+        </button>
       </div>
     </div>
   </div>
@@ -65,6 +83,7 @@
     border-radius: 5px;
     width: 170px;
     height: 100%;
+    min-height: 256.367px;
     position: relative;
     // aspect-ratio: 2/3;
     transition: all 150ms ease-in;
@@ -142,11 +161,11 @@
 
     &:hover {
       transform: scale(1.3);
+      z-index: 99;
     }
 
-    &:hover {
-      z-index: 99;
-
+    &:hover,
+    &:global(.details-shown) {
       img {
         width: 100%;
         height: 100%;

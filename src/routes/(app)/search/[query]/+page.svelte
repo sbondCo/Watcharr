@@ -70,7 +70,7 @@
   {#if data?.results?.length > 0}
     {#each data.results as w (w.id)}
       <Poster
-        poster={"https://image.tmdb.org/t/p/w500" + w.poster_path}
+        poster={w.poster_path ? "https://image.tmdb.org/t/p/w500" + w.poster_path : undefined}
         title={w.title ?? w.name}
         desc={w.overview}
         onBtnClicked={(t, r) => addWatched(w.id, w.title ? "movie" : "tv", t, r)}
