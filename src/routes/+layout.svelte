@@ -45,6 +45,7 @@
     &:focus-visible {
       background-color: black;
       color: white;
+      fill: white;
       opacity: 1;
     }
   }

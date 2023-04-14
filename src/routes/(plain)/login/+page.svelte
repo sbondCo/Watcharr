@@ -1,9 +1,10 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { page } from '$app/stores'
+  import { page } from "$app/stores";
+  import Icon from "@/lib/Icon.svelte";
   import { noAuthAxios } from "@/lib/api";
   import { onMount, afterUpdate } from "svelte";
-  
+
   let error: string;
   let login = true;
 
@@ -11,19 +12,31 @@
     if (localStorage.getItem("token")) {
       goto("/");
     }
-  })
+  });
 
   afterUpdate(() => {
-    if($page.url.searchParams.get('again')) {
-      error = "Please Login Again"
+    if ($page.url.searchParams.get("again")) {
+      error = "Please Login Again";
     }
   });
 
   function handleLogin(ev: SubmitEvent) {
     const fd = new FormData(ev.target! as HTMLFormElement);
+    const user = fd.get("username");
+    const pass = fd.get("password");
+
+    if (!user || !pass) {
+      error = "Username and Password fields are required";
+      return;
+    }
+
+    let customAuthEP = "";
+    if ((ev.submitter as HTMLButtonElement)?.name === "jellyfin") {
+      customAuthEP = "jellyfin";
+    }
 
     noAuthAxios
-      .post(`/auth${login ? "/" : "/register"}`, {
+      .post(`/auth${login ? `/${customAuthEP}` : "/register"}`, {
         username: fd.get("username"),
         password: fd.get("password")
       })
@@ -65,13 +78,17 @@
       <label for="password">Password</label>
       <input type="password" name="password" placeholder="Password" />
 
-      <button type="submit">
-        {#if login}
-          Login
-        {:else}
-          Sign Up
-        {/if}
-      </button>
+      {#if login}
+        <span class="login-with" style="font-weight: bold">Login With</span>
+        <div class="login-btns">
+          <button type="submit">Watcharr</button>
+          <button type="submit" name="jellyfin"><Icon i="jellyfin" wh={18} />Jellyfin</button>
+        </div>
+      {:else}
+        <div class="login-btns">
+          <button type="submit">Sign Up</button>
+        </div>
+      {/if}
     </form>
 
     <button
@@ -107,6 +124,23 @@
   label {
     align-self: flex-start;
     font-weight: bold;
+  }
+
+  span.login-with {
+    font-size: 14px;
+  }
+
+  .login-btns {
+    display: flex;
+    flex-flow: row;
+    gap: 10px;
+    width: 100%;
+
+    button {
+      display: flex;
+      flex-flow: row;
+      gap: 10px;
+    }
   }
 
   .error {
