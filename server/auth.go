@@ -37,7 +37,7 @@ type User struct {
 	Password string `gorm:"not null" json:"password" binding:"required"`
 	// The type of user/which auth service they originate from.
 	// Empty if from Watcharr, or the name of the service (eg. jellyfin)
-	Type UserType `gorm:"uniqueIndex:usr_name_to_type;not null" json:"type"`
+	Type UserType `gorm:"uniqueIndex:usr_name_to_type;not null;default:0" json:"type"`
 	// ID of user from the third party service, this will be used purely for lookup of user at signin.
 	ThirdPartyID string `json:"-"`
 	Watched      []Watched
