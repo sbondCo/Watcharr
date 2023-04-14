@@ -15,7 +15,7 @@
   });
 
   afterUpdate(() => {
-    if ($page.url.searchParams.get("again")) {
+    if (!error && $page.url.searchParams.get("again")) {
       error = "Please Login Again";
     }
   });
