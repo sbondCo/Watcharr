@@ -97,7 +97,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 		println("addWatched, returned content missing id or title!", id, title)
 		return Watched{}, errors.New("content response missing id or title")
 	}
-	content := Content{ID: id, Title: title, Overview: overview, PosterPath: posterPath}
+	content := Content{ID: id, Title: title, Overview: overview, PosterPath: posterPath, Type: ar.ContentType}
 	res := db.Create(&content)
 	if res.Error != nil {
 		// Error if anything but unique contraint error
