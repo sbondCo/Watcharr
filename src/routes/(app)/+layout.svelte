@@ -54,6 +54,7 @@
     justify-content: space-between;
     margin: 10px 20px 28px 20px;
     position: relative;
+    gap: 20px;
 
     a {
       text-decoration: none;
@@ -103,6 +104,16 @@
           background-color: rgba(0, 0, 0, 1);
           color: white;
         }
+      }
+    }
+
+    @media screen and (max-width: 580px) {
+      h1 {
+        display: none;
+      }
+
+      input {
+        width: 100%;
       }
     }
   }

@@ -101,6 +101,7 @@
 
     img {
       width: 170px;
+      height: 100%;
     }
 
     img.backdrop {
@@ -165,6 +166,11 @@
       //     padding: 5px 8px;
       //   }
       // }
+    }
+
+    @media screen and (max-width: 450px) {
+      flex-flow: column;
+      align-items: center;
     }
   }
 
