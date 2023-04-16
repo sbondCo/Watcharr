@@ -48,22 +48,41 @@
       </div>
     </div>
 
-    <div class="creators">
-      <div>
-        <span>Mr Boombastic</span>
-        <span>Director</span>
+    <div class="page">
+      <div class="creators">
+        <div>
+          <span>Mr Boombastic</span>
+          <span>Director</span>
+        </div>
+        <div>
+          <span>Mr Boombastic</span>
+          <span>Writer</span>
+        </div>
+        <div>
+          <span>Mr Boombastic</span>
+          <span>Producer</span>
+        </div>
+        <div>
+          <span>Mr Boombastic</span>
+          <span>Producer</span>
+        </div>
       </div>
-      <div>
-        <span>Mr Boombastic</span>
-        <span>Writer</span>
-      </div>
-      <div>
-        <span>Mr Boombastic</span>
-        <span>Producer</span>
-      </div>
-      <div>
-        <span>Mr Boombastic</span>
-        <span>Producer</span>
+
+      <div class="review">
+        <span>What did you think?</span>
+
+        <div id="rating-container" class="rating">
+          <button class="plain">*</button>
+          <button class="plain">*</button>
+          <button class="plain">*</button>
+          <button class="plain">*</button>
+          <button class="plain">*</button>
+          <button class="plain">*</button>
+          <button class="plain">*</button>
+          <button class="plain">*</button>
+          <button class="plain">*</button>
+          <button class="plain">*</button>
+        </div>
       </div>
     </div>
   </div>
@@ -149,11 +168,22 @@
     }
   }
 
+  .page {
+    display: flex;
+    flex-flow: column;
+    gap: 30px;
+    padding: 20px 50px;
+
+    @media screen and (max-width: 500px) {
+      padding: 20px 30px;
+    }
+  }
+
   .creators {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 35px;
-    padding: 20px 50px;
 
     div {
       display: flex;
@@ -161,6 +191,38 @@
 
       span:first-child {
         font-weight: bold;
+      }
+    }
+  }
+
+  .rating {
+    display: flex;
+    flex-flow: row-reverse;
+    align-items: center;
+    justify-content: center;
+    color: black;
+    -webkit-text-stroke: 1.5px black;
+    cursor: pointer;
+    overflow: hidden;
+    margin: 10px 0 10px 0;
+
+    button {
+      font-size: 55px;
+      font-family: "Rampart One";
+      letter-spacing: 10px;
+      line-height: 52px;
+      height: 38px;
+
+      &:hover,
+      &:hover ~ button,
+      &:global(.lit),
+      &:global(.lit ~ button) {
+        color: gold;
+        -webkit-text-stroke: 1.5px gold;
+      }
+
+      @media screen and (max-width: 500px) {
+        font-size: 40px;
       }
     }
   }

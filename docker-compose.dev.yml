@@ -1,24 +1,39 @@
 version: "3"
 
+networks:
+  watcharr:
+
 # To test prod
 services:
+  # Port 3000
   watcharr:
     build:
       context: .
       dockerfile: Dockerfile.ui
     container_name: watcharr
-    ports:
-      - 3000:3000
+    networks:
+      - watcharr
     depends_on:
       - watcharr-server
 
+  # Port 3080
   watcharr-server:
     build:
       context: .
       dockerfile: Dockerfile.svr
     container_name: watcharr-server
-    ports:
-      - 3080:3080
+    networks:
+      - watcharr
     volumes:
       - ./server/.env:/.env
       - ./container_data:/data
+
+  caddy:
+    image: caddy:2.6
+    container_name: watcharr-caddy
+    ports:
+      - "8080:80"
+    networks:
+      - watcharr
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
