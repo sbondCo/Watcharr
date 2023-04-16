@@ -9,6 +9,8 @@ RUN go mod download && GOOS=linux go build -o ./watcharr
 # Production
 FROM debian:11.6 AS runner
 
+RUN apt-get update && apt-get install ca-certificates -y
+
 COPY --from=server /server/watcharr /
 
 EXPOSE 3080
