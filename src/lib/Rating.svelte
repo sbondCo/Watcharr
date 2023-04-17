@@ -35,11 +35,10 @@
 </script>
 
 <div class="rating-container">
-  {rating}
   <span>
-    {#if hoveredRating !== undefined}
+    {#if typeof hoveredRating === "string"}
       {ratingDesc[hoveredRating]}
-    {:else if rating !== undefined}
+    {:else if typeof rating === "number"}
       {ratingDesc[rating]}
     {:else}
       Select Your Rating
