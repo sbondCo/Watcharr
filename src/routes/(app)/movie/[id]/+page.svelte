@@ -71,7 +71,7 @@
         <Status status={wListItem?.status} onChange={statusChanged} />
       </div>
 
-      <div class="creators">
+      <!-- <div class="creators">
         <div>
           <span>Mr Boombastic</span>
           <span>Director</span>
@@ -88,7 +88,7 @@
           <span>Mr Boombastic</span>
           <span>Producer</span>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 {:else}
@@ -98,10 +98,8 @@
 <style lang="scss">
   .content {
     position: relative;
-    /* display: flex;
-    flex-flow: row;
-    justify-content: center; */
     color: white;
+    margin-bottom: 15px;
 
     img.backdrop {
       position: absolute;
@@ -191,7 +189,7 @@
     padding: 20px 50px;
 
     @media screen and (max-width: 500px) {
-      padding: 20px 30px;
+      padding: 20px;
     }
   }
 
