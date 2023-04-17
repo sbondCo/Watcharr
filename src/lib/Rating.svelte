@@ -74,6 +74,7 @@
     cursor: pointer;
     overflow: hidden;
     margin: 10px 0 10px 0;
+    padding: 1px;
 
     button {
       font-size: 55px;
@@ -88,8 +89,12 @@
         -webkit-text-stroke: 1.5px gold;
       }
 
-      @media screen and (max-width: 500px) {
-        font-size: 40px;
+      @media screen and (max-width: 450px) {
+        font-size: 50px;
+      }
+
+      @media screen and (max-width: 400px) {
+        font-size: 45px;
       }
     }
   }
