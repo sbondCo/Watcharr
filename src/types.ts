@@ -1,5 +1,5 @@
 export type Rating = 1 | 2 | 3 | 4 | 5 | undefined;
-export type WatchedStatus = "PLANNED" | "WATCHING" | "FINISHED";
+export type WatchedStatus = "PLANNED" | "WATCHING" | "FINISHED" | "HOLD" | "DROPPED";
 export type ContentType = "tv" | "movie";
 
 export interface Content {
