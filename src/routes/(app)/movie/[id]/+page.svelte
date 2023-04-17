@@ -1,10 +1,26 @@
 <script lang="ts">
-  import type { TMDBMovieDetails } from "@/types";
-  import { onMount } from "svelte";
+  import Rating from "@/lib/Rating.svelte";
+  import Status from "@/lib/Status.svelte";
+  import { updateWatched } from "@/lib/api";
+  import { watchedList } from "@/store";
+  import type { TMDBMovieDetails, WatchedStatus } from "@/types";
 
   export let data: TMDBMovieDetails;
-
   let releaseDate = new Date(Date.parse(data.release_date));
+
+  $: wListItem = $watchedList.find((w) => w.content.id === data.id);
+
+  function statusChanged(newStatus: WatchedStatus) {
+    if (wListItem?.id)
+      updateWatched(wListItem.id, newStatus)
+        ?.then(() => {
+          wListItem!.status = newStatus;
+          $watchedList = $watchedList;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+  }
 
   console.log(data);
 </script>
@@ -27,12 +43,8 @@
           <span>{releaseDate.getFullYear()}</span>
         </span>
 
-        <!-- <span>{data.tagline}</span> -->
-
         <span class="quick-info">
           <span>{data.runtime}m</span>
-
-          <!-- <span>|</span> -->
 
           <div>
             {#each data.genres as g, i}
@@ -40,6 +52,8 @@
             {/each}
           </div>
         </span>
+
+        <!-- <span>{data.tagline}</span> -->
 
         <!-- {data.status} -->
 
@@ -49,6 +63,12 @@
     </div>
 
     <div class="page">
+      <div class="review">
+        <!-- <span>What did you think?</span> -->
+        <Rating rating={wListItem?.rating} />
+        <Status status={wListItem?.status} onChange={statusChanged} />
+      </div>
+
       <div class="creators">
         <div>
           <span>Mr Boombastic</span>
@@ -65,23 +85,6 @@
         <div>
           <span>Mr Boombastic</span>
           <span>Producer</span>
-        </div>
-      </div>
-
-      <div class="review">
-        <span>What did you think?</span>
-
-        <div id="rating-container" class="rating">
-          <button class="plain">*</button>
-          <button class="plain">*</button>
-          <button class="plain">*</button>
-          <button class="plain">*</button>
-          <button class="plain">*</button>
-          <button class="plain">*</button>
-          <button class="plain">*</button>
-          <button class="plain">*</button>
-          <button class="plain">*</button>
-          <button class="plain">*</button>
         </div>
       </div>
     </div>
@@ -177,12 +180,19 @@
   .page {
     display: flex;
     flex-flow: column;
+    align-items: center;
     gap: 30px;
     padding: 20px 50px;
 
     @media screen and (max-width: 500px) {
       padding: 20px 30px;
     }
+  }
+
+  .review {
+    display: flex;
+    flex-flow: column;
+    gap: 10px;
   }
 
   .creators {
@@ -197,38 +207,6 @@
 
       span:first-child {
         font-weight: bold;
-      }
-    }
-  }
-
-  .rating {
-    display: flex;
-    flex-flow: row-reverse;
-    align-items: center;
-    justify-content: center;
-    color: black;
-    -webkit-text-stroke: 1.5px black;
-    cursor: pointer;
-    overflow: hidden;
-    margin: 10px 0 10px 0;
-
-    button {
-      font-size: 55px;
-      font-family: "Rampart One";
-      letter-spacing: 10px;
-      line-height: 52px;
-      height: 38px;
-
-      &:hover,
-      &:hover ~ button,
-      &:global(.lit),
-      &:global(.lit ~ button) {
-        color: gold;
-        -webkit-text-stroke: 1.5px gold;
-      }
-
-      @media screen and (max-width: 500px) {
-        font-size: 40px;
       }
     }
   }
