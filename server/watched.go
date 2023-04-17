@@ -20,15 +20,17 @@ const (
 	FINISHED WatchedStatus = "FINISHED"
 	WATCHING WatchedStatus = "WATCHING"
 	PLANNED  WatchedStatus = "PLANNED"
+	HOLD     WatchedStatus = "ONHOLD"
+	DROPPED  WatchedStatus = "DROPPED"
 )
 
 type Watched struct {
 	GormModel
-	Status    WatchedStatus `json:"status"`
-	Rating    int8          `json:"rating"`
-	UserID    uint          `json:"-" gorm:"uniqueIndex:usernctnidx"`
-	ContentID int           `json:"-" gorm:"uniqueIndex:usernctnidx"`
-	Content   Content       `json:"content"`
+	Status    *WatchedStatus `json:"status"`
+	Rating    *int8          `json:"rating"`
+	UserID    uint           `json:"-" gorm:"uniqueIndex:usernctnidx"`
+	ContentID int            `json:"-" gorm:"uniqueIndex:usernctnidx"`
+	Content   Content        `json:"content"`
 }
 
 type WatchedAddRequest struct {
@@ -40,7 +42,7 @@ type WatchedAddRequest struct {
 
 type WatchedUpdateRequest struct {
 	Status WatchedStatus `json:"status" binding:"required_without=Rating"`
-	Rating int8          `json:"rating" binding:"max=5,required_without=Status"`
+	Rating int8          `json:"rating" binding:"max=10,required_without=Status"`
 }
 
 func getWatched(db *gorm.DB, userId uint) []Watched {
@@ -118,7 +120,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	if ar.Status == "" {
 		ar.Status = WATCHING
 	}
-	watched := Watched{Status: ar.Status, Rating: ar.Rating, UserID: userId, ContentID: id}
+	watched := Watched{Status: &ar.Status, Rating: &ar.Rating, UserID: userId, ContentID: id}
 	res = db.Create(&watched)
 	if res.Error != nil {
 		if strings.Contains(res.Error.Error(), "UNIQUE") {
@@ -135,7 +137,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 }
 
 func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (bool, error) {
-	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(Watched{Rating: ar.Rating, Status: ar.Status})
+	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(Watched{Rating: &ar.Rating, Status: &ar.Status})
 	if res.Error != nil {
 		println("Watched entry update failed:", id, res.Error.Error())
 		return false, errors.New("failed to update watched entry")
