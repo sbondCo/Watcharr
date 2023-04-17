@@ -14,7 +14,7 @@
 <PosterList>
   {#if watched?.length > 0}
     {#each watched as w (w.id)}
-      <a href={`/${w.content.type}/${w.content.id}`}>
+      <a data-sveltekit-preload-data="tap" href={`/${w.content.type}/${w.content.id}`}>
         <Poster
           poster={w.content.poster_path
             ? "http://localhost:3080/img" + w.content.poster_path
