@@ -36,7 +36,7 @@
 
 <div class="rating-container">
   <span>
-    {#if typeof hoveredRating === "string"}
+    {#if typeof hoveredRating === "number"}
       {ratingDesc[hoveredRating]}
     {:else if typeof rating === "number"}
       {ratingDesc[rating]}
