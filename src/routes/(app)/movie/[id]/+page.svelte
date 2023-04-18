@@ -10,19 +10,9 @@
 
   $: wListItem = $watchedList.find((w) => w.content.id === data.id);
 
-  function statusChanged(newStatus: WatchedStatus) {
-    if (wListItem?.id)
-      updateWatched(wListItem.id, newStatus)
-        ?.then(() => {
-          wListItem!.status = newStatus;
-          $watchedList = $watchedList;
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+  function contentChanged(newStatus?: WatchedStatus, newRating?: number) {
+    updateWatched(data.id, "movie", newStatus, newRating);
   }
-
-  console.log(data);
 </script>
 
 {#if Object.keys(data).length > 0}
@@ -67,8 +57,8 @@
     <div class="page">
       <div class="review">
         <!-- <span>What did you think?</span> -->
-        <Rating rating={wListItem?.rating} />
-        <Status status={wListItem?.status} onChange={statusChanged} />
+        <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
+        <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
       </div>
 
       <!-- <div class="creators">

@@ -1,4 +1,3 @@
-export type Rating = 1 | 2 | 3 | 4 | 5 | undefined;
 export type WatchedStatus = "PLANNED" | "WATCHING" | "FINISHED" | "HOLD" | "DROPPED";
 export type ContentType = "tv" | "movie";
 
@@ -13,7 +12,7 @@ export interface Content {
 export interface Watched {
   id: number;
   watched: boolean;
-  rating: Rating;
+  rating?: number;
   content: Content;
   status: WatchedStatus;
 }
@@ -21,12 +20,12 @@ export interface Watched {
 export interface WatchedAddRequest {
   contentId: number;
   contentType: ContentType;
-  rating: Rating;
+  rating?: number;
   status: WatchedStatus;
 }
 
 export interface WatchedUpdateRequest {
-  rating?: Rating;
+  rating?: number;
   status?: WatchedStatus;
 }
 
