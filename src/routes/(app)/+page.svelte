@@ -23,26 +23,8 @@
           desc={w.content.overview}
           rating={w.rating}
           status={w.status}
-          onBtnClicked={(type) => {
-            updateWatched(w.id, type)
-              ?.then(() => {
-                w.status = type;
-                $watchedList = watched;
-              })
-              .catch((err) => {
-                console.error(err);
-              });
-          }}
-          onRatingChanged={(rating) => {
-            updateWatched(w.id, undefined, rating)
-              ?.then(() => {
-                w.rating = rating;
-                $watchedList = watched;
-              })
-              .catch((err) => {
-                console.error(err);
-              });
-          }}
+          onBtnClicked={(t) => updateWatched(w.id, w.content.type, t)}
+          onRatingChanged={(r) => updateWatched(w.id, w.content.type, undefined, r)}
         />
       </a>
     {/each}

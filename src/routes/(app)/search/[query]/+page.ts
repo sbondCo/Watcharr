@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import type { Content } from "@/types";
+import type { Content, MediaType } from "@/types";
 import axios from "axios";
 
 export interface ContentSearch {
@@ -16,7 +16,7 @@ export interface ContentSearchResult {
   original_language: string;
   overview: string;
   poster_path: string;
-  media_type: string;
+  media_type: MediaType;
   genre_ids?: number[];
   popularity: number;
   vote_average: number;
