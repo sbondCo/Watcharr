@@ -43,7 +43,7 @@
 
     & :global(svg) {
       height: 100%;
-      width: 100%;
+      width: auto;
     }
 
     &:hover,
