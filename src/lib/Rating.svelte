@@ -1,5 +1,7 @@
 <script lang="ts">
   export let rating: number | undefined;
+  export let onChange: (newRating: number) => void;
+
   let hoveredRating: number | undefined;
   let shownRating: number | undefined;
 
@@ -17,12 +19,13 @@
   ];
 
   function handleStarClick(r: number) {
-    rating = r;
+    onChange(r);
   }
 
   $: {
     if (hoveredRating !== undefined) shownRating = hoveredRating;
     else if (rating !== undefined) shownRating = rating;
+    else shownRating = undefined;
   }
 
   function handleStarHover(r: number) {
@@ -37,15 +40,15 @@
 <div class="rating-container">
   <span>
     {#if typeof hoveredRating === "number"}
-      {ratingDesc[hoveredRating]}
-    {:else if typeof rating === "number"}
-      {ratingDesc[rating]}
+      {ratingDesc[hoveredRating - 1]}
+    {:else if typeof rating === "number" && rating > 0}
+      {ratingDesc[rating - 1]}
     {:else}
       Select Your Rating
     {/if}
   </span>
   <div class="rating">
-    {#each [9, 8, 7, 6, 5, 4, 3, 2, 1, 0] as v}
+    {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
       <button
         class="plain{shownRating === v ? ' lit' : ''}"
         on:click={() => handleStarClick(v)}
