@@ -41,6 +41,11 @@
     width: 100%;
     transition: background-color 100ms ease, opacity 100ms ease;
 
+    & :global(svg) {
+      height: 100%;
+      width: 100%;
+    }
+
     &:hover,
     &:focus-visible {
       background-color: black;

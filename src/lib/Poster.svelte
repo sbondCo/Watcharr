@@ -1,18 +1,16 @@
 <script lang="ts">
-  import type { Rating, WatchedStatus } from "@/types";
+  import type { WatchedStatus } from "@/types";
   import Icon from "./Icon.svelte";
 
   export let poster: string | undefined;
   export let title: string | undefined;
   export let desc: string | undefined;
-  export let rating: Rating = undefined;
+  export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
-  export let onBtnClicked: (type: WatchedStatus, rating?: Rating) => void = () => {};
-  export let onRatingChanged: (rating: Rating) => void = () => {};
+  export let onBtnClicked: (type: WatchedStatus, rating?: number) => void = () => {};
+  export let onRatingChanged: (rating: number) => void = () => {};
 
-  let ratingContainer: HTMLDivElement;
-
-  function handleStarClick(r: Rating) {
+  function handleStarClick(r: number) {
     if (r == rating) return;
     onRatingChanged(r);
   }
@@ -31,43 +29,9 @@
       <h2>{title}</h2>
       <span>{desc}</span>
 
-      <div id="rating-container" class="rating" bind:this={ratingContainer}>
-        <button class="plain{rating === 5 ? ' lit' : ''}" on:click={() => handleStarClick(5)}
-          >*</button
-        >
-        <button class="plain{rating === 4 ? ' lit' : ''}" on:click={() => handleStarClick(4)}
-          >*</button
-        >
-        <button class="plain{rating === 3 ? ' lit' : ''}" on:click={() => handleStarClick(3)}
-          >*</button
-        >
-        <button class="plain{rating === 2 ? ' lit' : ''}" on:click={() => handleStarClick(2)}
-          >*</button
-        >
-        <button class="plain{rating === 1 ? ' lit' : ''}" on:click={() => handleStarClick(1)}
-          >*</button
-        >
-      </div>
-
-      <div class="btn-container">
-        <button
-          class={status && status !== "PLANNED" ? "not-active" : ""}
-          on:click={() => wBtnClicked("PLANNED")}
-        >
-          <Icon i="calendar" />
-        </button>
-        <button
-          class={status && status !== "WATCHING" ? "not-active" : ""}
-          on:click={() => wBtnClicked("WATCHING")}
-        >
-          <Icon i="clock" />
-        </button>
-        <button
-          class={status && status !== "FINISHED" ? "not-active" : ""}
-          on:click={() => wBtnClicked("FINISHED")}
-        >
-          <Icon i="check" />
-        </button>
+      <div class="buttons">
+        <button><span>*</span><span>8</span></button>
+        <button><Icon i="clock" /></button>
       </div>
     </div>
   </div>
@@ -120,45 +84,46 @@
         overflow: hidden;
       }
 
-      .rating {
-        display: flex;
-        flex-flow: row-reverse;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        -webkit-text-stroke: 1.5px white;
-        cursor: pointer;
-        overflow: hidden;
-        margin: 10px 0 10px 0;
-
-        button {
-          font-size: 35px;
-          font-family: "Rampart One";
-          letter-spacing: 10px;
-          line-height: 52px;
-          height: 38px;
-
-          &:hover,
-          &:hover ~ button,
-          &:global(.lit),
-          &:global(.lit ~ button) {
-            color: gold;
-            -webkit-text-stroke: 1.5px gold;
-          }
-        }
-      }
-
-      .btn-container {
+      .buttons {
         display: flex;
         flex-flow: row;
-        gap: 10px;
         margin-top: auto;
+        gap: 10px;
+        height: 35px;
 
         button {
-          font-size: 10px;
+          padding: 3px;
 
-          &:hover {
-            fill: white;
+          /** Rating */
+          &:first-child {
+            font-family: "Rampart One";
+
+            span {
+              color: black;
+              -webkit-text-stroke: 1.5px black;
+
+              &:first-child {
+                font-size: 39px;
+                letter-spacing: 10px;
+                line-height: 52px;
+                height: 42px;
+              }
+
+              &:nth-child(2) {
+                font-size: 22px;
+                height: 35px; // quick fix to make the rating num look centered - text-stroke makes it look not centered
+              }
+            }
+
+            &:hover span {
+              color: gold;
+              -webkit-text-stroke: 1.5px gold;
+            }
+          }
+
+          /** Status */
+          &:nth-child(2) {
+            width: 40%;
           }
         }
       }
