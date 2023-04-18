@@ -58,12 +58,18 @@
 
     a {
       text-decoration: none;
+
+      &:hover h1,
+      &:focus-visible h1 {
+        color: black;
+      }
     }
 
     h1 {
       color: white;
       -webkit-text-stroke: 1.5px black;
       font-size: 35px;
+      transition: all 150ms ease;
     }
 
     input {
@@ -71,6 +77,12 @@
       font-weight: bold;
       text-align: center;
       box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+      transition: all 150ms ease-in-out;
+
+      &:hover,
+      &:focus {
+        box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+      }
     }
 
     button.face {
@@ -79,6 +91,13 @@
       writing-mode: vertical-rl;
       text-orientation: mixed;
       cursor: pointer;
+      transition: all 150ms ease-in-out;
+
+      &:hover,
+      &:focus-visible {
+        color: white;
+        -webkit-text-stroke: 1.5px black;
+      }
     }
 
     div {
