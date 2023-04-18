@@ -10,6 +10,12 @@
   export let onBtnClicked: (type: WatchedStatus, rating?: number) => void = () => {};
   export let onRatingChanged: (rating: number) => void = () => {};
 
+  let ratingsShown = false;
+
+  function ratingBtnClicked() {
+    ratingsShown = !ratingsShown;
+  }
+
   function handleStarClick(r: number) {
     if (r == rating) return;
     onRatingChanged(r);
@@ -30,8 +36,29 @@
       <span>{desc}</span>
 
       <div class="buttons">
-        <button><span>*</span><span>8</span></button>
-        <button><Icon i="clock" /></button>
+        <button
+          class="rating"
+          on:click={() => ratingBtnClicked()}
+          on:mouseleave={() => (ratingsShown = false)}
+        >
+          <span>*</span>
+          <span>{rating ? rating : "Rate"}</span>
+          {#if ratingsShown}
+            <div>
+              {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
+                <button
+                  class="plain{rating === v ? ' active' : ''}"
+                  on:click={() => handleStarClick(v)}
+                >
+                  {v}
+                </button>
+              {/each}
+            </div>
+          {/if}
+        </button>
+        <button class="status">
+          <Icon i="clock" />
+        </button>
       </div>
     </div>
   </div>
@@ -93,11 +120,11 @@
 
         button {
           padding: 3px;
+          position: relative;
+          font-family: "Rampart One";
 
           /** Rating */
-          &:first-child {
-            font-family: "Rampart One";
-
+          &.rating {
             span {
               color: black;
               -webkit-text-stroke: 1.5px black;
@@ -122,8 +149,31 @@
           }
 
           /** Status */
-          &:nth-child(2) {
+          &.status {
             width: 40%;
+          }
+
+          div {
+            display: flex;
+            flex-flow: column;
+            position: absolute;
+            width: 100%;
+            height: 200px;
+            background-color: white;
+            top: calc(-100% - 170px);
+            list-style: none;
+            border-radius: 4px 4px 0 0;
+            overflow: auto;
+
+            button {
+              width: 100%;
+              color: black;
+              font-size: 20px;
+
+              &:hover {
+                background-color: rgb(100, 100, 100, 0.25);
+              }
+            }
           }
         }
       }

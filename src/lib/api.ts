@@ -1,6 +1,6 @@
 import { watchedList } from "@/store";
 import type {
-  ContentType,
+  MediaType,
   Watched,
   WatchedAddRequest,
   WatchedStatus,
@@ -12,7 +12,7 @@ const { MODE } = import.meta.env;
 
 export function updateWatched(
   contentId: number,
-  contentType: ContentType,
+  contentType: MediaType,
   status?: WatchedStatus,
   rating?: number
 ) {

@@ -1,5 +1,6 @@
 export type WatchedStatus = "PLANNED" | "WATCHING" | "FINISHED" | "HOLD" | "DROPPED";
 export type ContentType = "tv" | "movie";
+export type MediaType = ContentType | "person";
 
 export interface Content {
   id: number;
