@@ -14,19 +14,19 @@
 <PosterList>
   {#if watched?.length > 0}
     {#each watched as w (w.id)}
-      <a data-sveltekit-preload-data="tap" href={`/${w.content.type}/${w.content.id}`}>
-        <Poster
-          poster={w.content.poster_path
-            ? "http://localhost:3080/img" + w.content.poster_path
-            : undefined}
-          title={w.content.title}
-          desc={w.content.overview}
-          rating={w.rating}
-          status={w.status}
-          onStatusChanged={(t) => updateWatched(w.id, w.content.type, t)}
-          onRatingChanged={(r) => updateWatched(w.id, w.content.type, undefined, r)}
-        />
-      </a>
+      <!-- <a data-sveltekit-preload-data="tap" href={`/${w.content.type}/${w.content.id}`}> -->
+      <Poster
+        poster={w.content.poster_path
+          ? "http://localhost:3080/img" + w.content.poster_path
+          : undefined}
+        title={w.content.title}
+        desc={w.content.overview}
+        rating={w.rating}
+        status={w.status}
+        onStatusChanged={(t) => updateWatched(w.content.id, w.content.type, t)}
+        onRatingChanged={(r) => updateWatched(w.content.id, w.content.type, undefined, r)}
+      />
+      <!-- </a> -->
     {/each}
   {:else}
     You don't have any watched content yet!
