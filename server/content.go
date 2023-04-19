@@ -39,3 +39,13 @@ func movieDetails(id string) (TMDBMovieDetails, error) {
 	}
 	return *resp, nil
 }
+
+func tvDetails(id string) (TMDBShowDetails, error) {
+	resp := new(TMDBShowDetails)
+	err := tmdbRequest("/tv/"+id, map[string]string{}, &resp)
+	if err != nil {
+		println("Failed to complete tv details request!", err.Error())
+		return TMDBShowDetails{}, errors.New("failed to complete tv details request")
+	}
+	return *resp, nil
+}
