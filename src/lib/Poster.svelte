@@ -63,7 +63,11 @@
           on:click={() => (statusesShown = !statusesShown)}
           on:mouseleave={() => (statusesShown = false)}
         >
-          <Icon i={status ? iconFromStatus(status) : "w"} />
+          {#if status}
+            <Icon i={iconFromStatus(status)} />
+          {:else}
+            <span class="no-icon">+</span>
+          {/if}
           {#if statusesShown}
             <div>
               <button
@@ -191,6 +195,16 @@
           /** Status */
           &.status {
             width: 40%;
+
+            .no-icon {
+              color: black;
+              font-size: 30px;
+              height: 52px;
+            }
+
+            &:hover .no-icon {
+              color: white;
+            }
           }
 
           div {
