@@ -23,7 +23,7 @@
           desc={w.content.overview}
           rating={w.rating}
           status={w.status}
-          onBtnClicked={(t) => updateWatched(w.id, w.content.type, t)}
+          onStatusChanged={(t) => updateWatched(w.id, w.content.type, t)}
           onRatingChanged={(r) => updateWatched(w.id, w.content.type, undefined, r)}
         />
       </a>
