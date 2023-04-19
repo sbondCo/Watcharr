@@ -14,10 +14,6 @@
   let ratingsShown = false;
   let statusesShown = false;
 
-  function ratingBtnClicked() {
-    ratingsShown = !ratingsShown;
-  }
-
   function handleStarClick(r: number) {
     if (r == rating) return;
     onRatingChanged(r);
@@ -40,7 +36,7 @@
       <div class="buttons">
         <button
           class="rating"
-          on:click={() => ratingBtnClicked()}
+          on:click={() => (ratingsShown = !ratingsShown)}
           on:mouseleave={() => (ratingsShown = false)}
         >
           <span>*</span>
