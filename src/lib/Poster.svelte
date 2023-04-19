@@ -24,82 +24,80 @@
   }
 </script>
 
-<li>
-  <div class={`container${!poster ? " details-shown" : ""}`}>
-    {#if poster}
-      <img loading="lazy" src={poster} alt="poster" />
-    {/if}
-    <div class="inner">
-      <h2>{title}</h2>
-      <span>{desc}</span>
+<li class={`container${!poster ? " details-shown" : ""}`} role="menuitem">
+  {#if poster}
+    <img loading="lazy" src={poster} alt="poster" />
+  {/if}
+  <div class="inner">
+    <h2>{title}</h2>
+    <span>{desc}</span>
 
-      <div class="buttons">
-        <button
-          class="rating"
-          on:click={() => (ratingsShown = !ratingsShown)}
-          on:mouseleave={() => (ratingsShown = false)}
-        >
-          <span>*</span>
-          <span>{rating ? rating : "Rate"}</span>
-          {#if ratingsShown}
-            <div>
-              {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
-                <button
-                  class="plain{rating === v ? ' active' : ''}"
-                  on:click={() => handleStarClick(v)}
-                >
-                  {v}
-                </button>
-              {/each}
-            </div>
-          {/if}
-        </button>
-        <button
-          class="status"
-          on:click={() => (statusesShown = !statusesShown)}
-          on:mouseleave={() => (statusesShown = false)}
-        >
-          {#if status}
-            <Icon i={iconFromStatus(status)} />
-          {:else}
-            <span class="no-icon">+</span>
-          {/if}
-          {#if statusesShown}
-            <div>
+    <div class="buttons">
+      <button
+        class="rating"
+        on:click={() => (ratingsShown = !ratingsShown)}
+        on:mouseleave={() => (ratingsShown = false)}
+      >
+        <span>*</span>
+        <span>{rating ? rating : "Rate"}</span>
+        {#if ratingsShown}
+          <div>
+            {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
               <button
-                class="plain{status && status !== 'PLANNED' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("PLANNED")}
+                class="plain{rating === v ? ' active' : ''}"
+                on:click={() => handleStarClick(v)}
               >
-                <Icon i="calendar" />
+                {v}
               </button>
-              <button
-                class="plain{status && status !== 'WATCHING' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("WATCHING")}
-              >
-                <Icon i="clock" />
-              </button>
-              <button
-                class="plain{status && status !== 'FINISHED' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("FINISHED")}
-              >
-                <Icon i="check" />
-              </button>
-              <button
-                class="plain{status && status !== 'HOLD' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("HOLD")}
-              >
-                <Icon i="pause" />
-              </button>
-              <button
-                class="plain{status && status !== 'DROPPED' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("DROPPED")}
-              >
-                <Icon i="thumb-down" />
-              </button>
-            </div>
-          {/if}
-        </button>
-      </div>
+            {/each}
+          </div>
+        {/if}
+      </button>
+      <button
+        class="status"
+        on:click={() => (statusesShown = !statusesShown)}
+        on:mouseleave={() => (statusesShown = false)}
+      >
+        {#if status}
+          <Icon i={iconFromStatus(status)} />
+        {:else}
+          <span class="no-icon">+</span>
+        {/if}
+        {#if statusesShown}
+          <div>
+            <button
+              class="plain{status && status !== 'PLANNED' ? ' not-active' : ''}"
+              on:click={() => handleStatusClick("PLANNED")}
+            >
+              <Icon i="calendar" />
+            </button>
+            <button
+              class="plain{status && status !== 'WATCHING' ? ' not-active' : ''}"
+              on:click={() => handleStatusClick("WATCHING")}
+            >
+              <Icon i="clock" />
+            </button>
+            <button
+              class="plain{status && status !== 'FINISHED' ? ' not-active' : ''}"
+              on:click={() => handleStatusClick("FINISHED")}
+            >
+              <Icon i="check" />
+            </button>
+            <button
+              class="plain{status && status !== 'HOLD' ? ' not-active' : ''}"
+              on:click={() => handleStatusClick("HOLD")}
+            >
+              <Icon i="pause" />
+            </button>
+            <button
+              class="plain{status && status !== 'DROPPED' ? ' not-active' : ''}"
+              on:click={() => handleStatusClick("DROPPED")}
+            >
+              <Icon i="thumb-down" />
+            </button>
+          </div>
+        {/if}
+      </button>
     </div>
   </div>
 </li>
@@ -126,7 +124,7 @@
 
     .inner {
       position: absolute;
-      visibility: hidden;
+      opacity: 0;
       display: flex;
       flex-flow: column;
       top: 0;
@@ -134,6 +132,7 @@
       width: 100%;
       padding: 10px;
       background-color: transparent;
+      transition: opacity 150ms cubic-bezier(0.19, 1, 0.22, 1);
 
       h2 {
         font-family: unset;
@@ -182,7 +181,8 @@
               }
             }
 
-            &:hover span {
+            &:hover span,
+            &:focus-visible span {
               color: gold;
               -webkit-text-stroke: 1.5px gold;
             }
@@ -198,7 +198,8 @@
               height: 52px;
             }
 
-            &:hover .no-icon {
+            &:hover .no-icon,
+            &:focus-visible .no-icon {
               color: white;
             }
           }
@@ -226,7 +227,8 @@
                 padding: 0 2px;
               }
 
-              &:hover {
+              &:hover,
+              &:focus-visible {
                 background-color: rgb(100, 100, 100, 0.25);
               }
             }
@@ -235,12 +237,14 @@
       }
     }
 
-    &:hover {
+    &:hover,
+    &:focus-within {
       transform: scale(1.3);
       z-index: 99;
     }
 
     &:hover,
+    &:focus-within,
     &:global(.details-shown) {
       img {
         filter: blur(4px) grayscale(80%);
@@ -251,7 +255,7 @@
 
       .inner {
         color: white;
-        visibility: visible;
+        opacity: 1;
       }
     }
   }
