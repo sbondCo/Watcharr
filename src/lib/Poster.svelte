@@ -1,16 +1,18 @@
 <script lang="ts">
   import type { WatchedStatus } from "@/types";
   import Icon from "./Icon.svelte";
+  import { iconFromStatus } from "./helpers";
 
   export let poster: string | undefined;
   export let title: string | undefined;
   export let desc: string | undefined;
   export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
-  export let onBtnClicked: (type: WatchedStatus, rating?: number) => void = () => {};
+  export let onStatusChanged: (type: WatchedStatus) => void = () => {};
   export let onRatingChanged: (rating: number) => void = () => {};
 
   let ratingsShown = false;
+  let statusesShown = false;
 
   function ratingBtnClicked() {
     ratingsShown = !ratingsShown;
@@ -21,8 +23,8 @@
     onRatingChanged(r);
   }
 
-  function wBtnClicked(type: WatchedStatus) {
-    onBtnClicked(type, rating);
+  function handleStatusClick(type: WatchedStatus) {
+    onStatusChanged(type);
   }
 </script>
 
@@ -56,8 +58,46 @@
             </div>
           {/if}
         </button>
-        <button class="status">
-          <Icon i="clock" />
+        <button
+          class="status"
+          on:click={() => (statusesShown = !statusesShown)}
+          on:mouseleave={() => (statusesShown = false)}
+        >
+          <Icon i={status ? iconFromStatus(status) : "w"} />
+          {#if statusesShown}
+            <div>
+              <button
+                class="plain{status && status !== 'PLANNED' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("PLANNED")}
+              >
+                <Icon i="calendar" />
+              </button>
+              <button
+                class="plain{status && status !== 'WATCHING' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("WATCHING")}
+              >
+                <Icon i="clock" />
+              </button>
+              <button
+                class="plain{status && status !== 'FINISHED' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("FINISHED")}
+              >
+                <Icon i="check" />
+              </button>
+              <button
+                class="plain{status && status !== 'HOLD' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("HOLD")}
+              >
+                <Icon i="pause" />
+              </button>
+              <button
+                class="plain{status && status !== 'DROPPED' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("DROPPED")}
+              >
+                <Icon i="thumb-down" />
+              </button>
+            </div>
+          {/if}
         </button>
       </div>
     </div>
@@ -168,7 +208,13 @@
             button {
               width: 100%;
               color: black;
+              fill: black;
               font-size: 20px;
+
+              & :global(svg) {
+                width: 100%;
+                padding: 0 2px;
+              }
 
               &:hover {
                 background-color: rgb(100, 100, 100, 0.25);
