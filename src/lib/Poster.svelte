@@ -23,6 +23,7 @@
   function handleStarClick(r: number) {
     if (r == rating) return;
     onRatingChanged(r);
+    ratingsShown = false;
   }
 
   function handleStatusClick(type: WatchedStatus) {
