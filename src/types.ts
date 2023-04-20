@@ -2,6 +2,9 @@ export type WatchedStatus = "PLANNED" | "WATCHING" | "FINISHED" | "HOLD" | "DROP
 export type ContentType = "tv" | "movie";
 export type MediaType = ContentType | "person";
 
+// Wasn't able to figure out how to import this type from its component file in other places, so its here for now.
+export type Icon = "check" | "clock" | "calendar" | "thumb-down" | "play" | "pause" | "jellyfin";
+
 export interface Content {
   id: number;
   title: string;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { WatchedStatus } from "@/types";
   import Icon from "./Icon.svelte";
-  import { iconFromStatus } from "./helpers";
+  import { watchedStatuses } from "./helpers";
 
   export let poster: string | undefined;
   export let title: string | undefined;
@@ -25,7 +25,11 @@
 </script>
 
 <li>
-  <div class={`container${!poster ? " details-shown" : ""}`}>
+  <div
+    class={`container${!poster ? " details-shown" : ""}`}
+    on:click={() => console.log("on click")}
+    on:keypress={() => console.log("on kpress")}
+  >
     {#if poster}
       <img loading="lazy" src={poster} alt="poster" />
     {/if}
@@ -36,7 +40,10 @@
       <div class="buttons">
         <button
           class="rating"
-          on:click={() => (ratingsShown = !ratingsShown)}
+          on:click={(ev) => {
+            ev.stopPropagation();
+            ratingsShown = !ratingsShown;
+          }}
           on:mouseleave={() => (ratingsShown = false)}
         >
           <span>*</span>
@@ -46,7 +53,10 @@
               {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
                 <button
                   class="plain{rating === v ? ' active' : ''}"
-                  on:click={() => handleStarClick(v)}
+                  on:click={(ev) => {
+                    ev.stopPropagation();
+                    handleStarClick(v);
+                  }}
                 >
                   {v}
                 </button>
@@ -56,46 +66,27 @@
         </button>
         <button
           class="status"
-          on:click={() => (statusesShown = !statusesShown)}
+          on:click={(ev) => {
+            ev.stopPropagation();
+            statusesShown = !statusesShown;
+          }}
           on:mouseleave={() => (statusesShown = false)}
         >
           {#if status}
-            <Icon i={iconFromStatus(status)} />
+            <Icon i={watchedStatuses[status]} />
           {:else}
             <span class="no-icon">+</span>
           {/if}
           {#if statusesShown}
             <div>
-              <button
-                class="plain{status && status !== 'PLANNED' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("PLANNED")}
-              >
-                <Icon i="calendar" />
-              </button>
-              <button
-                class="plain{status && status !== 'WATCHING' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("WATCHING")}
-              >
-                <Icon i="clock" />
-              </button>
-              <button
-                class="plain{status && status !== 'FINISHED' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("FINISHED")}
-              >
-                <Icon i="check" />
-              </button>
-              <button
-                class="plain{status && status !== 'HOLD' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("HOLD")}
-              >
-                <Icon i="pause" />
-              </button>
-              <button
-                class="plain{status && status !== 'DROPPED' ? ' not-active' : ''}"
-                on:click={() => handleStatusClick("DROPPED")}
-              >
-                <Icon i="thumb-down" />
-              </button>
+              {#each Object.entries(watchedStatuses) as [statusName, icon]}
+                <button
+                  class="plain{status && status !== statusName ? ' not-active' : ''}"
+                  on:click={() => handleStatusClick(statusName)}
+                >
+                  <Icon i={icon} />
+                </button>
+              {/each}
             </div>
           {/if}
         </button>
