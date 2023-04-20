@@ -1,8 +1,9 @@
 <script lang="ts">
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
-  import { updateWatched } from "@/lib/api";
+  import { baseURL, updateWatched } from "@/lib/api";
   import { watchedList } from "@/store";
+  import axios from "axios";
 
   $: watched = $watchedList;
 </script>
@@ -15,9 +16,7 @@
   {#if watched?.length > 0}
     {#each watched as w (w.id)}
       <Poster
-        poster={w.content.poster_path
-          ? "http://localhost:3080/img" + w.content.poster_path
-          : undefined}
+        poster={w.content.poster_path ? baseURL + "/img" + w.content.poster_path : undefined}
         title={w.content.title}
         desc={w.content.overview}
         rating={w.rating}
