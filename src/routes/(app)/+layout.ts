@@ -7,12 +7,12 @@ import axios from "axios";
 import { watchedList } from "@/store";
 import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
-const { MODE } = import.meta.env;
+import { baseURL } from "@/lib/api";
 
 axios.interceptors.request.use(
   (config) => {
     if (!config.baseURL) {
-      config.baseURL = MODE === "development" ? "http://127.0.0.1:3080" : "/api";
+      config.baseURL = baseURL;
 
       // Only want to set auth header if requesting to our backend.
       const token = localStorage.getItem("token");

@@ -10,6 +10,8 @@ import axios from "axios";
 import { get } from "svelte/store";
 const { MODE } = import.meta.env;
 
+export const baseURL = MODE === "development" ? "http://127.0.0.1:3080" : "/api";
+
 export function updateWatched(
   contentId: number,
   contentType: MediaType,
@@ -54,6 +56,9 @@ export function updateWatched(
     });
 }
 
+/**
+ * For use with routes that don't require authentication (eg login/register)
+ */
 export const noAuthAxios = axios.create({
-  baseURL: MODE === "development" ? "http://127.0.0.1:3080" : "/api"
+  baseURL: baseURL
 });
