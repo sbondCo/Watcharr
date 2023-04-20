@@ -1,8 +1,6 @@
-<script lang="ts" context="module">
-  export type Icon = "check" | "clock" | "calendar" | "thumb-down" | "play" | "pause" | "jellyfin";
-</script>
-
 <script lang="ts">
+  import type { Icon } from "@/types";
+
   export let i: Icon;
   export let wh = 24;
 </script>
