@@ -35,3 +35,4 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
+          tags: ${{ github.sha }}
