@@ -44,7 +44,10 @@
             ev.stopPropagation();
             ratingsShown = !ratingsShown;
           }}
-          on:mouseleave={() => (ratingsShown = false)}
+          on:mouseleave={(ev) => {
+            ratingsShown = false;
+            ev.currentTarget.blur();
+          }}
         >
           <span>*</span>
           <span>{rating ? rating : "Rate"}</span>
@@ -70,7 +73,10 @@
             ev.stopPropagation();
             statusesShown = !statusesShown;
           }}
-          on:mouseleave={() => (statusesShown = false)}
+          on:mouseleave={(ev) => {
+            statusesShown = false;
+            ev.currentTarget.blur();
+          }}
         >
           {#if status}
             <Icon i={watchedStatuses[status]} />
