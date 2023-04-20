@@ -3,6 +3,8 @@
 <img src="./static/logo-col.png" alt="logo" />
 </center>
 
-I hope to become the place you store your watched content for later rememberance, but sadly I am still being built. I aspire to be easily self hosted.
+I'm the place you store your watched content for later rememberance, sadly I am still in my infancy. I aspire to be easily self hosted.
 
-I'm being build with Go and Svelte(Kit).
+I am built with Go and Svelte(Kit).
+
+Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build: [https://watcharr.lab.sbond.co/](https://watcharr.lab.sbond.co/)
