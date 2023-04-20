@@ -13,7 +13,17 @@
     }
   }
 
-  function handleSearch(ev: Event) {
+  function handleSearch(ev: KeyboardEvent) {
+    if (
+      ev.key === "Tab" ||
+      ev.key === "CapsLock" ||
+      ev.key === "OS" ||
+      ev.key === "ArrowLeft" ||
+      ev.key === "ArrowRight" ||
+      ev.key === "ArrowUp" ||
+      ev.key === "ArrowDown"
+    )
+      return;
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       const target = ev.target as HTMLInputElement;
