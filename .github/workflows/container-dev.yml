@@ -38,4 +38,5 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
-          tags: ${{ matrix.image }}:${{ github.sha }}
+          tags: ${{ matrix.image }}:dev
+          labels: ${{ matrix.image }}:${{ github.sha }}
