@@ -2,16 +2,22 @@
   import type { WatchedStatus } from "@/types";
   import Icon from "./Icon.svelte";
   import { watchedStatuses } from "./helpers";
+  import { goto } from "$app/navigation";
 
   export let poster: string | undefined;
   export let title: string | undefined;
   export let desc: string | undefined;
   export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
+  export let link: string | undefined = undefined;
   export let onStatusChanged: (type: WatchedStatus) => void = () => {};
   export let onRatingChanged: (rating: number) => void = () => {};
 
+  // If poster is active (scaled up)
+  let posterActive = false;
+  // If ratings are shown
   let ratingsShown = false;
+  // If statuses are shown
   let statusesShown = false;
 
   function handleStarClick(r: number) {
@@ -24,17 +30,28 @@
   }
 </script>
 
-<li>
-  <div
-    class={`container${!poster ? " details-shown" : ""}`}
-    on:click={() => console.log("on click")}
-    on:keypress={() => console.log("on kpress")}
-  >
+<li
+  on:mouseenter={() => (posterActive = true)}
+  on:mouseleave={() => (posterActive = false)}
+  on:click={() => {
+    if (posterActive && link) goto(link);
+  }}
+  on:keypress={() => console.log("on kpress")}
+>
+  <div class={`container${!poster ? " details-shown" : ""}`}>
     {#if poster}
       <img loading="lazy" src={poster} alt="poster" />
     {/if}
     <div class="inner">
-      <h2>{title}</h2>
+      <h2>
+        {#if link}
+          <a data-sveltekit-preload-data="tap" href={link}>
+            {title}
+          </a>
+        {:else}
+          {title}
+        {/if}
+      </h2>
       <span>{desc}</span>
 
       <div class="buttons">
@@ -134,8 +151,9 @@
       transition: opacity 150ms cubic-bezier(0.19, 1, 0.22, 1);
 
       h2 {
-        font-family: unset;
+        font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
         font-size: 18px;
+        color: white;
       }
 
       span {

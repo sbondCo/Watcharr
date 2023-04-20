@@ -35,6 +35,7 @@
         poster={w.poster_path ? "https://image.tmdb.org/t/p/w500" + w.poster_path : undefined}
         title={w.title ?? w.name}
         desc={w.overview}
+        link="/{w.media_type}/{w.id}"
         onStatusChanged={(t) => updateWatched(w.id, w.media_type, t)}
         onRatingChanged={(r) => updateWatched(w.id, w.media_type, undefined, r)}
         {...getWatchedDependedProps(w.id, wList)}

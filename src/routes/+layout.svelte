@@ -17,6 +17,11 @@
     font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont;
   }
 
+  :global(a) {
+    text-decoration: none;
+    color: white;
+  }
+
   :global(input) {
     padding: 5px 10px;
     border: 2px solid black;
