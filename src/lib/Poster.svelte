@@ -37,6 +37,7 @@
     if (posterActive && link) goto(link);
   }}
   on:keypress={() => console.log("on kpress")}
+  class={posterActive ? "active" : ""}
 >
   <div class={`container${!poster ? " details-shown" : ""}`}>
     {#if poster}
@@ -119,6 +120,10 @@
 </li>
 
 <style lang="scss">
+  li.active {
+    cursor: pointer;
+  }
+
   .container {
     display: flex;
     flex-flow: column;
