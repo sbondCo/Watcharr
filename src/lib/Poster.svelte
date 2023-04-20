@@ -24,80 +24,82 @@
   }
 </script>
 
-<li class={`container${!poster ? " details-shown" : ""}`} role="menuitem">
-  {#if poster}
-    <img loading="lazy" src={poster} alt="poster" />
-  {/if}
-  <div class="inner">
-    <h2>{title}</h2>
-    <span>{desc}</span>
+<li>
+  <div class={`container${!poster ? " details-shown" : ""}`}>
+    {#if poster}
+      <img loading="lazy" src={poster} alt="poster" />
+    {/if}
+    <div class="inner">
+      <h2>{title}</h2>
+      <span>{desc}</span>
 
-    <div class="buttons">
-      <button
-        class="rating"
-        on:click={() => (ratingsShown = !ratingsShown)}
-        on:mouseleave={() => (ratingsShown = false)}
-      >
-        <span>*</span>
-        <span>{rating ? rating : "Rate"}</span>
-        {#if ratingsShown}
-          <div>
-            {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
+      <div class="buttons">
+        <button
+          class="rating"
+          on:click={() => (ratingsShown = !ratingsShown)}
+          on:mouseleave={() => (ratingsShown = false)}
+        >
+          <span>*</span>
+          <span>{rating ? rating : "Rate"}</span>
+          {#if ratingsShown}
+            <div>
+              {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
+                <button
+                  class="plain{rating === v ? ' active' : ''}"
+                  on:click={() => handleStarClick(v)}
+                >
+                  {v}
+                </button>
+              {/each}
+            </div>
+          {/if}
+        </button>
+        <button
+          class="status"
+          on:click={() => (statusesShown = !statusesShown)}
+          on:mouseleave={() => (statusesShown = false)}
+        >
+          {#if status}
+            <Icon i={iconFromStatus(status)} />
+          {:else}
+            <span class="no-icon">+</span>
+          {/if}
+          {#if statusesShown}
+            <div>
               <button
-                class="plain{rating === v ? ' active' : ''}"
-                on:click={() => handleStarClick(v)}
+                class="plain{status && status !== 'PLANNED' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("PLANNED")}
               >
-                {v}
+                <Icon i="calendar" />
               </button>
-            {/each}
-          </div>
-        {/if}
-      </button>
-      <button
-        class="status"
-        on:click={() => (statusesShown = !statusesShown)}
-        on:mouseleave={() => (statusesShown = false)}
-      >
-        {#if status}
-          <Icon i={iconFromStatus(status)} />
-        {:else}
-          <span class="no-icon">+</span>
-        {/if}
-        {#if statusesShown}
-          <div>
-            <button
-              class="plain{status && status !== 'PLANNED' ? ' not-active' : ''}"
-              on:click={() => handleStatusClick("PLANNED")}
-            >
-              <Icon i="calendar" />
-            </button>
-            <button
-              class="plain{status && status !== 'WATCHING' ? ' not-active' : ''}"
-              on:click={() => handleStatusClick("WATCHING")}
-            >
-              <Icon i="clock" />
-            </button>
-            <button
-              class="plain{status && status !== 'FINISHED' ? ' not-active' : ''}"
-              on:click={() => handleStatusClick("FINISHED")}
-            >
-              <Icon i="check" />
-            </button>
-            <button
-              class="plain{status && status !== 'HOLD' ? ' not-active' : ''}"
-              on:click={() => handleStatusClick("HOLD")}
-            >
-              <Icon i="pause" />
-            </button>
-            <button
-              class="plain{status && status !== 'DROPPED' ? ' not-active' : ''}"
-              on:click={() => handleStatusClick("DROPPED")}
-            >
-              <Icon i="thumb-down" />
-            </button>
-          </div>
-        {/if}
-      </button>
+              <button
+                class="plain{status && status !== 'WATCHING' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("WATCHING")}
+              >
+                <Icon i="clock" />
+              </button>
+              <button
+                class="plain{status && status !== 'FINISHED' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("FINISHED")}
+              >
+                <Icon i="check" />
+              </button>
+              <button
+                class="plain{status && status !== 'HOLD' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("HOLD")}
+              >
+                <Icon i="pause" />
+              </button>
+              <button
+                class="plain{status && status !== 'DROPPED' ? ' not-active' : ''}"
+                on:click={() => handleStatusClick("DROPPED")}
+              >
+                <Icon i="thumb-down" />
+              </button>
+            </div>
+          {/if}
+        </button>
+      </div>
     </div>
   </div>
 </li>
