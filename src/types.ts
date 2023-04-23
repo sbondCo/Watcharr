@@ -7,6 +7,7 @@ export type Icon = "check" | "clock" | "calendar" | "thumb-down" | "play" | "pau
 
 export interface Content {
   id: number;
+  tmdbId: number;
   title: string;
   poster_path: string;
   overview: string;

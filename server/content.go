@@ -13,11 +13,12 @@ const (
 
 // For storing cached content, so we can serve the basic local data for watched list to work
 type Content struct {
-	ID         int         `json:"id" gorm:"primaryKey"`
+	ID         int         `json:"id" gorm:"primaryKey;autoIncrement"`
+	TmdbID     int         `json:"tmdbId" gorm:"uniqueIndex:contentidtotypeidx;not null"`
 	Title      string      `json:"title"`
 	PosterPath string      `json:"poster_path"`
 	Overview   string      `json:"overview"`
-	Type       ContentType `json:"type"`
+	Type       ContentType `json:"type" gorm:"uniqueIndex:contentidtotypeidx;not null"`
 }
 
 func searchContent(query string) (TMDBSearchMultiResponse, error) {
