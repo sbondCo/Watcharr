@@ -17,7 +17,7 @@
     gap: 10px;
     list-style: none;
     flex-wrap: wrap;
-    margin: 20px;
+    margin: 20px 10px;
     max-width: 1200px;
   }
 </style>
