@@ -21,7 +21,7 @@
         desc={w.content.overview}
         rating={w.rating}
         status={w.status}
-        link="/{w.content.type}/{w.content.id}"
+        link="/{w.content.type}/{w.content.tmdbId}"
         onStatusChanged={(t) => updateWatched(w.content.id, w.content.type, t)}
         onRatingChanged={(r) => updateWatched(w.content.id, w.content.type, undefined, r)}
       />

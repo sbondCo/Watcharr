@@ -20,7 +20,7 @@ export function updateWatched(
 ) {
   // If item is already in watched store, run update request instead
   const wList = get(watchedList);
-  const wEntry = wList.find((w) => w.content.id === contentId);
+  const wEntry = wList.find((w) => w.content.id === contentId && w.content.type === contentType);
   if (wEntry?.id) {
     if (!status && !rating) return;
     const obj = {} as WatchedUpdateRequest;
