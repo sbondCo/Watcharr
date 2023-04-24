@@ -9,3 +9,7 @@ export const watchedStatuses: {
   HOLD: "pause",
   DROPPED: "thumb-down"
 };
+
+export function isTouch() {
+  return "ontouchstart" in window;
+}
