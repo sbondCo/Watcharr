@@ -44,7 +44,10 @@
 </script>
 
 <nav>
-  <a href="/"><h1>Watcharr</h1></a>
+  <a href="/">
+    <h1 class="large">Watcharr</h1>
+    <h1 class="small">W</h1>
+  </a>
   <input type="text" placeholder="Search" on:keydown={handleSearch} />
   <button class="plain face" on:click={handleProfileClick}>:)</button>
   {#if subMenuShown}
@@ -73,13 +76,26 @@
       &:focus-visible h1 {
         color: black;
       }
+
+      h1.small {
+        display: none;
+      }
+
+      @media screen and (max-width: 580px) {
+        h1.large {
+          display: none;
+        }
+        h1.small {
+          display: unset;
+        }
+      }
     }
 
     h1 {
       color: white;
       -webkit-text-stroke: 1.5px black;
       font-size: 35px;
-      transition: all 150ms ease;
+      transition: color 150ms ease;
     }
 
     input {
@@ -87,7 +103,7 @@
       font-weight: bold;
       text-align: center;
       box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
-      transition: all 150ms ease-in-out;
+      transition: width 150ms ease, box-shadow 150ms ease;
 
       &:hover,
       &:focus {
@@ -101,7 +117,7 @@
       writing-mode: vertical-rl;
       text-orientation: mixed;
       cursor: pointer;
-      transition: all 150ms ease-in-out;
+      transition: -webkit-text-stroke 150ms ease, color 150ms ease;
 
       &:hover,
       &:focus-visible {
@@ -137,10 +153,6 @@
     }
 
     @media screen and (max-width: 580px) {
-      h1 {
-        display: none;
-      }
-
       input {
         width: 100%;
       }
