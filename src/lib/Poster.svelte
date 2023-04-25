@@ -44,83 +44,85 @@
     {#if poster}
       <img loading="lazy" src={poster} alt="poster" />
     {/if}
-    {#if posterActive}
-      <a data-sveltekit-preload-data="off" href={link}>
-        <div class="inner">
-          <h2>
-            {#if link}
-              <a data-sveltekit-preload-data="tap" href={link}>
-                {title}
-              </a>
-            {:else}
-              {title}
-            {/if}
-          </h2>
-          <span>{desc}</span>
+    <div
+      on:click={() => {
+        if (posterActive && link) goto(link);
+      }}
+      on:keypress={() => console.log("on kpress")}
+      class="inner"
+    >
+      <h2>
+        {#if link}
+          <a data-sveltekit-preload-data="tap" href={link}>
+            {title}
+          </a>
+        {:else}
+          {title}
+        {/if}
+      </h2>
+      <span>{desc}</span>
 
-          <div class="buttons">
-            <button
-              class="rating"
-              on:click={(ev) => {
-                ev.stopPropagation();
-                ratingsShown = !ratingsShown;
-              }}
-              on:mouseleave={(ev) => {
-                ratingsShown = false;
-                ev.currentTarget.blur();
-              }}
-            >
-              <span>*</span>
-              <span>{rating ? rating : "Rate"}</span>
-              {#if ratingsShown}
-                <div>
-                  {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
-                    <button
-                      class="plain{rating === v ? ' active' : ''}"
-                      on:click={(ev) => {
-                        ev.stopPropagation();
-                        handleStarClick(v);
-                      }}
-                    >
-                      {v}
-                    </button>
-                  {/each}
-                </div>
-              {/if}
-            </button>
-            <button
-              class="status"
-              on:click={(ev) => {
-                ev.stopPropagation();
-                statusesShown = !statusesShown;
-              }}
-              on:mouseleave={(ev) => {
-                statusesShown = false;
-                ev.currentTarget.blur();
-              }}
-            >
-              {#if status}
-                <Icon i={watchedStatuses[status]} />
-              {:else}
-                <span class="no-icon">+</span>
-              {/if}
-              {#if statusesShown}
-                <div>
-                  {#each Object.entries(watchedStatuses) as [statusName, icon]}
-                    <button
-                      class="plain{status && status !== statusName ? ' not-active' : ''}"
-                      on:click={() => handleStatusClick(statusName)}
-                    >
-                      <Icon i={icon} />
-                    </button>
-                  {/each}
-                </div>
-              {/if}
-            </button>
-          </div>
-        </div>
-      </a>
-    {/if}
+      <div class="buttons">
+        <button
+          class="rating"
+          on:click={(ev) => {
+            ev.stopPropagation();
+            ratingsShown = !ratingsShown;
+          }}
+          on:mouseleave={(ev) => {
+            ratingsShown = false;
+            ev.currentTarget.blur();
+          }}
+        >
+          <span>*</span>
+          <span>{rating ? rating : "Rate"}</span>
+          {#if ratingsShown}
+            <div>
+              {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
+                <button
+                  class="plain{rating === v ? ' active' : ''}"
+                  on:click={(ev) => {
+                    ev.stopPropagation();
+                    handleStarClick(v);
+                  }}
+                >
+                  {v}
+                </button>
+              {/each}
+            </div>
+          {/if}
+        </button>
+        <button
+          class="status"
+          on:click={(ev) => {
+            ev.stopPropagation();
+            statusesShown = !statusesShown;
+          }}
+          on:mouseleave={(ev) => {
+            statusesShown = false;
+            ev.currentTarget.blur();
+          }}
+        >
+          {#if status}
+            <Icon i={watchedStatuses[status]} />
+          {:else}
+            <span class="no-icon">+</span>
+          {/if}
+          {#if statusesShown}
+            <div>
+              {#each Object.entries(watchedStatuses) as [statusName, icon]}
+                <button
+                  class="plain{status && status !== statusName ? ' not-active' : ''}"
+                  on:click={() => handleStatusClick(statusName)}
+                >
+                  <Icon i={icon} />
+                </button>
+              {/each}
+            </div>
+          {/if}
+        </button>
+      </div>
+    </div>
   </div>
 </li>
 
