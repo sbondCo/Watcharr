@@ -6,7 +6,7 @@ export type MediaType = ContentType | "person";
 export type Icon = "check" | "clock" | "calendar" | "thumb-down" | "play" | "pause" | "jellyfin";
 
 export interface Content {
-  id: number;
+  // id: number; // Not used
   tmdbId: number;
   title: string;
   poster_path: string;

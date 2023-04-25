@@ -8,7 +8,7 @@
   export let data: TMDBMovieDetails;
   let releaseDate = new Date(Date.parse(data.release_date));
 
-  $: wListItem = $watchedList.find((w) => w.content.id === data.id);
+  $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.id);
 
   function contentChanged(newStatus?: WatchedStatus, newRating?: number) {
     updateWatched(data.id, "movie", newStatus, newRating);

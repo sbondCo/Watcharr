@@ -22,8 +22,8 @@
         rating={w.rating}
         status={w.status}
         link="/{w.content.type}/{w.content.tmdbId}"
-        onStatusChanged={(t) => updateWatched(w.content.id, w.content.type, t)}
-        onRatingChanged={(r) => updateWatched(w.content.id, w.content.type, undefined, r)}
+        onStatusChanged={(t) => updateWatched(w.content.tmdbId, w.content.type, t)}
+        onRatingChanged={(r) => updateWatched(w.content.tmdbId, w.content.type, undefined, r)}
       />
     {/each}
   {:else}

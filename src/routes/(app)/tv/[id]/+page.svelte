@@ -8,10 +8,10 @@
   export let data: TMDBShowDetails;
   let releaseDate = new Date(Date.parse(data.first_air_date));
 
-  $: wListItem = $watchedList.find((w) => w.content.id === data.id);
+  $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.id);
 
   function contentChanged(newStatus?: WatchedStatus, newRating?: number) {
-    updateWatched(data.id, "movie", newStatus, newRating);
+    updateWatched(data.id, "tv", newStatus, newRating);
   }
 </script>
 
@@ -82,7 +82,7 @@
     </div>
   </div>
 {:else}
-  Movie not found
+  Show not found
 {/if}
 
 <style lang="scss">
