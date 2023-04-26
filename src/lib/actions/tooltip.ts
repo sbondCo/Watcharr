@@ -31,12 +31,14 @@ export default function tooltip(node: HTMLElement, opts: ToolTipOptions) {
 
   node.addEventListener("mouseover", show);
   node.addEventListener("mouseout", hide);
+  node.addEventListener("click", hide);
 
   return {
     destroy() {
       console.log("el destroyed");
       node.removeEventListener("mouseover", show);
       node.removeEventListener("mouseout", hide);
+      node.removeEventListener("click", hide);
     }
   };
 }
