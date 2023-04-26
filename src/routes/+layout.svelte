@@ -1,3 +1,4 @@
+<div id="tooltip" />
 <slot />
 
 <style lang="scss">
@@ -79,5 +80,18 @@
 
   :global(button.not-active) {
     opacity: 0.5;
+  }
+
+  :global(#tooltip) {
+    visibility: hidden;
+    position: absolute;
+    padding: 8px 5px;
+    background-color: black;
+    color: white;
+    border: 1px solid white;
+    border-radius: 6px;
+    z-index: 99999;
+    transition: top 100ms ease, left 100ms ease;
+    pointer-events: none;
   }
 </style>

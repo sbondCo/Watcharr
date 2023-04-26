@@ -3,6 +3,7 @@
   import Icon from "./Icon.svelte";
   import { isTouch, watchedStatuses } from "./helpers";
   import { goto } from "$app/navigation";
+  import tooltip from "./actions/tooltip";
 
   export let poster: string | undefined;
   export let title: string | undefined;
@@ -114,6 +115,7 @@
                 <button
                   class="plain{status && status !== statusName ? ' not-active' : ''}"
                   on:click={() => handleStatusClick(statusName)}
+                  use:tooltip={{ text: statusName }}
                 >
                   <Icon i={icon} />
                 </button>
