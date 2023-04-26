@@ -113,6 +113,7 @@
     flex-flow: column;
     align-items: center;
     gap: 10px;
+    margin: 0 35px;
   }
 
   .inner,
