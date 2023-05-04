@@ -92,8 +92,9 @@
     }
 
     h1 {
+      font-weight: bold;
       color: white;
-      -webkit-text-stroke: 1.5px black;
+      -webkit-text-stroke: 1px black;
       font-size: 35px;
       transition: color 150ms ease;
     }
@@ -114,8 +115,7 @@
     button.face {
       font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont;
       font-size: 25px;
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
+      transform: rotate(90deg);
       cursor: pointer;
       transition: -webkit-text-stroke 150ms ease, color 150ms ease;
 

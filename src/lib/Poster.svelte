@@ -197,7 +197,7 @@
           &.rating {
             span {
               color: black;
-              -webkit-text-stroke: 1.5px black;
+              /* -webkit-text-stroke: 1.5px black; */
 
               &:first-child {
                 font-size: 39px;
@@ -215,7 +215,11 @@
             &:hover span,
             &:focus-visible span {
               color: gold;
-              -webkit-text-stroke: 1.5px gold;
+              /* -webkit-text-stroke: 1.5px gold; */
+            }
+
+            div button {
+              font-size: 20px;
             }
           }
 
@@ -251,7 +255,6 @@
               width: 100%;
               color: black;
               fill: black;
-              font-size: 20px;
 
               & :global(svg) {
                 width: 100%;
