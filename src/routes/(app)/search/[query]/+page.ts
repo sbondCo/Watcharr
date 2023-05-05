@@ -39,13 +39,7 @@ export async function load({ params }) {
     return;
   }
 
-  try {
-    return (await axios.get(`/content/${query}`)).data as ContentSearch;
-  } catch (err: any) {
-    if (err.response) {
-      error(500, err.response.data.error);
-    } else {
-      error(500, err.message);
-    }
-  }
+  return {
+    slug: query
+  };
 }
