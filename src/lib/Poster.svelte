@@ -30,6 +30,15 @@
   function handleStatusClick(type: WatchedStatus) {
     onStatusChanged(type);
   }
+
+  function addClassToParent(
+    e: Event & {
+      currentTarget: EventTarget & Element;
+    },
+    c: string
+  ) {
+    (e.currentTarget?.parentNode as HTMLDivElement)?.classList.add(c);
+  }
 </script>
 
 <li
@@ -43,7 +52,20 @@
 >
   <div class={`container${!poster ? " details-shown" : ""}`}>
     {#if poster}
-      <img loading="lazy" src={poster} alt="poster" />
+      <div class="img-loader" />
+      <img
+        loading="lazy"
+        src={poster}
+        alt=""
+        on:load={(e) => {
+          // setTimeout(() => {
+          addClassToParent(e, "img-loaded");
+          // }, 1000);
+        }}
+        on:error={(e) => {
+          addClassToParent(e, "details-shown");
+        }}
+      />
     {/if}
     <div
       on:click={() => {
@@ -150,6 +172,33 @@
     img {
       width: 100%;
       height: 100%;
+    }
+
+    &.img-loaded .img-loader,
+    &.details-shown .img-loader {
+      display: none;
+    }
+
+    .img-loader {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-color: gray;
+      background: linear-gradient(359deg, #5c5c5c, #2c2929, #2c2424);
+      background-size: 400% 400%;
+      animation: imgloader 4s ease infinite;
+
+      @-webkit-keyframes imgloader {
+        0% {
+          background-position: 50% 0%;
+        }
+        50% {
+          background-position: 50% 100%;
+        }
+        100% {
+          background-position: 50% 0%;
+        }
+      }
     }
 
     .inner {

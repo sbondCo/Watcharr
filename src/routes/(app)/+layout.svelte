@@ -1,6 +1,9 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { clearAllStores } from "@/store";
+  import PageError from "@/lib/PageError.svelte";
+  import Spinner from "@/lib/Spinner.svelte";
+  import { clearAllStores, watchedList } from "@/store";
+  import axios from "axios";
 
   let searchTimeout: number;
   let subMenuShown = false;
@@ -41,6 +44,17 @@
     clearAllStores();
     goto("/login");
   }
+
+  async function getWatchedList() {
+    if (localStorage.getItem("token")) {
+      const w = await axios.get("/watched");
+      if (w?.data?.length > 0) {
+        watchedList.update((wl) => (wl = w.data));
+      }
+    } else {
+      goto("/login?again=1");
+    }
+  }
 </script>
 
 <nav>
@@ -58,7 +72,13 @@
   {/if}
 </nav>
 
-<slot />
+{#await getWatchedList()}
+  <Spinner />
+{:then}
+  <slot />
+{:catch err}
+  <PageError pretty="Failed to load watched list!" error={err} />
+{/await}
 
 <style lang="scss">
   nav {
