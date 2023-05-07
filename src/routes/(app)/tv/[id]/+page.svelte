@@ -1,67 +1,76 @@
 <script lang="ts">
+  import PageError from "@/lib/PageError.svelte";
   import Rating from "@/lib/Rating.svelte";
+  import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import { updateWatched } from "@/lib/api";
   import { watchedList } from "@/store";
   import type { TMDBShowDetails, WatchedStatus } from "@/types";
+  import axios from "axios";
 
-  export let data: TMDBShowDetails;
-  let releaseDate = new Date(Date.parse(data.first_air_date));
+  export let data;
 
-  $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.id);
+  $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.tvId);
+
+  async function getShow() {
+    return (await axios.get(`/content/tv/${data.tvId}`)).data as TMDBShowDetails;
+  }
 
   function contentChanged(newStatus?: WatchedStatus, newRating?: number) {
-    updateWatched(data.id, "tv", newStatus, newRating);
+    updateWatched(data.tvId, "tv", newStatus, newRating);
   }
 </script>
 
-{#if Object.keys(data).length > 0}
-  <div>
-    <div class="content">
-      <img
-        class="backdrop"
-        src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + data.backdrop_path}
-        alt=""
-      />
-      <div class="vignette" />
+{#await getShow()}
+  <Spinner />
+{:then show}
+  {#if Object.keys(show).length > 0}
+    <div>
+      <div class="content">
+        <img
+          class="backdrop"
+          src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + show.backdrop_path}
+          alt=""
+        />
+        <div class="vignette" />
 
-      <div class="details-container">
-        <img class="poster" src={"https://image.tmdb.org/t/p/w500" + data.poster_path} alt="" />
+        <div class="details-container">
+          <img class="poster" src={"https://image.tmdb.org/t/p/w500" + show.poster_path} alt="" />
 
-        <div class="details">
-          <span class="title-container">
-            <a href={data.homepage} target="_blank">{data.name}</a>
-            <span>{releaseDate.getFullYear()}</span>
-          </span>
+          <div class="details">
+            <span class="title-container">
+              <a href={show.homepage} target="_blank">{show.name}</a>
+              <span>{new Date(Date.parse(show.first_air_date)).getFullYear()}</span>
+            </span>
 
-          <span class="quick-info">
-            <span>{data.episode_run_time}m</span>
+            <span class="quick-info">
+              <span>{show.episode_run_time}m</span>
 
-            <div>
-              {#each data.genres as g, i}
-                <span>{g.name}{i !== data.genres.length - 1 ? ", " : ""}</span>
-              {/each}
-            </div>
-          </span>
+              <div>
+                {#each show.genres as g, i}
+                  <span>{g.name}{i !== show.genres.length - 1 ? ", " : ""}</span>
+                {/each}
+              </div>
+            </span>
 
-          <!-- <span>{data.tagline}</span> -->
+            <!-- <span>{show.tagline}</span> -->
 
-          <!-- {data.status} -->
+            <!-- {show.status} -->
 
-          <span style="font-weight: bold; font-size: 14px;">Overview</span>
-          <p>{data.overview}</p>
+            <span style="font-weight: bold; font-size: 14px;">Overview</span>
+            <p>{show.overview}</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="page">
-      <div class="review">
-        <!-- <span>What did you think?</span> -->
-        <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
-        <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
-      </div>
+      <div class="page">
+        <div class="review">
+          <!-- <span>What did you think?</span> -->
+          <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
+          <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
+        </div>
 
-      <!-- <div class="creators">
+        <!-- <div class="creators">
         <div>
           <span>Mr Boombastic</span>
           <span>Director</span>
@@ -79,11 +88,14 @@
           <span>Producer</span>
         </div>
       </div> -->
+      </div>
     </div>
-  </div>
-{:else}
-  Show not found
-{/if}
+  {:else}
+    Show not found
+  {/if}
+{:catch err}
+  <PageError pretty="Failed to load tv show!" error={err} />
+{/await}
 
 <style lang="scss">
   .content {

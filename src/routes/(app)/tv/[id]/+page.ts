@@ -1,6 +1,4 @@
 import { error } from "@sveltejs/kit";
-import type { TMDBShowDetails } from "@/types";
-import axios from "axios";
 import type { PageLoad } from "../../search/[query]/$types";
 
 export const load = (async ({ params }) => {
@@ -11,13 +9,7 @@ export const load = (async ({ params }) => {
     return;
   }
 
-  try {
-    return (await axios.get(`/content/tv/${id}`)).data as TMDBShowDetails;
-  } catch (err: any) {
-    if (err.response) {
-      error(500, err.response.data.error);
-    } else {
-      error(500, err.message);
-    }
-  }
+  return {
+    tvId: Number(id)
+  };
 }) satisfies PageLoad;
