@@ -2,7 +2,23 @@
 <slot />
 
 <style lang="scss">
-  @import url("https://fonts.googleapis.com/css2?family=Rampart+One&display=swap");
+  @font-face {
+    font-family: "Shrikhand";
+    src: local("Shrikhand Regular"), local("Shrikhand-Regular"),
+      url("/Shrikhand-Regular.woff2") format("woff2");
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Rampart One";
+    src: local("Rampart One Regular"), local("RampartOne-Regular"),
+      url("/RampartOne-Regular.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
 
   :global(*) {
     padding: 0;
@@ -15,7 +31,7 @@
   }
 
   :global(h1, h2, h3, h4, h5) {
-    font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont;
+    font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
   }
 
   :global(a) {

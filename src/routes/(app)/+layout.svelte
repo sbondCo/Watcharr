@@ -59,8 +59,8 @@
 
 <nav>
   <a href="/">
-    <h1 class="large">Watcharr</h1>
-    <h1 class="small">W</h1>
+    <span class="large">Watcharr</span>
+    <span class="small">W</span>
   </a>
   <input type="text" placeholder="Search" on:keydown={handleSearch} />
   <button class="plain face" on:click={handleProfileClick}>:)</button>
@@ -91,32 +91,30 @@
 
     a {
       text-decoration: none;
+      color: black;
+      font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
+      font-size: 35px;
+      transition: -webkit-text-stroke 150ms ease, color 150ms ease, font-weight 150ms ease;
 
-      &:hover h1,
-      &:focus-visible h1 {
-        color: black;
+      &:hover,
+      &:focus-visible {
+        color: white;
+        -webkit-text-stroke: 3px black;
+        font-weight: bold;
       }
 
-      h1.small {
+      span.small {
         display: none;
       }
 
       @media screen and (max-width: 580px) {
-        h1.large {
+        span.large {
           display: none;
         }
-        h1.small {
+        span.small {
           display: unset;
         }
       }
-    }
-
-    h1 {
-      font-weight: bold;
-      color: white;
-      -webkit-text-stroke: 1px black;
-      font-size: 35px;
-      transition: color 150ms ease;
     }
 
     input {
@@ -133,7 +131,7 @@
     }
 
     button.face {
-      font-family: "Rampart One", system-ui, -apple-system, BlinkMacSystemFont;
+      font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
       font-size: 25px;
       transform: rotate(90deg);
       cursor: pointer;
