@@ -58,9 +58,7 @@
         src={poster}
         alt=""
         on:load={(e) => {
-          // setTimeout(() => {
           addClassToParent(e, "img-loaded");
-          // }, 1000);
         }}
         on:error={(e) => {
           addClassToParent(e, "details-shown");

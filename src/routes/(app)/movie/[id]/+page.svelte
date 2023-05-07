@@ -1,89 +1,101 @@
 <script lang="ts">
+  import PageError from "@/lib/PageError.svelte";
   import Rating from "@/lib/Rating.svelte";
+  import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import { updateWatched } from "@/lib/api";
   import { watchedList } from "@/store";
   import type { TMDBMovieDetails, WatchedStatus } from "@/types";
+  import axios from "axios";
 
-  export let data: TMDBMovieDetails;
-  let releaseDate = new Date(Date.parse(data.release_date));
+  export let data;
 
-  $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.id);
+  $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.movieId);
+
+  async function getMovie() {
+    return (await axios.get(`/content/movie/${data.movieId}`)).data as TMDBMovieDetails;
+  }
 
   function contentChanged(newStatus?: WatchedStatus, newRating?: number) {
-    updateWatched(data.id, "movie", newStatus, newRating);
+    updateWatched(data.movieId, "movie", newStatus, newRating);
   }
 </script>
 
-{#if Object.keys(data).length > 0}
-  <div>
-    <div class="content">
-      <img
-        class="backdrop"
-        src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + data.backdrop_path}
-        alt=""
-      />
-      <div class="vignette" />
+{#await getMovie()}
+  <Spinner />
+{:then movie}
+  {#if Object.keys(movie).length > 0}
+    <div>
+      <div class="content">
+        <img
+          class="backdrop"
+          src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + movie.backdrop_path}
+          alt=""
+        />
+        <div class="vignette" />
 
-      <div class="details-container">
-        <img class="poster" src={"https://image.tmdb.org/t/p/w500" + data.poster_path} alt="" />
+        <div class="details-container">
+          <img class="poster" src={"https://image.tmdb.org/t/p/w500" + movie.poster_path} alt="" />
 
-        <div class="details">
-          <span class="title-container">
-            <a href={data.homepage} target="_blank">{data.title}</a>
-            <span>{releaseDate.getFullYear()}</span>
-          </span>
+          <div class="details">
+            <span class="title-container">
+              <a href={movie.homepage} target="_blank">{movie.title}</a>
+              <span>{new Date(Date.parse(movie.release_date)).getFullYear()}</span>
+            </span>
 
-          <span class="quick-info">
-            <span>{data.runtime}m</span>
+            <span class="quick-info">
+              <span>{movie.runtime}m</span>
 
-            <div>
-              {#each data.genres as g, i}
-                <span>{g.name}{i !== data.genres.length - 1 ? ", " : ""}</span>
-              {/each}
-            </div>
-          </span>
+              <div>
+                {#each movie.genres as g, i}
+                  <span>{g.name}{i !== movie.genres.length - 1 ? ", " : ""}</span>
+                {/each}
+              </div>
+            </span>
 
-          <!-- <span>{data.tagline}</span> -->
+            <!-- <span>{movie.tagline}</span> -->
 
-          <!-- {data.status} -->
+            <!-- {movie.status} -->
 
-          <span style="font-weight: bold; font-size: 14px;">Overview</span>
-          <p>{data.overview}</p>
+            <span style="font-weight: bold; font-size: 14px;">Overview</span>
+            <p>{movie.overview}</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="page">
-      <div class="review">
-        <!-- <span>What did you think?</span> -->
-        <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
-        <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
+      <div class="page">
+        <div class="review">
+          <!-- <span>What did you think?</span> -->
+          <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
+          <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
+        </div>
+
+        <!-- <div class="creators">
+      <div>
+        <span>Mr Boombastic</span>
+        <span>Director</span>
       </div>
-
-      <!-- <div class="creators">
-        <div>
-          <span>Mr Boombastic</span>
-          <span>Director</span>
-        </div>
-        <div>
-          <span>Mr Boombastic</span>
-          <span>Writer</span>
-        </div>
-        <div>
-          <span>Mr Boombastic</span>
-          <span>Producer</span>
-        </div>
-        <div>
-          <span>Mr Boombastic</span>
-          <span>Producer</span>
-        </div>
-      </div> -->
+      <div>
+        <span>Mr Boombastic</span>
+        <span>Writer</span>
+      </div>
+      <div>
+        <span>Mr Boombastic</span>
+        <span>Producer</span>
+      </div>
+      <div>
+        <span>Mr Boombastic</span>
+        <span>Producer</span>
+      </div>
+    </div> -->
+      </div>
     </div>
-  </div>
-{:else}
-  Movie not found
-{/if}
+  {:else}
+    Movie not found
+  {/if}
+{:catch err}
+  <PageError pretty="Failed to load movie!" error={err} />
+{/await}
 
 <style lang="scss">
   .content {
