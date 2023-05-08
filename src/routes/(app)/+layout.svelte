@@ -95,6 +95,7 @@
       font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
       font-size: 35px;
       transition: -webkit-text-stroke 150ms ease, color 150ms ease, font-weight 150ms ease;
+      width: 185.2px;
 
       &:hover,
       &:focus-visible {
