@@ -120,6 +120,25 @@ func (b *BaseRouter) addWatchedRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	watched.DELETE(":id", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.Status(400)
+			return
+		}
+		userId := c.MustGet("userId").(uint)
+		if err == nil {
+			response, err := removeWatched(b.db, userId, uint(id))
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
 }
 
 func (b *BaseRouter) addAuthRoutes() {

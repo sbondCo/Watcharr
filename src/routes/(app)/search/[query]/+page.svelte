@@ -4,7 +4,7 @@
   import { watchedList } from "@/store";
   import type { MediaType, Watched } from "@/types";
   import type { ContentSearch } from "./+page";
-  import { updateWatched } from "@/lib/api";
+  import { removeWatched, updateWatched } from "@/lib/api";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import axios from "axios";
@@ -47,6 +47,14 @@
           link="/{w.media_type}/{w.id}"
           onStatusChanged={(t) => updateWatched(w.id, w.media_type, t)}
           onRatingChanged={(r) => updateWatched(w.id, w.media_type, undefined, r)}
+          onDeleteClicked={() => {
+            const wl = wList.find((wi) => wi.content.tmdbId === w.id);
+            if (!wl) {
+              console.error("Failed to find item in watched list, cant remove!");
+              return;
+            }
+            removeWatched(wl.id);
+          }}
           {...getWatchedDependedProps(w.id, w.media_type, wList)}
         />
       {/each}

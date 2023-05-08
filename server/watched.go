@@ -149,6 +149,21 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 	return true, nil
 }
 
+func removeWatched(db *gorm.DB, userId uint, id uint) (bool, error) {
+	println("Removing watched item:", id, "for user", userId)
+	// Our model has a deleted_at field, which will make gorm do a soft delete,
+	// for now we want to delete permanently, so we use Unscoped.
+	res := db.Model(&Watched{}).Unscoped().Delete("id = ? AND user_id = ?", id, userId)
+	if res.Error != nil {
+		println("Removing watched entry failed:", id, res.Error.Error())
+		return false, errors.New("failed to remove watched entry")
+	}
+	if res.RowsAffected <= 0 {
+		return false, errors.New("no watched entry found")
+	}
+	return true, nil
+}
+
 func download(url string, outf string) (err error) {
 	println("Attempting to download file from", url, "to", outf)
 

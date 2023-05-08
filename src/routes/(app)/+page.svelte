@@ -1,9 +1,8 @@
 <script lang="ts">
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
-  import { baseURL, updateWatched } from "@/lib/api";
+  import { baseURL, removeWatched, updateWatched } from "@/lib/api";
   import { watchedList } from "@/store";
-  import axios from "axios";
 
   $: watched = $watchedList;
 </script>
@@ -24,6 +23,7 @@
         link="/{w.content.type}/{w.content.tmdbId}"
         onStatusChanged={(t) => updateWatched(w.content.tmdbId, w.content.type, t)}
         onRatingChanged={(r) => updateWatched(w.content.tmdbId, w.content.type, undefined, r)}
+        onDeleteClicked={() => removeWatched(w.id)}
       />
     {/each}
   {:else}
