@@ -122,6 +122,10 @@
     max-width: 400px;
   }
 
+  .inner h2 {
+    font-weight: normal;
+  }
+
   label {
     align-self: flex-start;
     font-weight: bold;
