@@ -13,6 +13,7 @@
   export let link: string | undefined = undefined;
   export let onStatusChanged: (type: WatchedStatus) => void = () => {};
   export let onRatingChanged: (rating: number) => void = () => {};
+  export let onDeleteClicked: () => void = () => {};
 
   // If poster is active (scaled up)
   let posterActive = false;
@@ -27,7 +28,11 @@
     ratingsShown = false;
   }
 
-  function handleStatusClick(type: WatchedStatus) {
+  function handleStatusClick(type: WatchedStatus | "DELETE") {
+    if (type === "DELETE") {
+      onDeleteClicked();
+      return;
+    }
     onStatusChanged(type);
   }
 
@@ -140,6 +145,15 @@
                   <Icon i={icon} />
                 </button>
               {/each}
+              {#if status}
+                <button
+                  class="plain not-active"
+                  on:click={() => handleStatusClick("DELETE")}
+                  use:tooltip={{ text: "Delete" }}
+                >
+                  <Icon i="trash" />
+                </button>
+              {/if}
             </div>
           {/if}
         </button>
@@ -297,6 +311,7 @@
             list-style: none;
             border-radius: 4px 4px 0 0;
             overflow: auto;
+            scrollbar-width: thin;
 
             button {
               width: 100%;

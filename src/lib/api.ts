@@ -12,6 +12,14 @@ const { MODE } = import.meta.env;
 
 export const baseURL = MODE === "development" ? "http://127.0.0.1:3080" : "/api";
 
+/**
+ *
+ * @param contentId TMDB ID
+ * @param contentType
+ * @param status
+ * @param rating
+ * @returns
+ */
 export function updateWatched(
   contentId: number,
   contentType: MediaType,
@@ -52,6 +60,29 @@ export function updateWatched(
       console.log("Added watched:", resp.data);
       wList.push(resp.data as Watched);
       watchedList.update(() => wList);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+}
+
+/**
+ * Delete an item from watched list.
+ * @param id Watched Entry ID
+ */
+export function removeWatched(id: number) {
+  const wList = get(watchedList);
+  const wEntry = wList.find((w) => w.id === id);
+  if (!wEntry) {
+    console.log("Watched entry does not exist!");
+    return;
+  }
+  axios
+    .delete(`/watched/${id}`)
+    .then((resp) => {
+      console.log("Removed watched:", resp.data);
+      const newList = wList.filter((w) => w.id !== id);
+      watchedList.update(() => newList);
     })
     .catch((err) => {
       console.error(err);
