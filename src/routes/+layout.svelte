@@ -28,6 +28,7 @@
 
   :global(body) {
     font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+    background-color: white;
   }
 
   :global(h1, h2, h3, h4, h5) {
