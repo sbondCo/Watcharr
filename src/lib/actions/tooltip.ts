@@ -12,6 +12,7 @@ export default function tooltip(node: HTMLElement, opts: ToolTipOptions) {
       tooltip.innerHTML = text;
       const nrect = node.getBoundingClientRect();
       const trect = tooltip.getBoundingClientRect();
+      nrect.y += window.scrollY; // Add scrollY to node dom rect so tooltip shows correcting when page is scrolled down
       if (pos === "left") {
         tooltip.style.left = `${nrect.x - trect.width - 10}px`;
         tooltip.style.top = `${nrect.y + trect.height / 2 - 10}px`;
