@@ -9,13 +9,24 @@ I am built with Go and Svelte(Kit).
 
 Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build: [https://watcharr.lab.sbond.co/](https://watcharr.lab.sbond.co/)
 
+# Screenshots
+
+<center>
+<img src="./screenshot/homepage.png" alt="Watched List" />
+
+| First Header                                                            | Second Header                                                                           | Second Header                                                               |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| <img src="./screenshot/homepage-poster-hover.png" alt="Watched List" /> | <img src="./screenshot/homepage-poster-change-status.png" alt="Changing Show Status" /> | <img src="./screenshot/show-details-page.png" alt="Content Details Page" /> |
+
+</center>
+
 # Set Up
 
 Currently we have docker images for each version that are fairly simple to setup, but it is a lot more complex that I would like it to be. Hopefully this improves in the future.
 
-For now though, we have two container images ([UI](https://github.com/sbondCo/Watcharr/pkgs/container/watcharr-ui) & [Server](https://github.com/sbondCo/Watcharr/pkgs/container/watcharr-ui)) that work together through the use of a proxy. We have an example of this with Caddy in the repo.
+For now though, we have two container images ([UI](https://github.com/sbondCo/Watcharr/pkgs/container/watcharr-ui) & [Server](https://github.com/sbondCo/Watcharr/pkgs/container/watcharr-ui)) that work together through the use of a proxy.
 
-Here's a simple setup to get you started:
+Here's a simple setup to get you started based from visible files in the repo, which you can also check out. We use Caddy here, but use whatever you are comfortable with!
 
 **docker-compose.yml**
 
