@@ -1,7 +1,6 @@
-<center>
-<h1>Watcharr</h1>
-<img src="./static/logo-col.png" alt="logo" />
-</center>
+<h1 align="center">Watcharr</h1>
+<p align="center"><img src="./static/logo-col.png" alt="logo" /></p>
+
 
 I'm the place you store your watched content for later rememberance, sadly I am still in my infancy. I aspire to be easily self hosted.
 
@@ -11,14 +10,14 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 
 # Screenshots
 
-<center>
+<h3 align="center">Watched List</h3>
+<p align="center">
 <img src="./screenshot/homepage.png" alt="Watched List" />
 
-| First Header                                                            | Second Header                                                                           | Second Header                                                               |
+| Watched Show Hover                                                            | Watched Show Status Change                                                                           | Show Details                                                               |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | <img src="./screenshot/homepage-poster-hover.png" alt="Watched List" /> | <img src="./screenshot/homepage-poster-change-status.png" alt="Changing Show Status" /> | <img src="./screenshot/show-details-page.png" alt="Content Details Page" /> |
-
-</center>
+</p>
 
 # Set Up
 
