@@ -41,7 +41,9 @@
     {#if results?.results?.length > 0}
       {#each results.results as w (w.id)}
         <Poster
-          poster={w.poster_path ? "https://image.tmdb.org/t/p/w500" + w.poster_path : undefined}
+          poster={w.poster_path
+            ? "https://image.tmdb.org/t/p/w500" + w.poster_path
+            : "https://image.tmdb.org/t/p/w300_and_h450_bestv2" + w.profile_path}
           title={w.title ?? w.name}
           desc={w.overview}
           link="/{w.media_type}/{w.id}"

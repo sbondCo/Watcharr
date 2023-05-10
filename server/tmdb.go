@@ -24,6 +24,7 @@ type TMDBSearchMultiResults struct {
 	OriginalTitle    string   `json:"original_title,omitempty"`
 	Overview         string   `json:"overview"`
 	PosterPath       string   `json:"poster_path"`
+	ProfilePath      string   `json:"profile_path"`
 	MediaType        string   `json:"media_type"`
 	GenreIds         []int64  `json:"genre_ids"`
 	Popularity       float64  `json:"popularity"`

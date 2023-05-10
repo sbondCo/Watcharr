@@ -4,31 +4,54 @@ import axios from "axios";
 
 export interface ContentSearch {
   page: number;
-  results: ContentSearchResult[];
+  results: (ContentSearchMovie | ContentSearchTv | ContentSearchPerson)[];
   total_pages: number;
   total_results: number;
 }
 
-export interface ContentSearchResult {
-  adult: boolean;
-  backdrop_path: string;
-  id: number;
-  original_language: string;
-  overview: string;
-  poster_path: string;
-  media_type: MediaType;
+export interface ContentSearchMovie {
+  poster_path?: string;
+  adult?: boolean;
+  overview?: string;
+  release_date?: string;
+  original_title?: string;
   genre_ids?: number[];
-  popularity: number;
-  vote_average: number;
-  vote_count: number;
-  name?: string;
-  original_name?: string;
+  id?: number;
+  media_type: "movie";
+  original_language?: string;
+  title?: string;
+  backdrop_path?: string;
+  popularity?: number;
+  vote_count?: number;
+  video?: boolean;
+  vote_average?: number;
+}
+
+export interface ContentSearchTv {
+  poster_path?: string;
+  popularity?: number;
+  id?: number;
+  overview?: string;
+  backdrop_path?: string;
+  vote_average?: number;
+  media_type: "tv";
   first_air_date?: string;
   origin_country?: string[];
-  title?: string;
-  original_title?: string;
-  release_date?: string;
-  video?: boolean;
+  genre_ids?: number[];
+  original_language?: string;
+  vote_count?: number;
+  name?: string;
+  original_name?: string;
+}
+
+export interface ContentSearchPerson {
+  profile_path?: string;
+  adult?: boolean;
+  id?: number;
+  media_type: "person";
+  known_for?: ContentSearchMovie | ContentSearchTv;
+  name?: string;
+  popularity?: number;
 }
 
 export async function load({ params }) {
