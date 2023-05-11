@@ -1,4 +1,4 @@
-import type { Icon, WatchedStatus } from "@/types";
+import type { Icon, MediaType, Watched, WatchedStatus } from "@/types";
 
 export const watchedStatuses: {
   [key in WatchedStatus]: Icon;
@@ -12,4 +12,16 @@ export const watchedStatuses: {
 
 export function isTouch() {
   return "ontouchstart" in window;
+}
+
+// Not passing wList from #each loop caused it not to have reactivity.
+// Passing it through must allow it to recognize it as a dependency?
+export function getWatchedDependedProps(wid: number, wtype: MediaType, list: Watched[]) {
+  const wel = list.find((wl) => wl.content.tmdbId === wid && wl.content.type === wtype);
+  if (!wel) return {};
+  console.log(wid, wtype, wel?.content.title, wel?.status, wel?.rating);
+  return {
+    status: wel.status,
+    rating: wel.rating
+  };
 }

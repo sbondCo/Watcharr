@@ -50,3 +50,23 @@ func tvDetails(id string) (TMDBShowDetails, error) {
 	}
 	return *resp, nil
 }
+
+func personDetails(id string) (TMDBPersonDetails, error) {
+	resp := new(TMDBPersonDetails)
+	err := tmdbRequest("/person/"+id, map[string]string{}, &resp)
+	if err != nil {
+		println("Failed to complete person details request!", err.Error())
+		return TMDBPersonDetails{}, errors.New("failed to complete person details request")
+	}
+	return *resp, nil
+}
+
+func personCredits(id string) (TMDBPersonCombinedCredits, error) {
+	resp := new(TMDBPersonCombinedCredits)
+	err := tmdbRequest("/person/"+id+"/combined_credits", map[string]string{}, &resp)
+	if err != nil {
+		println("Failed to complete person details request!", err.Error())
+		return TMDBPersonCombinedCredits{}, errors.New("failed to complete person details request")
+	}
+	return *resp, nil
+}

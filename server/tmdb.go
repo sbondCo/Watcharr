@@ -135,6 +135,54 @@ type TMDBShowDetails struct {
 	Type string `json:"type"`
 }
 
+type TMDBPersonDetails struct {
+	Birthday           string   `json:"birthday"`
+	KnownForDepartment string   `json:"known_for_department"`
+	Deathday           string   `json:"deathday"`
+	ID                 int16    `json:"id"`
+	Name               string   `json:"name"`
+	AlsoKnownAs        []string `json:"also_known_as"`
+	Gender             int8     `json:"gender"`
+	Biography          string   `json:"biography"`
+	Popularity         float32  `json:"popularity"`
+	PlaceOfBirth       string   `json:"place_of_birth"`
+	ProfilePath        string   `json:"profile_path"`
+	Adult              bool     `json:"adult"`
+	ImdbID             string   `json:"imdb_id"`
+	Homepage           string   `json:"homepage"`
+}
+
+type TMDBPersonCombinedCredits struct {
+	ID   int                             `json:"id"`
+	Cast []TMDBPersonCombinedCreditsCast `json:"cast"`
+	// crew TMDBPersonCombinedCreditsCrew
+}
+
+type TMDBPersonCombinedCreditsCast struct {
+	ID               int      `json:"id"`
+	OriginalLanguage string   `json:"original_language"`
+	EpisodeCount     int      `json:"episode_count"`
+	Overview         string   `json:"overview"`
+	OriginCountry    []string `json:"origin_country"`
+	OriginalName     string   `json:"original_name"`
+	GenreIDs         []int    `json:"genre_ids"`
+	Name             string   `json:"name"`
+	MediaType        string   `json:"media_type"`
+	PosterPath       string   `json:"poster_path"`
+	FirstAirDate     string   `json:"first_air_date"`
+	VoteAverage      float64  `json:"vote_average"`
+	VoteCount        int      `json:"vote_count"`
+	Character        string   `json:"character"`
+	BackdropPath     string   `json:"backdrop_path"`
+	Popularity       float64  `json:"popularity"`
+	CreditID         string   `json:"credit_id"`
+	OriginalTitle    string   `json:"original_title"`
+	Video            bool     `json:"video"`
+	ReleaseDate      string   `json:"release_date"`
+	Title            string   `json:"title"`
+	Adult            bool     `json:"adult"`
+}
+
 func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
 	println("tmdbAPIRequest:", ep)
 	base, err := url.Parse("https://api.themoviedb.org/3")
