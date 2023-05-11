@@ -27,7 +27,7 @@
   // If statuses are shown
   let statusesShown = false;
 
-  const title = media.title ?? media.name;
+  const title = media.title || media.name;
   const poster = `https://image.tmdb.org/t/p/${
     media.media_type === "person" ? "w300_and_h450_bestv2" : "w500"
   }${media.poster_path || media.profile_path}`;

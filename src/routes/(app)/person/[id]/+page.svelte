@@ -97,7 +97,7 @@
   {:then credits}
     <div class="page">
       <PosterList>
-        {#each credits?.cast.slice(0, 24) as c}
+        {#each credits?.cast as c}
           <Poster
             media={c}
             onStatusChanged={(t) => updateWatched(c.id, c.media_type, t)}
