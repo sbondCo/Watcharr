@@ -3,9 +3,7 @@
   import PageError from "@/lib/PageError.svelte";
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
-  import Rating from "@/lib/Rating.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import Status from "@/lib/Status.svelte";
   import { removeWatched, updateWatched } from "@/lib/api";
   import { getWatchedDependedProps } from "@/lib/helpers.js";
   import { watchedList } from "@/store";
@@ -21,8 +19,10 @@
   }
 
   async function getPersonCredits() {
-    return (await axios.get(`/content/person/${data.personId}/credits`))
+    const credits = (await axios.get(`/content/person/${data.personId}/credits`))
       .data as TMDBPersonCombinedCredits;
+    credits.cast = credits.cast?.sort((a, b) => b.vote_count - a.vote_count);
+    return credits;
   }
 </script>
 
