@@ -2,6 +2,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import Icon from "@/lib/Icon.svelte";
+  import type { Icon as Icons } from "@/types";
   import { noAuthAxios } from "@/lib/api";
   import { onMount, afterUpdate } from "svelte";
 
@@ -55,6 +56,10 @@
         }
       });
   }
+
+  async function getLoginProviders() {
+    return (await noAuthAxios.get("/auth/available")).data as Icons[];
+  }
 </script>
 
 <div>
@@ -82,7 +87,11 @@
         <span class="login-with" style="font-weight: bold">Login With</span>
         <div class="login-btns">
           <button type="submit"><span class="watcharr">W</span>Watcharr</button>
-          <button type="submit" name="jellyfin"><Icon i="jellyfin" wh={18} />Jellyfin</button>
+          {#await getLoginProviders() then providers}
+            {#each providers as p}
+              <button type="submit" name="jellyfin" class="other"><Icon i={p} wh={18} />{p}</button>
+            {/each}
+          {/await}
         </div>
       {:else}
         <div class="login-btns">
@@ -150,6 +159,20 @@
         font-family: "Rampart One";
         font-size: 18px;
         line-height: 18px;
+      }
+
+      &.other {
+        overflow: hidden;
+        animation: 250ms ease otherbtn;
+
+        @keyframes otherbtn {
+          from {
+            width: 0px;
+          }
+          to {
+            width: 100%;
+          }
+        }
       }
     }
   }

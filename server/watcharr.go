@@ -20,6 +20,8 @@ type GormModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
 }
 
+var AvailableAuthProviders = []string{}
+
 func main() {
 	fmt.Println("Watcharr Starting")
 
@@ -67,6 +69,10 @@ func main() {
 func ensureEnv() {
 	if os.Getenv("JWT_SECRET") == "" {
 		log.Fatal("JWT_SECRET env var missing!")
+	}
+
+	if os.Getenv("JELLYFIN_HOST") != "" {
+		AvailableAuthProviders = append(AvailableAuthProviders, "jellyfin")
 	}
 }
 

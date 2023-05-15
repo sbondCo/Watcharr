@@ -159,6 +159,7 @@ func (b *BaseRouter) addAuthRoutes() {
 		c.Status(400)
 	})
 
+	// Jellyfin login
 	auth.POST("/jellyfin", func(c *gin.Context) {
 		var user User
 		if c.ShouldBindJSON(&user) == nil {
@@ -186,5 +187,10 @@ func (b *BaseRouter) addAuthRoutes() {
 			return
 		}
 		c.Status(400)
+	})
+
+	// Get available auth providers
+	auth.GET("/available", func(c *gin.Context) {
+		c.JSON(http.StatusOK, AvailableAuthProviders)
 	})
 }
