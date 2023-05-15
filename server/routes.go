@@ -74,6 +74,34 @@ func (b *BaseRouter) addContentRoutes() {
 		}
 		c.JSON(http.StatusOK, content)
 	})
+
+	// Get person details
+	content.GET("/person/:id", func(c *gin.Context) {
+		if c.Param("id") == "" {
+			c.Status(400)
+			return
+		}
+		content, err := personDetails(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
+
+	// Get person credits
+	content.GET("/person/:id/credits", func(c *gin.Context) {
+		if c.Param("id") == "" {
+			c.Status(400)
+			return
+		}
+		content, err := personCredits(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
 }
 
 func (b *BaseRouter) addWatchedRoutes() {

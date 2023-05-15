@@ -2,12 +2,12 @@
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
   import { watchedList } from "@/store";
-  import type { MediaType, Watched } from "@/types";
   import type { ContentSearch } from "./+page";
   import { removeWatched, updateWatched } from "@/lib/api";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import axios from "axios";
+  import { getWatchedDependedProps } from "@/lib/helpers";
 
   export let data;
 
@@ -15,18 +15,6 @@
 
   async function search(query: string) {
     return (await axios.get(`/content/${query}`)).data as ContentSearch;
-  }
-
-  // Not passing wList from #each loop caused it not to have reactivity.
-  // Passing it through must allow it to recognize it as a dependency?
-  function getWatchedDependedProps(wid: number, wtype: MediaType, list: Watched[]) {
-    const wel = list.find((wl) => wl.content.tmdbId === wid && wl.content.type === wtype);
-    if (!wel) return {};
-    console.log(wid, wtype, wel?.content.title, wel?.status, wel?.rating);
-    return {
-      status: wel.status,
-      rating: wel.rating
-    };
   }
 </script>
 
@@ -41,10 +29,7 @@
     {#if results?.results?.length > 0}
       {#each results.results as w (w.id)}
         <Poster
-          poster={w.poster_path ? "https://image.tmdb.org/t/p/w500" + w.poster_path : undefined}
-          title={w.title ?? w.name}
-          desc={w.overview}
-          link="/{w.media_type}/{w.id}"
+          media={w}
           onStatusChanged={(t) => updateWatched(w.id, w.media_type, t)}
           onRatingChanged={(r) => updateWatched(w.id, w.media_type, undefined, r)}
           onDeleteClicked={() => {

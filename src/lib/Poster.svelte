@@ -1,16 +1,21 @@
 <script lang="ts">
-  import type { WatchedStatus } from "@/types";
+  import type { MediaType, WatchedStatus } from "@/types";
   import Icon from "./Icon.svelte";
   import { isTouch, watchedStatuses } from "./helpers";
   import { goto } from "$app/navigation";
   import tooltip from "./actions/tooltip";
 
-  export let poster: string | undefined;
-  export let title: string | undefined;
-  export let desc: string | undefined;
+  export let media: {
+    poster_path?: string;
+    profile_path?: string;
+    title?: string;
+    name?: string;
+    overview?: string;
+    id?: number;
+    media_type?: MediaType;
+  };
   export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
-  export let link: string | undefined = undefined;
   export let onStatusChanged: (type: WatchedStatus) => void = () => {};
   export let onRatingChanged: (rating: number) => void = () => {};
   export let onDeleteClicked: () => void = () => {};
@@ -21,6 +26,12 @@
   let ratingsShown = false;
   // If statuses are shown
   let statusesShown = false;
+
+  const title = media.title || media.name;
+  const poster = `https://image.tmdb.org/t/p/${
+    media.media_type === "person" ? "w300_and_h450_bestv2" : "w500"
+  }${media.poster_path || media.profile_path}`;
+  const link = media.id ? `/${media.media_type}/${media.id}` : undefined;
 
   function handleStarClick(r: number) {
     if (r == rating) return;
@@ -86,7 +97,7 @@
           {title}
         {/if}
       </h2>
-      <span>{desc}</span>
+      <span>{media.overview}</span>
 
       <div class="buttons">
         <button
@@ -118,47 +129,52 @@
             </div>
           {/if}
         </button>
-        <button
-          class="status"
-          on:click={(ev) => {
-            ev.stopPropagation();
-            statusesShown = !statusesShown;
-          }}
-          on:mouseleave={(ev) => {
-            statusesShown = false;
-            ev.currentTarget.blur();
-          }}
-        >
-          {#if status}
-            <Icon i={watchedStatuses[status]} />
-          {:else}
-            <span class="no-icon">+</span>
-          {/if}
-          {#if statusesShown}
-            <div>
-              {#each Object.entries(watchedStatuses) as [statusName, icon]}
-                <button
-                  class="plain{status && status !== statusName ? ' not-active' : ''}"
-                  on:click={() => handleStatusClick(statusName)}
-                  use:tooltip={{ text: statusName }}
-                >
-                  <Icon i={icon} />
-                </button>
-              {/each}
-              {#if status}
-                <button
-                  class="plain not-active"
-                  on:click={() => handleStatusClick("DELETE")}
-                  use:tooltip={{ text: "Delete" }}
-                >
-                  <Icon i="trash" />
-                </button>
-              {/if}
-            </div>
-          {/if}
-        </button>
+        {#if media.media_type !== "person"}
+          <button
+            class="status"
+            on:click={(ev) => {
+              ev.stopPropagation();
+              statusesShown = !statusesShown;
+            }}
+            on:mouseleave={(ev) => {
+              statusesShown = false;
+              ev.currentTarget.blur();
+            }}
+          >
+            {#if status}
+              <Icon i={watchedStatuses[status]} />
+            {:else}
+              <span class="no-icon">+</span>
+            {/if}
+            {#if statusesShown}
+              <div>
+                {#each Object.entries(watchedStatuses) as [statusName, icon]}
+                  <button
+                    class="plain{status && status !== statusName ? ' not-active' : ''}"
+                    on:click={() => handleStatusClick(statusName)}
+                    use:tooltip={{ text: statusName }}
+                  >
+                    <Icon i={icon} />
+                  </button>
+                {/each}
+                {#if status}
+                  <button
+                    class="plain not-active"
+                    on:click={() => handleStatusClick("DELETE")}
+                    use:tooltip={{ text: "Delete" }}
+                  >
+                    <Icon i="trash" />
+                  </button>
+                {/if}
+              </div>
+            {/if}
+          </button>
+        {/if}
       </div>
     </div>
+    {#if !posterActive && media.media_type === "person"}
+      <div class="person-indicator">P</div>
+    {/if}
   </div>
 </li>
 
@@ -211,6 +227,19 @@
           background-position: 50% 0%;
         }
       }
+    }
+
+    .person-indicator {
+      position: absolute;
+      bottom: 3px;
+      left: 3px;
+      padding: 3px 5px;
+      color: white;
+      background-color: black;
+      border: 1px solid darkblue;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 12px;
     }
 
     .inner {
@@ -352,6 +381,10 @@
       .inner {
         color: white;
         opacity: 1;
+      }
+
+      .person-indicator {
+        display: none;
       }
     }
   }
