@@ -6,7 +6,7 @@ I'm the place you store your watched content for later rememberance, sadly I am 
 
 I am built with Go and Svelte(Kit).
 
-Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build: [https://watcharr.lab.sbond.co/](https://watcharr.lab.sbond.co/)
+Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build (there may be bugs, as new features are tested on here too before release): [https://watcharr.lab.sbond.co/](https://watcharr.lab.sbond.co/)
 
 # Screenshots
 
