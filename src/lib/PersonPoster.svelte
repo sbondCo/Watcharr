@@ -1,9 +1,6 @@
 <script lang="ts">
-  import type { MediaType, WatchedStatus } from "@/types";
-  import Icon from "./Icon.svelte";
-  import { isTouch, watchedStatuses } from "./helpers";
   import { goto } from "$app/navigation";
-  import tooltip from "./actions/tooltip";
+  import { addClassToParent } from "./helpers";
 
   export let id: number | undefined;
   export let name: string | undefined;
@@ -11,15 +8,6 @@
 
   const poster = path ? `https://image.tmdb.org/t/p/w300_and_h450_bestv2${path}` : undefined;
   const link = id ? `/person/${id}` : undefined;
-
-  function addClassToParent(
-    e: Event & {
-      currentTarget: EventTarget & Element;
-    },
-    c: string
-  ) {
-    (e.currentTarget?.parentNode as HTMLDivElement)?.classList.add(c);
-  }
 </script>
 
 <li

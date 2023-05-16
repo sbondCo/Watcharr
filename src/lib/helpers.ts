@@ -25,3 +25,17 @@ export function getWatchedDependedProps(wid: number, wtype: MediaType, list: Wat
     rating: wel.rating
   };
 }
+
+/**
+ * Add a class to the parent node of a clicked element.
+ * @param e Event with currentTarget.
+ * @param c Class to add to parent.
+ */
+export function addClassToParent(
+  e: Event & {
+    currentTarget: EventTarget & Element;
+  },
+  c: string
+) {
+  (e.currentTarget?.parentNode as HTMLDivElement)?.classList.add(c);
+}

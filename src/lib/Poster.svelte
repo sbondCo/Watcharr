@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { MediaType, WatchedStatus } from "@/types";
   import Icon from "./Icon.svelte";
-  import { isTouch, watchedStatuses } from "./helpers";
+  import { addClassToParent, isTouch, watchedStatuses } from "./helpers";
   import { goto } from "$app/navigation";
   import tooltip from "./actions/tooltip";
 
@@ -42,15 +42,6 @@
       return;
     }
     onStatusChanged(type);
-  }
-
-  function addClassToParent(
-    e: Event & {
-      currentTarget: EventTarget & Element;
-    },
-    c: string
-  ) {
-    (e.currentTarget?.parentNode as HTMLDivElement)?.classList.add(c);
   }
 </script>
 
