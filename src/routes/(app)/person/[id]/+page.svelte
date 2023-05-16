@@ -219,10 +219,6 @@
     flex-flow: column;
     align-items: center;
     gap: 30px;
-    padding: 20px 50px;
-
-    @media screen and (max-width: 500px) {
-      padding: 20px;
-    }
+    padding: 10px 0px;
   }
 </style>
