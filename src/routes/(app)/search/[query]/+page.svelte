@@ -8,6 +8,7 @@
   import Spinner from "@/lib/Spinner.svelte";
   import axios from "axios";
   import { getWatchedDependedProps } from "@/lib/helpers";
+  import PersonPoster from "@/lib/PersonPoster.svelte";
 
   export let data;
 
@@ -28,20 +29,24 @@
   <PosterList>
     {#if results?.results?.length > 0}
       {#each results.results as w (w.id)}
-        <Poster
-          media={w}
-          onStatusChanged={(t) => updateWatched(w.id, w.media_type, t)}
-          onRatingChanged={(r) => updateWatched(w.id, w.media_type, undefined, r)}
-          onDeleteClicked={() => {
-            const wl = wList.find((wi) => wi.content.tmdbId === w.id);
-            if (!wl) {
-              console.error("Failed to find item in watched list, cant remove!");
-              return;
-            }
-            removeWatched(wl.id);
-          }}
-          {...getWatchedDependedProps(w.id, w.media_type, wList)}
-        />
+        {#if w.media_type === "person"}
+          <PersonPoster id={w.id} name={w.name} path={w.profile_path} />
+        {:else}
+          <Poster
+            media={w}
+            onStatusChanged={(t) => updateWatched(w.id, w.media_type, t)}
+            onRatingChanged={(r) => updateWatched(w.id, w.media_type, undefined, r)}
+            onDeleteClicked={() => {
+              const wl = wList.find((wi) => wi.content.tmdbId === w.id);
+              if (!wl) {
+                console.error("Failed to find item in watched list, cant remove!");
+                return;
+              }
+              removeWatched(wl.id);
+            }}
+            {...getWatchedDependedProps(w.id, w.media_type, wList)}
+          />
+        {/if}
       {/each}
     {:else}
       No Search Results!
