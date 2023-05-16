@@ -139,7 +139,7 @@ type TMDBPersonDetails struct {
 	Birthday           string   `json:"birthday"`
 	KnownForDepartment string   `json:"known_for_department"`
 	Deathday           string   `json:"deathday"`
-	ID                 int16    `json:"id"`
+	ID                 int      `json:"id"`
 	Name               string   `json:"name"`
 	AlsoKnownAs        []string `json:"also_known_as"`
 	Gender             int8     `json:"gender"`

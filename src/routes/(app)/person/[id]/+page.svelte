@@ -52,9 +52,11 @@
               <span />
             </span>
 
-            <span style="font-weight: bold; font-size: 14px;">Biography</span>
-            <!-- Show just the first paragraph -->
-            <p>{person.biography?.split("\n")[0]}</p>
+            {#if person.biography}
+              <span style="font-weight: bold; font-size: 14px;">Biography</span>
+              <!-- Show just the first paragraph -->
+              <p>{person.biography?.split("\n")[0]}</p>
+            {/if}
 
             <div class="detail-info">
               {#if person.known_for_department}
