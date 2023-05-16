@@ -109,6 +109,7 @@
         font-size: 18px;
         color: white;
         margin-top: auto;
+        text-shadow: 1px 1px 3px black;
       }
     }
 
