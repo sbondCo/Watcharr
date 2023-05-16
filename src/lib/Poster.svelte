@@ -228,6 +228,7 @@
         font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
         font-size: 18px;
         color: white;
+        word-wrap: break-word;
       }
 
       span {
