@@ -48,10 +48,6 @@
 </li>
 
 <style lang="scss">
-  li.active {
-    cursor: pointer;
-  }
-
   .container {
     display: flex;
     flex-flow: column;
