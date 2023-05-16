@@ -68,6 +68,8 @@
     <div>
       <button class="plain" style="text-decoration: line-through;">Profile</button>
       <button class="plain" on:click={() => logout()}>Logout</button>
+      <!-- svelte-ignore missing-declaration -->
+      <span>v{__WATCHARR_VERSION__}</span>
     </div>
   {/if}
 </nav>
@@ -173,6 +175,13 @@
           background-color: rgba(0, 0, 0, 1);
           color: white;
         }
+      }
+
+      span {
+        margin-top: 8px;
+        font-size: 11px;
+        color: gray;
+        text-align: center;
       }
     }
 
