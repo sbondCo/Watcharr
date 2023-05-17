@@ -2,6 +2,7 @@
   import { goto } from "$app/navigation";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
+  import { isTouch } from "@/lib/helpers";
   import { clearAllStores, watchedList } from "@/store";
   import axios from "axios";
 
@@ -28,15 +29,20 @@
     )
       return;
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const target = ev.target as HTMLInputElement;
-      const query = target?.value;
-      if (query) {
-        goto(`/search/${query}`).then(() => {
+    searchTimeout = setTimeout(
+      () => {
+        const target = ev.target as HTMLInputElement;
+        const query = target?.value;
+        if (query) {
           target?.focus();
-        });
-      }
-    }, 400);
+          goto(`/search/${query}`).then(() => {
+            target?.focus();
+          });
+          target?.focus();
+        }
+      },
+      isTouch() ? 800 : 400
+    );
   }
 
   function logout() {
