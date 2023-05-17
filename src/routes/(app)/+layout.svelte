@@ -34,11 +34,9 @@
         const target = ev.target as HTMLInputElement;
         const query = target?.value;
         if (query) {
-          target?.focus();
           goto(`/search/${query}`).then(() => {
             target?.focus();
           });
-          target?.focus();
         }
       },
       isTouch() ? 800 : 400
