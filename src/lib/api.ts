@@ -8,6 +8,7 @@ import type {
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
+import { notify } from "./util/notify";
 const { MODE } = import.meta.env;
 
 export const baseURL = MODE === "development" ? "http://127.0.0.1:3080" : "/api";
@@ -45,6 +46,7 @@ export function updateWatched(
       })
       .catch((err) => {
         console.error(err);
+        notify({ text: "Failed To Update!", type: "error" });
       });
     return;
   }
@@ -63,6 +65,7 @@ export function updateWatched(
     })
     .catch((err) => {
       console.error(err);
+      notify({ text: "Failed To Add!", type: "error" });
     });
 }
 
@@ -86,6 +89,7 @@ export function removeWatched(id: number) {
     })
     .catch((err) => {
       console.error(err);
+      notify({ text: "Failed To Remove!", type: "error" });
     });
 }
 

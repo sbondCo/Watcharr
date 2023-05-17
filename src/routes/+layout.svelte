@@ -1,4 +1,11 @@
 <script>
+  import Icon from "@/lib/Icon.svelte";
+  import { unNotify } from "@/lib/util/notify";
+  import { notifications } from "@/store";
+  import { get } from "svelte/store";
+
+  $: notifs = $notifications;
+
   console.log(
     `%cWATCHARR v${__WATCHARR_VERSION__}`,
     "background: white;color: black;font-size: large;padding: 3px 5px;"
@@ -6,6 +13,21 @@
 </script>
 
 <div id="tooltip" />
+<div id="notifications">
+  {#each notifs as n}
+    <div class={n.type}>
+      <span>{n.text}</span>
+      <button
+        class="plain"
+        on:click={() => {
+          unNotify(n.id);
+        }}
+      >
+        <Icon i="close" />
+      </button>
+    </div>
+  {/each}
+</div>
 <slot />
 
 <style lang="scss">
@@ -117,5 +139,78 @@
     z-index: 99999;
     transition: top 100ms ease, left 100ms ease;
     pointer-events: none;
+  }
+
+  :global(#notifications) {
+    display: flex;
+    flex-flow: column;
+    gap: 10px;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+    z-index: 99999;
+
+    div {
+      display: flex;
+      flex-flow: row;
+      align-items: center;
+      min-width: 200px;
+      color: black;
+      background-color: white;
+      border-radius: 8px;
+      border: 1px solid rgba($color: #000000, $alpha: 0.2);
+      box-shadow: 0 4px 10px rgba($color: #000000, $alpha: 0.2);
+      animation: comein 250ms ease forwards;
+      position: relative;
+
+      @keyframes comein {
+        from {
+          opacity: 0;
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+
+      &.error {
+        color: white;
+        background-color: #f3555a;
+        border: 1px solid #f3555a;
+
+        span {
+          border-color: rgba($color: white, $alpha: 0.5);
+        }
+      }
+
+      &.success {
+        color: white;
+        background-color: #28a745;
+        border: 1px solid #28a745;
+
+        span {
+          border-color: rgba($color: white, $alpha: 0.5);
+        }
+      }
+
+      span {
+        width: 100%;
+        height: 100%;
+        padding-right: 12px;
+        border-right: 1px solid rgba($color: black, $alpha: 0.2);
+        padding: 10px 12px;
+      }
+
+      button {
+        display: flex;
+        align-items: center;
+        margin: 8px;
+        width: 22px;
+        height: 100%;
+        color: inherit;
+      }
+    }
   }
 </style>
