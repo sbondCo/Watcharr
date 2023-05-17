@@ -5,6 +5,7 @@
   import type { Icon as Icons } from "@/types";
   import { noAuthAxios } from "@/lib/api";
   import { onMount, afterUpdate } from "svelte";
+  import { notify } from "@/lib/util/notify";
 
   let error: string;
   let login = true;
@@ -46,6 +47,7 @@
           console.log("Received token... logging in.");
           localStorage.setItem("token", resp.data.token);
           goto("/");
+          notify({ text: `Welcome ${user}!`, type: "success" });
         }
       })
       .catch((err) => {
