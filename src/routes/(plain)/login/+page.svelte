@@ -3,7 +3,7 @@
   import { page } from "$app/stores";
   import Icon from "@/lib/Icon.svelte";
   import type { Icon as Icons } from "@/types";
-  import { noAuthAxios } from "@/lib/api";
+  import { noAuthAxios } from "@/lib/util/api";
   import { onMount, afterUpdate } from "svelte";
   import { notify } from "@/lib/util/notify";
 

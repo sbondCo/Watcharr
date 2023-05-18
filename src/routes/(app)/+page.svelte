@@ -1,7 +1,7 @@
 <script lang="ts">
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
-  import { removeWatched, updateWatched } from "@/lib/api";
+  import { removeWatched, updateWatched } from "@/lib/util/api";
   import { watchedList } from "@/store";
 
   $: watched = $watchedList;

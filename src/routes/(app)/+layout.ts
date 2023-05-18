@@ -4,7 +4,7 @@ export const csr = true;
 
 import { goto } from "$app/navigation";
 import axios from "axios";
-import { baseURL } from "@/lib/api";
+import { baseURL } from "@/lib/util/api";
 import { notify } from "@/lib/util/notify";
 
 axios.interceptors.request.use(

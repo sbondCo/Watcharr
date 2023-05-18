@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { MediaType, WatchedStatus } from "@/types";
   import Icon from "./Icon.svelte";
-  import { addClassToParent, isTouch, watchedStatuses } from "./helpers";
+  import { addClassToParent, isTouch, watchedStatuses } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
   import tooltip from "./actions/tooltip";
 
