@@ -4,8 +4,8 @@
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import { removeWatched, updateWatched } from "@/lib/api";
-  import { getWatchedDependedProps } from "@/lib/helpers.js";
+  import { removeWatched, updateWatched } from "@/lib/util/api";
+  import { getWatchedDependedProps } from "@/lib/util/helpers";
   import { watchedList } from "@/store";
   import type { TMDBPersonCombinedCredits, TMDBPersonDetails } from "@/types";
   import axios from "axios";

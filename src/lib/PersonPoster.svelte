@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { addClassToParent } from "./helpers";
+  import { addClassToParent } from "@/lib/util/helpers";
 
   export let id: number | undefined;
   export let name: string | undefined;

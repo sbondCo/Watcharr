@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import { isTouch } from "@/lib/helpers";
+  import { isTouch } from "@/lib/util/helpers";
   import { clearAllStores, watchedList } from "@/store";
   import axios from "axios";
 
@@ -34,7 +34,8 @@
     searchTimeout = setTimeout(
       () => {
         const target = ev.target as HTMLInputElement;
-        const query = target?.value;
+        const query = target?.value.trim();
+        if (!query) return;
         if (query) {
           goto(`/search/${query}`).then(() => {
             target?.focus();

@@ -3,7 +3,7 @@
   import Rating from "@/lib/Rating.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
-  import { updateWatched } from "@/lib/api";
+  import { updateWatched } from "@/lib/util/api";
   import { watchedList } from "@/store";
   import type { TMDBMovieDetails, WatchedStatus } from "@/types";
   import axios from "axios";

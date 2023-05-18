@@ -1,6 +1,4 @@
 import { error } from "@sveltejs/kit";
-import type { Content, MediaType } from "@/types";
-import axios from "axios";
 
 export interface ContentSearch {
   page: number;
