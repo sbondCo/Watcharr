@@ -6,6 +6,8 @@
   import { clearAllStores, watchedList } from "@/store";
   import axios from "axios";
 
+  const username = localStorage.getItem("username");
+
   let searchTimeout: number;
   let subMenuShown = false;
 
@@ -70,6 +72,9 @@
   <button class="plain face" on:click={handleProfileClick}>:)</button>
   {#if subMenuShown}
     <div>
+      {#if username}
+        <h5 title={username}>Hi {username}!</h5>
+      {/if}
       <button class="plain" style="text-decoration: line-through;">Profile</button>
       <button class="plain" on:click={() => logout()}>Logout</button>
       <!-- svelte-ignore missing-declaration -->
@@ -162,12 +167,21 @@
       position: absolute;
       right: 0;
       top: 55px;
+      width: 125px;
       padding: 10px;
       border: 3px solid black;
       border-radius: 10px;
       background-color: white;
       list-style: none;
       z-index: 50;
+
+      h5 {
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: default;
+      }
 
       button {
         font-size: 14px;
