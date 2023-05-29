@@ -213,8 +213,11 @@
     display: flex;
     flex-flow: column;
     align-items: center;
+    margin-left: auto;
+    margin-right: auto;
     gap: 30px;
     padding: 20px 50px;
+    max-width: 1200px;
 
     @media screen and (max-width: 500px) {
       padding: 20px;
