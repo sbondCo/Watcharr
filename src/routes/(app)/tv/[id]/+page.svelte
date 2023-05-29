@@ -1,11 +1,20 @@
 <script lang="ts">
+  import Error from "@/lib/Error.svelte";
+  import HorizontalList from "@/lib/HorizontalList.svelte";
   import PageError from "@/lib/PageError.svelte";
+  import PersonPoster from "@/lib/PersonPoster.svelte";
   import Rating from "@/lib/Rating.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import { updateWatched } from "@/lib/util/api";
+  import { getTopCrew } from "@/lib/util/helpers.js";
   import { watchedList } from "@/store";
-  import type { TMDBShowDetails, WatchedStatus } from "@/types";
+  import type {
+    TMDBContentCredits,
+    TMDBContentCreditsCrew,
+    TMDBShowDetails,
+    WatchedStatus
+  } from "@/types";
   import axios from "axios";
 
   export let data;
@@ -14,6 +23,15 @@
 
   async function getShow() {
     return (await axios.get(`/content/tv/${data.tvId}`)).data as TMDBShowDetails;
+  }
+
+  async function getTvCredits() {
+    const credits = (await axios.get(`/content/tv/${data.tvId}/credits`))
+      .data as TMDBContentCredits & { topCrew: TMDBContentCreditsCrew[] };
+    if (credits.crew?.length > 0) {
+      credits.topCrew = getTopCrew(credits.crew);
+    }
+    return credits;
   }
 
   function contentChanged(newStatus?: WatchedStatus, newRating?: number) {
@@ -53,10 +71,6 @@
               </div>
             </span>
 
-            <!-- <span>{show.tagline}</span> -->
-
-            <!-- {show.status} -->
-
             <span style="font-weight: bold; font-size: 14px;">Overview</span>
             <p>{show.overview}</p>
           </div>
@@ -70,24 +84,36 @@
           <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
         </div>
 
-        <!-- <div class="creators">
-        <div>
-          <span>Mr Boombastic</span>
-          <span>Director</span>
-        </div>
-        <div>
-          <span>Mr Boombastic</span>
-          <span>Writer</span>
-        </div>
-        <div>
-          <span>Mr Boombastic</span>
-          <span>Producer</span>
-        </div>
-        <div>
-          <span>Mr Boombastic</span>
-          <span>Producer</span>
-        </div>
-      </div> -->
+        {#await getTvCredits()}
+          <Spinner />
+        {:then credits}
+          {#if credits.topCrew?.length > 0}
+            <div class="creators">
+              {#each credits.topCrew as crew}
+                <div>
+                  <span>{crew.name}</span>
+                  <span>{crew.job}</span>
+                </div>
+              {/each}
+            </div>
+          {/if}
+
+          <div class="cast">
+            <HorizontalList title="Cast">
+              {#each credits.cast?.slice(0, 50) as cast}
+                <PersonPoster
+                  id={cast.id}
+                  name={cast.name}
+                  path={cast.profile_path}
+                  role={cast.character}
+                  zoomOnHover={false}
+                />
+              {/each}
+            </HorizontalList>
+          </div>
+        {:catch err}
+          <Error error={err} pretty="Failed to load cast!" />
+        {/await}
       </div>
     </div>
   {:else}
@@ -187,8 +213,11 @@
     display: flex;
     flex-flow: column;
     align-items: center;
+    margin-left: auto;
+    margin-right: auto;
     gap: 30px;
     padding: 20px 50px;
+    max-width: 1200px;
 
     @media screen and (max-width: 500px) {
       padding: 20px;
@@ -201,15 +230,22 @@
     gap: 10px;
   }
 
+  .cast {
+    width: 100%;
+    overflow-x: auto;
+  }
+
   .creators {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 35px;
+    margin: 10px 60px;
 
     div {
       display: flex;
       flex-flow: column;
+      min-width: 150px;
 
       span:first-child {
         font-weight: bold;

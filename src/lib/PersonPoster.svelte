@@ -5,6 +5,8 @@
   export let id: number | undefined;
   export let name: string | undefined;
   export let path: string | undefined;
+  export let role: string | undefined;
+  export let zoomOnHover: boolean = true;
 
   const poster = path ? `https://image.tmdb.org/t/p/w300_and_h450_bestv2${path}` : undefined;
   const link = id ? `/person/${id}` : undefined;
@@ -16,7 +18,7 @@
   }}
   on:keypress={() => console.log("on kpress")}
 >
-  <div class={`container${!poster ? " details-shown" : ""}`}>
+  <div class={`container${!poster ? " details-shown" : ""}${!zoomOnHover ? " no-zoom" : ""}`}>
     {#if poster}
       <div class="img-loader" />
       <img
@@ -43,6 +45,9 @@
           {name}
         {/if}
       </h2>
+      {#if role}
+        <h3>{role}</h3>
+      {/if}
     </div>
   </div>
 </li>
@@ -59,7 +64,7 @@
     height: 100%;
     min-height: 256.367px;
     position: relative;
-    transition: transform 150ms ease;
+    transition: transform 150ms ease, outline 50ms ease;
     cursor: pointer;
 
     img {
@@ -104,20 +109,38 @@
       padding: 10px;
       background-color: transparent;
 
-      h2 {
+      h2,
+      h3 {
         font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
         font-size: 18px;
         color: white;
+        word-wrap: break-word;
+      }
+
+      h2 {
         margin-top: auto;
         text-shadow: 1px 1px 3px black;
-        word-wrap: break-word;
+      }
+
+      h3 {
+        font-size: 12px;
+        text-shadow: 0px 1px 1px black;
       }
     }
 
-    &:hover,
-    &:focus-within {
-      transform: scale(1.3);
-      z-index: 99;
+    &:not(.no-zoom) {
+      &:hover,
+      &:focus-within {
+        transform: scale(1.3);
+        z-index: 99;
+      }
+    }
+
+    &:not(:not(.no-zoom)) {
+      &:hover,
+      &:focus-within {
+        outline: 3px solid black;
+      }
     }
 
     &:hover,

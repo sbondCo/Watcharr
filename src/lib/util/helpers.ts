@@ -1,4 +1,4 @@
-import type { Icon, MediaType, Watched, WatchedStatus } from "@/types";
+import type { Icon, MediaType, TMDBContentCreditsCrew, Watched, WatchedStatus } from "@/types";
 
 export const watchedStatuses: {
   [key in WatchedStatus]: Icon;
@@ -38,4 +38,15 @@ export function addClassToParent(
   c: string
 ) {
   (e.currentTarget?.parentNode as HTMLDivElement)?.classList.add(c);
+}
+
+/**
+ * Gets "main" crew members from list of crew.
+ * @param crew Crew
+ * @returns Top Crew
+ */
+export function getTopCrew(crew: TMDBContentCreditsCrew[]) {
+  return crew.filter(
+    (c) => c.job === "Director" || c.job === "Writer" || c.job === "Characters" || c.job === "Story"
+  );
 }

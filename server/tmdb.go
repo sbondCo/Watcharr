@@ -183,6 +183,37 @@ type TMDBPersonCombinedCreditsCast struct {
 	Adult            bool     `json:"adult"`
 }
 
+type TMDBContentCredits struct {
+	ID   int `json:"id"`
+	Cast []struct {
+		Adult              bool    `json:"adult"`
+		Gender             int     `json:"gender"`
+		ID                 int     `json:"id"`
+		KnownForDepartment string  `json:"known_for_department"`
+		Name               string  `json:"name"`
+		OriginalName       string  `json:"original_name"`
+		Popularity         float64 `json:"popularity"`
+		ProfilePath        string  `json:"profile_path"`
+		CastID             int     `json:"cast_id"`
+		Character          string  `json:"character"`
+		CreditID           string  `json:"credit_id"`
+		Order              int     `json:"order"`
+	} `json:"cast"`
+	Crew []struct {
+		Adult              bool    `json:"adult"`
+		Gender             int     `json:"gender"`
+		ID                 int     `json:"id"`
+		KnownForDepartment string  `json:"known_for_department"`
+		Name               string  `json:"name"`
+		OriginalName       string  `json:"original_name"`
+		Popularity         float64 `json:"popularity"`
+		ProfilePath        string  `json:"profile_path"`
+		CreditID           string  `json:"credit_id"`
+		Department         string  `json:"department"`
+		Job                string  `json:"job"`
+	} `json:"crew"`
+}
+
 func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
 	println("tmdbAPIRequest:", ep)
 	base, err := url.Parse("https://api.themoviedb.org/3")

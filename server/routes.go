@@ -61,13 +61,41 @@ func (b *BaseRouter) addContentRoutes() {
 		c.JSON(http.StatusOK, content)
 	})
 
-	// Get movie details
+	// Get movie cast
+	content.GET("/movie/:id/credits", func(c *gin.Context) {
+		if c.Param("id") == "" {
+			c.Status(400)
+			return
+		}
+		content, err := movieCredits(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
+
+	// Get tv details
 	content.GET("/tv/:id", func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
 		}
 		content, err := tvDetails(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
+
+	// Get tv cast
+	content.GET("/tv/:id/credits", func(c *gin.Context) {
+		if c.Param("id") == "" {
+			c.Status(400)
+			return
+		}
+		content, err := tvCredits(c.Param("id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
