@@ -138,6 +138,39 @@ export interface TMDBShowDetails extends TMDBContentDetails {
   type: string;
 }
 
+export interface TMDBContentCredits {
+  id: number;
+  cast: {
+    adult: boolean;
+    gender: number;
+    id: number;
+    known_for_department: string;
+    name: string;
+    original_name: string;
+    popularity: number;
+    profile_path: string;
+    cast_id: number;
+    character: string;
+    credit_id: string;
+    order: number;
+  }[];
+  crew: TMDBContentCreditsCrew[];
+}
+
+export interface TMDBContentCreditsCrew {
+  adult: boolean;
+  gender: number;
+  id: number;
+  known_for_department: string;
+  name: string;
+  original_name: string;
+  popularity: number;
+  profile_path: string;
+  credit_id: string;
+  department: string;
+  job: string;
+}
+
 export interface TMDBPersonDetails {
   birthday?: string;
   known_for_department?: string;
