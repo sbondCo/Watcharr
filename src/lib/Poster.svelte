@@ -43,12 +43,48 @@
     }
     onStatusChanged(type);
   }
+
+  function calculateTransformOrigin(
+    e: Event & {
+      currentTarget: EventTarget & HTMLLIElement;
+    }
+  ) {
+    const magicNumber = 26;
+    const ctr = e.currentTarget.querySelector(".container") as HTMLElement;
+    const pb = ctr.getBoundingClientRect();
+    const sx = pb.x;
+    const sw = pb.width;
+    const wb = document.body.getBoundingClientRect();
+
+    if (ctr) {
+      ctr.style.transformOrigin = "unset";
+      let origins = [];
+      // Overflow on right
+      if (sx + sw + magicNumber > wb.x + wb.width) {
+        origins.push("right");
+      }
+      // Overflow on left
+      if (sx - magicNumber < wb.x) {
+        origins.push("left");
+      }
+      // Overflow on bottom
+      const ppb = e.currentTarget.getBoundingClientRect();
+      if (ppb.bottom + magicNumber > window.innerHeight) {
+        origins.push("bottom");
+      }
+      ctr.style.transformOrigin = `${origins.join(" ")}`;
+    }
+  }
 </script>
 
 <li
-  on:mouseenter={() => {
-    if (!isTouch()) posterActive = true;
+  on:mouseenter={(e) => {
+    calculateTransformOrigin(e);
+    if (!isTouch()) {
+      posterActive = true;
+    }
   }}
+  on:focusin={(e) => calculateTransformOrigin(e)}
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
   on:keypress={() => console.log("on kpress")}
