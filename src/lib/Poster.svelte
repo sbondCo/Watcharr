@@ -57,7 +57,11 @@
       posterActive = true;
     }
   }}
-  on:focusin={(e) => calculateTransformOrigin(e)}
+  on:focusin={(e) => {
+    // Only if poster not active to avoid clicking on a active poster,
+    // causing a recalculation, which will calculate it as doubly scaled.
+    if (!posterActive) calculateTransformOrigin(e);
+  }}
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
   on:keypress={() => console.log("on kpress")}
