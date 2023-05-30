@@ -5,7 +5,7 @@
   export let id: number | undefined;
   export let name: string | undefined;
   export let path: string | undefined;
-  export let role: string | undefined;
+  export let role: string | undefined = undefined;
   export let zoomOnHover: boolean = true;
 
   const poster = path ? `https://image.tmdb.org/t/p/w300_and_h450_bestv2${path}` : undefined;
