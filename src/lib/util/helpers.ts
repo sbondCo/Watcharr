@@ -50,3 +50,41 @@ export function getTopCrew(crew: TMDBContentCreditsCrew[]) {
     (c) => c.job === "Director" || c.job === "Writer" || c.job === "Characters" || c.job === "Story"
   );
 }
+
+/**
+ * Calculates what the transform-origin property should be
+ * depending on where the scaled (poster) element will be
+ * in the viewport to keep it in view.
+ * @param e
+ */
+export function calculateTransformOrigin(
+  e: Event & {
+    currentTarget: EventTarget & HTMLLIElement;
+  }
+) {
+  const magicNumber = 26;
+  const ctr = e.currentTarget.querySelector(".container") as HTMLElement;
+  const pb = ctr.getBoundingClientRect();
+  const sx = pb.x;
+  const sw = pb.width;
+  const wb = document.body.getBoundingClientRect();
+
+  if (ctr) {
+    ctr.style.transformOrigin = "unset";
+    const origins = [];
+    // Overflow on right
+    if (sx + sw + magicNumber > wb.x + wb.width) {
+      origins.push("right");
+    }
+    // Overflow on left
+    if (sx - magicNumber < wb.x) {
+      origins.push("left");
+    }
+    // Overflow on bottom
+    const ppb = e.currentTarget.getBoundingClientRect();
+    if (ppb.bottom + magicNumber > window.innerHeight) {
+      origins.push("bottom");
+    }
+    ctr.style.transformOrigin = `${origins.join(" ")}`;
+  }
+}
