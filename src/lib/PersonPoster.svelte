@@ -28,7 +28,6 @@
         src={poster}
         alt=""
         on:load={(e) => {
-          console.log("on lod");
           addClassToParent(e, "img-loaded");
         }}
         on:error={(e) => {
