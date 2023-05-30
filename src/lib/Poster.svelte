@@ -58,19 +58,21 @@
 
     if (ctr) {
       ctr.style.transformOrigin = "unset";
+      let origins = [];
       // Overflow on right
       if (sx + sw + magicNumber > wb.x + wb.width) {
-        ctr.style.transformOrigin = "right";
+        origins.push("right");
       }
       // Overflow on left
       if (sx - magicNumber < wb.x) {
-        ctr.style.transformOrigin = "left";
+        origins.push("left");
       }
       // Overflow on bottom
       const ppb = e.currentTarget.getBoundingClientRect();
       if (ppb.bottom + magicNumber > window.innerHeight) {
-        ctr.style.transformOrigin = "bottom";
+        origins.push("bottom");
       }
+      ctr.style.transformOrigin = `${origins.join(" ")}`;
     }
   }
 </script>
