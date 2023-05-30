@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { addClassToParent } from "@/lib/util/helpers";
+  import { addClassToParent, calculateTransformOrigin } from "@/lib/util/helpers";
 
   export let id: number | undefined;
   export let name: string | undefined;
@@ -13,6 +13,8 @@
 </script>
 
 <li
+  on:mouseenter={(e) => calculateTransformOrigin(e)}
+  on:focusin={(e) => calculateTransformOrigin(e)}
   on:click={() => {
     if (link) goto(link);
   }}
