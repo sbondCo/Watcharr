@@ -7,7 +7,7 @@ env:
   image: ghcr.io/sbondco/watcharr
 
 jobs:
-  release-images:
+  release-dev-image:
     runs-on: ubuntu-latest
 
     permissions:
