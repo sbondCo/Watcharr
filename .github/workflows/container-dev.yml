@@ -3,23 +3,16 @@ name: Development Watcharr Container Release
 on:
   workflow_dispatch:
 
+env:
+  image: ghcr.io/sbondco/watcharr
+
 jobs:
-  release-images:
+  release-dev-image:
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
       packages: write
-
-    strategy:
-      fail-fast: true
-      # Run for each dockerfile (one for server and one for ui images)
-      matrix:
-        include:
-          - dockerfile: ./Dockerfile.svr
-            image: ghcr.io/sbondco/watcharr
-          - dockerfile: ./Dockerfile.ui
-            image: ghcr.io/sbondco/watcharr-ui
 
     steps:
       - name: Checkout Repo
@@ -36,7 +29,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: ./Dockerfile
           push: true
-          tags: ${{ matrix.image }}:dev
-          labels: ${{ matrix.image }}:${{ github.sha }}
+          tags: ${{ env.image }}:dev
+          labels: ${{ env.image }}:${{ github.sha }}

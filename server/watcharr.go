@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -37,6 +38,12 @@ func main() {
 		log.Fatal("Failed to create data dir:", err)
 	}
 
+	// Check if we want to be in DEV or PROD
+	isProd := true
+	if os.Getenv("MODE") == "DEV" {
+		isProd = false
+	}
+
 	db, err := gorm.Open(sqlite.Open("./data/watcharr.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect to database")
@@ -47,8 +54,11 @@ func main() {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
 
-	gin := gin.Default()
-	gin.Use(cors.New(cors.Config{
+	if isProd {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	gine := gin.Default()
+	gine.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With"},
@@ -56,13 +66,16 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-	br := newBaseRouter(db, gin)
+	if isProd {
+		gine.NoRoute(gin.WrapH(http.FileServer(gin.Dir("/ui", false))))
+	}
+	br := newBaseRouter(db, gine.Group("/api"))
 	br.addAuthRoutes()
 	br.addContentRoutes()
 	br.addWatchedRoutes()
 	br.rg.Static("/img", "./data/img")
 
-	gin.Run("0.0.0.0:3080")
+	gine.Run("0.0.0.0:3080")
 }
 
 // Ensure all required environment variables are set.
