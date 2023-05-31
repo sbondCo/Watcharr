@@ -6,6 +6,9 @@ on:
     tags:
       - v*
 
+env:
+  image: ghcr.io/sbondco/watcharr
+
 jobs:
   release-images:
     runs-on: ubuntu-latest
@@ -13,16 +16,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-
-    strategy:
-      fail-fast: true
-      # Run for each dockerfile (one for server and one for ui images)
-      matrix:
-        include:
-          - dockerfile: ./Dockerfile.svr
-            image: ghcr.io/sbondco/watcharr
-          - dockerfile: ./Dockerfile.ui
-            image: ghcr.io/sbondco/watcharr-ui
 
     steps:
       - name: Checkout Repo
@@ -39,13 +32,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ matrix.image }}
+          images: ${{ env.image }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
