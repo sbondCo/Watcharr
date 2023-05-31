@@ -11,7 +11,7 @@ import { get } from "svelte/store";
 import { notify } from "./notify";
 const { MODE } = import.meta.env;
 
-export const baseURL = MODE === "development" ? "http://127.0.0.1:3080" : "/api";
+export const baseURL = MODE === "development" ? "http://127.0.0.1:3080/api" : "/api";
 
 /**
  *

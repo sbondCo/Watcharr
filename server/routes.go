@@ -14,10 +14,10 @@ type ErrorResponse struct {
 
 type BaseRouter struct {
 	db *gorm.DB
-	rg *gin.Engine
+	rg *gin.RouterGroup
 }
 
-func newBaseRouter(db *gorm.DB, rg *gin.Engine) *BaseRouter {
+func newBaseRouter(db *gorm.DB, rg *gin.RouterGroup) *BaseRouter {
 	return &BaseRouter{
 		db: db,
 		rg: rg,
