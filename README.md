@@ -56,7 +56,7 @@ JWT_SECRET=MAKE_ME_RANDOM_AND_LONG
 # to enable it as an auth provider.
 JELLYFIN_HOST=https://my.jellyfin.example
 
-# Optional: When not set we assume production, when set to
-# DEV extra logging will appear which could help solve issues.
+# Optional: When not set we assume production, should only
+# be set to DEV when developing the app.
 MODE=prod
 ```
