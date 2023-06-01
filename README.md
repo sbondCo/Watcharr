@@ -1,11 +1,20 @@
 <h1 align="center">Watcharr</h1>
-<p align="center"><img src="./static/logo-col.png" alt="logo" /></p>
+<p align="center"><img src="./static/logo-col.png" alt="logo" width="250" /></p>
 
-I'm the place you store your watched content for later rememberance, sadly I am still in my infancy. I aspire to be easily self hosted.
+<p align="center">
+  <a href="https://github.com/sbondCo/Watcharr/pkgs/container/watcharr"><img src="https://img.shields.io/github/v/release/sbondCo/Watcharr?label=version&style=for-the-badge" /></a>
+  <a href="https://watcharr.lab.sbond.co"><img src="https://img.shields.io/website?label=DEMO&style=for-the-badge&url=https%3A%2F%2Fwatcharr.lab.sbond.co%2F" /></a>
+  <a href="https://github.com/sbondCo/Watcharr/issues"><img src="https://img.shields.io/github/issues-raw/sbondCo/Watcharr?label=ISSUES&style=for-the-badge" /></a>
+  <a href="/LICENSE"><img src="https://img.shields.io/github/license/sbondCo/Watcharr?style=for-the-badge" /></a>
+</p>
+
+I'm your new easily self-hosted content watched list. The place you store your watched (or watching, planned, etc) movies and tv shows, rate them and track their status.
 
 I am built with Go and Svelte(Kit).
 
-Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build (there may be bugs, as new features are tested on here too before release): [https://watcharr.lab.sbond.co/](https://watcharr.lab.sbond.co/)
+Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build (there may be bugs, as new features are tested on here too): [https://watcharr.lab.sbond.co/](https://watcharr.lab.sbond.co/)
+
+[Track Progress Until Next Version](https://github.com/orgs/sbondCo/projects/9/views/3)
 
 # Screenshots
 
