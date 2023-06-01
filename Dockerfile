@@ -21,8 +21,20 @@ FROM debian:11.6 AS runner
 
 RUN apt-get update && apt-get install ca-certificates -y
 
+ENV NODE_VERSION=18.13.0
+RUN apt install -y curl
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+ENV NVM_DIR=/root/.nvm
+RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN node --version
+
 COPY --from=server /server/watcharr /
 COPY --from=ui /app/build /ui
+COPY --from=ui /app/package.json /app/package-lock.json /ui
+RUN cd /ui && npm ci
 
 EXPOSE 3080
 
