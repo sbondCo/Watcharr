@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { isTouch } from "@/lib/util/helpers";
@@ -10,6 +11,7 @@
 
   let searchTimeout: number;
   let subMenuShown = false;
+  let filterMenuShown = false;
 
   function handleProfileClick() {
     if (!localStorage.getItem("token")) {
@@ -62,6 +64,8 @@
       goto("/login?again=1");
     }
   }
+
+  function filterClicked(type: string) {}
 </script>
 
 <nav>
@@ -70,18 +74,29 @@
     <span class="small">W</span>
   </a>
   <input type="text" placeholder="Search" on:keydown={handleSearch} />
-  <button class="plain face" on:click={handleProfileClick}>:)</button>
-  {#if subMenuShown}
-    <div>
-      {#if username}
-        <h5 title={username}>Hi {username}!</h5>
-      {/if}
-      <button class="plain" style="text-decoration: line-through;">Profile</button>
-      <button class="plain" on:click={() => logout()}>Logout</button>
-      <!-- svelte-ignore missing-declaration -->
-      <span>v{__WATCHARR_VERSION__}</span>
-    </div>
-  {/if}
+  <div class="btns">
+    <button class="plain filter" on:click={() => (filterMenuShown = !filterMenuShown)}>
+      <Icon i="filter" />
+    </button>
+    {#if filterMenuShown}
+      <div class="filter-menu">
+        <button class="plain" on:click={() => filterClicked("dateadded")}>Date Added</button>
+        <button class="plain">Alphabetical</button>
+      </div>
+    {/if}
+    <button class="plain face" on:click={handleProfileClick}>:)</button>
+    {#if subMenuShown}
+      <div class="face-menu">
+        {#if username}
+          <h5 title={username}>Hi {username}!</h5>
+        {/if}
+        <button class="plain" style="text-decoration: line-through;">Profile</button>
+        <button class="plain" on:click={() => logout()}>Logout</button>
+        <!-- svelte-ignore missing-declaration -->
+        <span>v{__WATCHARR_VERSION__}</span>
+      </div>
+    {/if}
+  </div>
 </nav>
 
 {#await getWatchedList()}
@@ -148,59 +163,82 @@
       }
     }
 
-    button.face {
-      font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
-      font-size: 25px;
-      transform: rotate(90deg);
-      cursor: pointer;
-      transition: -webkit-text-stroke 150ms ease, color 150ms ease;
-
-      &:hover,
-      &:focus-visible {
-        color: white;
-        -webkit-text-stroke: 1.5px black;
-      }
-    }
-
-    div {
+    .btns {
       display: flex;
-      flex-flow: column;
-      position: absolute;
-      right: 0;
-      top: 55px;
-      width: 125px;
-      padding: 10px;
-      border: 3px solid black;
-      border-radius: 10px;
-      background-color: white;
-      list-style: none;
-      z-index: 50;
+      flex-flow: row;
+      gap: 30px;
 
-      h5 {
-        margin-bottom: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        cursor: default;
-      }
+      button.filter {
+        padding-top: 2px;
+        width: 28px;
+        transition: fill 150ms ease, stroke 150ms ease, stroke-width 150ms ease;
 
-      button {
-        font-size: 14px;
-        padding: 8px 16px;
-        cursor: pointer;
-        transition: background-color 200ms ease;
-
-        &:hover {
-          background-color: rgba(0, 0, 0, 1);
-          color: white;
+        &:hover,
+        &:focus-visible {
+          fill: white;
+          stroke: black;
+          stroke-width: 10px;
         }
       }
 
-      span {
-        margin-top: 8px;
-        font-size: 11px;
-        color: gray;
-        text-align: center;
+      button.face {
+        font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
+        font-size: 25px;
+        transform: rotate(90deg);
+        cursor: pointer;
+        transition: -webkit-text-stroke 150ms ease, color 150ms ease;
+
+        &:hover,
+        &:focus-visible {
+          color: white;
+          -webkit-text-stroke: 1.5px black;
+        }
+      }
+
+      div.filter-menu {
+        width: 150px;
+      }
+
+      div {
+        display: flex;
+        flex-flow: column;
+        position: absolute;
+        right: 0;
+        top: 55px;
+        width: 125px;
+        padding: 10px;
+        border: 3px solid black;
+        border-radius: 10px;
+        background-color: white;
+        list-style: none;
+        z-index: 50;
+
+        h5 {
+          margin-bottom: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          cursor: default;
+        }
+
+        button {
+          font-size: 14px;
+          padding: 8px 16px;
+          cursor: pointer;
+          transition: background-color 200ms ease;
+
+          &:hover {
+            background-color: rgba(0, 0, 0, 1);
+            color: white;
+          }
+        }
+
+        span {
+          margin-top: 8px;
+          font-size: 11px;
+          color: gray;
+          text-align: center;
+        }
       }
     }
 

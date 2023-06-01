@@ -12,7 +12,8 @@ export type Icon =
   | "pause"
   | "jellyfin"
   | "trash"
-  | "close";
+  | "close"
+  | "filter";
 
 export interface Content {
   // id: number; // Not used
