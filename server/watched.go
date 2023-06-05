@@ -10,6 +10,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -71,11 +72,20 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 		}
 
 		var (
-			id         int
-			title      string
-			overview   string
-			posterPath string
+			id          int
+			title       string
+			overview    string
+			posterPath  string
+			releaseDate time.Time
+			popularity  float32
+			voteAverage float32
+			voteCount   uint32
+			imdbID      string
+			status      string
+			budget      uint32
+			revenue     uint32
 		)
+		var dateFormat = "2006-01-02"
 		// Get details from movie/show response and fill out needed vars
 		if ar.ContentType == "movie" {
 			content := new(TMDBMovieDetails)
@@ -88,6 +98,17 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			overview = content.Overview
 			posterPath = content.PosterPath
 			title = content.Title
+			releaseDate, err = time.Parse(dateFormat, content.ReleaseDate)
+			if err != nil {
+				println("Failed to parse movie release date:", err)
+			}
+			popularity = content.Popularity
+			voteAverage = content.VoteAverage
+			voteCount = content.VoteCount
+			imdbID = content.ImdbID
+			status = content.Status
+			budget = content.Budget
+			revenue = content.Revenue
 		} else {
 			content := new(TMDBShowDetails)
 			err = json.Unmarshal(resp, &content)
@@ -99,6 +120,14 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			overview = content.Overview
 			posterPath = content.PosterPath
 			title = content.Name
+			releaseDate, err = time.Parse(dateFormat, content.FirstAirDate)
+			if err != nil {
+				println("Failed to parse tv release date:", err)
+			}
+			popularity = content.Popularity
+			voteAverage = content.VoteAverage
+			voteCount = content.VoteCount
+			status = content.Status
 		}
 		// Save the content in our db
 		println("id, etc:", id, title, overview, posterPath, "<-- end")
@@ -106,7 +135,21 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			println("addWatched, returned content missing id or title!", id, title)
 			return Watched{}, errors.New("content response missing id or title")
 		}
-		content = Content{TmdbID: id, Title: title, Overview: overview, PosterPath: posterPath, Type: ar.ContentType}
+		content = Content{
+			TmdbID:      id,
+			Title:       title,
+			Overview:    overview,
+			PosterPath:  posterPath,
+			Type:        ar.ContentType,
+			ReleaseDate: releaseDate,
+			Popularity:  popularity,
+			VoteAverage: voteAverage,
+			VoteCount:   voteCount,
+			ImdbID:      imdbID,
+			Status:      status,
+			Budget:      budget,
+			Revenue:     revenue,
+		}
 		res := db.Create(&content)
 		if res.Error != nil {
 			// Error if anything but unique contraint error

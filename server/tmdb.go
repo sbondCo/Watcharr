@@ -27,11 +27,11 @@ type TMDBSearchMultiResults struct {
 	ProfilePath      string   `json:"profile_path"`
 	MediaType        string   `json:"media_type"`
 	GenreIds         []int64  `json:"genre_ids"`
-	Popularity       float64  `json:"popularity"`
+	Popularity       float32  `json:"popularity"`
 	ReleaseDate      string   `json:"release_date,omitempty"`
 	Video            bool     `json:"video,omitempty"`
-	VoteAverage      float64  `json:"vote_average"`
-	VoteCount        int      `json:"vote_count"`
+	VoteAverage      float32  `json:"vote_average"`
+	VoteCount        uint32   `json:"vote_count"`
 	Name             string   `json:"name,omitempty"`
 	OriginalName     string   `json:"original_name,omitempty"`
 	FirstAirDate     string   `json:"first_air_date,omitempty"`
@@ -47,7 +47,7 @@ type TMDBContentDetails struct {
 	} `json:"genres"`
 	PosterPath          string  `json:"poster_path"`
 	Homepage            string  `json:"homepage"`
-	Popularity          float64 `json:"popularity"`
+	Popularity          float32 `json:"popularity"`
 	Overview            string  `json:"overview"`
 	OriginalLanguage    string  `json:"original_language"`
 	ProductionCompanies []struct {
@@ -62,8 +62,8 @@ type TMDBContentDetails struct {
 	} `json:"production_countries"`
 	Status          string  `json:"status"`
 	Tagline         string  `json:"tagline"`
-	VoteAverage     float64 `json:"vote_average"`
-	VoteCount       int     `json:"vote_count"`
+	VoteAverage     float32 `json:"vote_average"`
+	VoteCount       uint32  `json:"vote_count"`
 	SpokenLanguages []struct {
 		EnglishName string `json:"english_name"`
 		Iso6391     string `json:"iso_639_1"`
@@ -75,11 +75,11 @@ type TMDBMovieDetails struct {
 	TMDBContentDetails
 	Adult               bool   `json:"adult"`
 	BelongsToCollection any    `json:"belongs_to_collection"`
-	Budget              int    `json:"budget"`
+	Budget              uint32 `json:"budget"`
 	ImdbID              string `json:"imdb_id"`
 	OriginalTitle       string `json:"original_title"`
 	ReleaseDate         string `json:"release_date"`
-	Revenue             int    `json:"revenue"`
+	Revenue             uint32 `json:"revenue"`
 	Runtime             int    `json:"runtime"`
 	Title               string `json:"title"`
 	Video               bool   `json:"video"`
@@ -109,7 +109,7 @@ type TMDBShowDetails struct {
 		SeasonNumber   int     `json:"season_number"`
 		StillPath      string  `json:"still_path"`
 		VoteAverage    float64 `json:"vote_average"`
-		VoteCount      int     `json:"vote_count"`
+		VoteCount      uint32  `json:"vote_count"`
 	} `json:"last_episode_to_air"`
 	Name             string `json:"name"`
 	NextEpisodeToAir any    `json:"next_episode_to_air"`
@@ -171,7 +171,7 @@ type TMDBPersonCombinedCreditsCast struct {
 	PosterPath       string   `json:"poster_path"`
 	FirstAirDate     string   `json:"first_air_date"`
 	VoteAverage      float64  `json:"vote_average"`
-	VoteCount        int      `json:"vote_count"`
+	VoteCount        uint32   `json:"vote_count"`
 	Character        string   `json:"character"`
 	BackdropPath     string   `json:"backdrop_path"`
 	Popularity       float64  `json:"popularity"`
