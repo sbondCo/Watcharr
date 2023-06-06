@@ -30,6 +30,9 @@ export interface Watched {
   rating?: number;
   content: Content;
   status: WatchedStatus;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string;
 }
 
 export interface WatchedAddRequest {
