@@ -1,17 +1,21 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { isTouch } from "@/lib/util/helpers";
-  import { clearAllStores, watchedList } from "@/store";
+  import { activeFilter, clearAllStores, watchedList } from "@/store";
   import axios from "axios";
+  import { get } from "svelte/store";
 
   const username = localStorage.getItem("username");
 
   let searchTimeout: number;
   let subMenuShown = false;
   let filterMenuShown = false;
+
+  $: filter = $activeFilter;
 
   function handleProfileClick() {
     if (!localStorage.getItem("token")) {
@@ -65,7 +69,31 @@
     }
   }
 
-  function filterClicked(type: string) {}
+  function filterClicked(type: string, modeType: string = "UPDOWN") {
+    const af = get(activeFilter);
+    let mode: string;
+    if (modeType === "UPDOWN") {
+      mode = "UP";
+      if (af[0] == type) {
+        if (af[1] === "UP") {
+          mode = "DOWN";
+        } else if (af[1] === "DOWN") {
+          mode = "";
+        }
+      }
+    } else if (modeType === "TOGGLE") {
+      mode = "ON";
+      if (af[0] == type) {
+        if (af[1] === "ON") {
+          mode = "OFF";
+        }
+      }
+    } else {
+      console.error("filterClicked() ran without a valid modeType:", modeType);
+      return;
+    }
+    activeFilter.update((af) => (af = [type, mode]));
+  }
 </script>
 
 <nav>
@@ -75,14 +103,27 @@
   </a>
   <input type="text" placeholder="Search" on:keydown={handleSearch} />
   <div class="btns">
-    <button class="plain filter" on:click={() => (filterMenuShown = !filterMenuShown)}>
-      <Icon i="filter" />
-    </button>
-    {#if filterMenuShown}
-      <div class="filter-menu">
-        <button class="plain" on:click={() => filterClicked("dateadded")}>Date Added</button>
-        <button class="plain">Alphabetical</button>
-      </div>
+    <!-- Only show on watched list -->
+    {#if $page.url?.pathname === "/"}
+      <button class="plain filter" on:click={() => (filterMenuShown = !filterMenuShown)}>
+        <Icon i="filter" />
+      </button>
+      {#if filterMenuShown}
+        <div class="filter-menu">
+          <button
+            class={`plain ${filter[0] == "DATEADDED" ? filter[1].toLowerCase() : ""}`}
+            on:click={() => filterClicked("DATEADDED")}
+          >
+            Date Added
+          </button>
+          <button
+            class={`plain ${filter[0] == "ALPHA" ? filter[1].toLowerCase() : ""}`}
+            on:click={() => filterClicked("ALPHA")}
+          >
+            Alphabetical
+          </button>
+        </div>
+      {/if}
     {/if}
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
@@ -196,7 +237,31 @@
       }
 
       div.filter-menu {
-        width: 150px;
+        width: 180px;
+
+        & > button {
+          position: relative;
+
+          &.down::before {
+            content: "\2193";
+          }
+
+          &.up::before {
+            content: "\2191";
+          }
+
+          &.on::before {
+            content: "\2713";
+          }
+
+          &::before {
+            position: absolute;
+            top: 4px;
+            left: 12px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont;
+            font-size: 18px;
+          }
+        }
       }
 
       div {

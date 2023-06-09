@@ -232,6 +232,7 @@
     display: flex;
     flex-flow: column;
     gap: 10px;
+    max-width: 380px;
   }
 
   .cast {
