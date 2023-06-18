@@ -2,14 +2,12 @@
   import type { TMDBSeasonDetails, TMDBShowSeason } from "@/types";
   import axios from "axios";
   import Spinner from "./Spinner.svelte";
-  import PageError from "./PageError.svelte";
   import Error from "./Error.svelte";
-  import { onMount } from "svelte";
 
   export let tvId: number;
   export let seasons: TMDBShowSeason[];
 
-  let activeSeason = seasons[0].season_number;
+  let activeSeason = 1;
   let seasonDetailsReq = sdr(activeSeason);
   let seasonsEl: HTMLUListElement, episodesEl: HTMLDivElement;
 
@@ -18,7 +16,6 @@
   }
 
   $: {
-    console.log("as change");
     seasonDetailsReq = sdr(activeSeason);
   }
 
@@ -42,9 +39,12 @@
         }}
       >
         <h1>{season.name}</h1>
-        <h2>{new Date(Date.parse(season.air_date)).getFullYear()}</h2>
+        {#if season.air_date}
+          <h2>{new Date(Date.parse(season.air_date)).getFullYear()}</h2>
+        {/if}
       </button>
     {/each}
+    <div class="last" />
   </ul>
 
   <div class="episodes" bind:this={episodesEl}>
@@ -118,7 +118,6 @@
     overflow: auto;
     position: sticky;
     top: 0px;
-    padding: 10px 0;
 
     button {
       display: flex;
@@ -131,13 +130,19 @@
       cursor: pointer;
       transition: background-color 100ms ease;
 
+      &:first-of-type {
+        margin-top: 10px;
+      }
+
       h1 {
         font-size: 18px;
+        font-family: sans-serif;
       }
 
       h2 {
         font-size: 12px;
         font-family: sans-serif;
+        margin-left: auto;
       }
 
       &:hover,
@@ -145,6 +150,17 @@
         color: white;
         background-color: black;
       }
+
+      &.active {
+        position: sticky;
+        top: 10px;
+        bottom: 10px;
+      }
+    }
+
+    /* hack to get extra scroll space under last el */
+    .last {
+      padding: 1px;
     }
   }
 </style>
