@@ -4,6 +4,7 @@
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/PersonPoster.svelte";
   import Rating from "@/lib/Rating.svelte";
+  import SeasonsList from "@/lib/SeasonsList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import { updateWatched } from "@/lib/util/api";
@@ -114,6 +115,8 @@
         {:catch err}
           <Error error={err} pretty="Failed to load cast!" />
         {/await}
+
+        <SeasonsList tvId={data.tvId} seasons={show.seasons} />
       </div>
     </div>
   {:else}

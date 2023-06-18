@@ -80,6 +80,16 @@ func tvCredits(id string) (TMDBContentCredits, error) {
 	return *resp, nil
 }
 
+func seasonDetails(tvId string, seasonNumber string) (TMDBSeasonDetails, error) {
+	resp := new(TMDBSeasonDetails)
+	err := tmdbRequest("/tv/"+tvId+"/season/"+seasonNumber, map[string]string{}, &resp)
+	if err != nil {
+		println("Failed to complete season details request!", err.Error())
+		return TMDBSeasonDetails{}, errors.New("failed to complete season details request")
+	}
+	return *resp, nil
+}
+
 func personDetails(id string) (TMDBPersonDetails, error) {
 	resp := new(TMDBPersonDetails)
 	err := tmdbRequest("/person/"+id, map[string]string{}, &resp)
