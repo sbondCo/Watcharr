@@ -55,10 +55,14 @@
         <ul>
           {#each season.episodes as ep}
             <li>
-              <img
-                src={`https://www.themoviedb.org/t/p/w227_and_h127_bestv2/${ep.still_path}`}
-                alt=""
-              />
+              {#if ep.still_path}
+                <img
+                  src={`https://www.themoviedb.org/t/p/w227_and_h127_bestv2/${ep.still_path}`}
+                  alt=""
+                />
+              {:else}
+                <div class="no-still" />
+              {/if}
               <span>
                 <b>{ep.episode_number}</b>
                 {ep.name}
@@ -96,10 +100,12 @@
       flex-flow: row;
       gap: 12px;
 
-      img {
+      img,
+      .no-still {
         width: 227px;
         min-width: 227px;
         height: 127px;
+        min-height: 127px;
         border-radius: 10px;
         background-color: rgb(0, 0, 0);
         object-fit: fill;
