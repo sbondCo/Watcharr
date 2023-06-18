@@ -77,11 +77,11 @@
   .ctr {
     display: flex;
     flex-flow: row;
+    gap: 20px;
     width: 100%;
   }
 
   .episodes {
-    padding: 0px 20px;
     overflow: auto;
 
     ul {
@@ -100,10 +100,31 @@
         width: 227px;
         height: 127px;
         border-radius: 10px;
+
+        @media screen and (max-width: 590px) {
+          width: 80%;
+          height: auto;
+        }
+
+        @media screen and (max-width: 450px) {
+          width: 100%;
+        }
       }
 
       span {
         padding: 8px 5px;
+
+        @media screen and (max-width: 590px) {
+          text-align: center;
+        }
+      }
+    }
+
+    @media screen and (max-width: 590px) {
+      li {
+        align-items: center;
+        flex-flow: column;
+        width: 100%;
       }
     }
   }
@@ -161,6 +182,29 @@
     /* hack to get extra scroll space under last el */
     .last {
       padding: 1px;
+    }
+  }
+
+  @media screen and (max-width: 960px) {
+    .ctr {
+      flex-flow: column;
+    }
+
+    ul.seasons {
+      flex-flow: row;
+      flex-wrap: wrap;
+      position: unset;
+      height: unset;
+      justify-content: center;
+
+      button {
+        &:first-of-type {
+          margin-top: unset;
+        }
+        &.active {
+          position: unset;
+        }
+      }
     }
   }
 </style>
