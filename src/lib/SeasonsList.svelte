@@ -98,8 +98,11 @@
 
       img {
         width: 227px;
+        min-width: 227px;
         height: 127px;
         border-radius: 10px;
+        background-color: rgb(0, 0, 0);
+        object-fit: fill;
 
         @media screen and (max-width: 590px) {
           width: 80%;
