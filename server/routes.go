@@ -103,6 +103,20 @@ func (b *BaseRouter) addContentRoutes() {
 		c.JSON(http.StatusOK, content)
 	})
 
+	// Get season details
+	content.GET("/tv/:id/season/:num", func(c *gin.Context) {
+		if c.Param("id") == "" || c.Param("num") == "" {
+			c.Status(400)
+			return
+		}
+		content, err := seasonDetails(c.Param("id"), c.Param("num"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
+
 	// Get person details
 	content.GET("/person/:id", func(c *gin.Context) {
 		if c.Param("id") == "" {
