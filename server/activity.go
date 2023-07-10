@@ -7,24 +7,32 @@ import (
 	"gorm.io/gorm"
 )
 
+type ActivityType string
+
+var (
+	ADDED_WATCHED  ActivityType = "ADDED_WATCHED"
+	RATING_CHANGED ActivityType = "RATING_CHANGED"
+	STATUS_CHANGED ActivityType = "STATUS_CHANGED"
+)
+
 type Activity struct {
-	gorm.Model
+	GormModel
 	// ID of user this activity is linked to, so it can be easily
 	// secured (users can only view their own activities).
 	UserID uint `json:"-" gorm:"not null"`
 	// ID of watched list item this activity is linked to.
 	WatchedID uint `json:"watchedId" gorm:"not null"`
 	// Type of activity.
-	Type string `json:"type" gorm:"not null"`
+	Type ActivityType `json:"type" gorm:"not null"`
 	// Holds custom data (ex, if rating changed, this can
 	// hold new rating - if status changed, this will hold that).
 	Data string `json:"data" gorm:"not null"`
 }
 
 type ActivityAddRequest struct {
-	WatchedID uint   `json:"watchedId" binding:"required"`
-	Type      string `json:"type" binding:"required"`
-	Data      string `json:"data" binding:"required"`
+	WatchedID uint         `json:"watchedId" binding:"required"`
+	Type      ActivityType `json:"type" binding:"required"`
+	Data      string       `json:"data" binding:"required"`
 }
 
 func getActivity(db *gorm.DB, userId uint, watchedId uint) ([]Activity, error) {

@@ -117,7 +117,7 @@
           <Error error={err} pretty="Failed to load cast!" />
         {/await}
 
-        <Activity tvId={data.tvId} />
+        <Activity activity={wListItem?.activity} />
         <SeasonsList tvId={data.tvId} seasons={show.seasons} />
       </div>
     </div>

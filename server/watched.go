@@ -32,6 +32,7 @@ type Watched struct {
 	UserID    uint          `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	ContentID int           `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	Content   Content       `json:"content"`
+	Activity  []Activity    `json:"activity"`
 }
 
 type WatchedAddRequest struct {
@@ -48,7 +49,7 @@ type WatchedUpdateRequest struct {
 
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
-	res := db.Model(&Watched{}).Preload("Content").Where("user_id = ?", userId).Find(&watched)
+	res := db.Model(&Watched{}).Preload("Content").Preload("Activity").Where("user_id = ?", userId).Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}
@@ -185,12 +186,14 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	}
 	fmt.Printf("%+v\n", watched)
 
+	addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED})
+
 	watched.Content = content
 	return watched, nil
 }
 
 func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (bool, error) {
-	// println(ar.Rating, ar.Status)
+	println("UpdateWatched", ar.Rating, ar.Status)
 	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(Watched{Rating: ar.Rating, Status: ar.Status})
 	if res.Error != nil {
 		println("Watched entry update failed:", id, res.Error.Error())
@@ -198,6 +201,12 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 	}
 	if res.RowsAffected <= 0 {
 		return false, errors.New("no watched entry found")
+	}
+	if ar.Rating != 0 {
+		addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: RATING_CHANGED, Data: strconv.Itoa(int(ar.Rating))})
+	}
+	if ar.Status != "" {
+		addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: STATUS_CHANGED, Data: string(ar.Status)})
 	}
 	return true, nil
 }
