@@ -186,14 +186,15 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	}
 	fmt.Printf("%+v\n", watched)
 
+	var activity Activity
 	activityJson, err := json.Marshal(map[string]interface{}{"status": watched.Status, "rating": watched.Rating})
 	if err != nil {
 		println("Failed to marshal json for data in ADD_WATCHED activity request, adding without data", err.Error())
-		addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED})
+		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED})
 	} else {
-		addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED, Data: string(activityJson)})
+		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED, Data: string(activityJson)})
 	}
-
+	watched.Activity = []Activity{activity}
 	watched.Content = content
 	return watched, nil
 }
