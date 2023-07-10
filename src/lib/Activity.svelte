@@ -6,6 +6,12 @@
   function getMsg(a: Activity) {
     switch (a?.type) {
       case "ADDED_WATCHED":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `added to watched list${data?.status ? ` as ${data.status?.toLowerCase()}` : ""}${
+            data?.rating ? ` with ${data.rating} stars` : ""
+          }`;
+        }
         return "added to watched list";
       case "RATING_CHANGED":
         if (a.data) {
