@@ -243,6 +243,9 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 func removeWatched(db *gorm.DB, userId uint, id uint) (WatchedRemoveResponse, error) {
 	println("Removing watched item:", id, "for user", userId)
 	// Our model has a deleted_at field, which will make gorm do a soft delete.
+	// Since other tables (eg activities) will link their rows to a watched_id, it's best to soft
+	// delete, so if user restores watched item they still have activity for example (also so
+	// someone else wont get other users activity if auto increment gives them the same watched id).
 	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Delete(&Watched{})
 	if res.Error != nil {
 		println("Removing watched entry failed:", id, res.Error.Error())
