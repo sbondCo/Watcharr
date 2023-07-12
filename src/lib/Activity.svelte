@@ -1,7 +1,14 @@
 <script lang="ts">
   import type { Activity } from "@/types";
+  import { getOrdinalSuffix, months } from "./util/helpers";
 
   export let activity: Activity[] | undefined;
+
+  let groupedActivities: Object;
+
+  $: {
+    groupedActivities = getGroupedActivity(activity);
+  }
 
   function getMsg(a: Activity) {
     switch (a?.type) {
@@ -20,12 +27,34 @@
         return "rating changed";
       case "STATUS_CHANGED":
         if (a.data) {
-          return `watched status changed to ${a.data?.toLowerCase()}`;
+          return `status changed to ${a.data?.toLowerCase()}`;
         }
-        return "watched status changed";
+        return "status changed";
       default:
         return a.type;
     }
+  }
+
+  function toDayTime(d: Date) {
+    return `${d.getDate()}${getOrdinalSuffix(d.getDate())} at ${d.toLocaleTimeString()}`;
+  }
+
+  function getGroupedActivity(activities?: Activity[]) {
+    const a = activities?.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    let grouped: { [index: string]: any } = {};
+    if (a) {
+      for (let i = 0; i < a.length; i++) {
+        const activity = a[i];
+        const date = new Date(Date.parse(activity.createdAt));
+        const key = `${months[date.getMonth()]} ${date.getFullYear()}`;
+        if (grouped[key]) {
+          grouped[key].push(activity);
+        } else {
+          grouped[key] = [activity];
+        }
+      }
+    }
+    return grouped;
   }
 </script>
 
@@ -33,11 +62,17 @@
   <h2>Activity</h2>
   {#if activity && activity.length > 0}
     <ul>
-      {#each activity?.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)) as a}
-        <li>
-          {new Date(a.createdAt).toLocaleString()}
-          {getMsg(a)}
-        </li>
+      {#each Object.keys(groupedActivities) as k}
+        <h3>{k}</h3>
+
+        {#each groupedActivities[k] as a}
+          <li>
+            <span title={new Date(a.createdAt).toDateString()}>
+              {toDayTime(new Date(a.createdAt))}
+            </span>
+            <span>{getMsg(a)}</span>
+          </li>
+        {/each}
       {/each}
     </ul>
   {:else}
@@ -57,15 +92,40 @@
       margin-left: calc(30px + 8px);
       list-style: none;
       max-height: 250px;
-      overflow: auto;
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      h3 {
+        position: sticky;
+        top: 0;
+        bottom: 100px;
+        background-color: white;
+      }
 
       li {
+        display: flex;
+        flex-flow: row;
+        align-items: center;
+        gap: 8px;
         width: max-content;
-        padding: 10px 12px;
-        color: white;
-        background-color: rgb(46, 46, 46);
-        border-radius: 8px;
-        text-transform: capitalize;
+        max-width: 100%;
+
+        span {
+          width: max-content;
+          margin-left: 0px;
+
+          &:first-child {
+            min-width: max-content;
+          }
+
+          &:last-child {
+            background-color: rgb(46, 46, 46);
+            text-transform: capitalize;
+            color: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+          }
+        }
       }
     }
 
