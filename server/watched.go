@@ -187,7 +187,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	res := db.Create(&watched)
 	if res.Error != nil {
 		if strings.Contains(res.Error.Error(), "UNIQUE") {
-			res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Take(&watched)
+			res = db.Model(&Watched{}).Unscoped().Preload("Activity").Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Take(&watched)
 			if res.Error != nil {
 				return Watched{}, errors.New("content already on watched list. errored checking for soft deleted record")
 			}
@@ -215,7 +215,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	} else {
 		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED, Data: string(activityJson)})
 	}
-	watched.Activity = []Activity{activity}
+	watched.Activity = append(watched.Activity, activity)
 	watched.Content = content
 	return watched, nil
 }
