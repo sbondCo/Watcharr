@@ -195,7 +195,9 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 				return Watched{}, errors.New("content already on watched list")
 			} else {
 				println("Watched list item exists as soft deleted record.. attempting to restore")
-				res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Update("deleted_at", nil)
+				res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Updates(map[string]interface{}{"status": ar.Status, "rating": ar.Rating, "deleted_at": nil})
+				watched.Status = ar.Status
+				watched.Rating = ar.Rating
 				if res.Error != nil {
 					return Watched{}, errors.New("content already on watched list. errored removing soft delete timestamp")
 				}
@@ -208,7 +210,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	fmt.Printf("%+v\n", watched)
 
 	var activity Activity
-	activityJson, err := json.Marshal(map[string]interface{}{"status": watched.Status, "rating": watched.Rating})
+	activityJson, err := json.Marshal(map[string]interface{}{"status": ar.Status, "rating": ar.Rating})
 	if err != nil {
 		println("Failed to marshal json for data in ADD_WATCHED activity request, adding without data", err.Error())
 		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED})
