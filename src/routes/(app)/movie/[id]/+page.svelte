@@ -120,7 +120,9 @@
           <Error error={err} pretty="Failed to load cast!" />
         {/await}
 
-        <Activity activity={wListItem?.activity} />
+        {#if wListItem}
+          <Activity activity={wListItem?.activity} />
+        {/if}
       </div>
     </div>
   {:else}
