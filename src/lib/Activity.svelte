@@ -20,6 +20,8 @@
           }`;
         }
         return "added to watched list";
+      case "REMOVED_WATCHED":
+        return "removed from watched list";
       case "RATING_CHANGED":
         if (a.data) {
           return `rating changed to ${a.data}`;
