@@ -100,6 +100,9 @@
         top: 0;
         bottom: 100px;
         background-color: white;
+        font-size: 16px;
+        font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+        padding-bottom: 1px;
       }
 
       li {
