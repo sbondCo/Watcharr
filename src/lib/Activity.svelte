@@ -56,6 +56,8 @@
       margin-top: 8px;
       margin-left: calc(30px + 8px);
       list-style: none;
+      max-height: 250px;
+      overflow: auto;
 
       li {
         width: max-content;
