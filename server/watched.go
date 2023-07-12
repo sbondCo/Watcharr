@@ -47,6 +47,10 @@ type WatchedUpdateRequest struct {
 	Rating int8          `json:"rating" binding:"max=10,required_without=Status"`
 }
 
+type WatchedUpdateResponse struct {
+	NewActivity Activity `json:"newActivity"`
+}
+
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
 	res := db.Model(&Watched{}).Preload("Content").Preload("Activity").Where("user_id = ?", userId).Find(&watched)
@@ -199,23 +203,24 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	return watched, nil
 }
 
-func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (bool, error) {
+func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (WatchedUpdateResponse, error) {
 	println("UpdateWatched", ar.Rating, ar.Status)
 	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(Watched{Rating: ar.Rating, Status: ar.Status})
 	if res.Error != nil {
 		println("Watched entry update failed:", id, res.Error.Error())
-		return false, errors.New("failed to update watched entry")
+		return WatchedUpdateResponse{}, errors.New("failed to update watched entry")
 	}
 	if res.RowsAffected <= 0 {
-		return false, errors.New("no watched entry found")
+		return WatchedUpdateResponse{}, errors.New("no watched entry found")
 	}
+	addedActivity := Activity{}
 	if ar.Rating != 0 {
-		addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: RATING_CHANGED, Data: strconv.Itoa(int(ar.Rating))})
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: RATING_CHANGED, Data: strconv.Itoa(int(ar.Rating))})
 	}
 	if ar.Status != "" {
-		addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: STATUS_CHANGED, Data: string(ar.Status)})
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: STATUS_CHANGED, Data: string(ar.Status)})
 	}
-	return true, nil
+	return WatchedUpdateResponse{NewActivity: addedActivity}, nil
 }
 
 func removeWatched(db *gorm.DB, userId uint, id uint) (bool, error) {
