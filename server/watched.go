@@ -51,6 +51,10 @@ type WatchedUpdateResponse struct {
 	NewActivity Activity `json:"newActivity"`
 }
 
+type WatchedRemoveResponse struct {
+	NewActivity Activity `json:"newActivity"`
+}
+
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
 	res := db.Model(&Watched{}).Preload("Content").Preload("Activity").Where("user_id = ?", userId).Find(&watched)
@@ -183,10 +187,23 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	res := db.Create(&watched)
 	if res.Error != nil {
 		if strings.Contains(res.Error.Error(), "UNIQUE") {
-			return Watched{}, errors.New("content already on watched list")
+			res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Take(&watched)
+			if res.Error != nil {
+				return Watched{}, errors.New("content already on watched list. errored checking for soft deleted record")
+			}
+			if watched.DeletedAt.Time.IsZero() {
+				return Watched{}, errors.New("content already on watched list")
+			} else {
+				println("Watched list item exists as soft deleted record.. attempting to restore")
+				res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Update("deleted_at", nil)
+				if res.Error != nil {
+					return Watched{}, errors.New("content already on watched list. errored removing soft delete timestamp")
+				}
+			}
+		} else {
+			println("Error adding watched content to database:", res.Error.Error())
+			return Watched{}, errors.New("failed adding content to database")
 		}
-		println("Error adding watched content to database:", res.Error.Error())
-		return Watched{}, errors.New("failed adding content to database")
 	}
 	fmt.Printf("%+v\n", watched)
 
@@ -223,19 +240,19 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 	return WatchedUpdateResponse{NewActivity: addedActivity}, nil
 }
 
-func removeWatched(db *gorm.DB, userId uint, id uint) (bool, error) {
+func removeWatched(db *gorm.DB, userId uint, id uint) (WatchedRemoveResponse, error) {
 	println("Removing watched item:", id, "for user", userId)
-	// Our model has a deleted_at field, which will make gorm do a soft delete,
-	// for now we want to delete permanently, so we use Unscoped.
-	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Unscoped().Delete(&Watched{})
+	// Our model has a deleted_at field, which will make gorm do a soft delete.
+	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Delete(&Watched{})
 	if res.Error != nil {
 		println("Removing watched entry failed:", id, res.Error.Error())
-		return false, errors.New("failed to remove watched entry")
+		return WatchedRemoveResponse{}, errors.New("failed to remove watched entry")
 	}
 	if res.RowsAffected <= 0 {
-		return false, errors.New("no watched entry found")
+		return WatchedRemoveResponse{}, errors.New("no watched entry found")
 	}
-	return true, nil
+	addedActivity, _ := addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: REMOVED_WATCHED})
+	return WatchedRemoveResponse{NewActivity: addedActivity}, nil
 }
 
 func download(url string, outf string) (err error) {

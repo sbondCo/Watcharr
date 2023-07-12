@@ -10,9 +10,10 @@ import (
 type ActivityType string
 
 var (
-	ADDED_WATCHED  ActivityType = "ADDED_WATCHED"
-	RATING_CHANGED ActivityType = "RATING_CHANGED"
-	STATUS_CHANGED ActivityType = "STATUS_CHANGED"
+	ADDED_WATCHED   ActivityType = "ADDED_WATCHED"
+	REMOVED_WATCHED ActivityType = "REMOVED_WATCHED"
+	RATING_CHANGED  ActivityType = "RATING_CHANGED"
+	STATUS_CHANGED  ActivityType = "STATUS_CHANGED"
 )
 
 type Activity struct {
@@ -46,6 +47,9 @@ func getActivity(db *gorm.DB, userId uint, watchedId uint) ([]Activity, error) {
 }
 
 func addActivity(db *gorm.DB, userId uint, ar ActivityAddRequest) (Activity, error) {
+	if ar.WatchedID == 0 {
+		return Activity{}, errors.New("watchedId must be set to add an activity")
+	}
 	activity := Activity{UserID: userId, WatchedID: ar.WatchedID, Type: ar.Type, Data: ar.Data}
 	res := db.Create(&activity)
 	if res.Error != nil {

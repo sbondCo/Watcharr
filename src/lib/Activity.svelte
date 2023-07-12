@@ -4,7 +4,7 @@
 
   export let activity: Activity[] | undefined;
 
-  let groupedActivities: Object;
+  let groupedActivities: { [index: string]: any };
 
   $: {
     groupedActivities = getGroupedActivity(activity);
@@ -40,6 +40,7 @@
   }
 
   function getGroupedActivity(activities?: Activity[]) {
+    activities = activities?.filter((a) => a.type);
     const a = activities?.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
     let grouped: { [index: string]: any } = {};
     if (a) {
@@ -60,7 +61,7 @@
 
 <div class="activity">
   <h2>Activity</h2>
-  {#if activity && activity.length > 0}
+  {#if groupedActivities && Object.keys(groupedActivities).length > 0}
     <ul>
       {#each Object.keys(groupedActivities) as k}
         <h3>{k}</h3>
