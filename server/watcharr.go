@@ -52,7 +52,7 @@ func main() {
 		panic("failed to connect to database")
 	}
 
-	err = db.AutoMigrate(&User{}, &Content{}, &Watched{})
+	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &Activity{})
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
@@ -85,6 +85,7 @@ func main() {
 	br.addAuthRoutes()
 	br.addContentRoutes()
 	br.addWatchedRoutes()
+	br.addActivityRoutes()
 	br.rg.Static("/img", "./data/img")
 
 	gine.Run("0.0.0.0:3080")

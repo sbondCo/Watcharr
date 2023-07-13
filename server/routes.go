@@ -211,6 +211,41 @@ func (b *BaseRouter) addWatchedRoutes() {
 	})
 }
 
+func (b *BaseRouter) addActivityRoutes() {
+	activity := b.rg.Group("/activity").Use(AuthRequired())
+
+	activity.GET(":watchedId", func(c *gin.Context) {
+		watchedId, err := strconv.ParseUint(c.Param("watchedId"), 10, 32)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "check watched id route param"})
+			return
+		}
+		userId := c.MustGet("userId").(uint)
+		activity, err := getActivity(b.db, userId, uint(watchedId))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, activity)
+	})
+
+	activity.POST("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ar ActivityAddRequest
+		err := c.ShouldBindJSON(&ar)
+		if err == nil {
+			response, err := addActivity(b.db, userId, ar)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
+
 func (b *BaseRouter) addAuthRoutes() {
 	auth := b.rg.Group("/auth")
 

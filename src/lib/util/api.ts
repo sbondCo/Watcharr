@@ -39,9 +39,16 @@ export function updateWatched(
     if (rating) obj.rating = rating;
     axios
       .put(`/watched/${wEntry.id}`, obj)
-      .then(() => {
+      .then((resp) => {
         if (status) wEntry.status = status;
         if (rating) wEntry.rating = rating;
+        if (resp?.data?.newActivity) {
+          if (wEntry.activity?.length > 0) {
+            wEntry.activity.push(resp.data.newActivity);
+          } else {
+            wEntry.activity = [resp.data.newActivity];
+          }
+        }
         watchedList.update((w) => w);
       })
       .catch((err) => {

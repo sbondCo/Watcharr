@@ -10,6 +10,21 @@ export const watchedStatuses: {
   DROPPED: "thumb-down"
 };
 
+export const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+];
+
 export function isTouch() {
   return "ontouchstart" in window;
 }
@@ -87,4 +102,23 @@ export function calculateTransformOrigin(
     }
     ctr.style.transformOrigin = `${origins.join(" ")}`;
   }
+}
+
+/**
+ * Get ordinal suffix to use from day number (1`st`, 2`nd`, 3`rd`).
+ * @param i Day number.
+ */
+export function getOrdinalSuffix(i: number) {
+  const j = i % 10,
+    k = i % 100;
+  if (j == 1 && k != 11) {
+    return "st";
+  }
+  if (j == 2 && k != 12) {
+    return "nd";
+  }
+  if (j == 3 && k != 13) {
+    return "rd";
+  }
+  return "th";
 }

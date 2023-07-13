@@ -16,6 +16,7 @@
   } from "@/types";
   import axios from "axios";
   import { getTopCrew } from "@/lib/util/helpers.js";
+  import Activity from "@/lib/Activity.svelte";
 
   export let data;
 
@@ -118,6 +119,10 @@
         {:catch err}
           <Error error={err} pretty="Failed to load cast!" />
         {/await}
+
+        {#if wListItem}
+          <Activity activity={wListItem?.activity} />
+        {/if}
       </div>
     </div>
   {:else}

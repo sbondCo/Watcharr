@@ -32,6 +32,7 @@ type Watched struct {
 	UserID    uint          `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	ContentID int           `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	Content   Content       `json:"content"`
+	Activity  []Activity    `json:"activity"`
 }
 
 type WatchedAddRequest struct {
@@ -46,9 +47,17 @@ type WatchedUpdateRequest struct {
 	Rating int8          `json:"rating" binding:"max=10,required_without=Status"`
 }
 
+type WatchedUpdateResponse struct {
+	NewActivity Activity `json:"newActivity"`
+}
+
+type WatchedRemoveResponse struct {
+	NewActivity Activity `json:"newActivity"`
+}
+
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
-	res := db.Model(&Watched{}).Preload("Content").Where("user_id = ?", userId).Find(&watched)
+	res := db.Model(&Watched{}).Preload("Content").Preload("Activity").Where("user_id = ?", userId).Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}
@@ -178,43 +187,77 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	res := db.Create(&watched)
 	if res.Error != nil {
 		if strings.Contains(res.Error.Error(), "UNIQUE") {
-			return Watched{}, errors.New("content already on watched list")
+			res = db.Model(&Watched{}).Unscoped().Preload("Activity").Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Take(&watched)
+			if res.Error != nil {
+				return Watched{}, errors.New("content already on watched list. errored checking for soft deleted record")
+			}
+			if watched.DeletedAt.Time.IsZero() {
+				return Watched{}, errors.New("content already on watched list")
+			} else {
+				println("Watched list item exists as soft deleted record.. attempting to restore")
+				res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Updates(map[string]interface{}{"status": ar.Status, "rating": ar.Rating, "deleted_at": nil})
+				watched.Status = ar.Status
+				watched.Rating = ar.Rating
+				if res.Error != nil {
+					return Watched{}, errors.New("content already on watched list. errored removing soft delete timestamp")
+				}
+			}
+		} else {
+			println("Error adding watched content to database:", res.Error.Error())
+			return Watched{}, errors.New("failed adding content to database")
 		}
-		println("Error adding watched content to database:", res.Error.Error())
-		return Watched{}, errors.New("failed adding content to database")
 	}
 	fmt.Printf("%+v\n", watched)
 
+	var activity Activity
+	activityJson, err := json.Marshal(map[string]interface{}{"status": ar.Status, "rating": ar.Rating})
+	if err != nil {
+		println("Failed to marshal json for data in ADD_WATCHED activity request, adding without data", err.Error())
+		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED})
+	} else {
+		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED, Data: string(activityJson)})
+	}
+	watched.Activity = append(watched.Activity, activity)
 	watched.Content = content
 	return watched, nil
 }
 
-func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (bool, error) {
-	// println(ar.Rating, ar.Status)
+func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (WatchedUpdateResponse, error) {
+	println("UpdateWatched", ar.Rating, ar.Status)
 	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(Watched{Rating: ar.Rating, Status: ar.Status})
 	if res.Error != nil {
 		println("Watched entry update failed:", id, res.Error.Error())
-		return false, errors.New("failed to update watched entry")
+		return WatchedUpdateResponse{}, errors.New("failed to update watched entry")
 	}
 	if res.RowsAffected <= 0 {
-		return false, errors.New("no watched entry found")
+		return WatchedUpdateResponse{}, errors.New("no watched entry found")
 	}
-	return true, nil
+	addedActivity := Activity{}
+	if ar.Rating != 0 {
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: RATING_CHANGED, Data: strconv.Itoa(int(ar.Rating))})
+	}
+	if ar.Status != "" {
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: STATUS_CHANGED, Data: string(ar.Status)})
+	}
+	return WatchedUpdateResponse{NewActivity: addedActivity}, nil
 }
 
-func removeWatched(db *gorm.DB, userId uint, id uint) (bool, error) {
+func removeWatched(db *gorm.DB, userId uint, id uint) (WatchedRemoveResponse, error) {
 	println("Removing watched item:", id, "for user", userId)
-	// Our model has a deleted_at field, which will make gorm do a soft delete,
-	// for now we want to delete permanently, so we use Unscoped.
-	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Unscoped().Delete(&Watched{})
+	// Our model has a deleted_at field, which will make gorm do a soft delete.
+	// Since other tables (eg activities) will link their rows to a watched_id, it's best to soft
+	// delete, so if user restores watched item they still have activity for example (also so
+	// someone else wont get other users activity if auto increment gives them the same watched id).
+	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Delete(&Watched{})
 	if res.Error != nil {
 		println("Removing watched entry failed:", id, res.Error.Error())
-		return false, errors.New("failed to remove watched entry")
+		return WatchedRemoveResponse{}, errors.New("failed to remove watched entry")
 	}
 	if res.RowsAffected <= 0 {
-		return false, errors.New("no watched entry found")
+		return WatchedRemoveResponse{}, errors.New("no watched entry found")
 	}
-	return true, nil
+	addedActivity, _ := addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: REMOVED_WATCHED})
+	return WatchedRemoveResponse{NewActivity: addedActivity}, nil
 }
 
 func download(url string, outf string) (err error) {

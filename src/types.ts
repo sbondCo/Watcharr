@@ -15,6 +15,12 @@ export type Icon =
   | "close"
   | "filter";
 
+interface dbModel {
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string;
+}
+
 export interface Content {
   // id: number; // Not used
   tmdbId: number;
@@ -24,15 +30,19 @@ export interface Content {
   type: ContentType;
 }
 
-export interface Watched {
+export interface Activity extends dbModel {
+  watchedId: number;
+  type: string;
+  data: string;
+}
+
+export interface Watched extends dbModel {
   id: number;
   watched: boolean;
   rating?: number;
   content: Content;
+  activity: Activity[];
   status: WatchedStatus;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string;
 }
 
 export interface WatchedAddRequest {

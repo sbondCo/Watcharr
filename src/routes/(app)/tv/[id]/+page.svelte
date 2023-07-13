@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Activity from "@/lib/Activity.svelte";
   import Error from "@/lib/Error.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
   import PageError from "@/lib/PageError.svelte";
@@ -116,6 +117,9 @@
           <Error error={err} pretty="Failed to load cast!" />
         {/await}
 
+        {#if wListItem}
+          <Activity activity={wListItem?.activity} />
+        {/if}
         <SeasonsList tvId={data.tvId} seasons={show.seasons} />
       </div>
     </div>
