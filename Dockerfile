@@ -17,7 +17,7 @@ COPY ./static ./static
 RUN npm install && npm run build
 
 # Production
-FROM debian:11.6 AS runner
+FROM debian:12.0 AS runner
 
 RUN apt-get update && apt-get install ca-certificates -y
 
