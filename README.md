@@ -16,6 +16,11 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 
 [Track Progress Until Next Version](https://github.com/orgs/sbondCo/projects/9/views/3)
 
+### Contents
+
+- [Screenshots](#screenshots)
+- [Setup](#set-up)
+
 # Screenshots
 
 <h3 align="center">Watched List</h3>
@@ -30,7 +35,7 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 
 # Set Up
 
-Currently only a [docker image](https://github.com/sbondCo/Watcharr/pkgs/container/watcharr) is provided.
+Currently only a [docker image](https://github.com/sbondCo/Watcharr/pkgs/container/watcharr) is provided (**v1.9.1 and newer no longer require the `watcharr-ui` package, it is bundled inside the main `watcharr` package**).
 
 Here is a simple setup you can use yourself, using docker compose:
 
