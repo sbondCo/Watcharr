@@ -141,7 +141,9 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			voteAverage = content.VoteAverage
 			voteCount = content.VoteCount
 			status = content.Status
-			runtime = uint32(content.EpisodeRunTime[0])
+			if len(content.EpisodeRunTime) > 0 {
+				runtime = uint32(content.EpisodeRunTime[0])
+			}
 			numberOfEpisodes = content.NumberOfEpisodes
 			numberOfSeasons = content.NumberOfSeasons
 		}
