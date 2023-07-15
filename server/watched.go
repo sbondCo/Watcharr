@@ -81,18 +81,21 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 		}
 
 		var (
-			id          int
-			title       string
-			overview    string
-			posterPath  string
-			releaseDate time.Time
-			popularity  float32
-			voteAverage float32
-			voteCount   uint32
-			imdbID      string
-			status      string
-			budget      uint32
-			revenue     uint32
+			id               int
+			title            string
+			overview         string
+			posterPath       string
+			releaseDate      time.Time
+			popularity       float32
+			voteAverage      float32
+			voteCount        uint32
+			imdbID           string
+			status           string
+			budget           uint32
+			revenue          uint32
+			runtime          uint32
+			numberOfEpisodes uint32
+			numberOfSeasons  uint32
 		)
 		var dateFormat = "2006-01-02"
 		// Get details from movie/show response and fill out needed vars
@@ -118,6 +121,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			status = content.Status
 			budget = content.Budget
 			revenue = content.Revenue
+			runtime = content.Runtime
 		} else {
 			content := new(TMDBShowDetails)
 			err = json.Unmarshal(resp, &content)
@@ -137,6 +141,9 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			voteAverage = content.VoteAverage
 			voteCount = content.VoteCount
 			status = content.Status
+			runtime = uint32(content.EpisodeRunTime[0])
+			numberOfEpisodes = content.NumberOfEpisodes
+			numberOfSeasons = content.NumberOfSeasons
 		}
 		// Save the content in our db
 		println("id, etc:", id, title, overview, posterPath, "<-- end")
@@ -145,19 +152,22 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			return Watched{}, errors.New("content response missing id or title")
 		}
 		content = Content{
-			TmdbID:      id,
-			Title:       title,
-			Overview:    overview,
-			PosterPath:  posterPath,
-			Type:        ar.ContentType,
-			ReleaseDate: releaseDate,
-			Popularity:  popularity,
-			VoteAverage: voteAverage,
-			VoteCount:   voteCount,
-			ImdbID:      imdbID,
-			Status:      status,
-			Budget:      budget,
-			Revenue:     revenue,
+			TmdbID:           id,
+			Title:            title,
+			Overview:         overview,
+			PosterPath:       posterPath,
+			Type:             ar.ContentType,
+			ReleaseDate:      releaseDate,
+			Popularity:       popularity,
+			VoteAverage:      voteAverage,
+			VoteCount:        voteCount,
+			ImdbID:           imdbID,
+			Status:           status,
+			Budget:           budget,
+			Revenue:          revenue,
+			Runtime:          runtime,
+			NumberOfEpisodes: numberOfEpisodes,
+			NumberOfSeasons:  numberOfSeasons,
 		}
 		res := db.Create(&content)
 		if res.Error != nil {
