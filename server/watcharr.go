@@ -86,6 +86,7 @@ func main() {
 	br.addContentRoutes()
 	br.addWatchedRoutes()
 	br.addActivityRoutes()
+	br.addProfileRoutes()
 	br.rg.Static("/img", "./data/img")
 
 	gine.Run("0.0.0.0:3080")

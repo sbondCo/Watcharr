@@ -57,6 +57,12 @@ export interface WatchedUpdateRequest {
   status?: WatchedStatus;
 }
 
+export interface Profile {
+  joined: Date;
+  showsWatched: number;
+  moviesWatched: number;
+}
+
 export interface TMDBContentDetails {
   id: number;
   backdrop_path: string;
