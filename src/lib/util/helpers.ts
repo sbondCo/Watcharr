@@ -25,6 +25,21 @@ export const months = [
   "December"
 ];
 
+export const monthsShort = [
+  "Jan",
+  "Feb",
+  "March",
+  "Apr",
+  "May",
+  "June",
+  "July",
+  "Aug",
+  "Sept",
+  "Oct",
+  "Nov",
+  "Dec"
+];
+
 export function isTouch() {
   return "ontouchstart" in window;
 }

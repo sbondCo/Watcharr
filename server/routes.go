@@ -299,3 +299,18 @@ func (b *BaseRouter) addAuthRoutes() {
 		c.JSON(http.StatusOK, AvailableAuthProviders)
 	})
 }
+
+func (b *BaseRouter) addProfileRoutes() {
+	profile := b.rg.Group("/profile").Use(AuthRequired())
+
+	// Get user profile details
+	profile.GET("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		response, err := getProfile(b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+}

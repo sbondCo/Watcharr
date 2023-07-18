@@ -80,7 +80,7 @@ type TMDBMovieDetails struct {
 	OriginalTitle       string `json:"original_title"`
 	ReleaseDate         string `json:"release_date"`
 	Revenue             uint32 `json:"revenue"`
-	Runtime             int    `json:"runtime"`
+	Runtime             uint32 `json:"runtime"`
 	Title               string `json:"title"`
 	Video               bool   `json:"video"`
 }
@@ -119,8 +119,8 @@ type TMDBShowDetails struct {
 		LogoPath      string `json:"logo_path"`
 		OriginCountry string `json:"origin_country"`
 	} `json:"networks"`
-	NumberOfEpisodes int      `json:"number_of_episodes"`
-	NumberOfSeasons  int      `json:"number_of_seasons"`
+	NumberOfEpisodes uint32   `json:"number_of_episodes"`
+	NumberOfSeasons  uint32   `json:"number_of_seasons"`
 	OriginCountry    []string `json:"origin_country"`
 	OriginalName     string   `json:"original_name"`
 	Seasons          []struct {

@@ -58,6 +58,11 @@
     goto("/login");
   }
 
+  function profile() {
+    goto("/profile");
+    subMenuShown = false;
+  }
+
   async function getWatchedList() {
     if (localStorage.getItem("token")) {
       const w = await axios.get("/watched");
@@ -131,7 +136,7 @@
         {#if username}
           <h5 title={username}>Hi {username}!</h5>
         {/if}
-        <button class="plain" style="text-decoration: line-through;">Profile</button>
+        <button class="plain" on:click={() => profile()}>Profile</button>
         <button class="plain" on:click={() => logout()}>Logout</button>
         <!-- svelte-ignore missing-declaration -->
         <span>v{__WATCHARR_VERSION__}</span>
