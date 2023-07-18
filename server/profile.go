@@ -32,10 +32,12 @@ func getProfile(db *gorm.DB, userId uint) (Profile, error) {
 		moviesWatched int32
 	)
 	for _, w := range *watched {
-		if w.Content.Type == SHOW {
-			showsWatched++
-		} else if w.Content.Type == MOVIE {
-			moviesWatched++
+		if w.Status == FINISHED {
+			if w.Content.Type == SHOW {
+				showsWatched++
+			} else if w.Content.Type == MOVIE {
+				moviesWatched++
+			}
 		}
 	}
 	profile := Profile{Joined: user.CreatedAt, ShowsWatched: showsWatched, MoviesWatched: moviesWatched}
