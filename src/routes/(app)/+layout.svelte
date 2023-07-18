@@ -22,7 +22,13 @@
       goto("/login");
     } else {
       subMenuShown = !subMenuShown;
+      filterMenuShown = false;
     }
+  }
+
+  function handleFilterClick() {
+    filterMenuShown = !filterMenuShown;
+    subMenuShown = false;
   }
 
   function handleSearch(ev: KeyboardEvent) {
@@ -110,7 +116,7 @@
   <div class="btns">
     <!-- Only show on watched list -->
     {#if $page.url?.pathname === "/"}
-      <button class="plain filter" on:click={() => (filterMenuShown = !filterMenuShown)}>
+      <button class="plain filter" on:click={handleFilterClick}>
         <Icon i="filter" />
       </button>
       {#if filterMenuShown}
