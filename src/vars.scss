@@ -1,0 +1,15 @@
+:root {
+  --bg-color: white;
+  --text-color: black;
+  --accent-color: rgba(128, 128, 128, 0.226);
+}
+
+:root.theme-dark {
+  --bg-color: black;
+  --text-color: white;
+  --accent-color: rgba(255, 255, 255, 0.226);
+}
+
+$bg-color: var(--bg-color);
+$text-color: var(--text-color);
+$accent-color: var(--accent-color);
