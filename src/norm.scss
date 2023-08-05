@@ -55,10 +55,11 @@
   align-items: center;
   justify-content: center;
   padding: 5px 10px;
-  border: 2px solid black;
+  border: 2px solid $text-color;
   border-radius: 5px;
-  background-color: white;
-  color: black;
+  background-color: $bg-color;
+  color: $text-color;
+  fill: $text-color;
   font-weight: bold;
   width: 100%;
   transition: background-color 100ms ease, opacity 100ms ease;
@@ -70,9 +71,9 @@
 
   &:hover,
   &:focus-visible {
-    background-color: black;
-    color: white;
-    fill: white;
+    background-color: $bg-color;
+    color: $text-color;
+    fill: $text-color;
     opacity: 1;
   }
 }

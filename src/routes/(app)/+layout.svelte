@@ -223,11 +223,11 @@
         padding-top: 2px;
         width: 28px;
         transition: fill 150ms ease, stroke 150ms ease, stroke-width 150ms ease;
+        fill: $text-color;
 
         &:hover,
         &:focus-visible {
-          fill: white;
-          stroke: black;
+          stroke: $bg-color;
           stroke-width: 10px;
         }
       }
@@ -282,9 +282,9 @@
         top: 55px;
         width: 125px;
         padding: 10px;
-        border: 3px solid black;
+        border: 3px solid $text-color;
         border-radius: 10px;
-        background-color: white;
+        background-color: $bg-color;
         list-style: none;
         z-index: 50;
 
