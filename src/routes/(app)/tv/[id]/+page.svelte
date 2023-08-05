@@ -47,11 +47,13 @@
   {#if Object.keys(show).length > 0}
     <div>
       <div class="content">
-        <img
-          class="backdrop"
-          src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + show.backdrop_path}
-          alt=""
-        />
+        {#if show?.backdrop_path}
+          <img
+            class="backdrop"
+            src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + show.backdrop_path}
+            alt=""
+          />
+        {/if}
         <div class="vignette" />
 
         <div class="details-container">
@@ -144,8 +146,8 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: blur(4px) grayscale(80%);
-      mix-blend-mode: multiply;
+      filter: $backdrop-filter;
+      mix-blend-mode: $backdrop-mix-blend-mode;
     }
 
     .vignette {
