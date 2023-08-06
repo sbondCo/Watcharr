@@ -15,6 +15,8 @@ export type Icon =
   | "close"
   | "filter";
 
+export type Theme = "light" | "dark";
+
 interface dbModel {
   createdAt: string;
   updatedAt: string;

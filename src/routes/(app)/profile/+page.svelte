@@ -1,9 +1,12 @@
 <script lang="ts">
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import { getOrdinalSuffix, monthsShort } from "@/lib/util/helpers";
+  import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
+  import { appTheme } from "@/store";
   import type { Profile } from "@/types";
   import axios from "axios";
+
+  $: selectedTheme = $appTheme;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -13,14 +16,6 @@
     return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${
       monthsShort[d.getMonth()]
     } ${d.getFullYear()}`;
-  }
-
-  function toggleTheme(theme: "light" | "dark") {
-    if (theme === "dark") {
-      document.documentElement.classList.add("theme-dark");
-    } else {
-      document.documentElement.classList.remove("theme-dark");
-    }
   }
 </script>
 
@@ -52,9 +47,22 @@
     <div class="settings">
       <h3 class="norm">Settings</h3>
 
+      <h4 class="norm">Theme</h4>
       <div class="theme">
-        <button class="plain" id="light" on:click={() => toggleTheme("light")} />
-        <button class="plain" id="dark" on:click={() => toggleTheme("dark")} />
+        <button
+          class={`plain${selectedTheme === "light" ? " selected" : ""}`}
+          id="light"
+          on:click={() => toggleTheme("light")}
+        >
+          light
+        </button>
+        <button
+          class={`plain${selectedTheme === "dark" ? " selected" : ""}`}
+          id="dark"
+          on:click={() => toggleTheme("dark")}
+        >
+          dark
+        </button>
       </div>
     </div>
   </div>
@@ -110,28 +118,53 @@
     flex-flow: column;
     width: 100%;
 
+    h3 {
+      margin-bottom: 15px;
+    }
+
+    h4 {
+      margin-bottom: 0px;
+      margin-left: 15px;
+    }
+
     .theme {
       display: flex;
       gap: 10px;
       margin: 20px;
+      margin-top: 15px;
       width: 100%;
 
       & > button {
         width: 50%;
         height: 80px;
         border-radius: 10px;
-        outline: 3px solid $text-color;
+        outline: 3px solid;
+        font-size: 20px;
+        text-transform: uppercase;
+        font-family: "Rampart One";
+        color: transparent;
+        transition: all 200ms ease-in;
 
         &#light {
-          background-color: gray;
+          background-color: white;
+          outline-color: $accent-color;
+          &:hover {
+            color: black;
+            -webkit-text-stroke: 0.5px black;
+          }
         }
 
         &#dark {
           background-color: black;
+          outline-color: white;
+          &:hover {
+            color: white;
+            -webkit-text-stroke: 0.5px white;
+          }
         }
 
         &.selected {
-          border: 3px solid gray;
+          outline-color: gold !important;
         }
       }
     }

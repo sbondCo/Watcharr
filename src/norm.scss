@@ -30,7 +30,7 @@
   color: $text-color;
 }
 
-:global(h1, h2, h3, h4, h5) {
+:global(h1:not(.norm), h2:not(.norm), h3:not(.norm), h4:not(.norm), h5:not(.norm)) {
   font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
 }
 

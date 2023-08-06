@@ -1,5 +1,4 @@
 <script>
-  // import "@/norm.scss";
   import Icon from "@/lib/Icon.svelte";
   import { unNotify } from "@/lib/util/notify";
   import { notifications } from "@/store";
