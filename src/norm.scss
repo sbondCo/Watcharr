@@ -71,9 +71,9 @@
 
   &:hover,
   &:focus-visible {
-    background-color: $bg-color;
-    color: $text-color;
-    fill: $text-color;
+    background-color: $text-color;
+    color: $bg-color;
+    fill: $bg-color;
     opacity: 1;
   }
 }

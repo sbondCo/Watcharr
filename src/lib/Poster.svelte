@@ -290,7 +290,6 @@
             &:hover span,
             &:focus-visible span {
               color: gold;
-              /* -webkit-text-stroke: 1.5px gold; */
             }
 
             div button {
@@ -303,11 +302,12 @@
             width: 40%;
 
             .no-icon {
-              color: black;
+              color: $text-color;
               font-size: 30px;
               height: 52px;
             }
 
+            &:hover,
             &:hover .no-icon,
             &:focus-visible .no-icon {
               color: white;
@@ -331,6 +331,7 @@
               width: 100%;
               color: $text-color;
               fill: $text-color;
+              -webkit-text-stroke: 0.5px $text-color;
 
               & :global(svg) {
                 width: 100%;
@@ -342,6 +343,12 @@
                 background-color: rgb(100, 100, 100, 0.25);
               }
             }
+          }
+
+          &:hover,
+          &:focus-visible {
+            background-color: black;
+            border-color: black;
           }
         }
       }
