@@ -72,8 +72,8 @@
     flex-flow: row-reverse;
     align-items: center;
     justify-content: center;
-    color: black;
-    -webkit-text-stroke: 1.5px black;
+    color: $text-color;
+    -webkit-text-stroke: 1.5px $text-color;
     cursor: pointer;
     overflow: hidden;
     margin: 10px 0 10px 0;

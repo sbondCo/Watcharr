@@ -1,9 +1,12 @@
 <script lang="ts">
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import { getOrdinalSuffix, monthsShort } from "@/lib/util/helpers";
+  import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
+  import { appTheme } from "@/store";
   import type { Profile } from "@/types";
   import axios from "axios";
+
+  $: selectedTheme = $appTheme;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -40,6 +43,28 @@
         <Error error={err} pretty="Failed to get stats!" />
       {/await}
     </div>
+
+    <div class="settings">
+      <h3 class="norm">Settings</h3>
+
+      <h4 class="norm">Theme</h4>
+      <div class="theme">
+        <button
+          class={`plain${selectedTheme === "light" ? " selected" : ""}`}
+          id="light"
+          on:click={() => toggleTheme("light")}
+        >
+          light
+        </button>
+        <button
+          class={`plain${selectedTheme === "dark" ? " selected" : ""}`}
+          id="dark"
+          on:click={() => toggleTheme("dark")}
+        >
+          dark
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -53,6 +78,10 @@
       min-width: 400px;
       max-width: 400px;
       margin: 0 30px;
+
+      & > div:not(:first-of-type) {
+        margin-top: 30px;
+      }
     }
   }
 
@@ -66,7 +95,7 @@
       display: flex;
       flex-flow: column;
       padding: 20px 15px;
-      background-color: rgba(128, 128, 128, 0.226);
+      background-color: $accent-color;
       border-radius: 8px;
 
       > span:first-child {
@@ -80,6 +109,63 @@
 
       > span:last-child {
         margin-top: auto;
+      }
+    }
+  }
+
+  .settings {
+    display: flex;
+    flex-flow: column;
+    width: 100%;
+
+    h3 {
+      margin-bottom: 15px;
+    }
+
+    h4 {
+      margin-bottom: 0px;
+      margin-left: 15px;
+    }
+
+    .theme {
+      display: flex;
+      gap: 10px;
+      margin: 20px;
+      margin-top: 15px;
+      width: 100%;
+
+      & > button {
+        width: 50%;
+        height: 80px;
+        border-radius: 10px;
+        outline: 3px solid;
+        font-size: 20px;
+        text-transform: uppercase;
+        font-family: "Rampart One";
+        color: transparent;
+        transition: all 200ms ease-in;
+
+        &#light {
+          background-color: white;
+          outline-color: $accent-color;
+          &:hover {
+            color: black;
+            -webkit-text-stroke: 0.5px black;
+          }
+        }
+
+        &#dark {
+          background-color: black;
+          outline-color: white;
+          &:hover {
+            color: white;
+            -webkit-text-stroke: 0.5px white;
+          }
+        }
+
+        &.selected {
+          outline-color: gold !important;
+        }
       }
     }
   }

@@ -240,6 +240,10 @@
         font-size: 18px;
         color: white;
         word-wrap: break-word;
+
+        a {
+          color: white;
+        }
       }
 
       span {
@@ -268,10 +272,8 @@
           /** Rating */
           &.rating {
             span {
-              color: black;
-              /* -webkit-text-stroke: 1.5px black; */
-
               &:first-child {
+                color: $text-color;
                 font-size: 39px;
                 letter-spacing: 10px;
                 line-height: 52px;
@@ -279,6 +281,7 @@
               }
 
               &:nth-child(2) {
+                color: $text-color;
                 font-size: 22px;
                 height: 35px; // quick fix to make the rating num look centered - text-stroke makes it look not centered
               }
@@ -287,7 +290,6 @@
             &:hover span,
             &:focus-visible span {
               color: gold;
-              /* -webkit-text-stroke: 1.5px gold; */
             }
 
             div button {
@@ -300,11 +302,12 @@
             width: 40%;
 
             .no-icon {
-              color: black;
+              color: $text-color;
               font-size: 30px;
               height: 52px;
             }
 
+            &:hover,
             &:hover .no-icon,
             &:focus-visible .no-icon {
               color: white;
@@ -317,7 +320,7 @@
             position: absolute;
             width: 100%;
             height: 200px;
-            background-color: white;
+            background-color: $bg-color;
             top: calc(-100% - 170px);
             list-style: none;
             border-radius: 4px 4px 0 0;
@@ -326,8 +329,9 @@
 
             button {
               width: 100%;
-              color: black;
-              fill: black;
+              color: $text-color;
+              fill: $text-color;
+              -webkit-text-stroke: 0.5px $text-color;
 
               & :global(svg) {
                 width: 100%;
@@ -339,6 +343,12 @@
                 background-color: rgb(100, 100, 100, 0.25);
               }
             }
+          }
+
+          &:hover,
+          &:focus-visible {
+            background-color: black;
+            border-color: black;
           }
         }
       }

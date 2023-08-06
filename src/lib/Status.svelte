@@ -57,7 +57,7 @@
       font-size: 10px;
 
       &:hover {
-        fill: white;
+        fill: $text-color;
       }
     }
   }

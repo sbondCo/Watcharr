@@ -116,6 +116,10 @@
         font-size: 18px;
         color: white;
         word-wrap: break-word;
+
+        a {
+          color: white;
+        }
       }
 
       h2 {

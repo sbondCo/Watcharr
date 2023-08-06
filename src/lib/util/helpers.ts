@@ -1,4 +1,12 @@
-import type { Icon, MediaType, TMDBContentCreditsCrew, Watched, WatchedStatus } from "@/types";
+import { appTheme } from "@/store";
+import type {
+  Icon,
+  MediaType,
+  TMDBContentCreditsCrew,
+  Theme,
+  Watched,
+  WatchedStatus
+} from "@/types";
 
 export const watchedStatuses: {
   [key in WatchedStatus]: Icon;
@@ -136,4 +144,18 @@ export function getOrdinalSuffix(i: number) {
     return "rd";
   }
   return "th";
+}
+
+/**
+ * Toggle site wide theme.
+ * @param theme The theme to switch to.
+ */
+export function toggleTheme(theme: Theme) {
+  if (theme === "dark") {
+    document.documentElement.classList.add("theme-dark");
+    appTheme.update((t) => (t = "dark"));
+  } else {
+    document.documentElement.classList.remove("theme-dark");
+    appTheme.update((t) => (t = "light"));
+  }
 }

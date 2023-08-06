@@ -102,7 +102,6 @@
         position: sticky;
         top: 0;
         bottom: 100px;
-        background-color: white;
         font-size: 16px;
         font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
         padding-bottom: 1px;
@@ -125,9 +124,9 @@
           }
 
           &:last-child {
-            background-color: rgb(46, 46, 46);
+            background-color: $accent-color;
             text-transform: capitalize;
-            color: white;
+            color: $text-color;
             border-radius: 8px;
             padding: 10px 12px;
           }

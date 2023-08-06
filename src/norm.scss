@@ -1,0 +1,186 @@
+@import "./vars.scss";
+
+@font-face {
+  font-family: "Shrikhand";
+  src: local("Shrikhand Regular"), local("Shrikhand-Regular"),
+    url("/Shrikhand-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rampart One";
+  src: local("Rampart One Regular"), local("RampartOne-Regular"),
+    url("/RampartOne-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:global(*) {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+:global(body) {
+  font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+  background-color: $bg-color;
+  color: $text-color;
+}
+
+:global(h1:not(.norm), h2:not(.norm), h3:not(.norm), h4:not(.norm), h5:not(.norm)) {
+  font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+:global(a) {
+  text-decoration: none;
+  color: $text-color;
+}
+
+:global(input) {
+  padding: 5px 10px;
+  border: 2px solid black;
+  border-radius: 5px;
+  width: 100%;
+}
+
+:global(button) {
+  cursor: pointer;
+}
+
+:global(button:not(.plain)) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border: 2px solid $text-color;
+  border-radius: 5px;
+  background-color: $bg-color;
+  color: $text-color;
+  fill: $text-color;
+  font-weight: bold;
+  width: 100%;
+  transition: background-color 100ms ease, opacity 100ms ease;
+
+  & :global(svg) {
+    height: 100%;
+    width: auto;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background-color: $text-color;
+    color: $bg-color;
+    fill: $bg-color;
+    opacity: 1;
+  }
+}
+
+:global(button.secondary) {
+  border: 2px solid transparent;
+
+  &:hover,
+  &:focus-visible {
+    background-color: white;
+    color: black;
+    border: 2px solid black;
+  }
+}
+
+:global(button.plain) {
+  background-color: transparent;
+  color: $text-color;
+  border: 0;
+}
+
+:global(button.not-active) {
+  opacity: 0.5;
+}
+
+:global(#tooltip) {
+  visibility: hidden;
+  position: absolute;
+  padding: 8px 5px;
+  background-color: black;
+  color: white;
+  border: 1px solid white;
+  border-radius: 6px;
+  z-index: 99999;
+  transition: top 100ms ease, left 100ms ease;
+  pointer-events: none;
+}
+
+:global(#notifications) {
+  display: flex;
+  flex-flow: column;
+  gap: 10px;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  z-index: 99999;
+
+  div {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    min-width: 200px;
+    color: black;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid rgba($color: #000000, $alpha: 0.2);
+    box-shadow: 0 4px 10px rgba($color: #000000, $alpha: 0.2);
+    animation: comein 250ms ease forwards;
+    position: relative;
+
+    @keyframes comein {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    &.error {
+      color: white;
+      background-color: #f3555a;
+      border: 1px solid #f3555a;
+
+      span {
+        border-color: rgba($color: white, $alpha: 0.5);
+      }
+    }
+
+    &.success {
+      color: white;
+      background-color: #28a745;
+      border: 1px solid #28a745;
+
+      span {
+        border-color: rgba($color: white, $alpha: 0.5);
+      }
+    }
+
+    span {
+      width: 100%;
+      height: 100%;
+      padding-right: 12px;
+      border-right: 1px solid rgba($color: black, $alpha: 0.2);
+      padding: 10px 12px;
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      margin: 8px;
+      width: 22px;
+      height: 100%;
+      color: inherit;
+    }
+  }
+}

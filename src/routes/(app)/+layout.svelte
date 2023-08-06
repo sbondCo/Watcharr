@@ -170,15 +170,14 @@
 
     a {
       text-decoration: none;
-      color: black;
       font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
       font-size: 35px;
       transition: -webkit-text-stroke 150ms ease, color 150ms ease, font-weight 150ms ease;
 
       &:hover,
       &:focus-visible {
-        color: white;
-        -webkit-text-stroke: 3px black;
+        color: $bg-color;
+        -webkit-text-stroke: 3px $text-color;
         font-weight: bold;
       }
 
@@ -206,12 +205,12 @@
       width: 250px;
       font-weight: bold;
       text-align: center;
-      box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+      box-shadow: 4px 4px 0px 0px $text-color;
       transition: width 150ms ease, box-shadow 150ms ease;
 
       &:hover,
       &:focus {
-        box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+        box-shadow: 2px 2px 0px 0px $text-color;
       }
     }
 
@@ -224,11 +223,11 @@
         padding-top: 2px;
         width: 28px;
         transition: fill 150ms ease, stroke 150ms ease, stroke-width 150ms ease;
+        fill: $text-color;
 
         &:hover,
         &:focus-visible {
-          fill: white;
-          stroke: black;
+          stroke: $bg-color;
           stroke-width: 10px;
         }
       }
@@ -283,9 +282,9 @@
         top: 55px;
         width: 125px;
         padding: 10px;
-        border: 3px solid black;
+        border: 3px solid $text-color;
         border-radius: 10px;
-        background-color: white;
+        background-color: $bg-color;
         list-style: none;
         z-index: 50;
 
