@@ -102,19 +102,21 @@
             </div>
           {/if}
 
-          <div class="cast">
-            <HorizontalList title="Cast">
-              {#each credits.cast?.slice(0, 50) as cast}
-                <PersonPoster
-                  id={cast.id}
-                  name={cast.name}
-                  path={cast.profile_path}
-                  role={cast.character}
-                  zoomOnHover={false}
-                />
-              {/each}
-            </HorizontalList>
-          </div>
+          {#if credits.cast?.length > 0}
+            <div class="cast">
+              <HorizontalList title="Cast">
+                {#each credits.cast?.slice(0, 50) as cast}
+                  <PersonPoster
+                    id={cast.id}
+                    name={cast.name}
+                    path={cast.profile_path}
+                    role={cast.character}
+                    zoomOnHover={false}
+                  />
+                {/each}
+              </HorizontalList>
+            </div>
+          {/if}
         {:catch err}
           <Error error={err} pretty="Failed to load cast!" />
         {/await}
