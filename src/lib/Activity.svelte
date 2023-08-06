@@ -105,6 +105,7 @@
         font-size: 16px;
         font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
         padding-bottom: 1px;
+        background-color: $bg-color;
       }
 
       li {
