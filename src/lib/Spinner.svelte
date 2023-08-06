@@ -12,12 +12,12 @@
   .spinner {
     width: 80px;
     aspect-ratio: 1;
-    border: 10px solid #0000;
-    background: radial-gradient(farthest-side, #000 98%, #fff) 0 0/20px 20px,
-      radial-gradient(farthest-side, #000 98%, #fff) 100% 0/20px 20px,
-      radial-gradient(farthest-side, #000 98%, #fff) 100% 100%/20px 20px,
-      radial-gradient(farthest-side, #000 98%, #fff) 0 100%/20px 20px,
-      linear-gradient(#000 0 0) center/40px 40px, #fff;
+    border: 10px solid $bg-color;
+    background: radial-gradient(farthest-side, $text-color 98%, $bg-color) 0 0/20px 20px,
+      radial-gradient(farthest-side, $text-color 98%, $bg-color) 100% 0/20px 20px,
+      radial-gradient(farthest-side, $text-color 98%, $bg-color) 100% 100%/20px 20px,
+      radial-gradient(farthest-side, $text-color 98%, $bg-color) 0 100%/20px 20px,
+      linear-gradient($text-color 0 0) center/40px 40px, $bg-color;
     background-repeat: no-repeat;
     filter: blur(4px) contrast(10);
     animation: spin 800ms infinite;
