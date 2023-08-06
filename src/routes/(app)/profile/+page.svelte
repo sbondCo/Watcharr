@@ -73,14 +73,19 @@
     display: flex;
     width: 100%;
     justify-content: center;
+    padding: 0 30px 0 30px;
 
     .inner {
       min-width: 400px;
       max-width: 400px;
-      margin: 0 30px;
 
       & > div:not(:first-of-type) {
         margin-top: 30px;
+      }
+
+      @media screen and (max-width: 440px) {
+        width: 100%;
+        min-width: unset;
       }
     }
   }
@@ -91,9 +96,14 @@
     gap: 12px;
     margin-top: 15px;
 
+    @media screen and (max-width: 440px) {
+      flex-wrap: wrap;
+    }
+
     > div {
       display: flex;
       flex-flow: column;
+      flex-grow: 1;
       padding: 20px 15px;
       background-color: $accent-color;
       border-radius: 8px;
@@ -132,7 +142,6 @@
       gap: 10px;
       margin: 20px;
       margin-top: 15px;
-      width: 100%;
 
       & > button {
         width: 50%;
