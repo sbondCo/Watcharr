@@ -49,6 +49,9 @@
 :global(textarea) {
   padding: 5px;
   max-width: 100%;
+  background-color: transparent;
+  color: $text-color;
+  border-color: $text-color;
 }
 
 :global(button) {
