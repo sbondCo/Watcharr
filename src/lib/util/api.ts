@@ -53,6 +53,7 @@ export function updateWatched(
           }
         }
         watchedList.update((w) => w);
+        notify({ text: `Saved!`, type: "success" });
       })
       .catch((err) => {
         console.error(err);
