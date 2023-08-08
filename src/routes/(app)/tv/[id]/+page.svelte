@@ -93,7 +93,6 @@
               placeholder={`My thoughts on ${show.name}`}
               value={wListItem?.thoughts}
               on:blur={(e) => {
-                console.log(e.currentTarget?.value);
                 contentChanged(undefined, undefined, e.currentTarget?.value);
               }}
             />
