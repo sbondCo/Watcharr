@@ -39,11 +39,16 @@
   color: $text-color;
 }
 
-:global(input) {
+:global(input, textarea) {
   padding: 5px 10px;
   border: 2px solid black;
   border-radius: 5px;
   width: 100%;
+}
+
+:global(textarea) {
+  padding: 5px;
+  max-width: 100%;
 }
 
 :global(button) {

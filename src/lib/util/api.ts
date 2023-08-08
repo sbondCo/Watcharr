@@ -25,7 +25,8 @@ export function updateWatched(
   contentId: number,
   contentType: MediaType,
   status?: WatchedStatus,
-  rating?: number
+  rating?: number,
+  thoughts?: string
 ) {
   // If item is already in watched store, run update request instead
   const wList = get(watchedList);
@@ -33,15 +34,17 @@ export function updateWatched(
     (w) => w.content.tmdbId === contentId && w.content.type === contentType
   );
   if (wEntry?.id) {
-    if (!status && !rating) return;
+    if (!status && !rating && !thoughts) return;
     const obj = {} as WatchedUpdateRequest;
     if (status) obj.status = status;
     if (rating) obj.rating = rating;
+    if (thoughts) obj.thoughts = thoughts;
     axios
       .put(`/watched/${wEntry.id}`, obj)
       .then((resp) => {
         if (status) wEntry.status = status;
         if (rating) wEntry.rating = rating;
+        if (thoughts) wEntry.thoughts = thoughts;
         if (resp?.data?.newActivity) {
           if (wEntry.activity?.length > 0) {
             wEntry.activity.push(resp.data.newActivity);

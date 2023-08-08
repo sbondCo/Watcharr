@@ -32,6 +32,8 @@
           return `status changed to ${a.data?.toLowerCase()}`;
         }
         return "status changed";
+      case "THOUGHTS_CHANGED":
+        return "thoughts changed";
       default:
         return a.type;
     }

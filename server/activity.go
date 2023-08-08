@@ -10,10 +10,11 @@ import (
 type ActivityType string
 
 var (
-	ADDED_WATCHED   ActivityType = "ADDED_WATCHED"
-	REMOVED_WATCHED ActivityType = "REMOVED_WATCHED"
-	RATING_CHANGED  ActivityType = "RATING_CHANGED"
-	STATUS_CHANGED  ActivityType = "STATUS_CHANGED"
+	ADDED_WATCHED    ActivityType = "ADDED_WATCHED"
+	REMOVED_WATCHED  ActivityType = "REMOVED_WATCHED"
+	RATING_CHANGED   ActivityType = "RATING_CHANGED"
+	STATUS_CHANGED   ActivityType = "STATUS_CHANGED"
+	THOUGHTS_CHANGED ActivityType = "THOUGHTS_CHANGED"
 )
 
 type Activity struct {

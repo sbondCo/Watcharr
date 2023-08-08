@@ -36,8 +36,8 @@
     return credits;
   }
 
-  function contentChanged(newStatus?: WatchedStatus, newRating?: number) {
-    updateWatched(data.tvId, "tv", newStatus, newRating);
+  function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
+    updateWatched(data.tvId, "tv", newStatus, newRating, newThoughts);
   }
 </script>
 
@@ -86,6 +86,18 @@
           <!-- <span>What did you think?</span> -->
           <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
           <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
+          {#if wListItem}
+            <textarea
+              name="Thoughts"
+              rows="3"
+              placeholder={`My thoughts on ${show.name}`}
+              value={wListItem?.thoughts}
+              on:blur={(e) => {
+                console.log(e.currentTarget?.value);
+                contentChanged(undefined, undefined, e.currentTarget?.value);
+              }}
+            />
+          {/if}
         </div>
 
         {#await getTvCredits()}
