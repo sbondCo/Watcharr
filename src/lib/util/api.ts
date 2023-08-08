@@ -73,6 +73,7 @@ export function updateWatched(
       console.log("Added watched:", resp.data);
       wList.push(resp.data as Watched);
       watchedList.update(() => wList);
+      notify({ text: `Added!`, type: "success" });
     })
     .catch((err) => {
       console.error(err);
