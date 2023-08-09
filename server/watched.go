@@ -239,25 +239,26 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 
 func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (WatchedUpdateResponse, error) {
 	println("UpdateWatched", ar.Rating, ar.Status)
-	// ugly but it works so no complaining
-	upwat := map[string]interface{}{}
-	if ar.Rating != 0 {
-		upwat["rating"] = ar.Rating
-	}
-	if ar.Status != "" {
-		upwat["status"] = ar.Status
-	}
-	if ar.Thoughts != "" {
-		upwat["thoughts"] = ar.Thoughts
-	}
-	if ar.RemoveThoughts {
-		upwat["thoughts"] = ""
-	}
-	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(upwat)
+	upwat := Watched{}
+	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Take(&upwat)
 	if res.Error != nil {
 		println("Watched entry update failed:", id, res.Error.Error())
 		return WatchedUpdateResponse{}, errors.New("failed to update watched entry")
 	}
+	originalThoughts := upwat.Thoughts
+	if ar.Rating != 0 {
+		upwat.Rating = ar.Rating
+	}
+	if ar.Status != "" {
+		upwat.Status = ar.Status
+	}
+	if ar.Thoughts != "" {
+		upwat.Thoughts = ar.Thoughts
+	}
+	if ar.RemoveThoughts {
+		upwat.Thoughts = ""
+	}
+	res = db.Save(upwat)
 	if res.RowsAffected <= 0 {
 		return WatchedUpdateResponse{}, errors.New("no watched entry found")
 	}
@@ -272,7 +273,7 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: THOUGHTS_CHANGED})
 	}
 	if ar.RemoveThoughts {
-		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: THOUGHTS_REMOVED, Data: ar.Thoughts})
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: THOUGHTS_REMOVED, Data: originalThoughts})
 	}
 	return WatchedUpdateResponse{NewActivity: addedActivity}, nil
 }
