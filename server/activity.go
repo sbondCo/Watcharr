@@ -15,6 +15,7 @@ var (
 	RATING_CHANGED   ActivityType = "RATING_CHANGED"
 	STATUS_CHANGED   ActivityType = "STATUS_CHANGED"
 	THOUGHTS_CHANGED ActivityType = "THOUGHTS_CHANGED"
+	THOUGHTS_REMOVED ActivityType = "THOUGHTS_REMOVED"
 )
 
 type Activity struct {

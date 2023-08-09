@@ -44,9 +44,10 @@ type WatchedAddRequest struct {
 }
 
 type WatchedUpdateRequest struct {
-	Status   WatchedStatus `json:"status" binding:"required_without_all=Rating Thoughts"`
-	Rating   int8          `json:"rating" binding:"max=10,required_without_all=Status Thoughts"`
-	Thoughts string        `json:"thoughts" binding:"required_without_all=Status Rating"`
+	Status         WatchedStatus `json:"status" binding:"required_without_all=Rating Thoughts RemoveThoughts"`
+	Rating         int8          `json:"rating" binding:"max=10,required_without_all=Status Thoughts RemoveThoughts"`
+	Thoughts       string        `json:"thoughts" binding:"required_without_all=Status Rating RemoveThoughts"`
+	RemoveThoughts bool          `json:"removeThoughts"`
 }
 
 type WatchedUpdateResponse struct {
@@ -238,7 +239,21 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 
 func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (WatchedUpdateResponse, error) {
 	println("UpdateWatched", ar.Rating, ar.Status)
-	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(Watched{Rating: ar.Rating, Status: ar.Status, Thoughts: ar.Thoughts})
+	// ugly but it works so no complaining
+	upwat := map[string]interface{}{}
+	if ar.Rating != 0 {
+		upwat["rating"] = ar.Rating
+	}
+	if ar.Status != "" {
+		upwat["status"] = ar.Status
+	}
+	if ar.Thoughts != "" {
+		upwat["thoughts"] = ar.Thoughts
+	}
+	if ar.RemoveThoughts {
+		upwat["thoughts"] = ""
+	}
+	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(upwat)
 	if res.Error != nil {
 		println("Watched entry update failed:", id, res.Error.Error())
 		return WatchedUpdateResponse{}, errors.New("failed to update watched entry")
@@ -255,6 +270,9 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 	}
 	if ar.Thoughts != "" {
 		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: THOUGHTS_CHANGED})
+	}
+	if ar.RemoveThoughts {
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: THOUGHTS_REMOVED, Data: ar.Thoughts})
 	}
 	return WatchedUpdateResponse{NewActivity: addedActivity}, nil
 }

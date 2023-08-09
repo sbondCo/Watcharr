@@ -34,17 +34,18 @@ export function updateWatched(
     (w) => w.content.tmdbId === contentId && w.content.type === contentType
   );
   if (wEntry?.id) {
-    if (!status && !rating && !thoughts) return;
+    if (!status && !rating && typeof thoughts === "undefined") return;
     const obj = {} as WatchedUpdateRequest;
     if (status) obj.status = status;
     if (rating) obj.rating = rating;
-    if (thoughts) obj.thoughts = thoughts;
+    if (typeof thoughts !== "undefined") obj.thoughts = thoughts;
+    if (thoughts === "") obj.removeThoughts = true;
     axios
       .put(`/watched/${wEntry.id}`, obj)
       .then((resp) => {
         if (status) wEntry.status = status;
         if (rating) wEntry.rating = rating;
-        if (thoughts) wEntry.thoughts = thoughts;
+        if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
         if (resp?.data?.newActivity) {
           if (wEntry.activity?.length > 0) {
             wEntry.activity.push(resp.data.newActivity);

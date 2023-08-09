@@ -58,7 +58,8 @@ export interface WatchedAddRequest {
 export interface WatchedUpdateRequest {
   rating?: number;
   status?: WatchedStatus;
-  thoughts: string;
+  thoughts?: string;
+  removeThoughts?: boolean;
 }
 
 export interface Profile {

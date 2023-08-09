@@ -34,6 +34,8 @@
         return "status changed";
       case "THOUGHTS_CHANGED":
         return "thoughts changed";
+      case "THOUGHTS_REMOVED":
+        return "thoughts removed";
       default:
         return a.type;
     }
