@@ -237,6 +237,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	return watched, nil
 }
 
+// this method is too ugly to look at please make him look better, future irhm
 func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (WatchedUpdateResponse, error) {
 	println("UpdateWatched", ar.Rating, ar.Status)
 	upwat := Watched{}
