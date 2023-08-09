@@ -32,6 +32,10 @@
           return `status changed to ${a.data?.toLowerCase()}`;
         }
         return "status changed";
+      case "THOUGHTS_CHANGED":
+        return "thoughts changed";
+      case "THOUGHTS_REMOVED":
+        return "thoughts removed";
       default:
         return a.type;
     }
@@ -105,6 +109,7 @@
         font-size: 16px;
         font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
         padding-bottom: 1px;
+        background-color: $bg-color;
       }
 
       li {

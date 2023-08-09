@@ -36,8 +36,8 @@
     return credits;
   }
 
-  function contentChanged(newStatus?: WatchedStatus, newRating?: number) {
-    updateWatched(data.tvId, "tv", newStatus, newRating);
+  function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
+    updateWatched(data.tvId, "tv", newStatus, newRating, newThoughts);
   }
 </script>
 
@@ -86,6 +86,17 @@
           <!-- <span>What did you think?</span> -->
           <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
           <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
+          {#if wListItem}
+            <textarea
+              name="Thoughts"
+              rows="3"
+              placeholder={`My thoughts on ${show.name}`}
+              value={wListItem?.thoughts}
+              on:blur={(e) => {
+                contentChanged(undefined, undefined, e.currentTarget?.value);
+              }}
+            />
+          {/if}
         </div>
 
         {#await getTvCredits()}
@@ -102,19 +113,21 @@
             </div>
           {/if}
 
-          <div class="cast">
-            <HorizontalList title="Cast">
-              {#each credits.cast?.slice(0, 50) as cast}
-                <PersonPoster
-                  id={cast.id}
-                  name={cast.name}
-                  path={cast.profile_path}
-                  role={cast.character}
-                  zoomOnHover={false}
-                />
-              {/each}
-            </HorizontalList>
-          </div>
+          {#if credits.cast?.length > 0}
+            <div class="cast">
+              <HorizontalList title="Cast">
+                {#each credits.cast?.slice(0, 50) as cast}
+                  <PersonPoster
+                    id={cast.id}
+                    name={cast.name}
+                    path={cast.profile_path}
+                    role={cast.character}
+                    zoomOnHover={false}
+                  />
+                {/each}
+              </HorizontalList>
+            </div>
+          {/if}
         {:catch err}
           <Error error={err} pretty="Failed to load cast!" />
         {/await}

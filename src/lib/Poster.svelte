@@ -311,6 +311,7 @@
             &:hover .no-icon,
             &:focus-visible .no-icon {
               color: white;
+              fill: white;
             }
           }
 

@@ -45,6 +45,7 @@ export interface Watched extends dbModel {
   content: Content;
   activity: Activity[];
   status: WatchedStatus;
+  thoughts: string;
 }
 
 export interface WatchedAddRequest {
@@ -57,6 +58,8 @@ export interface WatchedAddRequest {
 export interface WatchedUpdateRequest {
   rating?: number;
   status?: WatchedStatus;
+  thoughts?: string;
+  removeThoughts?: boolean;
 }
 
 export interface Profile {

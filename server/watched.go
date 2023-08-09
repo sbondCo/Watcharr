@@ -29,6 +29,7 @@ type Watched struct {
 	GormModel
 	Status    WatchedStatus `json:"status"`
 	Rating    int8          `json:"rating"`
+	Thoughts  string        `json:"thoughts"`
 	UserID    uint          `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	ContentID int           `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	Content   Content       `json:"content"`
@@ -43,8 +44,10 @@ type WatchedAddRequest struct {
 }
 
 type WatchedUpdateRequest struct {
-	Status WatchedStatus `json:"status" binding:"required_without=Rating"`
-	Rating int8          `json:"rating" binding:"max=10,required_without=Status"`
+	Status         WatchedStatus `json:"status" binding:"required_without_all=Rating Thoughts RemoveThoughts"`
+	Rating         int8          `json:"rating" binding:"max=10,required_without_all=Status Thoughts RemoveThoughts"`
+	Thoughts       string        `json:"thoughts" binding:"required_without_all=Status Rating RemoveThoughts"`
+	RemoveThoughts bool          `json:"removeThoughts"`
 }
 
 type WatchedUpdateResponse struct {
@@ -234,13 +237,29 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	return watched, nil
 }
 
+// this method is too ugly to look at please make him look better, future irhm
 func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (WatchedUpdateResponse, error) {
 	println("UpdateWatched", ar.Rating, ar.Status)
-	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Updates(Watched{Rating: ar.Rating, Status: ar.Status})
+	upwat := Watched{}
+	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Take(&upwat)
 	if res.Error != nil {
 		println("Watched entry update failed:", id, res.Error.Error())
 		return WatchedUpdateResponse{}, errors.New("failed to update watched entry")
 	}
+	originalThoughts := upwat.Thoughts
+	if ar.Rating != 0 {
+		upwat.Rating = ar.Rating
+	}
+	if ar.Status != "" {
+		upwat.Status = ar.Status
+	}
+	if ar.Thoughts != "" {
+		upwat.Thoughts = ar.Thoughts
+	}
+	if ar.RemoveThoughts {
+		upwat.Thoughts = ""
+	}
+	res = db.Save(upwat)
 	if res.RowsAffected <= 0 {
 		return WatchedUpdateResponse{}, errors.New("no watched entry found")
 	}
@@ -250,6 +269,12 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 	}
 	if ar.Status != "" {
 		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: STATUS_CHANGED, Data: string(ar.Status)})
+	}
+	if ar.Thoughts != "" {
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: THOUGHTS_CHANGED})
+	}
+	if ar.RemoveThoughts {
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: THOUGHTS_REMOVED, Data: originalThoughts})
 	}
 	return WatchedUpdateResponse{NewActivity: addedActivity}, nil
 }

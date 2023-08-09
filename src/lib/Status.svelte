@@ -55,10 +55,6 @@
 
     button {
       font-size: 10px;
-
-      &:hover {
-        fill: $text-color;
-      }
     }
   }
 </style>

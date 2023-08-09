@@ -25,7 +25,8 @@ export function updateWatched(
   contentId: number,
   contentType: MediaType,
   status?: WatchedStatus,
-  rating?: number
+  rating?: number,
+  thoughts?: string
 ) {
   // If item is already in watched store, run update request instead
   const wList = get(watchedList);
@@ -33,15 +34,18 @@ export function updateWatched(
     (w) => w.content.tmdbId === contentId && w.content.type === contentType
   );
   if (wEntry?.id) {
-    if (!status && !rating) return;
+    if (!status && !rating && typeof thoughts === "undefined") return;
     const obj = {} as WatchedUpdateRequest;
     if (status) obj.status = status;
     if (rating) obj.rating = rating;
+    if (typeof thoughts !== "undefined") obj.thoughts = thoughts;
+    if (thoughts === "") obj.removeThoughts = true;
     axios
       .put(`/watched/${wEntry.id}`, obj)
       .then((resp) => {
         if (status) wEntry.status = status;
         if (rating) wEntry.rating = rating;
+        if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
         if (resp?.data?.newActivity) {
           if (wEntry.activity?.length > 0) {
             wEntry.activity.push(resp.data.newActivity);
@@ -50,6 +54,7 @@ export function updateWatched(
           }
         }
         watchedList.update((w) => w);
+        notify({ text: `Saved!`, type: "success" });
       })
       .catch((err) => {
         console.error(err);
@@ -69,6 +74,7 @@ export function updateWatched(
       console.log("Added watched:", resp.data);
       wList.push(resp.data as Watched);
       watchedList.update(() => wList);
+      notify({ text: `Added!`, type: "success" });
     })
     .catch((err) => {
       console.error(err);
