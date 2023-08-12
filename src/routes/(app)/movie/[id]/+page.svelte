@@ -17,6 +17,7 @@
   import axios from "axios";
   import { getTopCrew } from "@/lib/util/helpers.js";
   import Activity from "@/lib/Activity.svelte";
+  import Title from "@/lib/content/Title.svelte";
 
   export let data;
 
@@ -59,10 +60,12 @@
           <img class="poster" src={"https://image.tmdb.org/t/p/w500" + movie.poster_path} alt="" />
 
           <div class="details">
-            <span class="title-container">
-              <a href={movie.homepage} target="_blank">{movie.title}</a>
-              <span>{new Date(Date.parse(movie.release_date)).getFullYear()}</span>
-            </span>
+            <Title
+              title={movie.title}
+              homepage={movie.homepage}
+              releaseDate={movie.release_date}
+              voteAverage={movie.vote_average}
+            />
 
             <span class="quick-info">
               <span>{movie.runtime}m</span>
@@ -197,21 +200,6 @@
         flex-flow: column;
         gap: 5px;
 
-        .title-container {
-          a {
-            color: white;
-            text-decoration: none;
-            font-size: 30px;
-            font-weight: bold;
-            padding-right: 3px;
-          }
-
-          span {
-            font-size: 20px;
-            color: rgba($color: #fff, $alpha: 0.7);
-          }
-        }
-
         .quick-info {
           display: flex;
           gap: 10px;
@@ -227,7 +215,7 @@
         padding: 40px;
       }
 
-      @media screen and (max-width: 570px) {
+      @media screen and (max-width: 590px) {
         flex-flow: column;
         align-items: center;
       }
