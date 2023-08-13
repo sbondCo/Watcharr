@@ -9,6 +9,7 @@
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import Title from "@/lib/content/Title.svelte";
+  import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
   import { updateWatched } from "@/lib/util/api";
   import { getTopCrew } from "@/lib/util/helpers.js";
   import { watchedList } from "@/store";
@@ -23,6 +24,7 @@
   export let data;
 
   let trailer: string | undefined;
+  let trailerShown = false;
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.tvId);
 
@@ -32,7 +34,7 @@
       const t = show.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
       if (t?.key) {
         if (t?.site?.toLowerCase() === "youtube") {
-          trailer = `https://www.youtube.com/watch?v=${t?.key}`;
+          trailer = `https://www.youtube.com/embed/${t?.key}`;
         }
       }
     }
@@ -95,7 +97,10 @@
 
             <div class="btns">
               {#if trailer}
-                <button><a href={trailer} target="_blank">View Trailer</a></button>
+                <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
+                {#if trailerShown}
+                  <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
+                {/if}
               {/if}
             </div>
           </div>
@@ -227,6 +232,9 @@
 
         .btns {
           display: flex;
+          flex-flow: row;
+          gap: 8px;
+          margin-top: 18px;
 
           button {
             width: fit-content;
