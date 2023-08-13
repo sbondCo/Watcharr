@@ -105,7 +105,6 @@
       h3 {
         position: sticky;
         top: 0;
-        bottom: 100px;
         font-size: 16px;
         font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
         padding-bottom: 1px;
