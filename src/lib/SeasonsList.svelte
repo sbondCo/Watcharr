@@ -142,6 +142,7 @@
         font-size: 15px;
         color: gold;
         font-weight: bolder;
+        overflow: hidden;
 
         span {
           font-family: "Rampart One";
