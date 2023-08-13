@@ -9,6 +9,7 @@
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import Title from "@/lib/content/Title.svelte";
+  import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
   import { updateWatched } from "@/lib/util/api";
   import { getTopCrew } from "@/lib/util/helpers.js";
   import { watchedList } from "@/store";
@@ -22,10 +23,22 @@
 
   export let data;
 
+  let trailer: string | undefined;
+  let trailerShown = false;
+
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.tvId);
 
   async function getShow() {
-    return (await axios.get(`/content/tv/${data.tvId}`)).data as TMDBShowDetails;
+    const show = (await axios.get(`/content/tv/${data.tvId}`)).data as TMDBShowDetails;
+    if (show.videos?.results?.length > 0) {
+      const t = show.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
+      if (t?.key) {
+        if (t?.site?.toLowerCase() === "youtube") {
+          trailer = `https://www.youtube.com/embed/${t?.key}`;
+        }
+      }
+    }
+    return show;
   }
 
   async function getTvCredits() {
@@ -81,6 +94,15 @@
 
             <span style="font-weight: bold; font-size: 14px;">Overview</span>
             <p>{show.overview}</p>
+
+            <div class="btns">
+              {#if trailer}
+                <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
+                {#if trailerShown}
+                  <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
+                {/if}
+              {/if}
+            </div>
           </div>
         </div>
       </div>
@@ -206,6 +228,17 @@
 
         p {
           font-size: 14px;
+        }
+
+        .btns {
+          display: flex;
+          flex-flow: row;
+          gap: 8px;
+          margin-top: 18px;
+
+          button {
+            width: fit-content;
+          }
         }
       }
 

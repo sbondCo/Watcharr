@@ -18,13 +18,26 @@
   import { getTopCrew } from "@/lib/util/helpers.js";
   import Activity from "@/lib/Activity.svelte";
   import Title from "@/lib/content/Title.svelte";
+  import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
 
   export let data;
+
+  let trailer: string | undefined;
+  let trailerShown = false;
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.movieId);
 
   async function getMovie() {
-    return (await axios.get(`/content/movie/${data.movieId}`)).data as TMDBMovieDetails;
+    const movie = (await axios.get(`/content/movie/${data.movieId}`)).data as TMDBMovieDetails;
+    if (movie.videos?.results?.length > 0) {
+      const t = movie.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
+      if (t?.key) {
+        if (t?.site?.toLowerCase() === "youtube") {
+          trailer = `https://www.youtube.com/embed/${t?.key}`;
+        }
+      }
+    }
+    return movie;
   }
 
   async function getMovieCredits() {
@@ -84,6 +97,15 @@
 
             <span style="font-weight: bold; font-size: 14px;">Overview</span>
             <p>{movie.overview}</p>
+
+            <div class="btns">
+              {#if trailer}
+                <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
+                {#if trailerShown}
+                  <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
+                {/if}
+              {/if}
+            </div>
           </div>
         </div>
       </div>
@@ -209,6 +231,17 @@
 
         p {
           font-size: 14px;
+        }
+
+        .btns {
+          display: flex;
+          flex-flow: row;
+          gap: 8px;
+          margin-top: 18px;
+
+          button {
+            width: fit-content;
+          }
         }
       }
 
