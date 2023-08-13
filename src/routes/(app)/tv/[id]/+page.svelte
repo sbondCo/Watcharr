@@ -22,10 +22,21 @@
 
   export let data;
 
+  let trailer: string | undefined;
+
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.tvId);
 
   async function getShow() {
-    return (await axios.get(`/content/tv/${data.tvId}`)).data as TMDBShowDetails;
+    const show = (await axios.get(`/content/tv/${data.tvId}`)).data as TMDBShowDetails;
+    if (show.videos?.results?.length > 0) {
+      const t = show.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
+      if (t?.key) {
+        if (t?.site?.toLowerCase() === "youtube") {
+          trailer = `https://www.youtube.com/watch?v=${t?.key}`;
+        }
+      }
+    }
+    return show;
   }
 
   async function getTvCredits() {
@@ -82,7 +93,11 @@
             <span style="font-weight: bold; font-size: 14px;">Overview</span>
             <p>{show.overview}</p>
 
-            {show.videos}
+            <div class="btns">
+              {#if trailer}
+                <button><a href={trailer} target="_blank">View Trailer</a></button>
+              {/if}
+            </div>
           </div>
         </div>
       </div>
@@ -208,6 +223,14 @@
 
         p {
           font-size: 14px;
+        }
+
+        .btns {
+          display: flex;
+
+          button {
+            width: fit-content;
+          }
         }
       }
 
