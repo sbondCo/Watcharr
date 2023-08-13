@@ -66,6 +66,7 @@
               homepage={show.homepage}
               releaseDate={show.first_air_date}
               voteAverage={show.vote_average}
+              voteCount={show.vote_count}
             />
 
             <span class="quick-info">

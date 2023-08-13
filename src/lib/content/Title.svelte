@@ -3,6 +3,7 @@
   export let title: string;
   export let releaseDate: string;
   export let voteAverage: number;
+  export let voteCount: number;
 
   const vote = Math.round(voteAverage * 10) / 10;
 </script>
@@ -12,7 +13,7 @@
     <a href={homepage} target="_blank">{title}</a>
     <span>{new Date(Date.parse(releaseDate)).getFullYear()}</span>
   </span>
-  <span class="rating" title={`TMDB Rating: ${vote} out of 10`}>
+  <span class="rating" title={`TMDB Rating: ${vote} out of 10 (based on ${voteCount} votes)`}>
     <span>*</span>
     {vote}
   </span>

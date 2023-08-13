@@ -65,6 +65,7 @@
               homepage={movie.homepage}
               releaseDate={movie.release_date}
               voteAverage={movie.vote_average}
+              voteCount={movie.vote_count}
             />
 
             <span class="quick-info">
