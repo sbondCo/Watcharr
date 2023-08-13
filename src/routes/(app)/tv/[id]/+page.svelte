@@ -8,6 +8,7 @@
   import SeasonsList from "@/lib/SeasonsList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
+  import Title from "@/lib/content/Title.svelte";
   import { updateWatched } from "@/lib/util/api";
   import { getTopCrew } from "@/lib/util/helpers.js";
   import { watchedList } from "@/store";
@@ -60,10 +61,13 @@
           <img class="poster" src={"https://image.tmdb.org/t/p/w500" + show.poster_path} alt="" />
 
           <div class="details">
-            <span class="title-container">
-              <a href={show.homepage} target="_blank">{show.name}</a>
-              <span>{new Date(Date.parse(show.first_air_date)).getFullYear()}</span>
-            </span>
+            <Title
+              title={show.name}
+              homepage={show.homepage}
+              releaseDate={show.first_air_date}
+              voteAverage={show.vote_average}
+              voteCount={show.vote_count}
+            />
 
             <span class="quick-info">
               <span>{show.episode_run_time}m</span>
@@ -194,21 +198,6 @@
         flex-flow: column;
         gap: 5px;
 
-        .title-container {
-          a {
-            color: white;
-            text-decoration: none;
-            font-size: 30px;
-            font-weight: bold;
-            padding-right: 3px;
-          }
-
-          span {
-            font-size: 20px;
-            color: rgba($color: #fff, $alpha: 0.7);
-          }
-        }
-
         .quick-info {
           display: flex;
           gap: 10px;
@@ -224,7 +213,7 @@
         padding: 40px;
       }
 
-      @media screen and (max-width: 570px) {
+      @media screen and (max-width: 590px) {
         flex-flow: column;
         align-items: center;
       }
