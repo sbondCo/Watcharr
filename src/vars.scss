@@ -4,6 +4,7 @@
   --accent-color: rgba(128, 128, 128, 0.226);
   --backdrop-filter: blur(4px) grayscale(80%);
   --backdrop-mix-blend-mode: multiply;
+  --rating-color: black;
 }
 
 :root.theme-dark {
@@ -12,6 +13,7 @@
   --accent-color: rgba(46, 46, 46);
   --backdrop-filter: blur(0.5px) grayscale(50%);
   --backdrop-mix-blend-mode: difference;
+  --rating-color: gold;
 }
 
 $bg-color: var(--bg-color);
@@ -19,3 +21,6 @@ $text-color: var(--text-color);
 $accent-color: var(--accent-color);
 $backdrop-filter: var(--backdrop-filter);
 $backdrop-mix-blend-mode: var(--backdrop-mix-blend-mode);
+
+// For ratings that are on bg-color.
+$rating-color: var(--rating-color);
