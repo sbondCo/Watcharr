@@ -47,7 +47,7 @@ func (b *BaseRouter) addContentRoutes() {
 		c.JSON(http.StatusOK, content)
 	})
 
-	// Get movie details
+	// Get movie details (for movie page)
 	content.GET("/movie/:id", func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
@@ -75,7 +75,7 @@ func (b *BaseRouter) addContentRoutes() {
 		c.JSON(http.StatusOK, content)
 	})
 
-	// Get tv details
+	// Get tv details (for tv page)
 	content.GET("/tv/:id", func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)

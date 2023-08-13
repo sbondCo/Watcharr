@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type TMDBSearchMultiResponse struct {
@@ -83,6 +84,9 @@ type TMDBMovieDetails struct {
 	Runtime             uint32 `json:"runtime"`
 	Title               string `json:"title"`
 	Video               bool   `json:"video"`
+
+	// Extra items because we use `append_to_response` on the request
+	Videos TMDBContentVideos `json:"videos"`
 }
 
 type TMDBShowDetails struct {
@@ -133,6 +137,25 @@ type TMDBShowDetails struct {
 		SeasonNumber int    `json:"season_number"`
 	} `json:"seasons"`
 	Type string `json:"type"`
+
+	// Extra items because we use `append_to_response` on the request
+	Videos TMDBContentVideos `json:"videos"`
+}
+
+type TMDBContentVideos struct {
+	ID      int `json:"id"`
+	Results []struct {
+		Iso6391     string    `json:"iso_639_1"`
+		Iso31661    string    `json:"iso_3166_1"`
+		Name        string    `json:"name"`
+		Key         string    `json:"key"`
+		Site        string    `json:"site"`
+		Size        int       `json:"size"`
+		Type        string    `json:"type"`
+		Official    bool      `json:"official"`
+		PublishedAt time.Time `json:"published_at"`
+		ID          string    `json:"id"`
+	} `json:"results"`
 }
 
 type TMDBSeasonDetails struct {

@@ -81,6 +81,8 @@
 
             <span style="font-weight: bold; font-size: 14px;">Overview</span>
             <p>{show.overview}</p>
+
+            {show.videos}
           </div>
         </div>
       </div>

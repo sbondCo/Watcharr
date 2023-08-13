@@ -112,6 +112,7 @@ export interface TMDBMovieDetails extends TMDBContentDetails {
   runtime: number;
   title: string;
   video: boolean;
+  videos: TMDBContentVideos;
 }
 
 export interface TMDBShowDetails extends TMDBContentDetails {
@@ -153,6 +154,23 @@ export interface TMDBShowDetails extends TMDBContentDetails {
   original_name: string;
   seasons: TMDBShowSeason[];
   type: string;
+  videos: TMDBContentVideos;
+}
+
+export interface TMDBContentVideos {
+  id: number;
+  results: {
+    iso_639_1: string;
+    iso_3166_1: string;
+    name: string;
+    key: string;
+    site: string;
+    size: number;
+    type: string;
+    official: boolean;
+    published_at: string;
+    id: string;
+  }[];
 }
 
 export interface TMDBShowSeason {
