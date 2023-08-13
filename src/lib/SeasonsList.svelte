@@ -138,15 +138,14 @@
         display: flex;
         align-items: start;
         justify-content: center;
-        color: green;
         font-size: 15px;
-        color: gold;
+        color: $rating-color;
         font-weight: bolder;
         overflow: hidden;
 
         span {
           font-family: "Rampart One";
-          -webkit-text-stroke: 1px gold;
+          -webkit-text-stroke: 1px $rating-color;
           font-size: 25px;
           line-height: 0.7;
           margin-top: 1.5px;
