@@ -67,8 +67,14 @@
                 <b>{ep.episode_number}</b>
                 {ep.name}
               </span>
-            </li>
-          {/each}
+              <span
+                class="rating"
+                title={`TMDB Rating: ${ep.vote_average} out of 10 (based on ${ep.vote_count} votes)`}
+              >
+                <span>*</span>
+                {ep.vote_average}
+              </span>
+            </li>{/each}
         </ul>
       {/if}
     {:catch err}
@@ -92,13 +98,13 @@
       display: flex;
       flex-flow: column;
       list-style: none;
-      gap: 8px;
+      gap: 20px;
     }
 
     li {
       display: flex;
       flex-flow: row;
-      gap: 12px;
+      gap: 8px;
 
       img,
       .no-still {
@@ -121,10 +127,29 @@
       }
 
       span {
-        padding: 8px 5px;
+        padding: 3px 5px;
 
         @media screen and (max-width: 590px) {
           text-align: center;
+        }
+      }
+
+      .rating {
+        display: flex;
+        align-items: start;
+        justify-content: center;
+        color: green;
+        font-size: 15px;
+        color: gold;
+        font-weight: bolder;
+        overflow: hidden;
+
+        span {
+          font-family: "Rampart One";
+          -webkit-text-stroke: 1px gold;
+          font-size: 25px;
+          line-height: 0.7;
+          margin-top: 1.5px;
         }
       }
     }
@@ -134,6 +159,7 @@
         align-items: center;
         flex-flow: column;
         width: 100%;
+        height: 100%;
       }
     }
   }
