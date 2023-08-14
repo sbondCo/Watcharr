@@ -20,6 +20,8 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 
 - [Screenshots](#screenshots)
 - [Setup](#set-up)
+- [Contributing](CONTRIBUTING.md)
+- [Getting Help](#getting-help)
 
 # Screenshots
 
@@ -74,3 +76,7 @@ JELLYFIN_HOST=https://my.jellyfin.example
 # be set to DEV when developing the app.
 MODE=prod
 ```
+
+# Getting Help
+
+If something isn't working for you or you are stuck, [creating an issue](https://github.com/sbondCo/Watcharr/issues/new) is the best way to get help! Every type of issue is accepted, so don't be afraid to ask anything!
