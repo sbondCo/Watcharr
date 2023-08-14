@@ -72,9 +72,10 @@
                 title={`TMDB Rating: ${ep.vote_average} out of 10 (based on ${ep.vote_count} votes)`}
               >
                 <span>*</span>
-                {ep.vote_average}
+                {Math.round(ep.vote_average * 10) / 10}
               </span>
-            </li>{/each}
+            </li>
+          {/each}
         </ul>
       {/if}
     {:catch err}
