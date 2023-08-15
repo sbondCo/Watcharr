@@ -1,13 +1,9 @@
 module.exports = {
   root: true,
   parser: "@typescript-eslint/parser",
-  extends: [
-    "eslint:recommended",
-    "plugin:svelte/recommended",
-    "plugin:@typescript-eslint/recommended"
-  ],
+  extends: ["plugin:svelte/recommended"],
   plugins: ["@typescript-eslint"],
-  ignorePatterns: ["*.cjs"],
+  ignorePatterns: ["*.cjs", "*.config.js"],
   overrides: [
     {
       files: ["*.svelte"],
