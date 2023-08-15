@@ -103,7 +103,7 @@ export interface TMDBContentDetails {
 
 export interface TMDBMovieDetails extends TMDBContentDetails {
   adult: boolean;
-  belongs_to_collection: any;
+  belongs_to_collection: object;
   budget: number;
   imdb_id: string;
   original_title: string;
@@ -141,7 +141,7 @@ export interface TMDBShowDetails extends TMDBContentDetails {
     vote_count: number;
   };
   name: string;
-  next_episode_to_air: any;
+  next_episode_to_air: object;
   networks: {
     name: string;
     id: number;
