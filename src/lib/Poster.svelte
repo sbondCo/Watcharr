@@ -68,6 +68,7 @@
   }}
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
+  on:keypress={() => console.log("on kpress")}
   class={posterActive ? "active" : ""}
 >
   <div class={`container${!poster ? " details-shown" : ""}`}>
