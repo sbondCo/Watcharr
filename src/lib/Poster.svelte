@@ -48,6 +48,12 @@
     }
     onStatusChanged(type);
   }
+
+  function handleInnerKeyUp(e: KeyboardEvent) {
+    console.log(e.target);
+    if (e.key === "Enter" && (e.target as HTMLElement)?.id === "ilikemoviessueme" && link)
+      goto(link);
+  }
 </script>
 
 <li
@@ -62,7 +68,6 @@
   }}
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
-  on:keypress={() => console.log("on kpress")}
   class={posterActive ? "active" : ""}
 >
   <div class={`container${!poster ? " details-shown" : ""}`}>
@@ -84,8 +89,11 @@
       on:click={() => {
         if (posterActive && link) goto(link);
       }}
-      on:keypress={() => console.log("on kpress")}
+      on:keyup={handleInnerKeyUp}
+      id="ilikemoviessueme"
       class="inner"
+      role="button"
+      tabindex="0"
     >
       <h2>
         {#if link}
@@ -236,7 +244,11 @@
       transition: opacity 150ms cubic-bezier(0.19, 1, 0.22, 1);
 
       h2 {
-        font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+        font-family:
+          sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont;
         font-size: 18px;
         color: white;
         word-wrap: break-word;
