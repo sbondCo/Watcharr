@@ -39,9 +39,13 @@
         }}
       >
         <h1>{season.name}</h1>
-        {#if season.air_date}
-          <h2>{new Date(Date.parse(season.air_date)).getFullYear()}</h2>
-        {/if}
+        <h2>
+          {#if season.air_date}
+            {new Date(Date.parse(season.air_date)).getFullYear()}
+          {:else}
+            TBD
+          {/if}
+        </h2>
       </button>
     {/each}
     <div class="last" />
@@ -51,7 +55,7 @@
     {#await seasonDetailsReq}
       <Spinner />
     {:then season}
-      {#if season}
+      {#if season?.episodes?.length > 0}
         <ul>
           {#each season.episodes as ep}
             <li>
@@ -77,6 +81,8 @@
             </li>
           {/each}
         </ul>
+      {:else}
+        <h3 class="norm">No episodes in this season yet!</h3>
       {/if}
     {:catch err}
       <Error pretty="Failed to load season details!" error={err} />
