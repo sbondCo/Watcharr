@@ -289,7 +289,7 @@ type TMDBContentCredits struct {
 }
 
 func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
-	slog.Debug("tmdbAPIRequest:", "endpoint", ep, "params", p)
+	slog.Debug("tmdbAPIRequest", "endpoint", ep, "params", p)
 	base, err := url.Parse("https://api.themoviedb.org/3")
 	if err != nil {
 		return nil, errors.New("failed to parse api uri")
@@ -320,7 +320,7 @@ func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
 		return nil, err
 	}
 	if res.StatusCode != 200 {
-		println("TMDB non 200 status code:", res.StatusCode)
+		slog.Error("TMDB non 200 status code:", "status_code", res.StatusCode)
 		return nil, errors.New(string(body))
 	}
 	return body, nil

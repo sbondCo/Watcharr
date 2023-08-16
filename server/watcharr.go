@@ -107,6 +107,7 @@ func ensureEnv() {
 	}
 }
 
+// Setup slog defaults
 func setupLogging() {
 	level := slog.LevelInfo
 	if os.Getenv("DEBUG") == "true" {

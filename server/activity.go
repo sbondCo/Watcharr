@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 
 	"gorm.io/gorm"
@@ -56,9 +55,9 @@ func addActivity(db *gorm.DB, userId uint, ar ActivityAddRequest) (Activity, err
 	activity := Activity{UserID: userId, WatchedID: ar.WatchedID, Type: ar.Type, Data: ar.Data}
 	res := db.Create(&activity)
 	if res.Error != nil {
-		println("Error adding activity to database:", res.Error.Error())
+		slog.Error("Error adding activity to database", "error", res.Error.Error())
 		return Activity{}, errors.New("failed adding new activity to database")
 	}
-	fmt.Printf("%+v\n", activity)
+	slog.Debug("Adding activity", "added_activity", activity)
 	return activity, nil
 }
