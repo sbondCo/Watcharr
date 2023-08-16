@@ -14,9 +14,9 @@ export type Icon =
   | "trash"
   | "close"
   | "filter"
-	|	"Sky Go"
-	| "Disney Plus"
-	| "Netflix";
+  | "Sky Go"
+  | "Disney Plus"
+  | "Netflix";
 
 export type Theme = "light" | "dark";
 
@@ -116,7 +116,7 @@ export interface TMDBMovieDetails extends TMDBContentDetails {
   title: string;
   video: boolean;
   videos: TMDBContentVideos;
-	"watch/providers": TMDBContentWatchProviders;
+  "watch/providers": TMDBContentWatchProviders;
 }
 
 export interface TMDBShowDetails extends TMDBContentDetails {
@@ -159,26 +159,25 @@ export interface TMDBShowDetails extends TMDBContentDetails {
   seasons: TMDBShowSeason[];
   type: string;
   videos: TMDBContentVideos;
-	"watch/providers": TMDBContentWatchProviders;
+  "watch/providers": TMDBContentWatchProviders;
 }
 
 export interface TMDBWatchProvider {
-	logo_path: string;
-	provider_id: string;
-	provider_name: string;
-	display_priority: string;
+  logo_path: string;
+  provider_id: string;
+  provider_name: string;
+  display_priority: string;
 }
 
 export interface TMDBContentWatchProviders {
   results: {
     GB: {
-			link: string;
-			flatrate: TMDBWatchProvider[]
-			free: TMDBWatchProvider[]
-		}
+      link: string;
+      flatrate: TMDBWatchProvider[];
+      free: TMDBWatchProvider[];
+    };
   };
 }
-
 
 export interface TMDBContentVideos {
   id: number;

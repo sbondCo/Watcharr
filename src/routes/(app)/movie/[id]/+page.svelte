@@ -12,6 +12,7 @@
     TMDBContentCredits,
     TMDBContentCreditsCrew,
     TMDBMovieDetails,
+    TMDBWatchProvider,
     WatchedStatus
   } from "@/types";
   import axios from "axios";
@@ -115,13 +116,13 @@
               {/if}
             </div>
 
-						{#if providers}
-						<div class="streaming-providers">
-							{#each providers as provider}
-								<Icon i={provider.provider_name} wh={50}/>
-							{/each}
-						</div>
-						{/if}
+            {#if providers}
+            <div class="streaming-providers">
+              {#each providers as provider}
+                <Icon i={provider.provider_name} wh={50}/>
+              {/each}
+            </div>
+            {/if}
           </div>
         </div>
       </div>
