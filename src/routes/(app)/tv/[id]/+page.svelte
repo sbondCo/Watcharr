@@ -2,6 +2,7 @@
   import Activity from "@/lib/Activity.svelte";
   import Error from "@/lib/Error.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
+  import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/PersonPoster.svelte";
   import Rating from "@/lib/Rating.svelte";
@@ -17,6 +18,7 @@
     TMDBContentCredits,
     TMDBContentCreditsCrew,
     TMDBShowDetails,
+    TMDBWatchProvider,
     WatchedStatus
   } from "@/types";
   import axios from "axios";
@@ -25,6 +27,7 @@
 
   let trailer: string | undefined;
   let trailerShown = false;
+	let providers: TMDBWatchProvider[] | undefined;
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.tvId);
 
@@ -38,6 +41,11 @@
         }
       }
     }
+
+		// TODO: Move to server?
+		if (show["watch/providers"]?.results?.GB?.flatrate) {
+			providers = show["watch/providers"]?.results?.GB?.flatrate
+		}
     return show;
   }
 
@@ -103,6 +111,14 @@
                 {/if}
               {/if}
             </div>
+
+						{#if providers}
+						<div class="streaming-providers">
+							{#each providers as provider}
+								<Icon i={provider.provider_name} wh={50}/>
+							{/each}
+						</div>
+						{/if}
           </div>
         </div>
       </div>
@@ -177,6 +193,13 @@
     color: white;
     margin-bottom: 15px;
 
+		img.provider {
+			width: 45px;
+			height: 45px;
+			box-shadow: 0px 0px 8px -4px #9c8080;
+      border-radius: 50px;
+		}
+
     img.backdrop {
       position: absolute;
       left: 0;
@@ -223,6 +246,13 @@
         .quick-info {
           display: flex;
           gap: 10px;
+          margin-bottom: 8px;
+        }
+
+				.streaming-providers {
+          display: flex;
+          gap: 15px;
+					margin-top: 8px;
           margin-bottom: 8px;
         }
 

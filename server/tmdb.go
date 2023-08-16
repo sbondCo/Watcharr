@@ -86,7 +86,9 @@ type TMDBMovieDetails struct {
 	Video               bool   `json:"video"`
 
 	// Extra items because we use `append_to_response` on the request
-	Videos TMDBContentVideos `json:"videos"`
+	Videos 					TMDBContentVideos 				`json:"videos"`
+	WatchProviders 	TMDBContentWatchProviders `json:"watch/providers"`
+
 }
 
 type TMDBShowDetails struct {
@@ -139,7 +141,25 @@ type TMDBShowDetails struct {
 	Type string `json:"type"`
 
 	// Extra items because we use `append_to_response` on the request
-	Videos TMDBContentVideos `json:"videos"`
+	Videos 					TMDBContentVideos 				`json:"videos"`
+	WatchProviders 	TMDBContentWatchProviders `json:"watch/providers"`
+}
+
+type TMDBWatchProvider struct {
+	LogoPath 						string 	`json:"logo_path"`
+	ProviderID      		int 		`json:"provider_id"`
+	ProviderName 				string 	`json:"provider_name"`
+	DisplayPriority 		int 		`json:"display_priority"`
+}
+
+type TMDBContentWatchProviders struct {
+	Results struct {
+			GB struct {
+				Link 			string 							`json:"link"`
+				Flatrate 	[]TMDBWatchProvider `json:"flatrate"`
+				Free 	[]TMDBWatchProvider `json:"free"`
+			} `json:"GB"`
+	} `json:"results"`
 }
 
 type TMDBContentVideos struct {
