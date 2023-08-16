@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
@@ -288,7 +289,7 @@ type TMDBContentCredits struct {
 }
 
 func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
-	println("tmdbAPIRequest:", ep)
+	slog.Debug("tmdbAPIRequest:", "endpoint", ep, "params", p)
 	base, err := url.Parse("https://api.themoviedb.org/3")
 	if err != nil {
 		return nil, errors.New("failed to parse api uri")

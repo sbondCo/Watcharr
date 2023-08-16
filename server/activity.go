@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"gorm.io/gorm"
 )
@@ -42,7 +43,7 @@ func getActivity(db *gorm.DB, userId uint, watchedId uint) ([]Activity, error) {
 	activity := new([]Activity)
 	res := db.Model(&Activity{}).Where("user_id = ? AND watched_id = ?", userId, watchedId).Find(&activity)
 	if res.Error != nil {
-		println("Failed getting activity from database:", res.Error.Error())
+		slog.Error("Failed getting activity from database", "error", res.Error.Error())
 		return []Activity{}, errors.New("failed getting activity")
 	}
 	return *activity, nil
