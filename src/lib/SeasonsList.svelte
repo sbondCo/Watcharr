@@ -39,13 +39,11 @@
         }}
       >
         <h1>{season.name}</h1>
-        <h2>
-          {#if season.air_date}
-            {new Date(Date.parse(season.air_date)).getFullYear()}
-          {:else}
-            TBD
-          {/if}
-        </h2>
+        {#if season.air_date}
+          <h2>{new Date(Date.parse(season.air_date)).getFullYear()}</h2>
+        {:else if season.season_number > 0}
+          <h2>TBD</h2>
+        {/if}
       </button>
     {/each}
     <div class="last" />

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path"
@@ -68,18 +69,18 @@ func getWatched(db *gorm.DB, userId uint) []Watched {
 }
 
 func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error) {
-	println(ar.ContentType, ar.ContentID)
+	slog.Debug("Adding watched item", "userId", userId, "contentType", ar.ContentType, "contentId", ar.ContentID)
 
 	var content Content
 	db.Where("tmdb_id = ?", ar.ContentID).Find(&content)
 
 	// Create content if not found from our db
 	if content == (Content{}) {
-		println("Content not in db, fetching...")
+		slog.Debug("Content not in db, fetching...")
 
 		resp, err := tmdbAPIRequest("/"+string(ar.ContentType)+"/"+strconv.Itoa(ar.ContentID), map[string]string{})
 		if err != nil {
-			fmt.Printf("addWatched tmdb api request failed: %+v", err)
+			slog.Error("addWatched content tmdb api request failed", "error", err)
 			return Watched{}, errors.New("failed to find requested media")
 		}
 
@@ -106,7 +107,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			content := new(TMDBMovieDetails)
 			err = json.Unmarshal([]byte(resp), &content)
 			if err != nil {
-				println("Failed to unmarshal movie details:", err)
+				slog.Error("Failed to unmarshal movie details", "error", err)
 				return Watched{}, errors.New("failed to process movie details response")
 			}
 			id = content.ID
@@ -115,7 +116,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			title = content.Title
 			releaseDate, err = time.Parse(dateFormat, content.ReleaseDate)
 			if err != nil {
-				println("Failed to parse movie release date:", err)
+				slog.Error("Failed to parse movie release date", "error", err)
 			}
 			popularity = content.Popularity
 			voteAverage = content.VoteAverage
@@ -129,7 +130,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			content := new(TMDBShowDetails)
 			err = json.Unmarshal(resp, &content)
 			if err != nil {
-				println("Failed to unmarshal show details:", err)
+				slog.Error("Failed to unmarshal show details", "error", err)
 				return Watched{}, errors.New("failed to process show details response")
 			}
 			id = content.ID
@@ -138,7 +139,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			title = content.Name
 			releaseDate, err = time.Parse(dateFormat, content.FirstAirDate)
 			if err != nil {
-				println("Failed to parse tv release date:", err)
+				slog.Error("Failed to parse tv release date", "error", err)
 			}
 			popularity = content.Popularity
 			voteAverage = content.VoteAverage
@@ -151,9 +152,9 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			numberOfSeasons = content.NumberOfSeasons
 		}
 		// Save the content in our db
-		println("id, etc:", id, title, overview, posterPath, "<-- end")
+		slog.Info("Saving content to db", "id", id, "title", title)
 		if id == 0 || title == "" {
-			println("addWatched, returned content missing id or title!", id, title)
+			slog.Error("addWatched, returned content missing id or title!", "id", id, "title", title)
 			return Watched{}, errors.New("content response missing id or title")
 		}
 		content = Content{
@@ -178,7 +179,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 		if res.Error != nil {
 			// Error if anything but unique contraint error
 			if !strings.Contains(res.Error.Error(), "UNIQUE") {
-				println("Error creating content in database:", res.Error.Error())
+				slog.Error("Error creating content in database", "error", res.Error.Error())
 				return Watched{}, errors.New("failed to cache content in database")
 			}
 		}
@@ -186,7 +187,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 		if res.RowsAffected > 0 {
 			err := download("https://image.tmdb.org/t/p/w500"+posterPath, path.Join("./data/img", posterPath))
 			if err != nil {
-				println("Failed to download content image!", err.Error())
+				slog.Error("Failed to download content image!", "error", err.Error())
 			}
 		}
 	}
@@ -209,25 +210,26 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			if watched.DeletedAt.Time.IsZero() {
 				return Watched{}, errors.New("content already on watched list")
 			} else {
-				println("Watched list item exists as soft deleted record.. attempting to restore")
+				slog.Info("addWatched: Watched list item for this content exists as soft deleted record.. attempting to restore")
 				res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Updates(map[string]interface{}{"status": ar.Status, "rating": ar.Rating, "deleted_at": nil})
 				watched.Status = ar.Status
 				watched.Rating = ar.Rating
 				if res.Error != nil {
+					slog.Error("addWatched: Failed to restore soft deleted watch list item", "error", res.Error)
 					return Watched{}, errors.New("content already on watched list. errored removing soft delete timestamp")
 				}
 			}
 		} else {
-			println("Error adding watched content to database:", res.Error.Error())
+			slog.Error("Error adding watched content to database", "error", res.Error.Error())
 			return Watched{}, errors.New("failed adding content to database")
 		}
 	}
-	fmt.Printf("%+v\n", watched)
+	slog.Debug("Added watched list item", "item", watched)
 
 	var activity Activity
 	activityJson, err := json.Marshal(map[string]interface{}{"status": ar.Status, "rating": ar.Rating})
 	if err != nil {
-		println("Failed to marshal json for data in ADD_WATCHED activity request, adding without data", err.Error())
+		slog.Error("Failed to marshal json for data in ADD_WATCHED activity request, adding without data", "error", err.Error())
 		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED})
 	} else {
 		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED, Data: string(activityJson)})
@@ -239,11 +241,11 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 
 // this method is too ugly to look at please make him look better, future irhm
 func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (WatchedUpdateResponse, error) {
-	println("UpdateWatched", ar.Rating, ar.Status)
+	slog.Debug("UpdateWatched", "request_data", ar)
 	upwat := Watched{}
 	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Take(&upwat)
 	if res.Error != nil {
-		println("Watched entry update failed:", id, res.Error.Error())
+		slog.Error("Watched entry update failed:", "id", id, "error", res.Error.Error())
 		return WatchedUpdateResponse{}, errors.New("failed to update watched entry")
 	}
 	originalThoughts := upwat.Thoughts
@@ -280,14 +282,14 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 }
 
 func removeWatched(db *gorm.DB, userId uint, id uint) (WatchedRemoveResponse, error) {
-	println("Removing watched item:", id, "for user", userId)
+	slog.Debug("Removing watched item:", "id", id, "user_id", userId)
 	// Our model has a deleted_at field, which will make gorm do a soft delete.
 	// Since other tables (eg activities) will link their rows to a watched_id, it's best to soft
 	// delete, so if user restores watched item they still have activity for example (also so
 	// someone else wont get other users activity if auto increment gives them the same watched id).
 	res := db.Model(&Watched{}).Where("id = ? AND user_id = ?", id, userId).Delete(&Watched{})
 	if res.Error != nil {
-		println("Removing watched entry failed:", id, res.Error.Error())
+		slog.Error("Removing watched entry failed", "id", id, "error", res.Error.Error())
 		return WatchedRemoveResponse{}, errors.New("failed to remove watched entry")
 	}
 	if res.RowsAffected <= 0 {
@@ -298,7 +300,7 @@ func removeWatched(db *gorm.DB, userId uint, id uint) (WatchedRemoveResponse, er
 }
 
 func download(url string, outf string) (err error) {
-	println("Attempting to download file from", url, "to", outf)
+	slog.Debug("Attempting to download file", "url", url, "outf", outf)
 
 	// Create the file
 	out, err := os.Create(outf)
