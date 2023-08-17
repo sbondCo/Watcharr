@@ -34,6 +34,30 @@ type Content struct {
 	NumberOfSeasons  uint32      `json:"numberOfSeasons"`
 }
 
+// Getting only region needed from api is not a feature yet
+// https://trello.com/c/75tR4cpF/106-add-watch-provider-region-filtering
+// When it is, this can be removed for that instead.
+func transformProviders(c *interface{}, country string) {
+	slog.Debug("transformProviders called", "country", country)
+	if cmap, ok := (*c).(map[string]interface{}); ok {
+		if rmap, ok := cmap["results"].(map[string]interface{}); ok {
+			if val, ok := rmap[country]; ok {
+				slog.Debug("transformProviders: Found country.. overwriting whole object", "new_obj", val)
+				if rvmap, ok := val.(map[string]interface{}); ok {
+					rvmap["country"] = country
+				}
+				*c = val
+			} else {
+				slog.Warn("transformProviders: Couldn't find country..", "country", country)
+			}
+		} else {
+			slog.Warn("transformProviders: Couldn't find results property..")
+		}
+	} else {
+		slog.Error("transformProviders: Assertion failed")
+	}
+}
+
 func searchContent(query string) (TMDBSearchMultiResponse, error) {
 	resp := new(TMDBSearchMultiResponse)
 	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": "1"}, &resp)
@@ -44,13 +68,14 @@ func searchContent(query string) (TMDBSearchMultiResponse, error) {
 	return *resp, nil
 }
 
-func movieDetails(id string) (TMDBMovieDetails, error) {
+func movieDetails(id string, country string) (TMDBMovieDetails, error) {
 	resp := new(TMDBMovieDetails)
 	err := tmdbRequest("/movie/"+id, map[string]string{"append_to_response": "videos,watch/providers"}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete movie details request!", "error", err.Error())
 		return TMDBMovieDetails{}, errors.New("failed to complete movie details request")
 	}
+	transformProviders(&resp.WatchProviders, country)
 	return *resp, nil
 }
 
@@ -64,13 +89,14 @@ func movieCredits(id string) (TMDBContentCredits, error) {
 	return *resp, nil
 }
 
-func tvDetails(id string) (TMDBShowDetails, error) {
+func tvDetails(id string, country string) (TMDBShowDetails, error) {
 	resp := new(TMDBShowDetails)
 	err := tmdbRequest("/tv/"+id, map[string]string{"append_to_response": "videos,watch/providers"}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete tv details request!", "error", err.Error())
 		return TMDBShowDetails{}, errors.New("failed to complete tv details request")
 	}
+	transformProviders(&resp.WatchProviders, country)
 	return *resp, nil
 }
 

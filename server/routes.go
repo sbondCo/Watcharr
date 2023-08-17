@@ -48,12 +48,12 @@ func (b *BaseRouter) addContentRoutes() {
 	})
 
 	// Get movie details (for movie page)
-	content.GET("/movie/:id", func(c *gin.Context) {
+	content.Use(WhereaboutsRequired()).GET("/movie/:id", func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
 		}
-		content, err := movieDetails(c.Param("id"))
+		content, err := movieDetails(c.Param("id"), c.MustGet("userCountry").(string))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -76,12 +76,12 @@ func (b *BaseRouter) addContentRoutes() {
 	})
 
 	// Get tv details (for tv page)
-	content.GET("/tv/:id", func(c *gin.Context) {
+	content.Use(WhereaboutsRequired()).GET("/tv/:id", func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
 		}
-		content, err := tvDetails(c.Param("id"))
+		content, err := tvDetails(c.Param("id"), c.MustGet("userCountry").(string))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
