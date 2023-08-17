@@ -36,7 +36,7 @@ func main() {
 	}
 	ensureEnv()
 
-	setupLogging()
+	multiw := setupLogging()
 	slog.Info("Watcharr Starting")
 
 	// Ensure data dir exists
@@ -65,6 +65,7 @@ func main() {
 		go runUI()
 		gin.SetMode(gin.ReleaseMode)
 	}
+	gin.DefaultWriter = multiw
 	gine := gin.Default()
 	gine.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -108,7 +109,7 @@ func ensureEnv() {
 }
 
 // Setup slog defaults
-func setupLogging() {
+func setupLogging() io.Writer {
 	level := slog.LevelInfo
 	if os.Getenv("DEBUG") == "true" {
 		level = slog.LevelDebug
@@ -124,6 +125,7 @@ func setupLogging() {
 		slog.NewTextHandler(multiw, &slog.HandlerOptions{Level: level}),
 	))
 	slog.Info("Logging level set", "logging_level", level)
+	return multiw
 }
 
 // Run UI server
