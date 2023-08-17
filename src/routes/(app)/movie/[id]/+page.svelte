@@ -26,7 +26,7 @@
 
   let trailer: string | undefined;
   let trailerShown = false;
-	let providers: TMDBWatchProvider[] | undefined;
+  let providers: TMDBWatchProvider[] | undefined;
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.movieId);
 
@@ -41,10 +41,10 @@
       }
     }
 
-		// TODO: Move to server?
-		if (movie["watch/providers"]?.results?.GB?.flatrate) {
-			providers = movie["watch/providers"]?.results?.GB?.flatrate
-		}
+    // TODO: Move to server?
+    if (movie["watch/providers"]?.results?.GB?.flatrate) {
+      providers = movie["watch/providers"]?.results?.GB?.flatrate;
+    }
 
     return movie;
   }
@@ -117,11 +117,11 @@
             </div>
 
             {#if providers}
-            <div class="streaming-providers">
-              {#each providers as provider}
-                <Icon i={provider.provider_name} wh={50}/>
-              {/each}
-            </div>
+              <div class="streaming-providers">
+                {#each providers as provider}
+                  <Icon i={provider.provider_name} wh={50} />
+                {/each}
+              </div>
             {/if}
           </div>
         </div>
@@ -246,10 +246,10 @@
           margin-bottom: 8px;
         }
 
-				.streaming-providers {
+        .streaming-providers {
           display: flex;
           gap: 15px;
-					margin-top: 8px;
+          margin-top: 8px;
           margin-bottom: 8px;
         }
 
