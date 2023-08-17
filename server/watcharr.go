@@ -116,10 +116,10 @@ func setupLogging() io.Writer {
 	}
 	multiw := io.MultiWriter(&lumberjack.Logger{
 		Filename:   "./data/watcharr.log",
-		MaxSize:    500, // megabytes
+		MaxSize:    1, // megabytes
 		MaxBackups: 3,
 		MaxAge:     28, // days
-		Compress:   true,
+		Compress:   false,
 	}, os.Stdout)
 	slog.SetDefault(slog.New(
 		slog.NewTextHandler(multiw, &slog.HandlerOptions{Level: level}),
