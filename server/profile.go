@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 
 	"gorm.io/gorm"
@@ -18,13 +19,13 @@ func getProfile(db *gorm.DB, userId uint) (Profile, error) {
 	user := new(User)
 	res := db.Model(&User{}).Where("id = ?", userId).Take(&user)
 	if res.Error != nil {
-		println("Failed to get profile:", res.Error.Error())
+		slog.Error("Failed to get profile:", "error", res.Error.Error())
 		return Profile{}, errors.New("failed to get profile")
 	}
 	watched := new([]Watched)
 	res = db.Model(&Watched{}).Preload("Content").Where("user_id = ?", userId).Find(&watched)
 	if res.Error != nil {
-		println("Profile: Failed to get watched for processing:", res.Error.Error())
+		slog.Error("Profile: Failed to get watched for processing:", "error", res.Error.Error())
 		return Profile{}, errors.New("failed to get watched for processing")
 	}
 	var (

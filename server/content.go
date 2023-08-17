@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 )
 
@@ -37,7 +38,7 @@ func searchContent(query string) (TMDBSearchMultiResponse, error) {
 	resp := new(TMDBSearchMultiResponse)
 	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": "1"}, &resp)
 	if err != nil {
-		println("Failed to complete multi search request!", err.Error())
+		slog.Error("Failed to complete multi search request!", "error", err.Error())
 		return TMDBSearchMultiResponse{}, errors.New("failed to complete multi search request")
 	}
 	return *resp, nil
@@ -47,7 +48,7 @@ func movieDetails(id string) (TMDBMovieDetails, error) {
 	resp := new(TMDBMovieDetails)
 	err := tmdbRequest("/movie/"+id, map[string]string{"append_to_response": "videos,watch/providers"}, &resp)
 	if err != nil {
-		println("Failed to complete movie details request!", err.Error())
+		slog.Error("Failed to complete movie details request!", "error", err.Error())
 		return TMDBMovieDetails{}, errors.New("failed to complete movie details request")
 	}
 	return *resp, nil
@@ -57,7 +58,7 @@ func movieCredits(id string) (TMDBContentCredits, error) {
 	resp := new(TMDBContentCredits)
 	err := tmdbRequest("/movie/"+id+"/credits", map[string]string{}, &resp)
 	if err != nil {
-		println("Failed to complete movie cast request!", err.Error())
+		slog.Error("Failed to complete movie cast request!", "error", err.Error())
 		return TMDBContentCredits{}, errors.New("failed to complete movie cast request")
 	}
 	return *resp, nil
@@ -67,7 +68,7 @@ func tvDetails(id string) (TMDBShowDetails, error) {
 	resp := new(TMDBShowDetails)
 	err := tmdbRequest("/tv/"+id, map[string]string{"append_to_response": "videos,watch/providers"}, &resp)
 	if err != nil {
-		println("Failed to complete tv details request!", err.Error())
+		slog.Error("Failed to complete tv details request!", "error", err.Error())
 		return TMDBShowDetails{}, errors.New("failed to complete tv details request")
 	}
 	return *resp, nil
@@ -77,7 +78,7 @@ func tvCredits(id string) (TMDBContentCredits, error) {
 	resp := new(TMDBContentCredits)
 	err := tmdbRequest("/tv/"+id+"/credits", map[string]string{}, &resp)
 	if err != nil {
-		println("Failed to complete tv cast request!", err.Error())
+		slog.Error("Failed to complete tv cast request!", err.Error())
 		return TMDBContentCredits{}, errors.New("failed to complete tv cast request")
 	}
 	return *resp, nil
@@ -87,7 +88,7 @@ func seasonDetails(tvId string, seasonNumber string) (TMDBSeasonDetails, error) 
 	resp := new(TMDBSeasonDetails)
 	err := tmdbRequest("/tv/"+tvId+"/season/"+seasonNumber, map[string]string{}, &resp)
 	if err != nil {
-		println("Failed to complete season details request!", err.Error())
+		slog.Error("Failed to complete season details request!", "error", err.Error())
 		return TMDBSeasonDetails{}, errors.New("failed to complete season details request")
 	}
 	return *resp, nil
@@ -97,7 +98,7 @@ func personDetails(id string) (TMDBPersonDetails, error) {
 	resp := new(TMDBPersonDetails)
 	err := tmdbRequest("/person/"+id, map[string]string{}, &resp)
 	if err != nil {
-		println("Failed to complete person details request!", err.Error())
+		slog.Error("Failed to complete person details request!", "error", err.Error())
 		return TMDBPersonDetails{}, errors.New("failed to complete person details request")
 	}
 	return *resp, nil
@@ -107,7 +108,7 @@ func personCredits(id string) (TMDBPersonCombinedCredits, error) {
 	resp := new(TMDBPersonCombinedCredits)
 	err := tmdbRequest("/person/"+id+"/combined_credits", map[string]string{}, &resp)
 	if err != nil {
-		println("Failed to complete person details request!", err.Error())
+		slog.Error("Failed to complete person details request!", "error", err.Error())
 		return TMDBPersonCombinedCredits{}, errors.New("failed to complete person details request")
 	}
 	return *resp, nil

@@ -72,6 +72,12 @@ JWT_SECRET=MAKE_ME_RANDOM_AND_LONG
 # to enable it as an auth provider.
 JELLYFIN_HOST=https://my.jellyfin.example
 
+# Enable/disable debug logging. Useful for when trying
+# to figure out exactly what the server is doing at a point
+# of failure.
+# Set to `true` to enable.
+DEBUG=false
+
 # Optional: When not set we assume production, should only
 # be set to DEV when developing the app.
 MODE=prod

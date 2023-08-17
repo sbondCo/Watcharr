@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -76,11 +77,11 @@ type TokenClaims struct {
 // Auth middleware
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		println("AuthRequired middleware hit")
+		slog.Debug("AuthRequired middleware hit")
 		atoken := c.GetHeader("Authorization")
 		// Make sure auth header isn't empty
 		if atoken == "" {
-			println("Returning 401, Authorization header not provided")
+			slog.Warn("Returning 401, Authorization header not provided")
 			c.AbortWithStatus(401)
 			return
 		}
@@ -88,19 +89,26 @@ func AuthRequired() gin.HandlerFunc {
 		token, err := jwt.ParseWithClaims(atoken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
+		if err != nil {
+			slog.Error("AuthRequired failed to parse token", "error", err)
+			c.AbortWithStatus(401)
+			return
+		}
 		// If token is valid, go to next handler
 		if claims, ok := token.Claims.(*TokenClaims); ok && token.Valid {
-			println("Token valid", claims.Username)
+			slog.Debug("Token is valid", "userId", claims.UserID, "username", claims.Username)
 			c.Set("userId", claims.UserID)
 			c.Next()
 		} else {
-			fmt.Println(err)
+			slog.Error("Token is **not** valid")
+			c.AbortWithStatus(401)
+			return
 		}
 	}
 }
 
 func register(user *User, db *gorm.DB) (AuthResponse, error) {
-	println("Registering", user.Username)
+	slog.Info("A user is registering", "username", user.Username)
 	hash, err := hashPassword(user.Password, &ArgonParams{
 		memory:      64 * 1024,
 		iterations:  3,
@@ -119,49 +127,50 @@ func register(user *User, db *gorm.DB) (AuthResponse, error) {
 	if res.Error != nil {
 		// If error is because unique contraint failed.. user already exists
 		if strings.Contains(res.Error.Error(), "UNIQUE") {
-			println("Unique contraint fail:", res.Error.Error())
+			slog.Error("Registration failed", "error", res.Error.Error(), "error_pretty", "User already exists")
 			return AuthResponse{}, errors.New("User already exists")
 		}
-		panic(err)
+		slog.Error("Registration failed", "error", err, "error_pretty", "Watcharr does not know why this failed, assume database operation failed")
+		return AuthResponse{}, errors.New("unknown error")
 	}
 
 	// Gorm fills our user obj with the ID from db after insert,
 	// just ensure it actually has.
 	if user.ID == 0 {
-		fmt.Println("user.ID not filled out after registration", user.ID)
+		slog.Error("user.ID not filled out after registration", "userId", user.ID)
 		return AuthResponse{}, errors.New("failed to get user id, try login")
 	}
 
 	token, err := signJWT(user)
 	if err != nil {
-		fmt.Println("Failed to sign new jwt:", err)
+		slog.Error("Registration: Failed to sign new jwt", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
 }
 
 func login(user *User, db *gorm.DB) (AuthResponse, error) {
-	fmt.Println("Logging in", user.Username)
+	slog.Debug("A User Is Logging In", "username", user.Username)
 	dbUser := new(User)
 	res := db.Where("username = ? AND (type IS NULL OR type = 0)", user.Username).Take(&dbUser)
 	if res.Error != nil {
-		fmt.Println("Failed to select user from database for login:", res.Error)
+		slog.Error("Failed to select user from database for login", "error", res.Error)
 		return AuthResponse{}, errors.New("User does not exist")
 	}
 
 	match, err := compareHash(user.Password, dbUser.Password)
 	if err != nil {
-		fmt.Println("Failed to compare pass to hash for login:", err)
+		slog.Error("Failed to compare pass to hash for login", "error", err)
 		return AuthResponse{}, errors.New("failed to login")
 	}
 	if !match {
-		fmt.Println("User failed to provide correct password for login:", match)
+		slog.Error("User failed to provide correct password for login", "hash_matched", match)
 		return AuthResponse{}, errors.New("incorrect details")
 	}
 
 	token, err := signJWT(dbUser)
 	if err != nil {
-		fmt.Println("Failed to sign new jwt:", err)
+		slog.Error("Failed to sign new jwt", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
@@ -170,20 +179,20 @@ func login(user *User, db *gorm.DB) (AuthResponse, error) {
 func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 	jellyfinHost := os.Getenv("JELLYFIN_HOST")
 	if jellyfinHost == "" {
-		println("Request made to login via Jellyfin, but JELLYFIN_HOST environment variable is not set.")
+		slog.Error("Request made to login via Jellyfin, but JELLYFIN_HOST environment variable is not set.")
 		return AuthResponse{}, errors.New("jellyfin login not enabled")
 	}
 
 	base, err := url.Parse(jellyfinHost + "/Users/AuthenticateByName")
 	if err != nil {
-		println("Failed to parse AuthenticateByName api endpoint url:", err.Error())
+		slog.Error("Failed to parse AuthenticateByName api endpoint url", "error", err.Error())
 		return AuthResponse{}, errors.New("failed to parse api uri")
 	}
 
 	// Marshall struct as json
 	usrJSON, err := json.Marshal(JellyfinAuth{Username: user.Username, Pw: user.Password})
 	if err != nil {
-		println("Error marshalling JellyfinAuth JSON", err.Error())
+		slog.Error("Error marshalling JellyfinAuth JSON", "error", err.Error())
 		return AuthResponse{}, errors.New("failed to marshal json")
 	}
 	// Run auth request
@@ -191,24 +200,24 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", base.String(), bytes.NewBuffer(usrJSON))
 	if err != nil {
-		println("creating request to jellyfin for auth failed:", err)
+		slog.Error("Creating request to jellyfin for auth failed", "error", err)
 		return AuthResponse{}, errors.New("request failed")
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-Emby-Authorization", "MediaBrowser Client=\"Watcharr\", Device=\"HTTP\", DeviceId=\"WatcharrFor"+user.Username+"\", Version=\"10.8.0\"")
 	res, err := client.Do(req)
 	if err != nil {
-		println("making request to jellyfin for auth failed:", err)
+		slog.Error("making request to jellyfin for auth failed", "error", err)
 		return AuthResponse{}, errors.New("request failed")
 	}
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		println("Error reading response", err.Error())
+		slog.Error("Error reading jellyfin auth response", "error", err.Error())
 		return AuthResponse{}, err
 	}
 	if res.StatusCode != 200 {
-		println("Jellyfin auth non 200 status code:", res.StatusCode, string(body))
+		slog.Error("Jellyfin auth non 200 status code", "status_code", res.StatusCode, "error", string(body))
 		return AuthResponse{}, errors.New("incorrect details")
 	}
 	// Process auth response
@@ -233,7 +242,7 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 
 			dbRes = db.Create(&dbUser)
 			if dbRes.Error != nil {
-				println("Failed to create new user in db from jellyfin response:", err.Error())
+				slog.Error("Failed to create new user in db from jellyfin response", "error", err.Error())
 				return AuthResponse{}, errors.New("failed to create new user from jellyfin")
 			}
 		} else {
@@ -243,7 +252,7 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 
 	token, err := signJWT(dbUser)
 	if err != nil {
-		fmt.Println("Failed to sign new jwt:", err)
+		slog.Error("Failed to sign new (jellyfin login) jwt", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil

@@ -91,7 +91,9 @@
             />
 
             <span class="quick-info">
-              <span>{show.episode_run_time}m</span>
+              {#if show?.episode_run_time?.length > 0}
+                <span>{show.episode_run_time.join(",")}m</span>
+              {/if}
 
               <div>
                 {#each show.genres as g, i}

@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -13,6 +15,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -27,13 +30,14 @@ type GormModel struct {
 var AvailableAuthProviders = []string{}
 
 func main() {
-	fmt.Println("Watcharr Starting")
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Failed to load vars from .env file:", err)
 	}
 	ensureEnv()
+
+	multiw := setupLogging()
+	slog.Info("Watcharr Starting")
 
 	// Ensure data dir exists
 	err = ensureDirExists("./data")
@@ -61,6 +65,7 @@ func main() {
 		go runUI()
 		gin.SetMode(gin.ReleaseMode)
 	}
+	gin.DefaultWriter = multiw
 	gine := gin.Default()
 	gine.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -92,6 +97,37 @@ func main() {
 	gine.Run("0.0.0.0:3080")
 }
 
+// Ensure all required environment variables are set.
+func ensureEnv() {
+	if os.Getenv("JWT_SECRET") == "" {
+		log.Fatal("JWT_SECRET env var missing!")
+	}
+
+	if os.Getenv("JELLYFIN_HOST") != "" {
+		AvailableAuthProviders = append(AvailableAuthProviders, "jellyfin")
+	}
+}
+
+// Setup slog defaults
+func setupLogging() io.Writer {
+	level := slog.LevelInfo
+	if os.Getenv("DEBUG") == "true" {
+		level = slog.LevelDebug
+	}
+	multiw := io.MultiWriter(&lumberjack.Logger{
+		Filename:   "./data/watcharr.log",
+		MaxSize:    1, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28, // days
+		Compress:   false,
+	}, os.Stdout)
+	slog.SetDefault(slog.New(
+		slog.NewTextHandler(multiw, &slog.HandlerOptions{Level: level}),
+	))
+	slog.Info("Logging level set", "logging_level", level)
+	return multiw
+}
+
 // Run UI server
 func runUI() {
 	cmd := exec.Command("node", "ui/index.js")
@@ -110,17 +146,6 @@ func runUI() {
 	}
 	if err := cmd.Wait(); err != nil {
 		log.Fatal("UI ERR ", err)
-	}
-}
-
-// Ensure all required environment variables are set.
-func ensureEnv() {
-	if os.Getenv("JWT_SECRET") == "" {
-		log.Fatal("JWT_SECRET env var missing!")
-	}
-
-	if os.Getenv("JELLYFIN_HOST") != "" {
-		AvailableAuthProviders = append(AvailableAuthProviders, "jellyfin")
 	}
 }
 
