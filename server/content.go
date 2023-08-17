@@ -46,7 +46,7 @@ func searchContent(query string) (TMDBSearchMultiResponse, error) {
 
 func movieDetails(id string) (TMDBMovieDetails, error) {
 	resp := new(TMDBMovieDetails)
-	err := tmdbRequest("/movie/"+id, map[string]string{"append_to_response": "videos"}, &resp)
+	err := tmdbRequest("/movie/"+id, map[string]string{"append_to_response": "videos,watch/providers"}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete movie details request!", "error", err.Error())
 		return TMDBMovieDetails{}, errors.New("failed to complete movie details request")
@@ -66,7 +66,7 @@ func movieCredits(id string) (TMDBContentCredits, error) {
 
 func tvDetails(id string) (TMDBShowDetails, error) {
 	resp := new(TMDBShowDetails)
-	err := tmdbRequest("/tv/"+id, map[string]string{"append_to_response": "videos"}, &resp)
+	err := tmdbRequest("/tv/"+id, map[string]string{"append_to_response": "videos,watch/providers"}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete tv details request!", "error", err.Error())
 		return TMDBShowDetails{}, errors.New("failed to complete tv details request")
