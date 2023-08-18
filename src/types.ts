@@ -20,6 +20,11 @@ export type Icon =
 
 export type Theme = "light" | "dark";
 
+export enum UserType {
+  // Assume watcharr user if none of these...
+  Jellyfin = 1
+}
+
 interface dbModel {
   createdAt: string;
   updatedAt: string;
