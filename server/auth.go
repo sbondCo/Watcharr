@@ -263,7 +263,7 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 
 			dbRes = db.Create(&dbUser)
 			if dbRes.Error != nil {
-				slog.Error("Failed to create new user in db from jellyfin response", "error", err.Error())
+				slog.Error("Failed to create new user in db from jellyfin response", "error", dbRes.Error)
 				return AuthResponse{}, errors.New("failed to create new user from jellyfin")
 			}
 		} else {
