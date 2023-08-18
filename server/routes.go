@@ -25,7 +25,7 @@ func newBaseRouter(db *gorm.DB, rg *gin.RouterGroup) *BaseRouter {
 }
 
 func (b *BaseRouter) addContentRoutes() {
-	content := b.rg.Group("/content").Use(AuthRequired())
+	content := b.rg.Group("/content").Use(AuthRequired(nil))
 
 	// Get trending content
 	// content.GET("/", func(c *gin.Context) {
@@ -147,7 +147,7 @@ func (b *BaseRouter) addContentRoutes() {
 }
 
 func (b *BaseRouter) addWatchedRoutes() {
-	watched := b.rg.Group("/watched").Use(AuthRequired())
+	watched := b.rg.Group("/watched").Use(AuthRequired(nil))
 
 	watched.GET("", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
@@ -212,7 +212,7 @@ func (b *BaseRouter) addWatchedRoutes() {
 }
 
 func (b *BaseRouter) addActivityRoutes() {
-	activity := b.rg.Group("/activity").Use(AuthRequired())
+	activity := b.rg.Group("/activity").Use(AuthRequired(nil))
 
 	activity.GET(":watchedId", func(c *gin.Context) {
 		watchedId, err := strconv.ParseUint(c.Param("watchedId"), 10, 32)
@@ -301,12 +301,31 @@ func (b *BaseRouter) addAuthRoutes() {
 }
 
 func (b *BaseRouter) addProfileRoutes() {
-	profile := b.rg.Group("/profile").Use(AuthRequired())
+	profile := b.rg.Group("/profile").Use(AuthRequired(nil))
 
 	// Get user profile details
 	profile.GET("", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		response, err := getProfile(b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+}
+
+func (b *BaseRouter) addJellyfinRoutes() {
+	jf := b.rg.Group("/jellyfin").Use(AuthRequired(b.db))
+
+	// Check if jf has item
+	jf.GET("/:type/:name/:tmdbId", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		userType := c.MustGet("userType").(UserType)
+		username := c.MustGet("username").(string)
+		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
+		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
+		response, err := jellyfinContentFind(userId, userType, username, userThirdPartyId, userThirdPartyAuth, c.Param("type"), c.Param("name"), c.Param("tmdbId"))
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return
