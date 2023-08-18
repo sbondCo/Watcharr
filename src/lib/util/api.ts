@@ -1,5 +1,6 @@
 import { watchedList } from "@/store";
 import type {
+  JellyfinFoundContent,
   MediaType,
   Watched,
   WatchedAddRequest,
@@ -104,6 +105,21 @@ export function removeWatched(id: number) {
       console.error(err);
       notify({ text: "Failed To Remove!", type: "error" });
     });
+}
+
+export async function contentExistsOnJellyfin(
+  type: MediaType,
+  name: string,
+  tmdbId: number
+): Promise<JellyfinFoundContent | undefined> {
+  try {
+    const resp = await axios.get(`/jellyfin/${type}/${name}/${tmdbId}`);
+    console.log("contentExistsOnJellyfin response:", resp.data);
+    return resp.data as JellyfinFoundContent;
+  } catch (err) {
+    console.error(err);
+    // notify({ text: "Failed To Remove!", type: "error" });
+  }
 }
 
 /**

@@ -2,6 +2,7 @@
   import Activity from "@/lib/Activity.svelte";
   import Error from "@/lib/Error.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
+  import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/PersonPoster.svelte";
   import Rating from "@/lib/Rating.svelte";
@@ -11,7 +12,7 @@
   import ProvidersList from "@/lib/content/ProvidersList.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
-  import { updateWatched } from "@/lib/util/api";
+  import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
   import { getTopCrew } from "@/lib/util/helpers.js";
   import { watchedList } from "@/store";
   import type {
@@ -26,6 +27,7 @@
 
   let trailer: string | undefined;
   let trailerShown = false;
+  let jellyfinUrl: string | undefined;
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.tvId);
 
@@ -39,6 +41,11 @@
         }
       }
     }
+    contentExistsOnJellyfin("tv", show.name, show.id).then((j) => {
+      if (j?.hasContent && j?.url !== "") {
+        jellyfinUrl = j.url;
+      }
+    });
     return show;
   }
 
@@ -104,6 +111,11 @@
                 {#if trailerShown}
                   <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
                 {/if}
+              {/if}
+              {#if jellyfinUrl}
+                <a href={jellyfinUrl} target="_blank">
+                  <button><Icon i="jellyfin" wh={14} />Play On Jellyfin</button>
+                </a>
               {/if}
             </div>
 
@@ -249,7 +261,21 @@
           margin-top: 18px;
 
           button {
-            width: fit-content;
+            max-width: fit-content;
+            overflow: hidden;
+            animation: 50ms cubic-bezier(0.86, 0, 0.07, 1) forwards otherbtn;
+            white-space: nowrap;
+            gap: 6px;
+            justify-content: flex-start;
+
+            @keyframes otherbtn {
+              from {
+                width: 0px;
+              }
+              to {
+                width: 100%;
+              }
+            }
           }
         }
       }

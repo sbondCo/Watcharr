@@ -6,13 +6,12 @@
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
-  import { updateWatched } from "@/lib/util/api";
+  import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
   import { watchedList } from "@/store";
   import type {
     TMDBContentCredits,
     TMDBContentCreditsCrew,
     TMDBMovieDetails,
-    TMDBWatchProvider,
     WatchedStatus
   } from "@/types";
   import axios from "axios";
@@ -21,11 +20,13 @@
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
   import ProvidersList from "@/lib/content/ProvidersList.svelte";
+  import Icon from "@/lib/Icon.svelte";
 
   export let data;
 
   let trailer: string | undefined;
   let trailerShown = false;
+  let jellyfinUrl: string | undefined;
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.movieId);
 
@@ -39,6 +40,11 @@
         }
       }
     }
+    contentExistsOnJellyfin("movie", movie.title, movie.id).then((j) => {
+      if (j?.hasContent && j?.url !== "") {
+        jellyfinUrl = j.url;
+      }
+    });
     return movie;
   }
 
@@ -106,6 +112,11 @@
                 {#if trailerShown}
                   <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
                 {/if}
+              {/if}
+              {#if jellyfinUrl}
+                <a href={jellyfinUrl} target="_blank">
+                  <button><Icon i="jellyfin" wh={14} />Play On Jellyfin</button>
+                </a>
               {/if}
             </div>
 
@@ -244,7 +255,21 @@
           margin-top: 18px;
 
           button {
-            width: fit-content;
+            max-width: fit-content;
+            overflow: hidden;
+            animation: 50ms cubic-bezier(0.86, 0, 0.07, 1) forwards otherbtn;
+            white-space: nowrap;
+            gap: 6px;
+            justify-content: flex-start;
+
+            @keyframes otherbtn {
+              from {
+                width: 0px;
+              }
+              to {
+                width: 100%;
+              }
+            }
           }
         }
       }

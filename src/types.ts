@@ -71,6 +71,11 @@ export interface Profile {
   moviesWatched: number;
 }
 
+export interface JellyfinFoundContent {
+  hasContent: boolean;
+  url: string;
+}
+
 export interface TMDBContentDetails {
   id: number;
   backdrop_path: string;
