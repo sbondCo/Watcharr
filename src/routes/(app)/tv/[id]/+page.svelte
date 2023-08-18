@@ -9,6 +9,7 @@
   import SeasonsList from "@/lib/SeasonsList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
+  import ProvidersList from "@/lib/content/ProvidersList.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
   import { updateWatched } from "@/lib/util/api";
@@ -27,7 +28,6 @@
 
   let trailer: string | undefined;
   let trailerShown = false;
-  let providers: TMDBWatchProvider[] | undefined;
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.tvId);
 
@@ -40,11 +40,6 @@
           trailer = `https://www.youtube.com/embed/${t?.key}`;
         }
       }
-    }
-
-    // TODO: Move to server?
-    if (show["watch/providers"]?.results?.GB?.flatrate) {
-      providers = show["watch/providers"]?.results?.GB?.flatrate;
     }
     return show;
   }
@@ -114,13 +109,7 @@
               {/if}
             </div>
 
-            {#if providers}
-              <div class="streaming-providers">
-                {#each providers as provider}
-                  <Icon i={provider.provider_name} wh={50} />
-                {/each}
-              </div>
-            {/if}
+            <ProvidersList providers={show["watch/providers"]} />
           </div>
         </div>
       </div>
@@ -248,13 +237,6 @@
         .quick-info {
           display: flex;
           gap: 10px;
-          margin-bottom: 8px;
-        }
-
-        .streaming-providers {
-          display: flex;
-          gap: 15px;
-          margin-top: 8px;
           margin-bottom: 8px;
         }
 

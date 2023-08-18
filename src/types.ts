@@ -170,13 +170,9 @@ export interface TMDBWatchProvider {
 }
 
 export interface TMDBContentWatchProviders {
-  results: {
-    GB: {
-      link: string;
-      flatrate: TMDBWatchProvider[];
-      free: TMDBWatchProvider[];
-    };
-  };
+  link: string;
+  flatrate: TMDBWatchProvider[];
+  free: TMDBWatchProvider[];
 }
 
 export interface TMDBContentVideos {
