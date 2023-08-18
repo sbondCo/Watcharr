@@ -1,10 +1,12 @@
 import { watchedList } from "@/store";
-import type {
-  MediaType,
-  Watched,
-  WatchedAddRequest,
-  WatchedStatus,
-  WatchedUpdateRequest
+import {
+  UserType,
+  type JellyfinFoundContent,
+  type MediaType,
+  type Watched,
+  type WatchedAddRequest,
+  type WatchedStatus,
+  type WatchedUpdateRequest
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
@@ -104,6 +106,23 @@ export function removeWatched(id: number) {
       console.error(err);
       notify({ text: "Failed To Remove!", type: "error" });
     });
+}
+
+export async function contentExistsOnJellyfin(
+  type: MediaType,
+  name: string,
+  tmdbId: number
+): Promise<JellyfinFoundContent | undefined> {
+  try {
+    if (Number(localStorage.getItem("userType")) == UserType.Jellyfin) {
+      const resp = await axios.get(`/jellyfin/${type}/${name}/${tmdbId}`);
+      console.log("contentExistsOnJellyfin response:", resp.data);
+      return resp.data as JellyfinFoundContent;
+    }
+  } catch (err) {
+    console.error(err);
+    // notify({ text: "Failed To Remove!", type: "error" });
+  }
 }
 
 /**

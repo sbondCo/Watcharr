@@ -41,7 +41,9 @@ type User struct {
 	Type UserType `gorm:"uniqueIndex:usr_name_to_type;not null;default:0" json:"type"`
 	// ID of user from the third party service, this will be used purely for lookup of user at signin.
 	ThirdPartyID string `json:"-"`
-	Watched      []Watched
+	// Auth token from third party (jellyfin)
+	ThirdPartyAuth string `json:"-"`
+	Watched        []Watched
 }
 
 type JellyfinAuth struct {
@@ -54,6 +56,7 @@ type JellyfinAuthResponse struct {
 		ID   string `json:"Id"`
 		Name string `json:"Name"`
 	} `json:"User"`
+	AccessToken string `json:"AccessToken"`
 }
 
 type AuthResponse struct {
@@ -69,13 +72,15 @@ type ArgonParams struct {
 }
 
 type TokenClaims struct {
-	UserID   uint   `json:"userId"`
-	Username string `json:"username"`
+	UserID   uint     `json:"userId"`
+	Username string   `json:"username"`
+	Type     UserType `json:"type"`
 	jwt.RegisteredClaims
 }
 
 // Auth middleware
-func AuthRequired() gin.HandlerFunc {
+// If db is passed, extra user info from the database will be fetched.
+func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		slog.Debug("AuthRequired middleware hit")
 		atoken := c.GetHeader("Authorization")
@@ -96,8 +101,33 @@ func AuthRequired() gin.HandlerFunc {
 		}
 		// If token is valid, go to next handler
 		if claims, ok := token.Claims.(*TokenClaims); ok && token.Valid {
-			slog.Debug("Token is valid", "userId", claims.UserID, "username", claims.Username)
+			// Check if token issuedAt is from before `timeOfNewLoginRequired`.
+			// Basically just so we can logout old tokens and force relogin...
+			// since new changes require the user login again.
+			timeOfNewLoginRequired, _ := time.Parse(time.RFC822, "18 Aug 23 20:30 UTC")
+			if claims.IssuedAt.Before(timeOfNewLoginRequired) {
+				slog.Info("Token is from before timeOfNewLoginRequired.. returning 401", "token_issued_at", claims.IssuedAt, "time_of_new_login_required", timeOfNewLoginRequired)
+				c.AbortWithStatus(401)
+				return
+			}
+			slog.Debug("Token is valid", "claims", claims)
 			c.Set("userId", claims.UserID)
+			c.Set("userType", claims.Type)
+			// If db passed, get extra user info and set as variables in req context
+			if db != nil {
+				slog.Debug("AuthRequired: db passed.. getting extra user info")
+				dbUser := new(User)
+				res := db.Where("id = ?", claims.UserID).Take(&dbUser)
+				if res.Error != nil {
+					slog.Error("AuthRequired: Failed to select user from database", "error", res.Error)
+					c.AbortWithStatus(401)
+					return
+				}
+				slog.Debug("AuthRequired: fetched extra user info. Setting vars.", "userThirdPartyId", dbUser.ThirdPartyID, "userThirdPartyAuth", "lol this is censored dude")
+				c.Set("userThirdPartyId", dbUser.ThirdPartyID)
+				c.Set("userThirdPartyAuth", dbUser.ThirdPartyAuth)
+				c.Set("username", dbUser.Username)
+			}
 			c.Next()
 		} else {
 			slog.Error("Token is **not** valid")
@@ -196,7 +226,6 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 		return AuthResponse{}, errors.New("failed to marshal json")
 	}
 	// Run auth request
-	// res, err := http.Post(base.String(), "application/json", bytes.NewBuffer(usrJSON))
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", base.String(), bytes.NewBuffer(usrJSON))
 	if err != nil {
@@ -237,17 +266,24 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 			// Record not found, so we should create the user
 			// dbUser will be empty, so we can just reuse it for this purpose.
 			dbUser.ThirdPartyID = resp.User.ID
+			dbUser.ThirdPartyAuth = resp.AccessToken
 			dbUser.Username = resp.User.Name
 			dbUser.Type = JELLYFIN_USER
 
 			dbRes = db.Create(&dbUser)
 			if dbRes.Error != nil {
-				slog.Error("Failed to create new user in db from jellyfin response", "error", err.Error())
+				slog.Error("Failed to create new user in db from jellyfin response", "error", dbRes.Error)
 				return AuthResponse{}, errors.New("failed to create new user from jellyfin")
 			}
 		} else {
 			return AuthResponse{}, errors.New("error locating user in db")
 		}
+	}
+	// If user exists.. update their access token in db
+	if resp.AccessToken != "" {
+		slog.Debug("Jellyfin user login - updating user with new access token")
+		dbUser.ThirdPartyAuth = resp.AccessToken
+		db.Save(&dbUser)
 	}
 
 	token, err := signJWT(dbUser)
@@ -263,6 +299,7 @@ func signJWT(user *User) (token string, err error) {
 	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, TokenClaims{
 		user.ID,
 		user.Username,
+		user.Type,
 		jwt.RegisteredClaims{
 			// ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt: jwt.NewNumericDate(time.Now()),

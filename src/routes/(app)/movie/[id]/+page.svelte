@@ -6,13 +6,12 @@
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
-  import { updateWatched } from "@/lib/util/api";
+  import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
   import { watchedList } from "@/store";
   import type {
     TMDBContentCredits,
     TMDBContentCreditsCrew,
     TMDBMovieDetails,
-    TMDBWatchProvider,
     WatchedStatus
   } from "@/types";
   import axios from "axios";
@@ -20,13 +19,14 @@
   import Activity from "@/lib/Activity.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
+  import ProvidersList from "@/lib/content/ProvidersList.svelte";
   import Icon from "@/lib/Icon.svelte";
 
   export let data;
 
   let trailer: string | undefined;
   let trailerShown = false;
-	let providers: TMDBWatchProvider[] | undefined;
+  let jellyfinUrl: string | undefined;
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.movieId);
 
@@ -40,12 +40,11 @@
         }
       }
     }
-
-		// TODO: Move to server?
-		if (movie["watch/providers"]?.results?.GB?.flatrate) {
-			providers = movie["watch/providers"]?.results?.GB?.flatrate
-		}
-
+    contentExistsOnJellyfin("movie", movie.title, movie.id).then((j) => {
+      if (j?.hasContent && j?.url !== "") {
+        jellyfinUrl = j.url;
+      }
+    });
     return movie;
   }
 
@@ -114,15 +113,14 @@
                   <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
                 {/if}
               {/if}
+              {#if jellyfinUrl}
+                <a href={jellyfinUrl} target="_blank">
+                  <button><Icon i="jellyfin" wh={14} />Play On Jellyfin</button>
+                </a>
+              {/if}
             </div>
 
-            {#if providers}
-            <div class="streaming-providers">
-              {#each providers as provider}
-                <Icon i={provider.provider_name} wh={50}/>
-              {/each}
-            </div>
-            {/if}
+            <ProvidersList providers={movie["watch/providers"]} />
           </div>
         </div>
       </div>
@@ -246,13 +244,6 @@
           margin-bottom: 8px;
         }
 
-				.streaming-providers {
-          display: flex;
-          gap: 15px;
-					margin-top: 8px;
-          margin-bottom: 8px;
-        }
-
         p {
           font-size: 14px;
         }
@@ -264,7 +255,21 @@
           margin-top: 18px;
 
           button {
-            width: fit-content;
+            max-width: fit-content;
+            overflow: hidden;
+            animation: 50ms cubic-bezier(0.86, 0, 0.07, 1) forwards otherbtn;
+            white-space: nowrap;
+            gap: 6px;
+            justify-content: flex-start;
+
+            @keyframes otherbtn {
+              from {
+                width: 0px;
+              }
+              to {
+                width: 100%;
+              }
+            }
           }
         }
       }

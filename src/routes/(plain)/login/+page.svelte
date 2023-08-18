@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import Icon from "@/lib/Icon.svelte";
-  import type { Icon as Icons } from "@/types";
+  import { UserType, type Icon as Icons } from "@/types";
   import { noAuthAxios } from "@/lib/util/api";
   import { onMount, afterUpdate } from "svelte";
   import { notify } from "@/lib/util/notify";
@@ -47,6 +47,9 @@
           console.log("Received token... logging in.");
           localStorage.setItem("token", resp.data.token);
           localStorage.setItem("username", String(user));
+          let userType = 0;
+          if (customAuthEP == "jellyfin") userType = UserType.Jellyfin;
+          localStorage.setItem("userType", String(userType));
           goto("/");
           notify({ text: `Welcome ${user}!`, type: "success" });
         }
