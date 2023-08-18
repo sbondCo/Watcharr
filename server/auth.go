@@ -101,6 +101,15 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 		}
 		// If token is valid, go to next handler
 		if claims, ok := token.Claims.(*TokenClaims); ok && token.Valid {
+			// Check if token issuedAt is from before `timeOfNewLoginRequired`.
+			// Basically just so we can logout old tokens and force relogin...
+			// since new changes require the user login again.
+			timeOfNewLoginRequired, _ := time.Parse(time.RFC822, "18 Aug 23 20:30 UTC")
+			if claims.IssuedAt.Before(timeOfNewLoginRequired) {
+				slog.Info("Token is from before timeOfNewLoginRequired.. returning 401", "token_issued_at", claims.IssuedAt, "time_of_new_login_required", timeOfNewLoginRequired)
+				c.AbortWithStatus(401)
+				return
+			}
 			slog.Debug("Token is valid", "claims", claims)
 			c.Set("userId", claims.UserID)
 			c.Set("userType", claims.Type)
