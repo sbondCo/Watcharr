@@ -20,7 +20,6 @@
   import Activity from "@/lib/Activity.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
-  import Icon from "@/lib/Icon.svelte";
   import ProvidersList from "@/lib/content/ProvidersList.svelte";
 
   export let data;

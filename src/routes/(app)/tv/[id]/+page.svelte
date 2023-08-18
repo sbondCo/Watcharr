@@ -2,7 +2,6 @@
   import Activity from "@/lib/Activity.svelte";
   import Error from "@/lib/Error.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
-  import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/PersonPoster.svelte";
   import Rating from "@/lib/Rating.svelte";
@@ -19,7 +18,6 @@
     TMDBContentCredits,
     TMDBContentCreditsCrew,
     TMDBShowDetails,
-    TMDBWatchProvider,
     WatchedStatus
   } from "@/types";
   import axios from "axios";
