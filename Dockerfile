@@ -1,5 +1,5 @@
 # Backend
-FROM golang:1.20 AS server
+FROM golang:1.21 AS server
 
 WORKDIR /server
 COPY server/*.go server/go.* ./
