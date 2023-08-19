@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
   import { removeWatched, updateWatched } from "@/lib/util/api";
@@ -40,6 +41,27 @@
       />
     {/each}
   {:else}
-    You don't have any watched content yet!
+    <div class="empty-list">
+      <Icon i="reel" wh={80} />
+      <h2 class="norm">Your watched list is empty!</h2>
+      <h4 class="norm">Try searching for something you would like to add.</h4>
+    </div>
   {/if}
 </PosterList>
+
+<style lang="scss">
+  .empty-list {
+    display: flex;
+    flex-flow: column;
+    gap: 5px;
+    align-items: center;
+
+    h2 {
+      margin-top: 10px;
+    }
+
+    h4 {
+      font-weight: normal;
+    }
+  }
+</style>
