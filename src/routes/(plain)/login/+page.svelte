@@ -2,18 +2,27 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import Icon from "@/lib/Icon.svelte";
-  import { UserType, type Icon as Icons } from "@/types";
+  import { UserType, type Icon as Icons, type AvailableAuthProviders } from "@/types";
   import { noAuthAxios } from "@/lib/util/api";
   import { onMount, afterUpdate } from "svelte";
   import { notify } from "@/lib/util/notify";
 
   let error: string;
   let login = true;
+  let availableProviders: string[] = [];
+  let signupEnabled = true;
 
   onMount(() => {
     if (localStorage.getItem("token")) {
       goto("/");
     }
+
+    noAuthAxios.get<AvailableAuthProviders>("/auth/available").then((r) => {
+      if (r?.data) {
+        availableProviders = r?.data?.available;
+        signupEnabled = r?.data?.signupEnabled;
+      }
+    });
   });
 
   afterUpdate(() => {
@@ -62,10 +71,6 @@
         }
       });
   }
-
-  async function getLoginProviders() {
-    return (await noAuthAxios.get("/auth/available")).data as Icons[];
-  }
 </script>
 
 <div>
@@ -93,11 +98,11 @@
         <span class="login-with" style="font-weight: bold">Login With</span>
         <div class="login-btns">
           <button type="submit"><span class="watcharr">W</span>Watcharr</button>
-          {#await getLoginProviders() then providers}
-            {#each providers as p}
+          {#if availableProviders}
+            {#each availableProviders as p}
               <button type="submit" name="jellyfin" class="other"><Icon i={p} wh={18} />{p}</button>
             {/each}
-          {/await}
+          {/if}
         </div>
       {:else}
         <div class="login-btns">
@@ -106,18 +111,20 @@
       {/if}
     </form>
 
-    <button
-      class="plain"
-      on:click={() => {
-        login = !login;
-      }}
-    >
-      {#if login}
-        Not a user?
-      {:else}
-        Already a user?
-      {/if}
-    </button>
+    {#if signupEnabled}
+      <button
+        class="plain"
+        on:click={() => {
+          login = !login;
+        }}
+      >
+        {#if login}
+          Not a user?
+        {:else}
+          Already a user?
+        {/if}
+      </button>
+    {/if}
   </div>
 </div>
 

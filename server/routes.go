@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -296,7 +297,14 @@ func (b *BaseRouter) addAuthRoutes() {
 
 	// Get available auth providers
 	auth.GET("/available", func(c *gin.Context) {
-		c.JSON(http.StatusOK, AvailableAuthProviders)
+		signupEnabled := true
+		if os.Getenv("SIGNUP_ENABLED") == "false" {
+			signupEnabled = false
+		}
+		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
+			AvailableAuthProviders: AvailableAuthProviders,
+			SignupEnabled:          signupEnabled,
+		})
 	})
 }
 
