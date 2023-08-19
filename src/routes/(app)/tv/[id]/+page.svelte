@@ -192,7 +192,6 @@
   .content {
     position: relative;
     color: white;
-    margin-bottom: 15px;
 
     img.provider {
       width: 45px;
@@ -211,6 +210,7 @@
       object-fit: cover;
       filter: $backdrop-filter;
       mix-blend-mode: $backdrop-mix-blend-mode;
+      mask-image: $backdrop-mask-image;
     }
 
     .vignette {
@@ -221,6 +221,7 @@
       height: 100%;
       background-color: rgba($color: #000000, $alpha: 0.7);
       z-index: -1;
+      mask-image: $backdrop-mask-image;
     }
 
     .details-container {
