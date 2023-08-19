@@ -14,9 +14,7 @@ export type Icon =
   | "trash"
   | "close"
   | "filter"
-  | "Sky Go"
-  | "Disney Plus"
-  | "Netflix";
+  | "reel";
 
 export type Theme = "light" | "dark";
 
