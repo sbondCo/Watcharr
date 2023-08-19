@@ -81,6 +81,11 @@ export interface JellyfinFoundContent {
   url: string;
 }
 
+export interface AvailableAuthProviders {
+  available: string[];
+  signupEnabled: boolean;
+}
+
 export interface TMDBContentDetails {
   id: number;
   backdrop_path: string;

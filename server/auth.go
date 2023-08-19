@@ -63,6 +63,11 @@ type AuthResponse struct {
 	Token string `json:"token"`
 }
 
+type AvailableAuthProvidersResponse struct {
+	AvailableAuthProviders []string `json:"available"`
+	SignupEnabled          bool     `json:"signupEnabled"`
+}
+
 type ArgonParams struct {
 	memory      uint32
 	iterations  uint32
@@ -138,6 +143,10 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 }
 
 func register(user *User, db *gorm.DB) (AuthResponse, error) {
+	if os.Getenv("SIGNUP_ENABLED") == "false" {
+		slog.Warn("Register called, but signing up is disabled via env variable.")
+		return AuthResponse{}, errors.New("registering is disabled")
+	}
 	slog.Info("A user is registering", "username", user.Username)
 	hash, err := hashPassword(user.Password, &ArgonParams{
 		memory:      64 * 1024,
