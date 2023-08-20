@@ -240,10 +240,6 @@
           stroke-width 150ms ease;
         fill: $text-color;
 
-        &:nth-child(2) {
-          margin-right: 3px;
-        }
-
         &:hover,
         &:focus-visible {
           stroke: $bg-color;
@@ -273,6 +269,7 @@
         font-size: 25px;
         transform: rotate(90deg);
         cursor: pointer;
+        margin-left: 3px;
         transition:
           -webkit-text-stroke 150ms ease,
           color 150ms ease;
