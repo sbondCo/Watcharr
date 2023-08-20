@@ -116,7 +116,7 @@
   <div class="btns">
     <!-- Only show on watched list -->
     {#if $page.url?.pathname === "/"}
-      <button class="plain filter" on:click={handleFilterClick}>
+      <button class="plain other" on:click={handleFilterClick}>
         <Icon i="filter" />
       </button>
       {#if filterMenuShown}
@@ -136,6 +136,9 @@
         </div>
       {/if}
     {/if}
+    <button class="plain other discover" on:click={() => goto("/discover")}>
+      <Icon i="compass" />
+    </button>
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
       <div class="face-menu">
@@ -170,9 +173,16 @@
 
     a {
       text-decoration: none;
-      font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
+      font-family:
+        "Shrikhand",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont;
       font-size: 35px;
-      transition: -webkit-text-stroke 150ms ease, color 150ms ease, font-weight 150ms ease;
+      transition:
+        -webkit-text-stroke 150ms ease,
+        color 150ms ease,
+        font-weight 150ms ease;
 
       &:hover,
       &:focus-visible {
@@ -206,7 +216,9 @@
       font-weight: bold;
       text-align: center;
       box-shadow: 4px 4px 0px 0px $text-color;
-      transition: width 150ms ease, box-shadow 150ms ease;
+      transition:
+        width 150ms ease,
+        box-shadow 150ms ease;
 
       &:hover,
       &:focus {
@@ -217,12 +229,15 @@
     .btns {
       display: flex;
       flex-flow: row;
-      gap: 30px;
+      gap: 20px;
 
-      button.filter {
+      button.other {
         padding-top: 2px;
         width: 28px;
-        transition: fill 150ms ease, stroke 150ms ease, stroke-width 150ms ease;
+        transition:
+          fill 150ms ease,
+          stroke 150ms ease,
+          stroke-width 150ms ease;
         fill: $text-color;
 
         &:hover,
@@ -232,12 +247,32 @@
         }
       }
 
+      button.discover {
+        transition:
+          fill 150ms ease,
+          stroke 150ms ease,
+          stroke-width 150ms ease,
+          transform 150ms ease;
+
+        &:hover,
+        &:focus-visible {
+          transform: rotate(60deg);
+        }
+      }
+
       button.face {
-        font-family: "Shrikhand", system-ui, -apple-system, BlinkMacSystemFont;
+        font-family:
+          "Shrikhand",
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont;
         font-size: 25px;
         transform: rotate(90deg);
         cursor: pointer;
-        transition: -webkit-text-stroke 150ms ease, color 150ms ease;
+        margin-left: 3px;
+        transition:
+          -webkit-text-stroke 150ms ease,
+          color 150ms ease;
 
         &:hover,
         &:focus-visible {
@@ -268,7 +303,10 @@
             position: absolute;
             top: 4px;
             left: 12px;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont;
+            font-family:
+              system-ui,
+              -apple-system,
+              BlinkMacSystemFont;
             font-size: 18px;
           }
         }

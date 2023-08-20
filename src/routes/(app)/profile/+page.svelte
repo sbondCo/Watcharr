@@ -130,6 +130,7 @@
 
     h3 {
       margin-bottom: 15px;
+      font-variant: small-caps;
     }
 
     h4 {

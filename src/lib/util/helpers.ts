@@ -59,6 +59,7 @@ export function getWatchedDependedProps(wid: number, wtype: MediaType, list: Wat
   if (!wel) return {};
   console.log(wid, wtype, wel?.content.title, wel?.status, wel?.rating);
   return {
+    id: wel.id,
     status: wel.status,
     rating: wel.rating
   };

@@ -93,6 +93,7 @@ export function removeWatched(id: number) {
   const wEntry = wList.find((w) => w.id === id);
   if (!wEntry) {
     console.log("Watched entry does not exist!");
+    notify({ text: "Item Doesn't Exist On Watched List!", type: "error" });
     return;
   }
   axios

@@ -9,20 +9,22 @@
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
   import tooltip from "./actions/tooltip";
+  import { removeWatched, updateWatched } from "./util/api";
+  import { notify } from "./util/notify";
+  import { onMount } from "svelte";
 
+  export let id: number | undefined = undefined; // Watched list id
   export let media: {
     poster_path?: string;
     title?: string;
     name?: string;
     overview?: string;
-    id?: number;
-    media_type?: MediaType;
+    id: number; // tmdb id
+    media_type: MediaType;
   };
   export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
-  export let onStatusChanged: (type: WatchedStatus) => void = () => {};
-  export let onRatingChanged: (rating: number) => void = () => {};
-  export let onDeleteClicked: () => void = () => {};
+  export let small = false;
 
   // If poster is active (scaled up)
   let posterActive = false;
@@ -31,22 +33,28 @@
   // If statuses are shown
   let statusesShown = false;
 
+  let containerEl: HTMLDivElement;
+
   const title = media.title || media.name;
   const poster = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
   const link = media.id ? `/${media.media_type}/${media.id}` : undefined;
 
   function handleStarClick(r: number) {
     if (r == rating) return;
-    onRatingChanged(r);
+    updateWatched(media.id, media.media_type, undefined, r);
     ratingsShown = false;
   }
 
   function handleStatusClick(type: WatchedStatus | "DELETE") {
     if (type === "DELETE") {
-      onDeleteClicked();
+      if (!id) {
+        notify({ text: "Content has no watched list id, can't delete.", type: "error" });
+        return;
+      }
+      removeWatched(id);
       return;
     }
-    onStatusChanged(type);
+    updateWatched(media.id, media.media_type, type);
   }
 
   function handleInnerKeyUp(e: KeyboardEvent) {
@@ -54,8 +62,16 @@
     if (e.key === "Enter" && (e.target as HTMLElement)?.id === "ilikemoviessueme" && link)
       goto(link);
   }
+
+  onMount(() => {
+    if (small && containerEl) {
+      containerEl.classList.add("small");
+    }
+  });
 </script>
 
+<!-- HACK: disabled this issue for now, it should probably be fixed properly -->
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <li
   on:mouseenter={(e) => {
     if (!posterActive) calculateTransformOrigin(e);
@@ -71,7 +87,7 @@
   on:keypress={() => console.log("on kpress")}
   class={posterActive ? "active" : ""}
 >
-  <div class={`container${!poster ? " details-shown" : ""}`}>
+  <div class={`container${!poster ? " details-shown" : ""}`} bind:this={containerEl}>
     {#if poster}
       <div class="img-loader" />
       <img
@@ -219,7 +235,7 @@
       background-size: 400% 400%;
       animation: imgloader 4s ease infinite;
 
-      @-webkit-keyframes imgloader {
+      @keyframes imgloader {
         0% {
           background-position: 50% 0%;
         }
@@ -368,10 +384,19 @@
       }
     }
 
+    &.small .inner span {
+      font-size: 11px;
+    }
+
     &:hover,
     &:focus-within {
       transform: scale(1.3);
       z-index: 99;
+    }
+
+    &.small:hover,
+    &.small:focus-within {
+      transform: scale(1.1);
     }
 
     &:hover,
