@@ -26,6 +26,7 @@
   {#if watched?.length > 0}
     {#each watched as w (w.id)}
       <Poster
+        id={w.id}
         media={{
           id: w.content.tmdbId,
           poster_path: w.content.poster_path,
@@ -35,9 +36,6 @@
         }}
         rating={w.rating}
         status={w.status}
-        onStatusChanged={(t) => updateWatched(w.content.tmdbId, w.content.type, t)}
-        onRatingChanged={(r) => updateWatched(w.content.tmdbId, w.content.type, undefined, r)}
-        onDeleteClicked={() => removeWatched(w.id)}
       />
     {/each}
   {:else}

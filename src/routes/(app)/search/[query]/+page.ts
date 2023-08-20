@@ -14,7 +14,7 @@ export interface ContentSearchMovie {
   release_date?: string;
   original_title?: string;
   genre_ids?: number[];
-  id?: number;
+  id: number;
   media_type: "movie";
   original_language?: string;
   title?: string;
@@ -28,7 +28,7 @@ export interface ContentSearchMovie {
 export interface ContentSearchTv {
   poster_path?: string;
   popularity?: number;
-  id?: number;
+  id: number;
   overview?: string;
   backdrop_path?: string;
   vote_average?: number;
