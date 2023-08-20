@@ -69,6 +69,10 @@ export interface WatchedUpdateRequest {
   removeThoughts?: boolean;
 }
 
+export interface WatchedUpdateResponse {
+  newActivity: Activity;
+}
+
 export interface Profile {
   joined: Date;
   showsWatched: number;

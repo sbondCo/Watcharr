@@ -2,7 +2,6 @@
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
-  import { removeWatched, updateWatched } from "@/lib/util/api";
   import { activeFilter, watchedList } from "@/store";
 
   $: filter = $activeFilter;
@@ -12,6 +11,12 @@
     } else if (filter[0] === "ALPHA") {
       if (filter[1] === "UP") return a.content.title.localeCompare(b.content.title);
       else if (filter[1] === "DOWN") return b.content.title.localeCompare(a.content.title);
+    } else if (filter[0] === "LASTCHANGED") {
+      if (filter[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
+      else if (filter[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
+    } else if (filter[0] === "RATING") {
+      if (filter[1] === "UP") return (a.rating ?? 0) - (b.rating ?? 0);
+      else if (filter[1] === "DOWN") return (b.rating ?? 0) - (a.rating ?? 0);
     }
     // default DATEADDED DOWN
     return Date.parse(b.createdAt) - Date.parse(a.createdAt);

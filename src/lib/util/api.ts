@@ -6,7 +6,8 @@ import {
   type Watched,
   type WatchedAddRequest,
   type WatchedStatus,
-  type WatchedUpdateRequest
+  type WatchedUpdateRequest,
+  type WatchedUpdateResponse
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
@@ -43,7 +44,7 @@ export function updateWatched(
     if (typeof thoughts !== "undefined") obj.thoughts = thoughts;
     if (thoughts === "") obj.removeThoughts = true;
     axios
-      .put(`/watched/${wEntry.id}`, obj)
+      .put<WatchedUpdateResponse>(`/watched/${wEntry.id}`, obj)
       .then((resp) => {
         if (status) wEntry.status = status;
         if (rating) wEntry.rating = rating;
@@ -54,6 +55,10 @@ export function updateWatched(
           } else {
             wEntry.activity = [resp.data.newActivity];
           }
+          // We want to update the updatedAt field too (so
+          // change is reflected when filtering modified at)
+          // We can piggy back from this data for now.
+          wEntry.updatedAt = resp.data.newActivity.createdAt;
         }
         watchedList.update((w) => w);
         notify({ text: `Saved!`, type: "success" });
