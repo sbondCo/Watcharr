@@ -44,7 +44,7 @@
 <div class="page">
   <h1>Discover</h1>
 
-  <h2>Trending Today</h2>
+  <h2 class="norm">Trending Today</h2>
   {#await allTrending()}
     <Spinner />
   {:then trending}
@@ -61,7 +61,7 @@
     <PageError pretty="Failed to load currently trending!" error={err} />
   {/await}
 
-  <h2>Trending Movies</h2>
+  <h2 class="norm">Trending Movies</h2>
   {#await trendingMovies()}
     <Spinner />
   {:then movies}
@@ -78,7 +78,7 @@
     <PageError pretty="Failed to load discovered movies!" error={err} />
   {/await}
 
-  <h2>Trending Shows</h2>
+  <h2 class="norm">Trending Shows</h2>
   {#await trendingShows()}
     <Spinner />
   {:then shows}
@@ -95,7 +95,7 @@
     <PageError pretty="Failed to load discovered shows!" error={err} />
   {/await}
 
-  <h2>Upcoming Movies</h2>
+  <h2 class="norm">Upcoming Movies</h2>
   {#await upcomingMovies()}
     <Spinner />
   {:then shows}
@@ -112,7 +112,7 @@
     <PageError pretty="Failed to load upcoming movies!" error={err} />
   {/await}
 
-  <h2>Upcoming Shows</h2>
+  <h2 class="norm">Upcoming Shows</h2>
   {#await upcomingShows()}
     <Spinner />
   {:then shows}
@@ -141,6 +141,10 @@
 
     h1 {
       margin-bottom: 15px;
+    }
+
+    h2 {
+      font-variant: small-caps;
     }
 
     @media screen and (max-width: 500px) {
