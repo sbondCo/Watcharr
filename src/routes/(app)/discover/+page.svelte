@@ -50,11 +50,14 @@
   {:then trending}
     <PosterList type="vertical">
       {#each trending.results as trend}
-        <Poster
-          media={{ ...trend, media_type: trend.media_type }}
-          {...getWatchedDependedProps(trend.id, trend.media_type, wList)}
-          small={true}
-        />
+        <!-- Possible a person gets returned, but i don't think anyone cares for them -->
+        {#if trend.media_type === "movie" || trend.media_type === "tv"}
+          <Poster
+            media={{ ...trend, media_type: trend.media_type }}
+            {...getWatchedDependedProps(trend.id, trend.media_type, wList)}
+            small={true}
+          />
+        {/if}
       {/each}
     </PosterList>
   {:catch err}
