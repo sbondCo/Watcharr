@@ -165,6 +165,36 @@ func (b *BaseRouter) addContentRoutes() {
 		}
 		c.JSON(http.StatusOK, content)
 	})
+
+	// Get all trending (movies, tv, people)
+	content.GET("/trending", func(c *gin.Context) {
+		content, err := allTrending()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
+
+	// Upcoming Movies
+	content.GET("/upcoming/movies", func(c *gin.Context) {
+		content, err := upcomingMovies()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
+
+	// Upcoming Tv
+	content.GET("/upcoming/tv", func(c *gin.Context) {
+		content, err := upcomingTv()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
 }
 
 func (b *BaseRouter) addWatchedRoutes() {

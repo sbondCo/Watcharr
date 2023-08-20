@@ -159,3 +159,37 @@ func discoverTv() (TMDBDiscoverShows, error) {
 	}
 	return *resp, nil
 }
+
+func allTrending() (TMDBTrendingAll, error) {
+	resp := new(TMDBTrendingAll)
+	err := tmdbRequest("/trending/all/day", map[string]string{}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete all trending request!", "error", err.Error())
+		return TMDBTrendingAll{}, errors.New("failed to complete all trending request")
+	}
+	return *resp, nil
+}
+
+func upcomingMovies() (TMDBUpcomingMovies, error) {
+	resp := new(TMDBUpcomingMovies)
+	err := tmdbRequest("/movie/upcoming", map[string]string{"page": "1"}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete upcoming movies request!", "error", err.Error())
+		return TMDBUpcomingMovies{}, errors.New("failed to complete upcoming movies request")
+	}
+	return *resp, nil
+}
+
+// Theres no upcoming endpoint for tv ;( - using discover with future dates
+func upcomingTv() (TMDBUpcomingShows, error) {
+	resp := new(TMDBUpcomingShows)
+	dFmt := "2006-01-02"
+	mind := time.Now().Format(dFmt)
+	maxd := time.Now().AddDate(0, 0, 15).Format(dFmt)
+	err := tmdbRequest("/discover/tv", map[string]string{"page": "1", "first_air_date.gte": mind, "first_air_date.lte": maxd, "sort_by": "popularity.desc", "with_type": "2|3"}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete upcoming tv request!", "error", err.Error())
+		return TMDBUpcomingShows{}, errors.New("failed to complete upcoming tv request")
+	}
+	return *resp, nil
+}
