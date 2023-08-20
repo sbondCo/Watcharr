@@ -128,6 +128,18 @@
             Date Added
           </button>
           <button
+            class={`plain ${filter[0] == "LASTCHANGED" ? filter[1].toLowerCase() : ""}`}
+            on:click={() => filterClicked("LASTCHANGED")}
+          >
+            Last Changed
+          </button>
+          <button
+            class={`plain ${filter[0] == "RATING" ? filter[1].toLowerCase() : ""}`}
+            on:click={() => filterClicked("RATING")}
+          >
+            Rating
+          </button>
+          <button
             class={`plain ${filter[0] == "ALPHA" ? filter[1].toLowerCase() : ""}`}
             on:click={() => filterClicked("ALPHA")}
           >
