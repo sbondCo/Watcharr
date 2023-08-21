@@ -21,7 +21,7 @@ $text-color: var(--text-color);
 $accent-color: var(--accent-color);
 $backdrop-filter: var(--backdrop-filter);
 $backdrop-mix-blend-mode: var(--backdrop-mix-blend-mode);
-$backdrop-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+$backdrop-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0));
 
 // For ratings that are on bg-color.
 $rating-color: var(--rating-color);
