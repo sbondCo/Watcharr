@@ -8,7 +8,7 @@
   export let seasons: TMDBShowSeason[];
 
   let activeSeason = 1;
-  let seasonDetailsReq = sdr(activeSeason);
+  let seasonDetailsReq: Promise<TMDBSeasonDetails>;
   let seasonsEl: HTMLUListElement, episodesEl: HTMLDivElement;
 
   async function sdr(seasonNum: number) {
