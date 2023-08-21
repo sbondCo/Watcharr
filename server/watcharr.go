@@ -27,17 +27,21 @@ type GormModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
 }
 
-var AvailableAuthProviders = []string{}
+var (
+	AvailableAuthProviders = []string{}
+	TMDBKey                = "d047fa61d926371f277e7a83c9c4ff2c"
+)
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Failed to load vars from .env file:", err)
 	}
-	ensureEnv()
 
 	multiw := setupLogging()
 	slog.Info("Watcharr Starting")
+
+	ensureEnv()
 
 	// Ensure data dir exists
 	err = ensureDirExists("./data")
@@ -106,6 +110,11 @@ func ensureEnv() {
 
 	if os.Getenv("JELLYFIN_HOST") != "" {
 		AvailableAuthProviders = append(AvailableAuthProviders, "jellyfin")
+	}
+
+	if os.Getenv("TMDB_KEY") != "" {
+		slog.Info("Default TMDBKey being overriden by TMDB_KEY.")
+		TMDBKey = os.Getenv("TMDB_KEY")
 	}
 }
 
