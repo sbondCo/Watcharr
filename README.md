@@ -76,6 +76,10 @@ JELLYFIN_HOST=https://my.jellyfin.example
 # Set to `false` to disable registering an account.
 SIGNUP_ENABLED=true
 
+# Optional: Provide your own TMDB API Key.
+# If unprovided, the default Watcharr API key will be used.
+# TMDB_KEY=
+
 # Enable/disable debug logging. Useful for when trying
 # to figure out exactly what the server is doing at a point
 # of failure.
