@@ -49,7 +49,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get movie details (for movie page)
-	content.Use(WhereaboutsRequired()).GET("/movie/:id", func(c *gin.Context) {
+	content.Use(WhereaboutsRequired()).GET("/movie/:id", cache.CachePage(store, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -60,10 +60,10 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Get movie cast
-	content.GET("/movie/:id/credits", func(c *gin.Context) {
+	content.GET("/movie/:id/credits", cache.CachePage(store, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -74,10 +74,10 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Get tv details (for tv page)
-	content.Use(WhereaboutsRequired()).GET("/tv/:id", func(c *gin.Context) {
+	content.Use(WhereaboutsRequired()).GET("/tv/:id", cache.CachePage(store, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -88,10 +88,10 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Get tv cast
-	content.GET("/tv/:id/credits", func(c *gin.Context) {
+	content.GET("/tv/:id/credits", cache.CachePage(store, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -102,10 +102,10 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Get season details
-	content.GET("/tv/:id/season/:num", func(c *gin.Context) {
+	content.GET("/tv/:id/season/:num", cache.CachePage(store, exp, func(c *gin.Context) {
 		if c.Param("id") == "" || c.Param("num") == "" {
 			c.Status(400)
 			return
@@ -116,10 +116,10 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Get person details
-	content.GET("/person/:id", func(c *gin.Context) {
+	content.GET("/person/:id", cache.CachePage(store, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -130,10 +130,10 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Get person credits
-	content.GET("/person/:id/credits", func(c *gin.Context) {
+	content.GET("/person/:id/credits", cache.CachePage(store, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -144,57 +144,57 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Discover movies
-	content.GET("/discover/movies", func(c *gin.Context) {
+	content.GET("/discover/movies", cache.CachePage(store, exp, func(c *gin.Context) {
 		content, err := discoverMovies()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Discover shows
-	content.GET("/discover/tv", func(c *gin.Context) {
+	content.GET("/discover/tv", cache.CachePage(store, exp, func(c *gin.Context) {
 		content, err := discoverTv()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Get all trending (movies, tv, people)
-	content.GET("/trending", func(c *gin.Context) {
+	content.GET("/trending", cache.CachePage(store, exp, func(c *gin.Context) {
 		content, err := allTrending()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Upcoming Movies
-	content.GET("/upcoming/movies", func(c *gin.Context) {
+	content.GET("/upcoming/movies", cache.CachePage(store, exp, func(c *gin.Context) {
 		content, err := upcomingMovies()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Upcoming Tv
-	content.GET("/upcoming/tv", func(c *gin.Context) {
+	content.GET("/upcoming/tv", cache.CachePage(store, exp, func(c *gin.Context) {
 		content, err := upcomingTv()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 }
 
 func (b *BaseRouter) addWatchedRoutes() {
