@@ -20,7 +20,7 @@
     name?: string;
     overview?: string;
     id: number; // tmdb id
-    media_type: MediaType; 
+    media_type: MediaType;
     release_date?: string;
     first_air_date?: string;
   };
@@ -125,8 +125,8 @@
           {title}
         {/if}
         {#if year}
-           <time>{year}</time>
-         {/if}
+          <time>{year}</time>
+        {/if}
       </h2>
       <span>{media.overview}</span>
 
@@ -287,7 +287,6 @@
           color: rgba(255, 255, 255, 0.7);
         }
       }
-
 
       span {
         color: white;
