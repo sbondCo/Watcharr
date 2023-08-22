@@ -4,7 +4,10 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
+	"github.com/gin-contrib/cache"
+	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -27,15 +30,12 @@ func newBaseRouter(db *gorm.DB, rg *gin.RouterGroup) *BaseRouter {
 
 func (b *BaseRouter) addContentRoutes() {
 	content := b.rg.Group("/content").Use(AuthRequired(nil))
-
-	// Get trending content
-	// content.GET("/", func(c *gin.Context) {
-	// 	c.JSON(http.StatusOK, getWatched(b.db))
-	// })
+	exp := time.Hour * 24
+	store := persistence.NewInMemoryStore(exp)
 
 	// Search for content
-	content.GET("/:query", func(c *gin.Context) {
-		println(c.Param("query"))
+	content.GET("/:query", cache.CachePage(store, exp, func(c *gin.Context) {
+		// println(c.Param("query"))
 		if c.Param("query") == "" {
 			c.Status(400)
 			return
@@ -46,7 +46,7 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	})
+	}))
 
 	// Get movie details (for movie page)
 	content.Use(WhereaboutsRequired()).GET("/movie/:id", func(c *gin.Context) {
