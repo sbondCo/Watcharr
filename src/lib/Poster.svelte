@@ -41,7 +41,8 @@
   const poster = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
   const link = media.id ? `/${media.media_type}/${media.id}` : undefined;
   const dateStr = media.release_date || media.first_air_date;
-  const year = new Date(media.release_date || media.first_air_date)?.getFullYear();
+  const year = dateStr && new Date(dateStr).getFullYear();
+
 
   function handleStarClick(r: number) {
     if (r == rating) return;
@@ -124,10 +125,10 @@
         {:else}
           {title}
         {/if}
+        {#if year}
+           <time>{year}</time>
+         {/if}
       </h2>
-     {#if year}
-        <time>{year}</time>
-      {/if}
       <span>{media.overview}</span>
 
       <div class="buttons">
@@ -280,7 +281,14 @@
         a {
           color: white;
         }
+
+        time {
+          font-size: 14px;
+          font-weight: 400;
+          color: rgba(255, 255, 255, 0.7);
+        }
       }
+
 
       span {
         color: white;

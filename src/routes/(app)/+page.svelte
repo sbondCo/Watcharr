@@ -37,7 +37,9 @@
           poster_path: w.content.poster_path,
           title: w.content.title,
           overview: w.content.overview,
-          media_type: w.content.type
+          media_type: w.content.type,
+          release_date: w.content.release_date,
+          first_air_date: w.content.first_air_date,
         }}
         rating={w.rating}
         status={w.status}
