@@ -125,7 +125,9 @@
           {title}
         {/if}
       </h2>
-      <time>{year}</time>
+     {#if year}
+        <time>{year}</time>
+      {/if}
       <span>{media.overview}</span>
 
       <div class="buttons">
