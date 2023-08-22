@@ -21,6 +21,8 @@
     overview?: string;
     id: number; // tmdb id
     media_type: MediaType;
+    release_date?: string;
+    first_air_date?: string;
   };
   export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
@@ -38,6 +40,8 @@
   const title = media.title || media.name;
   const poster = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
   const link = media.id ? `/${media.media_type}/${media.id}` : undefined;
+  const dateStr = media.release_date || media.first_air_date;
+  const year = dateStr && new Date(dateStr).getFullYear();
 
   function handleStarClick(r: number) {
     if (r == rating) return;
@@ -119,6 +123,9 @@
           </a>
         {:else}
           {title}
+        {/if}
+        {#if year}
+          <time>{year}</time>
         {/if}
       </h2>
       <span>{media.overview}</span>
@@ -272,6 +279,12 @@
 
         a {
           color: white;
+        }
+
+        time {
+          font-size: 14px;
+          font-weight: 400;
+          color: rgba(255, 255, 255, 0.7);
         }
       }
 
