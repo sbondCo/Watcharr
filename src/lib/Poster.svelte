@@ -43,7 +43,6 @@
   const dateStr = media.release_date || media.first_air_date;
   const year = dateStr && new Date(dateStr).getFullYear();
 
-
   function handleStarClick(r: number) {
     if (r == rating) return;
     updateWatched(media.id, media.media_type, undefined, r);
