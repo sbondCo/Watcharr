@@ -65,7 +65,9 @@
     height: 100%;
     min-height: 256.367px;
     position: relative;
-    transition: transform 150ms ease, outline 50ms ease;
+    transition:
+      transform 150ms ease,
+      outline 50ms ease;
     cursor: pointer;
 
     img {
@@ -112,7 +114,11 @@
 
       h2,
       h3 {
-        font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+        font-family:
+          sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont;
         font-size: 18px;
         color: white;
         word-wrap: break-word;
@@ -144,7 +150,7 @@
     &:not(:not(.no-zoom)) {
       &:hover,
       &:focus-within {
-        outline: 3px solid black;
+        outline: 3px solid $text-color;
       }
     }
 
