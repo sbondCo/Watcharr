@@ -12,7 +12,7 @@ I'm your new easily self-hosted content watched list. The place you store your w
 
 I am built with Go and Svelte(Kit).
 
-Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build (there may be bugs, as new features are tested on here too): [https://watcharr.lab.sbond.co/](https://watcharr.lab.sbond.co/)
+Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build (there may be bugs, as new features are tested on here too): [https://beta.watcharr.app/](https://beta.watcharr.app/)
 
 [Track Progress Until Next Version](https://github.com/orgs/sbondCo/projects/9/views/3)
 
