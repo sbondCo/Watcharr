@@ -21,7 +21,7 @@ type Content struct {
 	PosterPath       string      `json:"poster_path"`
 	Overview         string      `json:"overview"`
 	Type             ContentType `json:"type" gorm:"uniqueIndex:contentidtotypeidx;not null"`
-	ReleaseDate      time.Time   `json:"release_date"`
+	ReleaseDate      *time.Time  `json:"release_date,omitempty"`
 	Popularity       float32     `json:"popularity"`
 	VoteAverage      float32     `json:"vote_average"`
 	VoteCount        uint32      `json:"vote_count"`
