@@ -163,7 +163,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 			Overview:         overview,
 			PosterPath:       posterPath,
 			Type:             ar.ContentType,
-			ReleaseDate:      releaseDate,
+			ReleaseDate:      &releaseDate,
 			Popularity:       popularity,
 			VoteAverage:      voteAverage,
 			VoteCount:        voteCount,

@@ -41,7 +41,7 @@
   const poster = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
   const link = media.id ? `/${media.media_type}/${media.id}` : undefined;
   const dateStr = media.release_date || media.first_air_date;
-  const year = dateStr && new Date(dateStr).getFullYear();
+  const year = dateStr ? new Date(dateStr).getFullYear() : undefined;
 
   function handleStarClick(r: number) {
     if (r == rating) return;
