@@ -5,7 +5,7 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { isTouch } from "@/lib/util/helpers";
-  import { activeFilter, clearAllStores, watchedList } from "@/store";
+  import { activeFilter, clearAllStores, userSettings, watchedList } from "@/store";
   import axios from "axios";
   import { get } from "svelte/store";
 
@@ -69,11 +69,14 @@
     subMenuShown = false;
   }
 
-  async function getWatchedList() {
+  async function getInitialData() {
     if (localStorage.getItem("token")) {
-      const w = await axios.get("/watched");
+      const [w, u] = await Promise.all([axios.get("/watched"), axios.get("/user/settings")]);
       if (w?.data?.length > 0) {
         watchedList.update((wl) => (wl = w.data));
+      }
+      if (u?.data) {
+        userSettings.update((us) => (us = u.data));
       }
     } else {
       goto("/login?again=1");
@@ -166,12 +169,12 @@
   </div>
 </nav>
 
-{#await getWatchedList()}
+{#await getInitialData()}
   <Spinner />
 {:then}
   <slot />
 {:catch err}
-  <PageError pretty="Failed to load watched list!" error={err} />
+  <PageError pretty="Failed to retrieve user data!" error={err} />
 {/await}
 
 <style lang="scss">

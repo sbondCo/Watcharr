@@ -1,4 +1,4 @@
-import { watchedList } from "@/store";
+import { userSettings, watchedList } from "@/store";
 import {
   UserType,
   type JellyfinFoundContent,
@@ -7,7 +7,8 @@ import {
   type WatchedAddRequest,
   type WatchedStatus,
   type WatchedUpdateRequest,
-  type WatchedUpdateResponse
+  type WatchedUpdateResponse,
+  type UserSettings
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
@@ -133,6 +134,28 @@ export async function contentExistsOnJellyfin(
     console.error(err);
     // notify({ text: "Failed To Remove!", type: "error" });
   }
+}
+
+export function updateUserSetting<K extends keyof UserSettings>(name: K, value: UserSettings[K]) {
+  console.log("Updating user setting", name, "to", value);
+  const uSettings = get(userSettings);
+  const originalValue = uSettings[name];
+  const nid = notify({ type: "loading", text: "Updating" });
+  axios
+    .post("/user/update", { [name]: value })
+    .then((r) => {
+      if (r.status === 200) {
+        uSettings[name] = value;
+        userSettings.update((u) => (u = uSettings));
+        notify({ id: nid, type: "success", text: "Updated" });
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to update user setting", err);
+      notify({ id: nid, type: "error", text: "Couldn't Update" });
+      uSettings[name] = originalValue;
+      userSettings.update((u) => (u = uSettings));
+    });
 }
 
 /**

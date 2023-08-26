@@ -81,6 +81,10 @@ export interface Profile {
   moviesWatched: number;
 }
 
+export interface UserSettings {
+  private: boolean;
+}
+
 export interface JellyfinFoundContent {
   hasContent: boolean;
   url: string;

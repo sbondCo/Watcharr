@@ -2,11 +2,13 @@
   import Checkbox from "@/lib/Checkbox.svelte";
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
+  import { updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
-  import { appTheme } from "@/store";
+  import { appTheme, userSettings } from "@/store";
   import type { Profile } from "@/types";
   import axios from "axios";
 
+  $: settings = $userSettings;
   $: selectedTheme = $appTheme;
 
   async function getProfile() {
@@ -73,7 +75,7 @@
           <h4 class="norm">Private</h4>
           <h5 class="norm">Hide your profile from others?</h5>
         </div>
-        <Checkbox />
+        <Checkbox value={settings.private} toggled={(on) => updateUserSetting("private", on)} />
       </div>
     </div>
   </div>

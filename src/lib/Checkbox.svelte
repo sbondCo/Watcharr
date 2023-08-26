@@ -1,5 +1,16 @@
+<!-- TODO: Allow disabling so when doing request, it cant be clicked again -->
+
+<script lang="ts">
+  export let value: boolean = false;
+  export let toggled: (on: boolean) => void;
+
+  function checkboxChange(e: Event) {
+    toggled((e.target as HTMLInputElement).checked);
+  }
+</script>
+
 <div class="toggle-pill-color">
-  <input type="checkbox" id="checkbox" />
+  <input bind:checked={value} type="checkbox" id="checkbox" on:change={checkboxChange} />
   <label for="checkbox"></label>
 </div>
 

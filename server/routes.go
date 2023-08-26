@@ -391,3 +391,46 @@ func (b *BaseRouter) addJellyfinRoutes() {
 		c.JSON(http.StatusOK, response)
 	})
 }
+
+func (b *BaseRouter) addUserRoutes() {
+	u := b.rg.Group("/user").Use(AuthRequired(b.db))
+
+	// Update current user settings
+	u.POST("/update", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ur UserSettings
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			response, err := userUpdate(b.db, userId, ur)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	// Get current user setting
+	u.GET("/settings", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		response, err := userGetSettings(b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	// // Search users
+	//	u.GET("/:query", func(c *gin.Context) {
+	//		uq := c.MustGet("query").(string)
+	//		response, err := userSearch(b.db, uq)
+	//		if err != nil {
+	//			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+	//			return
+	//		}
+	//		c.JSON(http.StatusOK, response)
+	//	})
+}
