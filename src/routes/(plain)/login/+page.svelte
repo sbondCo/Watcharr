@@ -5,7 +5,7 @@
   import { UserType, type Icon as Icons, type AvailableAuthProviders } from "@/types";
   import { noAuthAxios } from "@/lib/util/api";
   import { onMount, afterUpdate } from "svelte";
-  import { notify } from "@/lib/util/notify";
+  import { notify, unNotify } from "@/lib/util/notify";
 
   let error: string;
   let login = true;
@@ -46,6 +46,7 @@
       customAuthEP = "jellyfin";
     }
 
+    const nid = notify({ text: "Logging in", type: "loading" });
     noAuthAxios
       .post(`/auth${login ? `/${customAuthEP}` : "/register"}`, {
         username: user,
@@ -60,7 +61,7 @@
           if (customAuthEP == "jellyfin") userType = UserType.Jellyfin;
           localStorage.setItem("userType", String(userType));
           goto("/");
-          notify({ text: `Welcome ${user}!`, type: "success" });
+          notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
         }
       })
       .catch((err) => {
@@ -69,6 +70,7 @@
         } else {
           error = err.message;
         }
+        unNotify(nid);
       });
   }
 </script>

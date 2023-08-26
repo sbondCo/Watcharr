@@ -5,7 +5,7 @@ import { browser } from "$app/environment";
 import { toggleTheme } from "./lib/util/helpers";
 
 export const watchedList = writable<Watched[]>([]);
-export const notifications = writable<(Notification & { id: number })[]>([]);
+export const notifications = writable<Notification[]>([]);
 export const activeFilter = writable<string[]>(["DATEADDED", "DOWN"]);
 export const appTheme = writable<Theme>();
 

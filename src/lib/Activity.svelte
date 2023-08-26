@@ -106,7 +106,11 @@
         position: sticky;
         top: 0;
         font-size: 16px;
-        font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+        font-family:
+          sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont;
         padding-bottom: 1px;
         background-color: $bg-color;
       }
@@ -147,7 +151,11 @@
   }
 
   h2 {
-    font-family: sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+    font-family:
+      sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont;
     font-size: 30px;
     font-weight: bold;
     margin-left: 30px;
