@@ -441,7 +441,8 @@ func (b *BaseRouter) addUserRoutes() {
 
 	// Search users
 	u.GET("/search/:query", func(c *gin.Context) {
-		response, err := userSearch(b.db, c.Param("query"))
+		userId := c.MustGet("userId").(uint)
+		response, err := userSearch(b.db, userId, c.Param("query"))
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return
