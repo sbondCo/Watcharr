@@ -1,5 +1,6 @@
 <script>
   import Icon from "@/lib/Icon.svelte";
+  import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { unNotify } from "@/lib/util/notify";
   import { notifications } from "@/store";
 
@@ -14,7 +15,10 @@
 <div id="tooltip" />
 <div id="notifications">
   {#each notifs as n}
-    <div class={n.type}>
+    <div class={`${n.type} notif`}>
+      {#if n.type === "loading"}
+        <SpinnerTiny />
+      {/if}
       <span>{n.text}</span>
       <button
         class="plain"

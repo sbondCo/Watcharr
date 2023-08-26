@@ -148,7 +148,7 @@
     margin-bottom: 8px;
     z-index: 99999;
 
-    div {
+    .notif {
       display: flex;
       flex-flow: row;
       align-items: center;
@@ -160,6 +160,10 @@
       box-shadow: 0 4px 10px rgba($color: #000000, $alpha: 0.2);
       animation: comein 250ms ease forwards;
       position: relative;
+
+      &.loading {
+        padding-left: 10px;
+      }
 
       @keyframes comein {
         from {
@@ -197,6 +201,7 @@
         padding-right: 12px;
         border-right: 1px solid rgba($color: black, $alpha: 0.2);
         padding: 10px 12px;
+        padding-left: 9px;
       }
 
       button {

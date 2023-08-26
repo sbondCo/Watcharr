@@ -37,6 +37,7 @@ export function updateWatched(
     (w) => w.content.tmdbId === contentId && w.content.type === contentType
   );
   if (wEntry?.id) {
+    const nid = notify({ text: `Saving`, type: "loading" });
     if (!status && !rating && typeof thoughts === "undefined") return;
     const obj = {} as WatchedUpdateRequest;
     if (status) obj.status = status;
@@ -61,15 +62,16 @@ export function updateWatched(
           wEntry.updatedAt = resp.data.newActivity.createdAt;
         }
         watchedList.update((w) => w);
-        notify({ text: `Saved!`, type: "success" });
+        notify({ id: nid, text: `Saved!`, type: "success" });
       })
       .catch((err) => {
         console.error(err);
-        notify({ text: "Failed To Update!", type: "error" });
+        notify({ id: nid, text: "Failed To Update!", type: "error" });
       });
     return;
   }
   // Add new watched item
+  const nid = notify({ text: `Adding`, type: "loading" });
   axios
     .post("/watched", {
       contentId,
@@ -81,11 +83,11 @@ export function updateWatched(
       console.log("Added watched:", resp.data);
       wList.push(resp.data as Watched);
       watchedList.update(() => wList);
-      notify({ text: `Added!`, type: "success" });
+      notify({ id: nid, text: `Added!`, type: "success" });
     })
     .catch((err) => {
       console.error(err);
-      notify({ text: "Failed To Add!", type: "error" });
+      notify({ id: nid, text: "Failed To Add!", type: "error" });
     });
 }
 
@@ -94,6 +96,7 @@ export function updateWatched(
  * @param id Watched Entry ID
  */
 export function removeWatched(id: number) {
+  const nid = notify({ text: `Removing`, type: "loading" });
   const wList = get(watchedList);
   const wEntry = wList.find((w) => w.id === id);
   if (!wEntry) {
@@ -107,10 +110,11 @@ export function removeWatched(id: number) {
       console.log("Removed watched:", resp.data);
       const newList = wList.filter((w) => w.id !== id);
       watchedList.update(() => newList);
+      notify({ id: nid, text: "Removed!", type: "error" });
     })
     .catch((err) => {
       console.error(err);
-      notify({ text: "Failed To Remove!", type: "error" });
+      notify({ id: nid, text: "Failed To Remove!", type: "error" });
     });
 }
 
