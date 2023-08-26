@@ -26,7 +26,7 @@
 
 <div class="content">
   <div class="inner">
-    <h2>Hey {localStorage.getItem("username")}</h2>
+    <h2 title={localStorage.getItem("username")}>Hey {localStorage.getItem("username")}</h2>
 
     <div class="stats">
       {#await getProfile()}
@@ -102,6 +102,13 @@
     .inner {
       min-width: 400px;
       max-width: 400px;
+      overflow: hidden;
+
+      h2 {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
 
       & > div:not(:first-of-type) {
         margin-top: 30px;
