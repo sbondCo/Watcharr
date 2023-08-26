@@ -423,14 +423,13 @@ func (b *BaseRouter) addUserRoutes() {
 		c.JSON(http.StatusOK, response)
 	})
 
-	// // Search users
-	//	u.GET("/:query", func(c *gin.Context) {
-	//		uq := c.MustGet("query").(string)
-	//		response, err := userSearch(b.db, uq)
-	//		if err != nil {
-	//			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
-	//			return
-	//		}
-	//		c.JSON(http.StatusOK, response)
-	//	})
+	// Search users
+	u.GET("/search/:query", func(c *gin.Context) {
+		response, err := userSearch(b.db, c.Param("query"))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
 }
