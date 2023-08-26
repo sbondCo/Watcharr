@@ -177,8 +177,8 @@
 
       &.error {
         color: white;
-        background-color: #f3555a;
-        border: 1px solid #f3555a;
+        background-color: $error;
+        border: 1px solid $error;
 
         span {
           border-color: rgba($color: white, $alpha: 0.5);
@@ -187,8 +187,8 @@
 
       &.success {
         color: white;
-        background-color: #28a745;
-        border: 1px solid #28a745;
+        background-color: $success;
+        border: 1px solid $success;
 
         span {
           border-color: rgba($color: white, $alpha: 0.5);
