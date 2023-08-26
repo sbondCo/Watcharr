@@ -6,7 +6,7 @@
 
 <ul>
   {#each users as user}
-    <li><a href="/lists/{user.id}/{user.username}">{user.username}</a></li>
+    <li title={user.username}><a href="/lists/{user.id}/{user.username}">{user.username}</a></li>
   {/each}
 </ul>
 
@@ -20,16 +20,20 @@
     justify-content: center;
 
     li {
+      display: flex;
       min-width: 50px;
+      max-width: 200px;
 
       a {
-        display: flex;
-        justify-content: center;
+        flex-shrink: 1;
         width: 100%;
         height: 100%;
         padding: 3px 8px;
         border-radius: 4px;
         background-color: $accent-color;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
         transition:
           background-color 150ms ease,
           color 150ms ease;
