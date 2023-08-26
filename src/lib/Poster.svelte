@@ -144,7 +144,9 @@
           }}
         >
           <span>*</span>
-          <span>{rating ? rating : "Rate"}</span>
+          <span class={!rating && disableInteraction ? "unrated-text" : ""}>
+            {rating ? rating : disableInteraction ? "Unrated" : "Rate"}
+          </span>
           {#if ratingsShown}
             <div>
               {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
@@ -214,6 +216,15 @@
     button {
       pointer-events: none;
       cursor: default;
+      background-color: transparent;
+      border: unset;
+      filter: invert(1);
+
+      .unrated-text {
+        display: flex;
+        align-items: center;
+        font-size: 15px !important;
+      }
     }
   }
 
