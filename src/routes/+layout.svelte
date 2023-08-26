@@ -19,7 +19,7 @@
       {#if n.type === "loading"}
         <SpinnerTiny />
       {/if}
-      <span>{n.text}</span>
+      <span>{@html n.text}</span>
       <button
         class="plain"
         on:click={() => {

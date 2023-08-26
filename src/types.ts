@@ -101,6 +101,12 @@ export interface AvailableAuthProviders {
   signupEnabled: boolean;
 }
 
+export interface TokenClaims {
+  userId: number;
+  username: string;
+  type: number;
+}
+
 export interface TMDBContentDetails {
   id: number;
   backdrop_path: string;

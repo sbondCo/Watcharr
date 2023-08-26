@@ -4,7 +4,8 @@
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import { isTouch } from "@/lib/util/helpers";
+  import { isTouch, parseTokenPayload } from "@/lib/util/helpers";
+  import { notify } from "@/lib/util/notify";
   import { activeFilter, clearAllStores, userSettings, watchedList } from "@/store";
   import axios from "axios";
   import { get } from "svelte/store";
@@ -67,6 +68,31 @@
   function profile() {
     goto("/profile");
     subMenuShown = false;
+  }
+
+  function shareWatchedList() {
+    const nid = notify({ type: "loading", text: "Getting link" });
+    const ud = parseTokenPayload();
+    console.log(ud);
+    if (ud?.userId && ud?.username) {
+      const shareLink = `${window.location.host}/lists/${ud.userId}/${ud.username}`;
+      navigator.clipboard
+        .writeText(shareLink)
+        .then(() => {
+          notify({ id: nid, type: "success", text: "Copied share link" });
+        })
+        .catch((r) => {
+          console.error("Failed to copy list share link", r);
+          notify({
+            id: nid,
+            type: "error",
+            text: `Failed to copy share link:<br/><a href="${shareLink}" target="_blank">${shareLink}</a>`,
+            time: 20000
+          });
+        });
+    } else {
+      notify({ id: nid, type: "error", text: "Failed to get link" });
+    }
   }
 
   async function getInitialData() {
@@ -161,6 +187,7 @@
           <h5 title={username}>Hi {username}!</h5>
         {/if}
         <button class="plain" on:click={() => profile()}>Profile</button>
+        <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
         <button class="plain" on:click={() => logout()}>Logout</button>
         <!-- svelte-ignore missing-declaration -->
         <span>v{__WATCHARR_VERSION__}</span>
