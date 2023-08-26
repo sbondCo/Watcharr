@@ -1,8 +1,7 @@
-<!-- TODO: Allow disabling so when doing request, it cant be clicked again -->
-
 <script lang="ts">
   export let value: boolean = false;
   export let toggled: (on: boolean) => void;
+  export let disabled = false;
 
   function checkboxChange(e: Event) {
     toggled((e.target as HTMLInputElement).checked);
@@ -10,7 +9,7 @@
 </script>
 
 <div class="toggle-pill-color">
-  <input bind:checked={value} type="checkbox" id="checkbox" on:change={checkboxChange} />
+  <input bind:checked={value} {disabled} type="checkbox" id="checkbox" on:change={checkboxChange} />
   <label for="checkbox"></label>
 </div>
 
@@ -20,13 +19,18 @@
 
     input {
       display: none;
-    }
 
-    input:checked + label {
-      background: $success;
+      &:checked + label {
+        background: $success;
 
-      &::before {
-        left: 1.6em;
+        &::before {
+          left: 1.6em;
+        }
+      }
+
+      &:disabled + label {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
     }
 
@@ -39,7 +43,9 @@
       background: $error;
       cursor: pointer;
       user-select: none;
-      transition: background 0.1s ease-in-out;
+      transition:
+        opacity 100ms ease-in-out,
+        opacity 100ms ease-in-out;
 
       &::before {
         content: "";
