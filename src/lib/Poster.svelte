@@ -27,6 +27,7 @@
   export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
   export let small = false;
+  export let disableInteraction = false;
 
   // If poster is active (scaled up)
   let posterActive = false;
@@ -89,7 +90,7 @@
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
   on:keypress={() => console.log("on kpress")}
-  class={posterActive ? "active" : ""}
+  class={`${posterActive ? "active " : ""}${disableInteraction ? "interaction-disabled" : ""}`}
 >
   <div class={`container${!poster ? " details-shown" : ""}`} bind:this={containerEl}>
     {#if poster}
@@ -207,6 +208,13 @@
 <style lang="scss">
   li.active {
     cursor: pointer;
+  }
+
+  li.interaction-disabled {
+    button {
+      pointer-events: none;
+      cursor: default;
+    }
   }
 
   .container {

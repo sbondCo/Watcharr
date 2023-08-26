@@ -6,7 +6,7 @@
 
 <ul>
   {#each users as user}
-    <li><a href="">{user.username}</a></li>
+    <li><a href="/lists/{user.id}/{user.username}">{user.username}</a></li>
   {/each}
 </ul>
 

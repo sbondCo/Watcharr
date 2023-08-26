@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -203,6 +204,21 @@ func (b *BaseRouter) addWatchedRoutes() {
 	watched.GET("", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		c.JSON(http.StatusOK, getWatched(b.db, userId))
+	})
+
+	watched.GET(":id/:username", func(c *gin.Context) {
+		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		if err != nil {
+			slog.Error("getPublicWatched route failed to convert id param to uint", "id", id)
+			c.Status(400)
+			return
+		}
+		response, err := getPublicWatched(b.db, uint(id), c.Param("username"))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
 	})
 
 	watched.POST("", func(c *gin.Context) {
