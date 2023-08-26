@@ -85,6 +85,12 @@ export interface UserSettings {
   private: boolean;
 }
 
+// What the user search returns
+export interface PublicUser {
+  id: number;
+  username: string;
+}
+
 export interface JellyfinFoundContent {
   hasContent: boolean;
   url: string;

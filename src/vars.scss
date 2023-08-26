@@ -2,6 +2,7 @@
   --bg-color: white;
   --text-color: black;
   --accent-color: rgba(128, 128, 128, 0.226);
+  --accent-color-hover: rgba(46, 46, 46);
   --backdrop-filter: blur(4px) grayscale(80%);
   --backdrop-mix-blend-mode: multiply;
   --rating-color: black;
@@ -11,6 +12,7 @@
   --bg-color: rgb(15, 15, 15);
   --text-color: white;
   --accent-color: rgba(46, 46, 46);
+  --accent-color-hover: rgba(128, 128, 128, 0.226);
   --backdrop-filter: blur(0.5px) grayscale(50%);
   --backdrop-mix-blend-mode: difference;
   --rating-color: gold;
@@ -19,6 +21,7 @@
 $bg-color: var(--bg-color);
 $text-color: var(--text-color);
 $accent-color: var(--accent-color);
+$accent-color-hover: var(--accent-color-hover);
 $backdrop-filter: var(--backdrop-filter);
 $backdrop-mix-blend-mode: var(--backdrop-mix-blend-mode);
 $backdrop-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0));
