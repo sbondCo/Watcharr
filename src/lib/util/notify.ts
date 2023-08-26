@@ -15,6 +15,8 @@ export interface Notification {
 
   /**
    * Type of notification, controls the style.
+   * Loading notifs never hide, so after request completion
+   * or failure, the notif must be updated or `unNotify`ed.
    */
   type?: "error" | "success" | "loading";
 
