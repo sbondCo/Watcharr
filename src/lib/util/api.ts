@@ -136,7 +136,11 @@ export async function contentExistsOnJellyfin(
   }
 }
 
-export function updateUserSetting<K extends keyof UserSettings>(name: K, value: UserSettings[K]) {
+export function updateUserSetting<K extends keyof UserSettings>(
+  name: K,
+  value: UserSettings[K],
+  done?: () => void
+) {
   console.log("Updating user setting", name, "to", value);
   const uSettings = get(userSettings);
   const originalValue = uSettings[name];
@@ -148,6 +152,7 @@ export function updateUserSetting<K extends keyof UserSettings>(name: K, value: 
         uSettings[name] = value;
         userSettings.update((u) => (u = uSettings));
         notify({ id: nid, type: "success", text: "Updated" });
+        if (typeof done !== "undefined") done();
       }
     })
     .catch((err) => {
@@ -155,6 +160,7 @@ export function updateUserSetting<K extends keyof UserSettings>(name: K, value: 
       notify({ id: nid, type: "error", text: "Couldn't Update" });
       uSettings[name] = originalValue;
       userSettings.update((u) => (u = uSettings));
+      if (typeof done !== "undefined") done();
     });
 }
 

@@ -11,6 +11,8 @@
   $: settings = $userSettings;
   $: selectedTheme = $appTheme;
 
+  let privateDisabled = false;
+
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
   }
@@ -75,7 +77,16 @@
           <h4 class="norm">Private</h4>
           <h5 class="norm">Hide your profile from others?</h5>
         </div>
-        <Checkbox value={settings.private} toggled={(on) => updateUserSetting("private", on)} />
+        <Checkbox
+          disabled={privateDisabled}
+          value={settings.private}
+          toggled={(on) => {
+            privateDisabled = true;
+            updateUserSetting("private", on, () => {
+              privateDisabled = false;
+            });
+          }}
+        />
       </div>
     </div>
   </div>
