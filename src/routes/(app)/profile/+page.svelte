@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Checkbox from "@/lib/Checkbox.svelte";
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
@@ -47,22 +48,32 @@
     <div class="settings">
       <h3 class="norm">Settings</h3>
 
-      <h4 class="norm">Theme</h4>
       <div class="theme">
-        <button
-          class={`plain${selectedTheme === "light" ? " selected" : ""}`}
-          id="light"
-          on:click={() => toggleTheme("light")}
-        >
-          light
-        </button>
-        <button
-          class={`plain${selectedTheme === "dark" ? " selected" : ""}`}
-          id="dark"
-          on:click={() => toggleTheme("dark")}
-        >
-          dark
-        </button>
+        <h4 class="norm">Theme</h4>
+        <div class="row">
+          <button
+            class={`plain${selectedTheme === "light" ? " selected" : ""}`}
+            id="light"
+            on:click={() => toggleTheme("light")}
+          >
+            light
+          </button>
+          <button
+            class={`plain${selectedTheme === "dark" ? " selected" : ""}`}
+            id="dark"
+            on:click={() => toggleTheme("dark")}
+          >
+            dark
+          </button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <h4 class="norm">Private</h4>
+          <h5 class="norm">Hide your profile from others?</h5>
+        </div>
+        <Checkbox />
       </div>
     </div>
   </div>
@@ -126,25 +137,40 @@
   .settings {
     display: flex;
     flex-flow: column;
+    gap: 20px;
     width: 100%;
 
     h3 {
-      margin-bottom: 15px;
       font-variant: small-caps;
     }
 
-    h4 {
-      margin-bottom: 0px;
-      margin-left: 15px;
+    h5 {
+      font-weight: normal;
+    }
+
+    & > div {
+      margin: 0 15px;
+    }
+
+    div {
+      &.row {
+        display: flex;
+        flex-flow: row;
+        gap: 10px;
+        align-items: center;
+
+        & > div:first-of-type {
+          margin-right: auto;
+        }
+      }
     }
 
     .theme {
       display: flex;
+      flex-flow: column;
       gap: 10px;
-      margin: 20px;
-      margin-top: 15px;
 
-      & > button {
+      & button {
         width: 50%;
         height: 80px;
         border-radius: 10px;
