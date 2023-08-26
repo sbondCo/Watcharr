@@ -21,6 +21,8 @@
   <title>{data.username}'s Watched List</title>
 </svelte:head>
 
+<h2 class="norm">{data.username}'s Watched List</h2>
+
 {#await getPublicWatchedList(Number(data.id), data.username)}
   <Spinner />
 {:then watched}
@@ -28,3 +30,11 @@
 {:catch err}
   <PageError pretty="Failed to get watched list!" error={err} />
 {/await}
+
+<style lang="scss">
+  h2 {
+    display: flex;
+    justify-content: center;
+    margin: 20px 30px;
+  }
+</style>
