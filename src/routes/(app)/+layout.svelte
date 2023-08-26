@@ -17,6 +17,7 @@
   let filterMenuShown = false;
 
   $: filter = $activeFilter;
+  $: settings = $userSettings;
 
   function handleProfileClick() {
     if (!localStorage.getItem("token")) {
@@ -187,7 +188,9 @@
           <h5 title={username}>Hi {username}!</h5>
         {/if}
         <button class="plain" on:click={() => profile()}>Profile</button>
-        <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+        {#if !settings.private}
+          <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+        {/if}
         <button class="plain" on:click={() => logout()}>Logout</button>
         <!-- svelte-ignore missing-declaration -->
         <span>v{__WATCHARR_VERSION__}</span>
