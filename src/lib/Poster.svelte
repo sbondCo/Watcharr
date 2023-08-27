@@ -219,6 +219,7 @@
       background-color: transparent;
       border: unset;
       fill: white;
+      color: white;
 
       span {
         color: white !important;
