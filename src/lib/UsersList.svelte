@@ -14,6 +14,7 @@
   ul {
     display: flex;
     flex-flow: row;
+    flex-wrap: wrap;
     gap: 10px;
     margin: 5px 20px;
     list-style: none;
