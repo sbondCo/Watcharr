@@ -4,8 +4,9 @@
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import { isTouch } from "@/lib/util/helpers";
-  import { activeFilter, clearAllStores, watchedList } from "@/store";
+  import { isTouch, parseTokenPayload } from "@/lib/util/helpers";
+  import { notify } from "@/lib/util/notify";
+  import { activeFilter, clearAllStores, userSettings, watchedList } from "@/store";
   import axios from "axios";
   import { get } from "svelte/store";
 
@@ -16,6 +17,7 @@
   let filterMenuShown = false;
 
   $: filter = $activeFilter;
+  $: settings = $userSettings;
 
   function handleProfileClick() {
     if (!localStorage.getItem("token")) {
@@ -69,11 +71,39 @@
     subMenuShown = false;
   }
 
-  async function getWatchedList() {
+  function shareWatchedList() {
+    const nid = notify({ type: "loading", text: "Getting link" });
+    const ud = parseTokenPayload();
+    console.log(ud);
+    if (ud?.userId && ud?.username) {
+      const shareLink = `${window.location.host}/lists/${ud.userId}/${ud.username}`;
+      navigator.clipboard
+        .writeText(shareLink)
+        .then(() => {
+          notify({ id: nid, type: "success", text: "Copied share link" });
+        })
+        .catch((r) => {
+          console.error("Failed to copy list share link", r);
+          notify({
+            id: nid,
+            type: "error",
+            text: `Failed to copy share link:<br/><a href="${shareLink}" target="_blank">${shareLink}</a>`,
+            time: 20000
+          });
+        });
+    } else {
+      notify({ id: nid, type: "error", text: "Failed to get link" });
+    }
+  }
+
+  async function getInitialData() {
     if (localStorage.getItem("token")) {
-      const w = await axios.get("/watched");
+      const [w, u] = await Promise.all([axios.get("/watched"), axios.get("/user/settings")]);
       if (w?.data?.length > 0) {
         watchedList.update((wl) => (wl = w.data));
+      }
+      if (u?.data) {
+        userSettings.update((us) => (us = u.data));
       }
     } else {
       goto("/login?again=1");
@@ -158,6 +188,9 @@
           <h5 title={username}>Hi {username}!</h5>
         {/if}
         <button class="plain" on:click={() => profile()}>Profile</button>
+        {#if !settings.private}
+          <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+        {/if}
         <button class="plain" on:click={() => logout()}>Logout</button>
         <!-- svelte-ignore missing-declaration -->
         <span>v{__WATCHARR_VERSION__}</span>
@@ -166,12 +199,12 @@
   </div>
 </nav>
 
-{#await getWatchedList()}
+{#await getInitialData()}
   <Spinner />
 {:then}
   <slot />
 {:catch err}
-  <PageError pretty="Failed to load watched list!" error={err} />
+  <PageError pretty="Failed to retrieve user data!" error={err} />
 {/await}
 
 <style lang="scss">

@@ -81,6 +81,16 @@ export interface Profile {
   moviesWatched: number;
 }
 
+export interface UserSettings {
+  private: boolean;
+}
+
+// What the user search returns
+export interface PublicUser {
+  id: number;
+  username: string;
+}
+
 export interface JellyfinFoundContent {
   hasContent: boolean;
   url: string;
@@ -89,6 +99,12 @@ export interface JellyfinFoundContent {
 export interface AvailableAuthProviders {
   available: string[];
   signupEnabled: boolean;
+}
+
+export interface TokenClaims {
+  userId: number;
+  username: string;
+  type: number;
 }
 
 export interface TMDBContentDetails {

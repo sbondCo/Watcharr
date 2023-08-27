@@ -44,6 +44,13 @@ type User struct {
 	// Auth token from third party (jellyfin)
 	ThirdPartyAuth string `json:"-"`
 	Watched        []Watched
+	// All user settings cols, in another struct for reusability
+	UserSettings
+}
+
+type UserSettings struct {
+	// Is profile private
+	Private bool `gorm:"default:false" json:"private"`
 }
 
 type JellyfinAuth struct {

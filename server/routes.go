@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -205,6 +206,21 @@ func (b *BaseRouter) addWatchedRoutes() {
 		c.JSON(http.StatusOK, getWatched(b.db, userId))
 	})
 
+	watched.GET(":id/:username", func(c *gin.Context) {
+		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		if err != nil {
+			slog.Error("getPublicWatched route failed to convert id param to uint", "id", id)
+			c.Status(400)
+			return
+		}
+		response, err := getPublicWatched(b.db, uint(id), c.Param("username"))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
 	watched.POST("", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		var ar WatchedAddRequest
@@ -384,6 +400,49 @@ func (b *BaseRouter) addJellyfinRoutes() {
 		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
 		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
 		response, err := jellyfinContentFind(userId, userType, username, userThirdPartyId, userThirdPartyAuth, c.Param("type"), c.Param("name"), c.Param("tmdbId"))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+}
+
+func (b *BaseRouter) addUserRoutes() {
+	u := b.rg.Group("/user").Use(AuthRequired(b.db))
+
+	// Update current user settings
+	u.POST("/update", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ur UserSettings
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			response, err := userUpdate(b.db, userId, ur)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	// Get current user setting
+	u.GET("/settings", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		response, err := userGetSettings(b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Search users
+	u.GET("/search/:query", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		response, err := userSearch(b.db, userId, c.Param("query"))
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return

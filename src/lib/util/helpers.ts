@@ -4,6 +4,7 @@ import type {
   MediaType,
   TMDBContentCreditsCrew,
   Theme,
+  TokenClaims,
   Watched,
   WatchedStatus
 } from "@/types";
@@ -158,5 +159,15 @@ export function toggleTheme(theme: Theme) {
   } else {
     document.documentElement.classList.remove("theme-dark");
     appTheme.update((t) => (t = "light"));
+  }
+}
+
+export function parseTokenPayload(): TokenClaims | undefined {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    return JSON.parse(atob(token.split(".")[1])) as TokenClaims;
+  } catch (err) {
+    return;
   }
 }

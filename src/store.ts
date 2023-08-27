@@ -1,9 +1,10 @@
 import { writable } from "svelte/store";
-import type { Theme, Watched } from "./types";
+import type { Theme, UserSettings, Watched } from "./types";
 import type { Notification } from "./lib/util/notify";
 import { browser } from "$app/environment";
 import { toggleTheme } from "./lib/util/helpers";
 
+export const userSettings = writable<UserSettings>();
 export const watchedList = writable<Watched[]>([]);
 export const notifications = writable<Notification[]>([]);
 export const activeFilter = writable<string[]>(["DATEADDED", "DOWN"]);

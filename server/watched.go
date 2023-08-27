@@ -68,6 +68,32 @@ func getWatched(db *gorm.DB, userId uint) []Watched {
 	return *watched
 }
 
+// Get another users **public** watchlist.
+func getPublicWatched(db *gorm.DB, userId uint, username string) ([]Watched, error) {
+	slog.Debug("getPublicWatched running", "user_id", userId, "username", username)
+	// First we need to make sure the users list is public
+	user := new(User)
+	// Figure we require knowlege of the users id and name to make it
+	// harder to just type in random ids and see someones list.. dunno
+	// if this is a thing we need but its here.. for now at least.
+	res := db.Where("id = ? AND username = ?", userId, username).Take(&user)
+	if res.Error != nil {
+		slog.Error("Failed to get user for getPublicWatched request")
+		return []Watched{}, errors.New("failed to check privacy settings")
+	}
+	if user.Private {
+		slog.Error("getPublicWatched attempted to get a private list")
+		return []Watched{}, errors.New("this watched list is private")
+	}
+	// Now we know the user is public, return their list
+	watched := new([]Watched)
+	res = db.Model(&Watched{}).Preload("Content").Where("user_id = ?", userId).Find(&watched)
+	if res.Error != nil {
+		panic(res.Error)
+	}
+	return *watched, nil
+}
+
 func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error) {
 	slog.Debug("Adding watched item", "userId", userId, "contentType", ar.ContentType, "contentId", ar.ContentID)
 

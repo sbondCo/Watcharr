@@ -27,6 +27,7 @@
   export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
   export let small = false;
+  export let disableInteraction = false;
 
   // If poster is active (scaled up)
   let posterActive = false;
@@ -89,7 +90,7 @@
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
   on:keypress={() => console.log("on kpress")}
-  class={posterActive ? "active" : ""}
+  class={`${posterActive ? "active " : ""}${disableInteraction ? "interaction-disabled" : ""}`}
 >
   <div class={`container${!poster ? " details-shown" : ""}`} bind:this={containerEl}>
     {#if poster}
@@ -143,7 +144,9 @@
           }}
         >
           <span>*</span>
-          <span>{rating ? rating : "Rate"}</span>
+          <span class={!rating && disableInteraction ? "unrated-text" : ""}>
+            {rating ? rating : disableInteraction ? "Unrated" : "Rate"}
+          </span>
           {#if ratingsShown}
             <div>
               {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
@@ -207,6 +210,26 @@
 <style lang="scss">
   li.active {
     cursor: pointer;
+  }
+
+  li.interaction-disabled {
+    button {
+      pointer-events: none;
+      cursor: default;
+      background-color: transparent;
+      border: unset;
+      fill: white;
+
+      span {
+        color: white !important;
+      }
+
+      .unrated-text {
+        display: flex;
+        align-items: center;
+        font-size: 15px !important;
+      }
+    }
   }
 
   .container {
