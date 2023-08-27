@@ -76,7 +76,7 @@
     const ud = parseTokenPayload();
     console.log(ud);
     if (ud?.userId && ud?.username) {
-      const shareLink = `${window.location.host}/lists/${ud.userId}/${ud.username}`;
+      const shareLink = `${window.location.origin}/lists/${ud.userId}/${ud.username}`;
       navigator.clipboard
         .writeText(shareLink)
         .then(() => {
