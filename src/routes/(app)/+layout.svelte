@@ -212,9 +212,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 10px 20px 28px 20px;
-    position: relative;
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
     gap: 20px;
+    z-index: 999999999;
+    backdrop-filter: blur(2.5px) saturate(180%);
+    background-color: color-mix(in srgb, $bg-color 75%, transparent);
 
     a {
       text-decoration: none;
