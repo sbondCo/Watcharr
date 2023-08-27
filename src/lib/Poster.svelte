@@ -218,7 +218,11 @@
       cursor: default;
       background-color: transparent;
       border: unset;
-      filter: invert(1);
+      fill: white;
+
+      span {
+        color: white !important;
+      }
 
       .unrated-text {
         display: flex;
