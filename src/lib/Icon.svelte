@@ -2,7 +2,7 @@
   import type { Icon } from "@/types";
 
   export let i: Icon;
-  export let wh = 24;
+  export let wh: number | string = 24;
 </script>
 
 {#if i === "check"}
@@ -129,6 +129,24 @@
     />
     <path
       d="m351 151-118 47a64 64 0 0 0-35 35l-47 118a8 8 0 0 0 10 10l118-47a64 64 0 0 0 35-35l47-118a8 8 0 0 0-10-10zm-95 129a24 24 0 1 1 24-24 24 24 0 0 1-24 24z"
+    />
+  </svg>
+{:else if i === "document"}
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <path
+      d="M416 221.25V416a48 48 0 0 1-48 48H144a48 48 0 0 1-48-48V96a48 48 0 0 1 48-48h98.75a32 32 0 0 1 22.62 9.37l141.26 141.26a32 32 0 0 1 9.37 22.62z"
+      fill="none"
+      stroke="currentColor"
+      stroke-linejoin="round"
+      stroke-width="32"
+    />
+    <path
+      d="M256 56v120a32 32 0 0 0 32 32h120m-232 80h160m-160 80h160"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="32"
     />
   </svg>
 {/if}
