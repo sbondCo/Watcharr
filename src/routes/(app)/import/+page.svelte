@@ -12,13 +12,17 @@
   import { onMount } from "svelte";
 
   let fileInput: HTMLInputElement;
+  let dragEnterTarget: EventTarget | null;
+  let isDragOver = false;
 
-  function fileInputChange() {
-    console.log(fileInput.files);
-    if (!fileInput.files) {
+  function processFiles(files?: FileList | null) {
+    console.log("processFiles", files);
+    if (!files) {
+      console.error("processFiles", "No files to process!");
       return;
     }
-    const file = fileInput.files[0];
+    // Currently only support for importing one file at a time
+    const file = files[0];
     const r = new FileReader();
     r.addEventListener(
       "load",
@@ -42,7 +46,9 @@
 
   onMount(() => {
     if (fileInput) {
-      fileInput.addEventListener("change", fileInputChange);
+      fileInput.addEventListener("change", (ev) => {
+        processFiles(fileInput.files);
+      });
     }
   });
 </script>
@@ -51,10 +57,43 @@
   <div class="inner">
     <h2>Import Your Watchlist</h2>
     <div class="big-btns">
-      <button on:click={importFile}>
-        <Icon i="document" />
+      <button
+        on:click={importFile}
+        on:dragover={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+        }}
+        on:dragenter={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          dragEnterTarget = ev.target;
+          console.log("enter");
+          isDragOver = true;
+        }}
+        on:dragleave={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (dragEnterTarget === ev.target) {
+            console.log("leave");
+            isDragOver = false;
+          }
+        }}
+        on:drop={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          processFiles(ev.dataTransfer?.files);
+        }}
+        class={isDragOver ? "dragging-over" : ""}
+      >
+        <Icon i={isDragOver ? "add" : "document"} wh="100%" />
         <div>
-          <h4 class="norm">Browse</h4>
+          <h4 class="norm">
+            {#if isDragOver}
+              Import
+            {:else}
+              Browse
+            {/if}
+          </h4>
           <!-- <h5 class="norm">Or Drag And Drop</h5> -->
         </div>
       </button>
@@ -113,7 +152,8 @@
           }
         }
 
-        &:hover {
+        &:hover,
+        &.dragging-over {
           color: $bg-color;
           background-color: $accent-color-hover;
 

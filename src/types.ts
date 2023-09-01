@@ -16,7 +16,8 @@ export type Icon =
   | "filter"
   | "reel"
   | "compass"
-  | "document";
+  | "document"
+  | "add";
 
 export type Theme = "light" | "dark";
 

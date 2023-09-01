@@ -149,6 +149,17 @@
       stroke-width="32"
     />
   </svg>
+{:else if i === "add"}
+  <svg xmlns="http://www.w3.org/2000/svg" width={wh} height={wh} viewBox="0 0 512 512">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="32"
+      d="M256 112v288M400 256H112"
+    />
+  </svg>
 {/if}
 
 <style lang="scss">
