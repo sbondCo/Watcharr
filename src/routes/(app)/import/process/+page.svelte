@@ -8,6 +8,7 @@
  -->
 
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { importedList } from "@/store";
@@ -23,6 +24,11 @@
 
   async function getList() {
     const list = get(importedList);
+    if (!list) {
+      console.log("import/process, no list, returning to /import");
+      goto("/import");
+      return;
+    }
     console.log("getList", list);
     // TODO transform the data into readable depending on type
     if (list?.file.type === "text/plain") {
