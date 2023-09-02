@@ -89,13 +89,15 @@
           {#each rList as l}
             <tr>
               <td><input class="plain" bind:value={l.name} /></td>
-              <td><input class="plain" bind:value={l.year} placeholder="Unknown" /></td>
+              <td>
+                <input class="plain" bind:value={l.year} placeholder="Unknown" type="number" />
+              </td>
               <!-- <td>Unknown</td> -->
             </tr>
           {/each}
           <tr>
             <td><input class="plain" placeholder="Name" on:blur={addRow} /></td>
-            <td><input class="plain" id="addYear" placeholder="Unknown" /></td>
+            <td><input class="plain" id="addYear" placeholder="Unknown" type="number" /></td>
             <!-- <td>Unknown</td> -->
           </tr>
         </table>
@@ -178,6 +180,16 @@
         font-size: 16px;
         padding: 0;
         padding: 7px 10px;
+
+        &[type="number"] {
+          appearance: textfield;
+
+          &::-webkit-outer-spin-button,
+          &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+        }
       }
     }
   }
