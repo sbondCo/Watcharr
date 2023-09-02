@@ -99,6 +99,9 @@
             <!-- <td>Unknown</td> -->
           </tr>
         </table>
+        <div class="btns">
+          <button on:click={doImport}>Start Importing</button>
+        </div>
       {:else}
         <h2>No list</h2>
       {/if}
@@ -175,6 +178,20 @@
         font-size: 16px;
         padding: 0;
         padding: 7px 10px;
+      }
+    }
+  }
+
+  .btns {
+    display: flex;
+    flex-flow: row;
+    margin-top: 20px;
+
+    button {
+      width: max-content;
+
+      &:last-of-type {
+        margin-left: auto;
       }
     }
   }
