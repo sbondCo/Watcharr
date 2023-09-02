@@ -1,4 +1,8 @@
-<div class="loader"></div>
+<script lang="ts">
+  export let style: string = "";
+</script>
+
+<div class="loader" {style}></div>
 
 <style lang="scss">
   .loader {

@@ -2,14 +2,13 @@
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
   import { watchedList } from "@/store";
-  import type { ContentSearch } from "./+page";
   import { removeWatched, updateWatched } from "@/lib/util/api";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import axios from "axios";
   import { getWatchedDependedProps } from "@/lib/util/helpers";
   import PersonPoster from "@/lib/PersonPoster.svelte";
-  import type { PublicUser } from "@/types";
+  import type { ContentSearch, PublicUser } from "@/types";
   import UsersList from "@/lib/UsersList.svelte";
 
   export let data;

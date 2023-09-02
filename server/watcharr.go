@@ -98,6 +98,7 @@ func main() {
 	br.addProfileRoutes()
 	br.addJellyfinRoutes()
 	br.addUserRoutes()
+	br.addImportRoutes()
 	br.rg.Static("/img", "./data/img")
 
 	gine.Run("0.0.0.0:3080")

@@ -11,16 +11,21 @@
   import { goto } from "$app/navigation";
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
+  import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { importedList } from "@/store";
+  import { ImportResponseType, type ImportResponse } from "@/types";
+  import axios from "axios";
   import { get } from "svelte/store";
 
   interface ImportedList {
     name: string;
     year?: string;
     type?: string;
+    state: string;
   }
 
   let rList: ImportedList[] = [];
+  let isImporting = false;
 
   async function getList() {
     const list = get(importedList);
@@ -67,8 +72,21 @@
     yearEl.value = "";
   }
 
-  function doImport() {
+  async function startImport() {
     console.log(rList);
+    isImporting = true;
+    for (let i = 0; i < rList.length; i++) {
+      const li = rList[i];
+      console.log("Importing", li);
+      doImport(li);
+    }
+  }
+
+  async function doImport(item: ImportedList) {
+    const resp = await axios.post<ImportResponse>("/import", item);
+    if (resp.data.type === ImportResponseType.IMPORT_MULTI) {
+      console.log("Import found multiple responses for content", resp.data);
+    }
   }
 </script>
 
@@ -82,12 +100,22 @@
         <h5 class="norm">Review your imported list and fix any problems.</h5>
         <table>
           <tr>
+            {#if isImporting}
+              <th class="loading-col"></th>
+            {/if}
             <th>Name</th>
             <th>Year</th>
             <!-- <th>Type</th> -->
           </tr>
           {#each rList as l}
             <tr>
+              {#if isImporting}
+                <td>
+                  {#if !l.state}
+                    <SpinnerTiny style="width: 13px;" />
+                  {/if}
+                </td>
+              {/if}
               <td><input class="plain" bind:value={l.name} /></td>
               <td>
                 <input class="plain" bind:value={l.year} placeholder="Unknown" type="number" />
@@ -95,14 +123,16 @@
               <!-- <td>Unknown</td> -->
             </tr>
           {/each}
-          <tr>
-            <td><input class="plain" placeholder="Name" on:blur={addRow} /></td>
-            <td><input class="plain" id="addYear" placeholder="Unknown" type="number" /></td>
-            <!-- <td>Unknown</td> -->
-          </tr>
+          {#if !isImporting}
+            <tr>
+              <td><input class="plain" placeholder="Name" on:blur={addRow} /></td>
+              <td><input class="plain" id="addYear" placeholder="Unknown" type="number" /></td>
+              <!-- <td>Unknown</td> -->
+            </tr>
+          {/if}
         </table>
         <div class="btns">
-          <button on:click={doImport}>Start Importing</button>
+          <button on:click={startImport} disabled={isImporting}>Start Importing</button>
         </div>
       {:else}
         <h2>No list</h2>
@@ -148,6 +178,11 @@
 
       &:last-of-type {
         border-top-right-radius: 10px;
+      }
+
+      &.loading-col {
+        width: 10px;
+        padding: 0;
       }
     }
 
