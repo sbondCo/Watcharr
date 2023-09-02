@@ -43,13 +43,32 @@
           const year = el.match(yearRegex);
           if (year && year.length > 0) {
             l.year = year[0].replaceAll(/\(|\)/g, "");
-            l.name = l.name.replace(yearRegex, "");
+            l.name = l.name.replace(yearRegex, "").trim();
           }
           rList.push(l);
         }
       }
     }
     return list;
+  }
+
+  function addRow(ev: FocusEvent & { currentTarget: EventTarget & HTMLInputElement }) {
+    if (!ev.currentTarget.value) {
+      return;
+    }
+    const lo = { name: ev.currentTarget.value } as ImportedList;
+    const yearEl = document.getElementById("addYear") as HTMLInputElement;
+    if (yearEl?.value) {
+      lo.year = yearEl.value;
+    }
+    rList.push(lo);
+    rList = rList;
+    ev.currentTarget.value = "";
+    yearEl.value = "";
+  }
+
+  function doImport() {
+    console.log(rList);
   }
 </script>
 
@@ -69,11 +88,16 @@
           </tr>
           {#each rList as l}
             <tr>
-              <td>{l.name}</td>
-              <td>{l.year ? l.year : "Unknown"}</td>
+              <td><input class="plain" bind:value={l.name} /></td>
+              <td><input class="plain" bind:value={l.year} placeholder="Unknown" /></td>
               <!-- <td>Unknown</td> -->
             </tr>
           {/each}
+          <tr>
+            <td><input class="plain" placeholder="Name" on:blur={addRow} /></td>
+            <td><input class="plain" id="addYear" placeholder="Unknown" /></td>
+            <!-- <td>Unknown</td> -->
+          </tr>
         </table>
       {:else}
         <h2>No list</h2>
@@ -105,8 +129,12 @@
     table-layout: fixed;
     width: 100%;
     border-spacing: 0px;
+    border: 1px solid $accent-color;
+    border-radius: 10px;
+    font-size: 16px;
 
     th {
+      padding: 12px 15px;
       text-align: left;
 
       &:first-of-type {
@@ -138,9 +166,16 @@
       }
     }
 
-    td,
-    th {
-      padding: 8px;
+    td {
+      padding: 5px;
+
+      input {
+        background: transparent;
+        border: 0;
+        font-size: 16px;
+        padding: 0;
+        padding: 7px 10px;
+      }
     }
   }
 </style>
