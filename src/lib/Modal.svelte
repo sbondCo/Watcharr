@@ -6,8 +6,8 @@
 <div class="backdrop"></div>
 <div class="modal">
   <div>
-    <h3 class="norm">Multiple results found</h3>
-    <h5 class="norm">Select the correct item for Guardians of the Galaxy vol. 3</h5>
+    <h3 class="norm">{title}</h3>
+    <h5 class="norm">{desc}</h5>
     <slot />
   </div>
 </div>
