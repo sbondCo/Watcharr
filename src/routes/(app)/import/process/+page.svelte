@@ -16,6 +16,7 @@
   import PosterList from "@/lib/PosterList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
+  import { sleep } from "@/lib/util/helpers";
   import { importedList } from "@/store";
   import {
     ImportResponseType,
@@ -39,6 +40,7 @@
   interface ImportedListItemMultiProblem {
     original: ImportedList;
     results: (ContentSearchMovie | ContentSearchTv)[];
+    callback: (err: Error | string | undefined) => void;
   }
 
   let rList: ImportedList[] = [];
@@ -99,22 +101,33 @@
     for (let i = 0; i < rList.length; i++) {
       const li = rList[i];
       console.log("Importing", li);
-      doImport(li);
+      await doImport(li);
+      await sleep(2000);
     }
   }
 
   async function doImport(item: ImportedList) {
     const resp = await axios.post<ImportResponse>("/import", item);
-    if (resp.data.type === ImportResponseType.IMPORT_MULTI) {
-      console.log("Import found multiple responses for content", resp.data);
-      importMultiItem = {
-        original: item,
-        results: resp.data.results
-      };
-    } else if (resp.data.type === ImportResponseType.IMPORT_SUCCESS) {
-      item.state = ImportResponseType.IMPORT_SUCCESS;
-    }
-    rList = rList;
+    return new Promise((res, rej) => {
+      if (resp.data.type === ImportResponseType.IMPORT_MULTI) {
+        console.log("Import found multiple responses for content", resp.data);
+        importMultiItem = {
+          original: item,
+          results: resp.data.results,
+          callback: (err) => {
+            if (err) {
+              rej(err);
+            } else {
+              res(0);
+            }
+          }
+        };
+      } else if (resp.data.type === ImportResponseType.IMPORT_SUCCESS) {
+        item.state = ImportResponseType.IMPORT_SUCCESS;
+        rList = rList;
+        res(0);
+      }
+    });
   }
 </script>
 
@@ -185,12 +198,17 @@
             small={true}
             disableInteraction={true}
             hideButtons={true}
-            onClick={() => {
+            onClick={async () => {
               const item = rList.find((i) => i.name === importMultiItem?.original.name);
               if (item) {
                 item.tmdbId = r.id;
                 item.type = r.media_type;
-                doImport(item);
+                try {
+                  await doImport(item);
+                  importMultiItem?.callback(undefined);
+                } catch (err) {
+                  importMultiItem?.callback(String(err));
+                }
                 importMultiItem = undefined;
               } else {
                 // TODO: show error notif and update state with error icon
