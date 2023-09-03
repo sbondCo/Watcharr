@@ -10,22 +10,43 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import Error from "@/lib/Error.svelte";
+  import Icon from "@/lib/Icon.svelte";
+  import Modal from "@/lib/Modal.svelte";
+  import Poster from "@/lib/Poster.svelte";
+  import PosterList from "@/lib/PosterList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { importedList } from "@/store";
-  import { ImportResponseType, type ImportResponse } from "@/types";
+  import {
+    ImportResponseType,
+    type ImportResponse,
+    type ContentSearchTv,
+    type ContentSearchMovie,
+    type ContentType
+  } from "@/types";
   import axios from "axios";
   import { get } from "svelte/store";
 
   interface ImportedList {
+    tmdbId?: number;
+    // TODO: this property can be unique if we remove duplicates
     name: string;
     year?: string;
-    type?: string;
-    state: string;
+    type?: ContentType;
+    state?: string;
+  }
+
+  interface ImportedListItemMultiProblem {
+    original: ImportedList;
+    results: (ContentSearchMovie | ContentSearchTv)[];
   }
 
   let rList: ImportedList[] = [];
   let isImporting = false;
+
+  // Set when current item being imported gets an IMPORT_MULTI
+  // response, which then shows the modal for user to pick correct item.
+  let importMultiItem: ImportedListItemMultiProblem | undefined;
 
   async function getList() {
     const list = get(importedList);
@@ -86,7 +107,14 @@
     const resp = await axios.post<ImportResponse>("/import", item);
     if (resp.data.type === ImportResponseType.IMPORT_MULTI) {
       console.log("Import found multiple responses for content", resp.data);
+      importMultiItem = {
+        original: item,
+        results: resp.data.results
+      };
+    } else if (resp.data.type === ImportResponseType.IMPORT_SUCCESS) {
+      item.state = ImportResponseType.IMPORT_SUCCESS;
     }
+    rList = rList;
   }
 </script>
 
@@ -98,7 +126,7 @@
       {#if rList}
         <h2>Importing {list?.file.name ? list.file.name : ""}</h2>
         <h5 class="norm">Review your imported list and fix any problems.</h5>
-        <table>
+        <table class={isImporting ? "is-importing" : ""}>
           <tr>
             {#if isImporting}
               <th class="loading-col"></th>
@@ -110,10 +138,14 @@
           {#each rList as l}
             <tr>
               {#if isImporting}
-                <td>
-                  {#if !l.state}
-                    <SpinnerTiny style="width: 13px;" />
-                  {/if}
+                <td class="icon-cell">
+                  <div>
+                    {#if !l.state}
+                      <SpinnerTiny style="width: 13px;" />
+                    {:else if l.state === ImportResponseType.IMPORT_SUCCESS}
+                      <Icon i="check" wh={22} />
+                    {/if}
+                  </div>
                 </td>
               {/if}
               <td><input class="plain" bind:value={l.name} /></td>
@@ -139,6 +171,37 @@
       {/if}
     </div>
   </div>
+
+  <!-- Multiple results found modal -->
+  {#if importMultiItem}
+    <Modal
+      title="Multiple Results Found"
+      desc="Select the correct item for {importMultiItem.original.name}"
+    >
+      <PosterList type="vertical">
+        {#each importMultiItem.results as r}
+          <Poster
+            media={r}
+            small={true}
+            disableInteraction={true}
+            hideButtons={true}
+            onClick={() => {
+              const item = rList.find((i) => i.name === importMultiItem?.original.name);
+              if (item) {
+                item.tmdbId = r.id;
+                item.type = r.media_type;
+                doImport(item);
+                importMultiItem = undefined;
+              } else {
+                // TODO: show error notif and update state with error icon
+              }
+              console.log("multi: Poster clicked", r);
+            }}
+          />
+        {/each}
+      </PosterList>
+    </Modal>
+  {/if}
 {:catch err}
   <Error error={err} pretty="Failed to process list!" />
 {/await}
@@ -171,6 +234,7 @@
     th {
       padding: 12px 15px;
       text-align: left;
+      transition: padding 100ms ease;
 
       &:first-of-type {
         border-top-left-radius: 10px;
@@ -181,8 +245,12 @@
       }
 
       &.loading-col {
-        width: 10px;
+        width: 28px;
         padding: 0;
+
+        & + th {
+          padding-left: 3px;
+        }
       }
     }
 
@@ -206,8 +274,30 @@
       }
     }
 
+    &.is-importing td {
+      padding-left: 3px;
+
+      input {
+        padding: 7px 0;
+
+        &:focus {
+          padding: 7px 5px;
+          padding-left: 3px;
+        }
+      }
+    }
+
     td {
       padding: 5px;
+
+      &.icon-cell {
+        padding-right: 3px;
+
+        & > div {
+          display: flex;
+          padding-left: 4px;
+        }
+      }
 
       input {
         background: transparent;
@@ -215,6 +305,7 @@
         font-size: 16px;
         padding: 0;
         padding: 7px 10px;
+        transition: padding 100ms ease;
 
         &[type="number"] {
           appearance: textfield;

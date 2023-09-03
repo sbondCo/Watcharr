@@ -68,6 +68,7 @@ func searchContent(query string) (TMDBSearchMultiResponse, error) {
 	return *resp, nil
 }
 
+// TODO: Make append to response a func param and add it to the movie details route
 func movieDetails(id string, country string) (TMDBMovieDetails, error) {
 	resp := new(TMDBMovieDetails)
 	err := tmdbRequest("/movie/"+id, map[string]string{"append_to_response": "videos,watch/providers"}, &resp)
@@ -89,6 +90,7 @@ func movieCredits(id string) (TMDBContentCredits, error) {
 	return *resp, nil
 }
 
+// TODO: Make append to response a func param and add it to the tv details route
 func tvDetails(id string, country string) (TMDBShowDetails, error) {
 	resp := new(TMDBShowDetails)
 	err := tmdbRequest("/tv/"+id, map[string]string{"append_to_response": "videos,watch/providers"}, &resp)

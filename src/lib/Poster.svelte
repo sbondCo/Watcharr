@@ -28,6 +28,9 @@
   export let status: WatchedStatus | undefined = undefined;
   export let small = false;
   export let disableInteraction = false;
+  export let hideButtons = false;
+  // When provided, default click handlers will instead run this callback.
+  export let onClick: (() => void) | undefined = undefined;
 
   // If poster is active (scaled up)
   let posterActive = false;
@@ -64,8 +67,15 @@
 
   function handleInnerKeyUp(e: KeyboardEvent) {
     console.log(e.target);
-    if (e.key === "Enter" && (e.target as HTMLElement)?.id === "ilikemoviessueme" && link)
-      goto(link);
+    if (e.key === "Enter" && (e.target as HTMLElement)?.id === "ilikemoviessueme") {
+      if (typeof onClick !== "undefined") {
+        onClick();
+        return;
+      }
+      if (link) {
+        goto(link);
+      }
+    }
   }
 
   onMount(() => {
@@ -109,6 +119,10 @@
     {/if}
     <div
       on:click={() => {
+        if (typeof onClick !== "undefined") {
+          onClick();
+          return;
+        }
         if (posterActive && link) goto(link);
       }}
       on:keyup={handleInnerKeyUp}
@@ -118,7 +132,7 @@
       tabindex="0"
     >
       <h2>
-        {#if link}
+        {#if typeof onClick === "undefined" && link}
           <a data-sveltekit-preload-data="tap" href={link}>
             {title}
           </a>
@@ -131,78 +145,80 @@
       </h2>
       <span>{media.overview}</span>
 
-      <div class="buttons">
-        <button
-          class="rating"
-          on:click={(ev) => {
-            ev.stopPropagation();
-            ratingsShown = !ratingsShown;
-          }}
-          on:mouseleave={(ev) => {
-            ratingsShown = false;
-            ev.currentTarget.blur();
-          }}
-        >
-          <span>*</span>
-          <span class={!rating && disableInteraction ? "unrated-text" : ""}>
-            {rating ? rating : disableInteraction ? "Unrated" : "Rate"}
-          </span>
-          {#if ratingsShown}
-            <div>
-              {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
-                <button
-                  class="plain{rating === v ? ' active' : ''}"
-                  on:click={(ev) => {
-                    ev.stopPropagation();
-                    handleStarClick(v);
-                  }}
-                >
-                  {v}
-                </button>
-              {/each}
-            </div>
-          {/if}
-        </button>
-        <button
-          class="status"
-          on:click={(ev) => {
-            ev.stopPropagation();
-            statusesShown = !statusesShown;
-          }}
-          on:mouseleave={(ev) => {
-            statusesShown = false;
-            ev.currentTarget.blur();
-          }}
-        >
-          {#if status}
-            <Icon i={watchedStatuses[status]} />
-          {:else}
-            <span class="no-icon">+</span>
-          {/if}
-          {#if statusesShown}
-            <div>
-              {#each Object.entries(watchedStatuses) as [statusName, icon]}
-                <button
-                  class="plain{status && status !== statusName ? ' not-active' : ''}"
-                  on:click={() => handleStatusClick(statusName)}
-                  use:tooltip={{ text: statusName }}
-                >
-                  <Icon i={icon} />
-                </button>
-              {/each}
-              {#if status}
-                <button
-                  class="plain not-active"
-                  on:click={() => handleStatusClick("DELETE")}
-                  use:tooltip={{ text: "Delete" }}
-                >
-                  <Icon i="trash" />
-                </button>
-              {/if}
-            </div>
-          {/if}
-        </button>
-      </div>
+      {#if !hideButtons}
+        <div class="buttons">
+          <button
+            class="rating"
+            on:click={(ev) => {
+              ev.stopPropagation();
+              ratingsShown = !ratingsShown;
+            }}
+            on:mouseleave={(ev) => {
+              ratingsShown = false;
+              ev.currentTarget.blur();
+            }}
+          >
+            <span>*</span>
+            <span class={!rating && disableInteraction ? "unrated-text" : ""}>
+              {rating ? rating : disableInteraction ? "Unrated" : "Rate"}
+            </span>
+            {#if ratingsShown}
+              <div>
+                {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
+                  <button
+                    class="plain{rating === v ? ' active' : ''}"
+                    on:click={(ev) => {
+                      ev.stopPropagation();
+                      handleStarClick(v);
+                    }}
+                  >
+                    {v}
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </button>
+          <button
+            class="status"
+            on:click={(ev) => {
+              ev.stopPropagation();
+              statusesShown = !statusesShown;
+            }}
+            on:mouseleave={(ev) => {
+              statusesShown = false;
+              ev.currentTarget.blur();
+            }}
+          >
+            {#if status}
+              <Icon i={watchedStatuses[status]} />
+            {:else}
+              <span class="no-icon">+</span>
+            {/if}
+            {#if statusesShown}
+              <div>
+                {#each Object.entries(watchedStatuses) as [statusName, icon]}
+                  <button
+                    class="plain{status && status !== statusName ? ' not-active' : ''}"
+                    on:click={() => handleStatusClick(statusName)}
+                    use:tooltip={{ text: statusName }}
+                  >
+                    <Icon i={icon} />
+                  </button>
+                {/each}
+                {#if status}
+                  <button
+                    class="plain not-active"
+                    on:click={() => handleStatusClick("DELETE")}
+                    use:tooltip={{ text: "Delete" }}
+                  >
+                    <Icon i="trash" />
+                  </button>
+                {/if}
+              </div>
+            {/if}
+          </button>
+        </div>
+      {/if}
     </div>
   </div>
 </li>
