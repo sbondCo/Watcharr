@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"strconv"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -68,6 +69,31 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 	if resLen <= 0 {
 		return ImportResponse{Type: IMPORT_NOTFOUND}, nil
 	} else if resLen > 1 {
+		slog.Debug("import: multiple results found")
+		// If there are multiple responses, but only one item
+		// from the results is a 100% match for the imported
+		// items name, then consider successful match with that.
+		var perfectMatch TMDBSearchMultiResults
+		for _, r := range sr.Results {
+			itemName := r.Name
+			if itemName == "" {
+				itemName = r.Title
+			}
+			if strings.ToLower(itemName) == strings.ToLower(ar.Name) {
+				slog.Debug("import: multiple results processing: found a perfectMatch", "match", r)
+				if perfectMatch.ID != 0 {
+					// If perfect match has been set before..
+					// quit looking and just show all results.
+					slog.Debug("import: multiple results processing: Second perfectMatch found.. returning all results")
+					return ImportResponse{Type: IMPORT_MULTI, Results: sr.Results}, nil
+				}
+				perfectMatch = r
+			}
+		}
+		// If one perfect match found, import it
+		if perfectMatch.ID != 0 {
+			return ImportResponse{Type: IMPORT_SUCCESS}, nil
+		}
 		return ImportResponse{Type: IMPORT_MULTI, Results: sr.Results}, nil
 	} else {
 		return ImportResponse{Type: IMPORT_SUCCESS}, nil
