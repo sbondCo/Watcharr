@@ -79,7 +79,7 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 			if itemName == "" {
 				itemName = r.Title
 			}
-			if strings.ToLower(itemName) == strings.ToLower(ar.Name) {
+			if strings.EqualFold(itemName, ar.Name) {
 				slog.Debug("import: multiple results processing: found a perfectMatch", "match", r)
 				if perfectMatch.ID != 0 {
 					// If perfect match has been set before..
