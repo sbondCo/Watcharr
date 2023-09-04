@@ -32,6 +32,7 @@ type ImportRequest struct {
 type ImportResponse struct {
 	Type    ImportResponseType       `json:"type"`
 	Results []TMDBSearchMultiResults `json:"results"`
+	Match   TMDBSearchMultiResults   `json:"match"`
 }
 
 // TODO
@@ -50,15 +51,15 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 			if err != nil {
 				return ImportResponse{}, errors.New("movie details request failed")
 			}
-			slog.Info("", "cr", cr)
-			return ImportResponse{Type: IMPORT_SUCCESS}, nil
+			slog.Debug("import: by tmdbid of movie", "cr", cr)
+			return ImportResponse{Type: IMPORT_SUCCESS, Match: TMDBSearchMultiResults{ID: cr.ID, Title: cr.Title, ReleaseDate: cr.ReleaseDate, MediaType: string(MOVIE)}}, nil
 		} else if ar.Type == SHOW {
 			cr, err := tvDetails(tid, "")
 			if err != nil {
 				return ImportResponse{}, errors.New("tv details request failed")
 			}
-			slog.Info("", "cr", cr)
-			return ImportResponse{Type: IMPORT_SUCCESS}, nil
+			slog.Debug("import: by tmdbid of tv", "cr", cr)
+			return ImportResponse{Type: IMPORT_SUCCESS, Match: TMDBSearchMultiResults{ID: cr.ID, Name: cr.Name, FirstAirDate: cr.FirstAirDate, MediaType: string(SHOW)}}, nil
 		}
 	}
 	sr, err := searchContent(ar.Name)
@@ -92,10 +93,10 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		}
 		// If one perfect match found, import it
 		if perfectMatch.ID != 0 {
-			return ImportResponse{Type: IMPORT_SUCCESS}, nil
+			return ImportResponse{Type: IMPORT_SUCCESS, Match: perfectMatch}, nil
 		}
 		return ImportResponse{Type: IMPORT_MULTI, Results: sr.Results}, nil
 	} else {
-		return ImportResponse{Type: IMPORT_SUCCESS}, nil
+		return ImportResponse{Type: IMPORT_SUCCESS, Match: sr.Results[0]}, nil
 	}
 }

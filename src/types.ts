@@ -553,4 +553,5 @@ export enum ImportResponseType {
 export interface ImportResponse {
   type: ImportResponseType;
   results: (ContentSearchMovie | ContentSearchTv)[];
+  match?: ContentSearchMovie | ContentSearchTv;
 }

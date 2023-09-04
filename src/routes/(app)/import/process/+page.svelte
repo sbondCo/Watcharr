@@ -124,6 +124,12 @@
         };
       } else if (resp.data.type === ImportResponseType.IMPORT_SUCCESS) {
         item.state = ImportResponseType.IMPORT_SUCCESS;
+        const match = resp.data.match;
+        if (match) {
+          const release = match.media_type === "movie" ? match.release_date : match.first_air_date;
+          if (release) item.year = String(new Date(Date.parse(release)).getFullYear());
+          item.type = match.media_type;
+        }
         rList = rList;
         res(0);
       }
@@ -146,7 +152,7 @@
             {/if}
             <th>Name</th>
             <th>Year</th>
-            <!-- <th>Type</th> -->
+            <th>Type</th>
           </tr>
           {#each rList as l}
             <tr>
@@ -162,17 +168,19 @@
                 </td>
               {/if}
               <td><input class="plain" bind:value={l.name} /></td>
-              <td>
-                <input class="plain" bind:value={l.year} placeholder="Unknown" type="number" />
+              <td class="year">
+                <input class="plain" bind:value={l.year} placeholder="YYYY" type="number" />
               </td>
-              <!-- <td>Unknown</td> -->
+              <td class="type">{l.type}</td>
             </tr>
           {/each}
           {#if !isImporting}
             <tr>
               <td><input class="plain" placeholder="Name" on:blur={addRow} /></td>
-              <td><input class="plain" id="addYear" placeholder="Unknown" type="number" /></td>
-              <!-- <td>Unknown</td> -->
+              <td class="year">
+                <input class="plain" id="addYear" placeholder="YYYY" type="number" />
+              </td>
+              <td class="type"></td>
             </tr>
           {/if}
         </table>
@@ -242,7 +250,7 @@
 
   table {
     margin-top: 20px;
-    table-layout: fixed;
+    // table-layout: fixed;
     width: 100%;
     border-spacing: 0px;
     border: 1px solid $accent-color;
@@ -253,6 +261,7 @@
       padding: 12px 15px;
       text-align: left;
       transition: padding 100ms ease;
+      padding-left: 3px;
 
       &:first-of-type {
         border-top-left-radius: 10px;
@@ -265,10 +274,6 @@
       &.loading-col {
         width: 28px;
         padding: 0;
-
-        & + th {
-          padding-left: 3px;
-        }
       }
     }
 
@@ -315,6 +320,14 @@
           display: flex;
           padding-left: 4px;
         }
+      }
+
+      &.year {
+        width: 70px;
+      }
+
+      &.type {
+        width: 120px;
       }
 
       input {
