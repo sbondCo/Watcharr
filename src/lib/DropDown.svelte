@@ -4,12 +4,19 @@
   export let options: string[];
   export let active: string | undefined;
   export let placeholder: string;
+  export let blendIn: boolean = false;
 
   let availableOptions = options.filter((o) => o !== active);
   let open = false;
 </script>
 
-<div class={[open ? "is-open" : "", !active ? "placeholder-shown" : ""].join(" ")}>
+<div
+  class={[
+    open ? "is-open" : "",
+    !active ? "placeholder-shown" : "",
+    blendIn ? "blend-in" : ""
+  ].join(" ")}
+>
   <button on:click={() => (open = !open)}>
     {active ? active : placeholder}
     <Icon i="chevron" facing={open ? "up" : "down"} />
@@ -45,13 +52,19 @@
       }
     }
 
+    &.blend-in {
+      & > button {
+        border-color: transparent;
+      }
+    }
+
     &.is-open {
       ul {
         display: flex;
       }
 
-      button {
-        // border-bottom: unset;
+      & > button {
+        border-color: $text-color;
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
       }

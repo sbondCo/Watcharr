@@ -173,7 +173,12 @@
                 <input class="plain" bind:value={l.year} placeholder="YYYY" type="number" />
               </td>
               <td class="type">
-                <DropDown options={["movie", "tv"]} bind:active={l.type} placeholder="Type" />
+                <DropDown
+                  options={["movie", "tv"]}
+                  bind:active={l.type}
+                  placeholder="Type"
+                  blendIn={true}
+                />
               </td>
             </tr>
           {/each}
