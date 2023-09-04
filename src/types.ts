@@ -18,7 +18,8 @@ export type Icon =
   | "compass"
   | "document"
   | "add"
-  | "arrow";
+  | "arrow"
+  | "chevron";
 
 export type Theme = "light" | "dark";
 

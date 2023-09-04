@@ -9,6 +9,7 @@
 
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import DropDown from "@/lib/DropDown.svelte";
   import Error from "@/lib/Error.svelte";
   import Icon from "@/lib/Icon.svelte";
   import Modal from "@/lib/Modal.svelte";
@@ -171,7 +172,9 @@
               <td class="year">
                 <input class="plain" bind:value={l.year} placeholder="YYYY" type="number" />
               </td>
-              <td class="type">{l.type}</td>
+              <td class="type">
+                <DropDown options={["movie", "tv"]} bind:active={l.type} placeholder="Type" />
+              </td>
             </tr>
           {/each}
           {#if !isImporting}

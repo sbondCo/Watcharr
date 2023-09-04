@@ -5,8 +5,6 @@
   export let active: string | undefined;
   export let placeholder: string;
 
-  console.log("dropdown active", active);
-
   let availableOptions = options.filter((o) => o !== active);
   let open = false;
 </script>
@@ -42,7 +40,7 @@
         color: #8e8e8e;
 
         &:hover {
-          color: white;
+          color: $bg-color;
         }
       }
     }
