@@ -262,7 +262,6 @@
       padding: 12px 15px;
       text-align: left;
       transition: padding 100ms ease;
-      padding-left: 3px;
 
       &:first-of-type {
         border-top-left-radius: 10px;
@@ -298,15 +297,21 @@
       }
     }
 
-    &.is-importing td {
-      padding-left: 3px;
+    &.is-importing {
+      th {
+        padding-left: 3px;
+      }
 
-      input {
-        padding: 7px 0;
+      td {
+        padding-left: 3px;
 
-        &:focus {
-          padding: 7px 5px;
-          padding-left: 3px;
+        input {
+          padding: 7px 0;
+
+          &:focus {
+            padding: 7px 5px;
+            padding-left: 3px;
+          }
         }
       }
     }
