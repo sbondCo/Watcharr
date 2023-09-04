@@ -3,6 +3,7 @@
 
   export let i: Icon;
   export let wh: number | string = 24;
+  export let facing: "up" | "down" | "left" | "right" | undefined = undefined;
 </script>
 
 {#if i === "check"}
@@ -161,7 +162,13 @@
     />
   </svg>
 {:else if i === "arrow"}
-  <svg xmlns="http://www.w3.org/2000/svg" width={wh} height={wh} viewBox="0 0 512 512">
+  <svg
+    class={facing}
+    xmlns="http://www.w3.org/2000/svg"
+    width={wh}
+    height={wh}
+    viewBox="0 0 512 512"
+  >
     <path
       fill="none"
       stroke="currentColor"
@@ -171,9 +178,38 @@
       d="M244 400L100 256l144-144M120 256h292"
     />
   </svg>
+{:else if i === "chevron"}
+  <svg
+    class={facing}
+    xmlns="http://www.w3.org/2000/svg"
+    width={wh}
+    height={wh}
+    viewBox="0 0 512 512"
+  >
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="48"
+      d="M328 112L184 256l144 144"
+    />
+  </svg>
 {/if}
 
 <style lang="scss">
+  svg {
+    transition: transform 100ms ease-in-out;
+
+    &.up {
+      transform: rotate(90deg);
+    }
+
+    &.down {
+      transform: rotate(270deg);
+    }
+  }
+
   #reel {
     path:first-of-type {
       fill: $text-color;
