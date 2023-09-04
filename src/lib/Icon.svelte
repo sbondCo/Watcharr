@@ -160,6 +160,17 @@
       d="M256 112v288M400 256H112"
     />
   </svg>
+{:else if i === "arrow"}
+  <svg xmlns="http://www.w3.org/2000/svg" width={wh} height={wh} viewBox="0 0 512 512">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="48"
+      d="M244 400L100 256l144-144M120 256h292"
+    />
+  </svg>
 {/if}
 
 <style lang="scss">

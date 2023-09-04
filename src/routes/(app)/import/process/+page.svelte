@@ -185,6 +185,7 @@
           {/if}
         </table>
         <div class="btns">
+          <button on:click={() => goto("/import")}><Icon i="arrow" />Back</button>
           <button on:click={startImport} disabled={isImporting}>Start Importing</button>
         </div>
       {:else}
@@ -358,6 +359,7 @@
 
     button {
       width: max-content;
+      gap: 3px;
 
       &:last-of-type {
         margin-left: auto;
