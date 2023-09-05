@@ -24,7 +24,6 @@ var (
 
 type ImportRequest struct {
 	Name   string      `json:"name"`
-	Year   string      `json:"year"`
 	TmdbID int         `json:"tmdbId"`
 	Type   ContentType `json:"type"`
 }

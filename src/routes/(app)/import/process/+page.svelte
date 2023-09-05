@@ -112,6 +112,22 @@
     return new Promise((res, rej) => {
       if (resp.data.type === ImportResponseType.IMPORT_MULTI) {
         console.log("Import found multiple responses for content", resp.data);
+        let results = resp.data.results;
+        if (item.year) {
+          results = results.sort((a, b) => {
+            try {
+              const ar = a.media_type === "movie" ? a.release_date : a.first_air_date;
+              const ay = ar ? new Date(Date.parse(ar)).getFullYear() : undefined;
+              const br = b.media_type === "movie" ? b.release_date : b.first_air_date;
+              const by = br ? new Date(Date.parse(br)).getFullYear() : undefined;
+              if (ay == item.year) return -1;
+              else if (by == item.year) return 1;
+            } catch (err) {
+              console.error("doImport: results sort failed", err);
+            }
+            return 0;
+          });
+        }
         importMultiItem = {
           original: item,
           results: resp.data.results,
