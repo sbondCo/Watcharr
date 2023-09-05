@@ -112,6 +112,11 @@
   }
 
   async function doImport(item: ImportedList) {
+    if (!item.name?.trim()) {
+      item.state = ImportResponseType.IMPORT_NOTFOUND;
+      rList = rList;
+      return;
+    }
     const resp = await axios.post<ImportResponse>("/import", item);
     return new Promise((res, rej) => {
       if (resp.data.type === ImportResponseType.IMPORT_MULTI) {
@@ -153,6 +158,10 @@
           if (release) item.year = String(new Date(Date.parse(release)).getFullYear());
           item.type = match.media_type;
         }
+        rList = rList;
+        res(0);
+      } else if (resp.data.type === ImportResponseType.IMPORT_NOTFOUND) {
+        item.state = ImportResponseType.IMPORT_NOTFOUND;
         rList = rList;
         res(0);
       }
