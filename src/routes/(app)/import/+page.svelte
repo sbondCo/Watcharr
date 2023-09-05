@@ -130,7 +130,7 @@
         justify-content: center;
         align-items: center;
         gap: 10px;
-        width: 150px;
+        height: 180px;
         padding: 20px;
         background-color: $accent-color;
         border: unset;
