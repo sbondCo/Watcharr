@@ -101,9 +101,13 @@
     isImporting = true;
     for (let i = 0; i < rList.length; i++) {
       const li = rList[i];
-      console.log("Importing", li);
-      await doImport(li);
-      await sleep(2000);
+      try {
+        console.log("Importing", li);
+        await doImport(li);
+        await sleep(2000);
+      } catch (err) {
+        console.error("Failed to import item:", li, "reason:", err);
+      }
     }
   }
 
@@ -133,6 +137,8 @@
           results: resp.data.results,
           callback: (err) => {
             if (err) {
+              item.state = ImportResponseType.IMPORT_NOTFOUND;
+              rList = rList;
               rej(err);
             } else {
               res(0);
@@ -180,6 +186,8 @@
                       <SpinnerTiny style="width: 13px;" />
                     {:else if l.state === ImportResponseType.IMPORT_SUCCESS}
                       <Icon i="check" wh={22} />
+                    {:else if l.state === ImportResponseType.IMPORT_NOTFOUND}
+                      <Icon i="close" wh={22} />
                     {/if}
                   </div>
                 </td>
@@ -223,6 +231,10 @@
     <Modal
       title="Multiple Results Found"
       desc="Select the correct item for {importMultiItem.original.name}"
+      onClose={() => {
+        importMultiItem?.callback("closed results modal");
+        importMultiItem = undefined;
+      }}
     >
       <PosterList type="vertical">
         {#each importMultiItem.results as r}

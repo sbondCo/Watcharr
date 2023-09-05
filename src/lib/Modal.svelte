@@ -1,11 +1,17 @@
 <script lang="ts">
+  import Icon from "./Icon.svelte";
+
   export let title: string;
   export let desc: string;
+  export let onClose: (() => void) | undefined = undefined;
 </script>
 
 <div class="backdrop"></div>
 <div class="modal">
   <div>
+    {#if typeof onClose !== "undefined"}
+      <button class="close" on:click={onClose}><Icon i="close" wh="20" /></button>
+    {/if}
     <h3 class="norm">{title}</h3>
     <h5 class="norm">{desc}</h5>
     <slot />
@@ -36,6 +42,7 @@
     z-index: 9999;
 
     & > div {
+      position: relative;
       min-width: 300px;
       min-height: 300px;
       width: 100%;
@@ -45,6 +52,14 @@
       padding: 15px 20px;
       margin: 20px 100px;
       transition: margin 100ms ease;
+
+      button.close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: max-content;
+        padding: 3px 5px;
+      }
 
       @media screen and (max-width: 680px) {
         margin: 20px;
