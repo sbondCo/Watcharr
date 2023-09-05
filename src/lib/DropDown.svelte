@@ -55,6 +55,12 @@
     &.blend-in {
       & > button {
         border-color: transparent;
+        background-color: transparent;
+
+        &:hover,
+        &:focus-visible {
+          background-color: $text-color;
+        }
       }
     }
 
@@ -91,6 +97,7 @@
       border-bottom-left-radius: 5px;
       border-bottom-right-radius: 5px;
       background-color: $bg-color;
+      z-index: 99;
 
       li {
         width: 100%;
