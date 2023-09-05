@@ -96,6 +96,11 @@
     yearEl.value = "";
   }
 
+  function removeRow(l: ImportedList) {
+    rList = rList.filter((r) => r.name !== l.name);
+    rList = rList;
+  }
+
   async function startImport() {
     console.log(rList);
     isImporting = true;
@@ -185,6 +190,9 @@
             <th>Name</th>
             <th>Year</th>
             <th>Type</th>
+            {#if !isImporting}
+              <th></th>
+            {/if}
           </tr>
           {#each rList as l}
             <tr>
@@ -213,6 +221,18 @@
                   blendIn={true}
                 />
               </td>
+              {#if !isImporting}
+                <td>
+                  <button
+                    class="plain delete"
+                    on:click={() => {
+                      removeRow(l);
+                    }}
+                  >
+                    <Icon i="close" wh="25" />
+                  </button>
+                </td>
+              {/if}
             </tr>
           {/each}
           {#if !isImporting}
@@ -222,6 +242,7 @@
                 <input class="plain" id="addYear" placeholder="YYYY" type="number" />
               </td>
               <td class="type"></td>
+              <td></td>
             </tr>
           {/if}
         </table>
@@ -289,14 +310,13 @@
       display: flex;
       flex-flow: column;
       min-width: 400px;
-      max-width: 400px;
+      max-width: 600px;
       overflow: hidden;
     }
   }
 
   table {
     margin-top: 20px;
-    // table-layout: fixed;
     width: 100%;
     border-spacing: 0px;
     border: 1px solid $accent-color;
@@ -396,6 +416,18 @@
           &::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
+          }
+        }
+      }
+
+      button {
+        &.delete {
+          display: flex;
+          justify-content: center;
+          color: $placeholder-color;
+
+          &:hover {
+            color: $error;
           }
         }
       }
