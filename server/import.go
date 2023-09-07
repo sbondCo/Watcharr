@@ -36,8 +36,6 @@ type ImportResponse struct {
 
 // TODO
 // - add slogging
-// - filter people out
-// - use year if provided in request body
 // - actually import the content
 func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, error) {
 	// If tmdbId and type passed in request body
@@ -65,7 +63,13 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 	if err != nil {
 		return ImportResponse{}, errors.New("Content search failed")
 	}
-	resLen := len(sr.Results)
+	pMatches := []TMDBSearchMultiResults{}
+	for _, r := range sr.Results {
+		if r.MediaType != "person" {
+			pMatches = append(pMatches, r)
+		}
+	}
+	resLen := len(pMatches)
 	if resLen <= 0 {
 		return ImportResponse{Type: IMPORT_NOTFOUND}, nil
 	} else if resLen > 1 {
@@ -74,7 +78,7 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		// from the results is a 100% match for the imported
 		// items name, then consider successful match with that.
 		var perfectMatch TMDBSearchMultiResults
-		for _, r := range sr.Results {
+		for _, r := range pMatches {
 			itemName := r.Name
 			if itemName == "" {
 				itemName = r.Title
@@ -85,7 +89,7 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 					// If perfect match has been set before..
 					// quit looking and just show all results.
 					slog.Debug("import: multiple results processing: Second perfectMatch found.. returning all results")
-					return ImportResponse{Type: IMPORT_MULTI, Results: sr.Results}, nil
+					return ImportResponse{Type: IMPORT_MULTI, Results: pMatches}, nil
 				}
 				perfectMatch = r
 			}
@@ -94,8 +98,8 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		if perfectMatch.ID != 0 {
 			return ImportResponse{Type: IMPORT_SUCCESS, Match: perfectMatch}, nil
 		}
-		return ImportResponse{Type: IMPORT_MULTI, Results: sr.Results}, nil
+		return ImportResponse{Type: IMPORT_MULTI, Results: pMatches}, nil
 	} else {
-		return ImportResponse{Type: IMPORT_SUCCESS, Match: sr.Results[0]}, nil
+		return ImportResponse{Type: IMPORT_SUCCESS, Match: pMatches[0]}, nil
 	}
 }
