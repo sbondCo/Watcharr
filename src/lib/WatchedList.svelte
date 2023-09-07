@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
@@ -55,6 +56,7 @@
       {:else}
         <h2 class="norm">Your watched list is empty!</h2>
         <h4 class="norm">Try searching for something you would like to add.</h4>
+        <button on:click={() => goto("/import")}>Import</button>
       {/if}
     </div>
   {/if}
@@ -73,6 +75,13 @@
 
     h4 {
       font-weight: normal;
+    }
+
+    button {
+      width: max-content;
+      padding-left: 20px;
+      padding-right: 20px;
+      margin-top: 15px;
     }
   }
 </style>
