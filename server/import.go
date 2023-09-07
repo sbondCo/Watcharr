@@ -35,7 +35,6 @@ type ImportResponse struct {
 }
 
 // TODO
-// - add slogging
 // - actually import the content
 func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, error) {
 	// If tmdbId and type passed in request body
@@ -61,6 +60,7 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 	}
 	sr, err := searchContent(ar.Name)
 	if err != nil {
+		slog.Error("import: content search failed", "error", err)
 		return ImportResponse{}, errors.New("Content search failed")
 	}
 	pMatches := []TMDBSearchMultiResults{}
@@ -70,7 +70,9 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		}
 	}
 	resLen := len(pMatches)
+	slog.Debug("import: potential matches", "num_found", resLen)
 	if resLen <= 0 {
+		slog.Debug("import: returning IMPORT_NOTFOUND")
 		return ImportResponse{Type: IMPORT_NOTFOUND}, nil
 	} else if resLen > 1 {
 		slog.Debug("import: multiple results found")
@@ -96,10 +98,12 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		}
 		// If one perfect match found, import it
 		if perfectMatch.ID != 0 {
+			slog.Debug("import: importing from perfect match")
 			return ImportResponse{Type: IMPORT_SUCCESS, Match: perfectMatch}, nil
 		}
 		return ImportResponse{Type: IMPORT_MULTI, Results: pMatches}, nil
 	} else {
+		slog.Debug("import: success.. only found one result")
 		return ImportResponse{Type: IMPORT_SUCCESS, Match: pMatches[0]}, nil
 	}
 }
