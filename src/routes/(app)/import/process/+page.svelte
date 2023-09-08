@@ -18,6 +18,7 @@
   import Spinner from "@/lib/Spinner.svelte";
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { sleep } from "@/lib/util/helpers";
+  import { notify } from "@/lib/util/notify";
   import { importedList, watchedList } from "@/store";
   import {
     ImportResponseType,
@@ -114,8 +115,8 @@
     isImporting = true;
     for (let i = 0; i < rList.length; i++) {
       if (cancelled) {
-        console.log("importing cancelled");
-        break;
+        notify({ type: "error", text: "Importing Cancelled" });
+        return;
       }
       const li = rList[i];
       try {
@@ -200,7 +201,13 @@
     <div class="inner">
       {#if rList}
         <h2>Importing {list?.file.name ? list.file.name : ""}</h2>
-        <h5 class="norm">Review your imported list and fix any problems.</h5>
+        <h5 class="norm">
+          {#if !isImporting}
+            Review your imported list and fix any problems.
+          {:else}
+            You can fix any failed imports when the process completes.
+          {/if}
+        </h5>
         <table class={isImporting ? "is-importing" : ""}>
           <tr>
             {#if isImporting}
