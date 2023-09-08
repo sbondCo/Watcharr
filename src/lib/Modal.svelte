@@ -27,7 +27,7 @@
     height: 100dvh;
     z-index: 9998;
     backdrop-filter: blur(2px) saturate(180%);
-    background-color: color-mix(in srgb, $text-color 85%, transparent);
+    background-color: color-mix(in srgb, black 85%, transparent);
   }
 
   .modal {
