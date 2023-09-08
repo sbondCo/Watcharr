@@ -94,7 +94,7 @@ func getPublicWatched(db *gorm.DB, userId uint, username string) ([]Watched, err
 	return *watched, nil
 }
 
-func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error) {
+func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType) (Watched, error) {
 	slog.Debug("Adding watched item", "userId", userId, "contentType", ar.ContentType, "contentId", ar.ContentID)
 
 	var content Content
@@ -256,9 +256,9 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest) (Watched, error)
 	activityJson, err := json.Marshal(map[string]interface{}{"status": ar.Status, "rating": ar.Rating})
 	if err != nil {
 		slog.Error("Failed to marshal json for data in ADD_WATCHED activity request, adding without data", "error", err.Error())
-		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED})
+		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: at})
 	} else {
-		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: ADDED_WATCHED, Data: string(activityJson)})
+		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: at, Data: string(activityJson)})
 	}
 	watched.Activity = append(watched.Activity, activity)
 	watched.Content = content

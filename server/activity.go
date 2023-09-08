@@ -16,6 +16,7 @@ var (
 	STATUS_CHANGED   ActivityType = "STATUS_CHANGED"
 	THOUGHTS_CHANGED ActivityType = "THOUGHTS_CHANGED"
 	THOUGHTS_REMOVED ActivityType = "THOUGHTS_REMOVED"
+	IMPORTED_WATCHED ActivityType = "IMPORTED_WATCHED"
 )
 
 type Activity struct {

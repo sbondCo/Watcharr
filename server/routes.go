@@ -226,7 +226,7 @@ func (b *BaseRouter) addWatchedRoutes() {
 		var ar WatchedAddRequest
 		err := c.ShouldBindJSON(&ar)
 		if err == nil {
-			response, err := addWatched(b.db, userId, ar)
+			response, err := addWatched(b.db, userId, ar, ADDED_WATCHED)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return

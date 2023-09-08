@@ -113,7 +113,7 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 		Status:      FINISHED,
 		ContentID:   contentId,
 		ContentType: contentType,
-	})
+	}, IMPORTED_WATCHED)
 	if err != nil {
 		slog.Error("successfulImport: Failed to add content as watched", "error", err)
 		return ImportResponse{Type: IMPORT_FAILED}, nil
