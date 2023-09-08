@@ -556,4 +556,5 @@ export interface ImportResponse {
   type: ImportResponseType;
   results: (ContentSearchMovie | ContentSearchTv)[];
   match?: ContentSearchMovie | ContentSearchTv;
+  watchedEntry?: Watched;
 }

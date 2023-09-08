@@ -18,7 +18,7 @@
   import Spinner from "@/lib/Spinner.svelte";
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { sleep } from "@/lib/util/helpers";
-  import { importedList } from "@/store";
+  import { importedList, watchedList } from "@/store";
   import {
     ImportResponseType,
     type ImportResponse,
@@ -28,6 +28,8 @@
   } from "@/types";
   import axios from "axios";
   import { get } from "svelte/store";
+
+  const wList = get(watchedList);
 
   interface ImportedList {
     tmdbId?: number;
@@ -157,11 +159,14 @@
         };
       } else if (resp.data.type === ImportResponseType.IMPORT_SUCCESS) {
         item.state = ImportResponseType.IMPORT_SUCCESS;
-        const match = resp.data.match;
-        if (match) {
-          const release = match.media_type === "movie" ? match.release_date : match.first_air_date;
+        const w = resp.data.watchedEntry;
+        if (w) {
+          const release =
+            w.content.type === "movie" ? w.content.release_date : w.content.first_air_date;
           if (release) item.year = String(new Date(Date.parse(release)).getFullYear());
-          item.type = match.media_type;
+          item.type = w.content.type;
+          wList.push(w);
+          watchedList.update(() => wList);
         }
         rList = rList;
         res(0);
