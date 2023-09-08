@@ -27,6 +27,7 @@
     type ContentType
   } from "@/types";
   import axios from "axios";
+  import { onDestroy } from "svelte";
   import { get } from "svelte/store";
 
   const wList = get(watchedList);
@@ -48,6 +49,11 @@
 
   let rList: ImportedList[] = [];
   let isImporting = false;
+  let cancelled = false;
+
+  onDestroy(() => {
+    cancelled = true;
+  });
 
   // Set when current item being imported gets an IMPORT_MULTI
   // response, which then shows the modal for user to pick correct item.
@@ -107,6 +113,10 @@
     console.log(rList);
     isImporting = true;
     for (let i = 0; i < rList.length; i++) {
+      if (cancelled) {
+        console.log("importing cancelled");
+        break;
+      }
       const li = rList[i];
       try {
         console.log("Importing", li);
