@@ -174,6 +174,10 @@
         item.state = ImportResponseType.IMPORT_NOTFOUND;
         rList = rList;
         res(0);
+      } else if (resp.data.type === ImportResponseType.IMPORT_FAILED) {
+        item.state = ImportResponseType.IMPORT_FAILED;
+        rList = rList;
+        res(0);
       }
     });
   }
@@ -209,6 +213,8 @@
                     {:else if l.state === ImportResponseType.IMPORT_SUCCESS}
                       <Icon i="check" wh={22} />
                     {:else if l.state === ImportResponseType.IMPORT_NOTFOUND}
+                      <Icon i="close" wh={22} />
+                    {:else if l.state === ImportResponseType.IMPORT_FAILED}
                       <Icon i="close" wh={22} />
                     {/if}
                   </div>

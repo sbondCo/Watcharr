@@ -56,13 +56,13 @@
   border: 2px solid black;
   border-radius: 5px;
   width: 100%;
+  color: $text-color;
 }
 
 :global(textarea) {
   padding: 5px;
   max-width: 100%;
   background-color: transparent;
-  color: $text-color;
   border-color: $text-color;
 }
 
