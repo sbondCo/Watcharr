@@ -91,12 +91,19 @@
     width: auto;
   }
 
-  &:hover,
-  &:focus-visible {
-    background-color: $text-color;
-    color: $bg-color;
-    fill: $bg-color;
-    opacity: 1;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled) {
+    &:hover,
+    &:focus-visible {
+      background-color: $text-color;
+      color: $bg-color;
+      fill: $bg-color;
+      opacity: 1;
+    }
   }
 }
 
