@@ -35,7 +35,10 @@ var (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Failed to load vars from .env file:", err)
+		// Do not fail if file does not exist
+		if !os.IsNotExist(err) {
+			log.Fatal("Failed to load vars from .env file:", err)
+		}
 	}
 
 	multiw := setupLogging()
