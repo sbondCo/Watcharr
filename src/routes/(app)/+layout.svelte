@@ -146,6 +146,8 @@
           navEl.classList.remove("scrolled-down");
         } else {
           navEl.classList.add("scrolled-down");
+          subMenuShown = false;
+          filterMenuShown = false;
         }
         scroll = window.scrollY;
       });
