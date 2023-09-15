@@ -1,5 +1,6 @@
 :root {
   --bg-color: white;
+  --nav-color: rgba(255, 255, 255, .8);
   --text-color: black;
   --accent-color: rgba(128, 128, 128, 0.226);
   --accent-color-hover: rgba(46, 46, 46);
@@ -10,6 +11,7 @@
 
 :root.theme-dark {
   --bg-color: rgb(15, 15, 15);
+  --nav-color: rgba(15, 15, 15, 0.438);
   --text-color: white;
   --accent-color: rgba(46, 46, 46);
   --accent-color-hover: rgba(255, 255, 255, 0.8);
@@ -25,6 +27,7 @@ $accent-color-hover: var(--accent-color-hover);
 $backdrop-filter: var(--backdrop-filter);
 $backdrop-mix-blend-mode: var(--backdrop-mix-blend-mode);
 $backdrop-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0));
+$nav-color: var(--nav-color);
 $error: #f3555a;
 $success: #28a745;
 

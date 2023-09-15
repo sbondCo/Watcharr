@@ -236,8 +236,8 @@
     top: 0;
     gap: 20px;
     z-index: 999999999;
-    backdrop-filter: blur(2.5px) saturate(180%);
-    background-color: color-mix(in srgb, $bg-color 75%, transparent);
+    backdrop-filter: blur(2.5px) saturate(120%);
+    background-color: $nav-color;
     transition: top 200ms ease-in-out;
 
     &:global(.scrolled-down) {
