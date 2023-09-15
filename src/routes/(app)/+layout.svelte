@@ -8,10 +8,12 @@
   import { notify } from "@/lib/util/notify";
   import { activeFilter, clearAllStores, userSettings, watchedList } from "@/store";
   import axios from "axios";
+  import { onMount } from "svelte";
   import { get } from "svelte/store";
 
   const username = localStorage.getItem("username");
 
+  let navEl: HTMLElement;
   let searchTimeout: number;
   let subMenuShown = false;
   let filterMenuShown = false;
@@ -135,9 +137,27 @@
     }
     activeFilter.update((af) => (af = [type, mode]));
   }
+
+  onMount(() => {
+    if (navEl) {
+      let scroll = window.scrollY;
+      window.document.addEventListener("scroll", (ev: Event) => {
+        if (scroll > window.scrollY) {
+          navEl.classList.remove("scrolled-down");
+        } else {
+          navEl.classList.add("scrolled-down");
+          subMenuShown = false;
+          filterMenuShown = false;
+        }
+        scroll = window.scrollY;
+      });
+    } else {
+      console.error("navEl doesn't exist, failed to initialize up/down listener");
+    }
+  });
 </script>
 
-<nav>
+<nav bind:this={navEl}>
   <a href="/">
     <span class="large">Watcharr</span>
     <span class="small">W</span>
@@ -212,9 +232,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 10px 20px 28px 20px;
-    position: relative;
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
     gap: 20px;
+    z-index: 999999999;
+    backdrop-filter: blur(2.5px) saturate(120%);
+    background-color: $nav-color;
+    transition: top 200ms ease-in-out;
+
+    &:global(.scrolled-down) {
+      top: -71px;
+    }
 
     a {
       text-decoration: none;
