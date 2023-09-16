@@ -8,36 +8,46 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import Icon from "@/lib/Icon.svelte";
+  import Spinner from "@/lib/Spinner.svelte";
+  import { notify } from "@/lib/util/notify";
   import { importedList } from "@/store";
   import { onMount } from "svelte";
 
   let fileInput: HTMLInputElement;
   let dragEnterTarget: EventTarget | null;
   let isDragOver = false;
+  let isLoading = false;
 
   function processFiles(files?: FileList | null) {
-    console.log("processFiles", files);
-    if (!files) {
-      console.error("processFiles", "No files to process!");
-      return;
+    try {
+      console.log("processFiles", files);
+      if (!files) {
+        console.error("processFiles", "No files to process!");
+        return;
+      }
+      isLoading = true;
+      // Currently only support for importing one file at a time
+      const file = files[0];
+      const r = new FileReader();
+      r.addEventListener(
+        "load",
+        () => {
+          if (r.result) {
+            importedList.set({
+              file,
+              data: r.result.toString()
+            });
+            goto("/import/process");
+          }
+        },
+        false
+      );
+      r.readAsText(file);
+    } catch (err) {
+      isLoading = false;
+      notify({ type: "error", text: "Failed to read file!" });
+      console.error("import: Failed to read file!", err);
     }
-    // Currently only support for importing one file at a time
-    const file = files[0];
-    const r = new FileReader();
-    r.addEventListener(
-      "load",
-      () => {
-        if (r.result) {
-          importedList.set({
-            file,
-            data: r.result.toString()
-          });
-          goto("/import/process");
-        }
-      },
-      false
-    );
-    r.readAsText(file);
   }
 
   function importFile() {
@@ -57,46 +67,50 @@
   <div class="inner">
     <h2>Import Your Watchlist</h2>
     <div class="big-btns">
-      <button
-        on:click={importFile}
-        on:dragover={(ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-        }}
-        on:dragenter={(ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          dragEnterTarget = ev.target;
-          console.log("enter");
-          isDragOver = true;
-        }}
-        on:dragleave={(ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          if (dragEnterTarget === ev.target) {
-            console.log("leave");
-            isDragOver = false;
-          }
-        }}
-        on:drop={(ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          processFiles(ev.dataTransfer?.files);
-        }}
-        class={isDragOver ? "dragging-over" : ""}
-      >
-        <Icon i={isDragOver ? "add" : "document"} wh="100%" />
-        <div>
-          <h4 class="norm">
-            {#if isDragOver}
-              Import
-            {:else}
-              Browse
-            {/if}
-          </h4>
-          <!-- <h5 class="norm">Or Drag And Drop</h5> -->
-        </div>
-      </button>
+      {#if isLoading}
+        <Spinner />
+      {:else}
+        <button
+          on:click={importFile}
+          on:dragover={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+          }}
+          on:dragenter={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            dragEnterTarget = ev.target;
+            console.log("enter");
+            isDragOver = true;
+          }}
+          on:dragleave={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (dragEnterTarget === ev.target) {
+              console.log("leave");
+              isDragOver = false;
+            }
+          }}
+          on:drop={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            processFiles(ev.dataTransfer?.files);
+          }}
+          class={isDragOver ? "dragging-over" : ""}
+        >
+          <Icon i={isDragOver ? "add" : "document"} wh="100%" />
+          <div>
+            <h4 class="norm">
+              {#if isDragOver}
+                Import
+              {:else}
+                Browse
+              {/if}
+            </h4>
+            <!-- <h5 class="norm">Or Drag And Drop</h5> -->
+          </div>
+        </button>
+      {/if}
     </div>
   </div>
   <input type="file" bind:this={fileInput} />
