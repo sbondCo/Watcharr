@@ -65,16 +65,15 @@
       return;
     }
     console.log("getList", list);
-    // TODO transform the data into readable depending on type
     if (list?.file.type === "text/plain") {
       // Regex to match a year in between brackets,
       // which we assume is the release year of content.
       const yearRegex = new RegExp(/\([0-9]{4}\)/);
       const s = list.data.split("\n");
       for (let i = 0; i < s.length; i++) {
-        const el = s[i];
+        const el = s[i]?.trim();
         if (el) {
-          const l: ImportedList = { name: el.trim() };
+          const l: ImportedList = { name: el };
           const year = el.match(yearRegex);
           if (year && year.length > 0) {
             l.year = year[0].replaceAll(/\(|\)/g, "");
