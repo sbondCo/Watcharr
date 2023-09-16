@@ -2,9 +2,6 @@
   /import/process is for processing the
   selected files data. Here it will be
   displayed and imported.
-
-  TODO:
-    - Go back to main import page if no list
  -->
 
 <script lang="ts">
