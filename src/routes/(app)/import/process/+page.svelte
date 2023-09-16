@@ -77,7 +77,7 @@
       for (let i = 0; i < s.length; i++) {
         const el = s[i];
         if (el) {
-          const l: ImportedList = { name: el };
+          const l: ImportedList = { name: el.trim() };
           const year = el.match(yearRegex);
           if (year && year.length > 0) {
             l.year = year[0].replaceAll(/\(|\)/g, "");
@@ -431,6 +431,7 @@
 
       input {
         background: transparent;
+        color: $text-color;
         border: 0;
         font-size: 16px;
         padding: 0;
