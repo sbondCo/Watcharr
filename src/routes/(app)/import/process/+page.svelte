@@ -238,9 +238,15 @@
                   </div>
                 </td>
               {/if}
-              <td><input class="plain" bind:value={l.name} /></td>
+              <td><input class="plain" bind:value={l.name} disabled={isImporting} /></td>
               <td class="year">
-                <input class="plain" bind:value={l.year} placeholder="YYYY" type="number" />
+                <input
+                  class="plain"
+                  bind:value={l.year}
+                  placeholder="YYYY"
+                  type="number"
+                  disabled={isImporting}
+                />
               </td>
               <td class="type">
                 <DropDown
@@ -248,6 +254,7 @@
                   bind:active={l.type}
                   placeholder="Type"
                   blendIn={true}
+                  disabled={isImporting}
                 />
               </td>
               {#if !isImporting}

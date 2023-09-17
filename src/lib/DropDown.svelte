@@ -5,6 +5,7 @@
   export let active: string | undefined;
   export let placeholder: string;
   export let blendIn: boolean = false;
+  export let disabled = false;
 
   let availableOptions = options.filter((o) => o !== active);
   let open = false;
@@ -17,7 +18,7 @@
     blendIn ? "blend-in" : ""
   ].join(" ")}
 >
-  <button on:click={() => (open = !open)}>
+  <button on:click={() => (open = !open)} {disabled}>
     {active ? active : placeholder}
     <Icon i="chevron" facing={open ? "up" : "down"} />
   </button>
@@ -46,7 +47,7 @@
       & > button {
         color: #8e8e8e;
 
-        &:hover {
+        &:hover:not(:disabled) {
           color: $bg-color;
         }
       }
@@ -57,8 +58,8 @@
         border-color: transparent;
         background-color: transparent;
 
-        &:hover,
-        &:focus-visible {
+        &:hover:not(:disabled),
+        &:focus-visible:not(:disabled) {
           background-color: $text-color;
         }
       }
@@ -109,8 +110,8 @@
           text-transform: capitalize;
           transition: background-color 100ms ease;
 
-          &:hover,
-          &:focus-visible {
+          &:hover:not(:disabled),
+          &:focus-visible:not(:disabled) {
             background-color: $text-color;
             color: $bg-color;
             fill: $bg-color;
