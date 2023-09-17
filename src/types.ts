@@ -19,7 +19,8 @@ export type Icon =
   | "document"
   | "add"
   | "arrow"
-  | "chevron";
+  | "chevron"
+  | "search";
 
 export type Theme = "light" | "dark";
 
@@ -549,7 +550,8 @@ export enum ImportResponseType {
   IMPORT_SUCCESS = "IMPORT_SUCCESS",
   IMPORT_FAILED = "IMPORT_FAILED",
   IMPORT_MULTI = "IMPORT_MULTI",
-  IMPORT_NOTFOUND = "IMPORT_NOTFOUND"
+  IMPORT_NOTFOUND = "IMPORT_NOTFOUND",
+  IMPORT_EXISTS = "IMPORT_EXISTS"
 }
 
 export interface ImportResponse {
@@ -557,4 +559,12 @@ export interface ImportResponse {
   results: (ContentSearchMovie | ContentSearchTv)[];
   match?: ContentSearchMovie | ContentSearchTv;
   watchedEntry?: Watched;
+}
+
+export interface ImportedList {
+  tmdbId?: number;
+  name: string;
+  year?: string;
+  type?: ContentType;
+  state?: string;
 }

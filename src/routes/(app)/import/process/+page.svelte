@@ -16,28 +16,19 @@
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { sleep } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
-  import { importedList, watchedList } from "@/store";
+  import { importedList, parsedImportedList, watchedList } from "@/store";
   import {
     ImportResponseType,
     type ImportResponse,
     type ContentSearchTv,
     type ContentSearchMovie,
-    type ContentType
+    type ImportedList
   } from "@/types";
   import axios from "axios";
   import { onDestroy } from "svelte";
   import { get } from "svelte/store";
 
   const wList = get(watchedList);
-
-  interface ImportedList {
-    tmdbId?: number;
-    // TODO: this property can be unique if we remove duplicates
-    name: string;
-    year?: string;
-    type?: ContentType;
-    state?: string;
-  }
 
   interface ImportedListItemMultiProblem {
     original: ImportedList;
@@ -83,6 +74,7 @@
         }
       }
     }
+    // TODO: remove duplicate names in list
     return list;
   }
 
@@ -122,6 +114,21 @@
       } catch (err) {
         console.error("Failed to import item:", li, "reason:", err);
       }
+    }
+    importedList.set(undefined);
+    if (
+      rList.some(
+        (i) =>
+          i.state == ImportResponseType.IMPORT_FAILED ||
+          i.state == ImportResponseType.IMPORT_NOTFOUND
+      )
+    ) {
+      // Some items failed.. go to some-failed
+      parsedImportedList.set(rList);
+      goto("/import/some-failed");
+    } else {
+      notify({ type: "success", text: "All content successfully imported!" });
+      goto("/");
     }
   }
 
@@ -177,12 +184,8 @@
         }
         rList = rList;
         res(0);
-      } else if (resp.data.type === ImportResponseType.IMPORT_NOTFOUND) {
-        item.state = ImportResponseType.IMPORT_NOTFOUND;
-        rList = rList;
-        res(0);
-      } else if (resp.data.type === ImportResponseType.IMPORT_FAILED) {
-        item.state = ImportResponseType.IMPORT_FAILED;
+      } else {
+        item.state = resp.data.type;
         rList = rList;
         res(0);
       }
@@ -229,6 +232,8 @@
                       <Icon i="close" wh={22} />
                     {:else if l.state === ImportResponseType.IMPORT_FAILED}
                       <Icon i="close" wh={22} />
+                    {:else if l.state === ImportResponseType.IMPORT_EXISTS}
+                      <Icon i="check" wh={22} />
                     {/if}
                   </div>
                 </td>

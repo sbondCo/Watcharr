@@ -20,6 +20,8 @@ var (
 	IMPORT_MULTI ImportResponseType = "IMPORT_MULTI"
 	// Import query returned zero results, user must provide more info
 	IMPORT_NOTFOUND ImportResponseType = "IMPORT_NOTFOUND"
+	// Item already exists so couldn't import (unique constraint hit when adding)
+	IMPORT_EXISTS ImportResponseType = "IMPORT_EXISTS"
 )
 
 type ImportRequest struct {
@@ -115,6 +117,10 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 		ContentType: contentType,
 	}, IMPORTED_WATCHED)
 	if err != nil {
+		if err.Error() == "content already on watched list" {
+			slog.Error("successfulImport: unique constraint hit.. show must already be on watch list", "error", err)
+			return ImportResponse{Type: IMPORT_EXISTS}, nil
+		}
 		slog.Error("successfulImport: Failed to add content as watched", "error", err)
 		return ImportResponse{Type: IMPORT_FAILED}, nil
 	}
