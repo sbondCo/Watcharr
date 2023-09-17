@@ -41,6 +41,7 @@
 <div class="content">
   <div class="inner">
     <h2>Some Content Failed To Import</h2>
+    <h5 class="norm">You can search for the failed imports and manually add them.</h5>
     <h4 class="norm">{successCount} succeeded and {failed.length} failed.</h4>
 
     {#if failed}
@@ -74,6 +75,10 @@
       max-width: 600px;
       overflow: hidden;
     }
+  }
+
+  h4 {
+    margin-top: 15px;
   }
 
   ul {
