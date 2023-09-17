@@ -65,7 +65,10 @@
 
 <div class="content">
   <div class="inner">
-    <h2>Import Your Watchlist</h2>
+    <span class="header">
+      <h2>Import Your Watchlist</h2>
+      <h5 class="norm">beta</h5>
+    </span>
     <div class="big-btns">
       {#if isLoading}
         <Spinner />
@@ -129,6 +132,15 @@
       min-width: 400px;
       max-width: 400px;
       overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      gap: 10px;
+
+      h5 {
+        margin-top: 3px;
+      }
     }
 
     .big-btns {

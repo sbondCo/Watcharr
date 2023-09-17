@@ -2,11 +2,16 @@
   /import/some-failed shows the user the
   failed imports so they can manually import
   them instead.
+
+  TODO: It would be better if this page didn't exist
+    and we instead just let users `re-try` on import/process
+    table. If any failed, we can hide the success ones (and
+    add a toggle to show successful ones), user can edit any
+    failed rows and try import each again.
  -->
 
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import Icon from "@/lib/Icon.svelte";
   import { parsedImportedList } from "@/store";
   import { ImportResponseType, type ImportedList } from "@/types";
   import { onMount } from "svelte";
@@ -49,9 +54,6 @@
         {#each failed as l}
           <li>
             <span>{l.name}</span>
-            <a href="/search/{l.name}" target="_blank">
-              <button><Icon i="search" /></button>
-            </a>
           </li>
         {/each}
       </ul>
