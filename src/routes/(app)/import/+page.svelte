@@ -26,8 +26,24 @@
         return;
       }
       isLoading = true;
+      if (files.length > 1) {
+        notify({
+          type: "error",
+          text: "Only one file at a time is supported. Continuing with the first.",
+          time: 6000
+        });
+      }
       // Currently only support for importing one file at a time
       const file = files[0];
+      if (file.type !== "text/plain") {
+        notify({
+          type: "error",
+          text: "Currently only text files are supported"
+        });
+        isLoading = false;
+        isDragOver = false;
+        return;
+      }
       const r = new FileReader();
       r.addEventListener(
         "load",
