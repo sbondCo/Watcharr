@@ -8,7 +8,6 @@
   import { notify } from "@/lib/util/notify";
   import { activeFilter, clearAllStores, searchQuery, userSettings, watchedList } from "@/store";
   import axios from "axios";
-  import { onMount } from "svelte";
   import { get } from "svelte/store";
 
   const username = localStorage.getItem("username");

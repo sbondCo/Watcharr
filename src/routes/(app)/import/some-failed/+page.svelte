@@ -7,7 +7,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import Icon from "@/lib/Icon.svelte";
-  import { parsedImportedList, watchedList } from "@/store";
+  import { parsedImportedList } from "@/store";
   import { ImportResponseType, type ImportedList } from "@/types";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
