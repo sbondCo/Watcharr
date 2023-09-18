@@ -55,7 +55,7 @@ func (b *BaseRouter) addContentRoutes() {
 			c.Status(400)
 			return
 		}
-		content, err := movieDetails(c.Param("id"), c.MustGet("userCountry").(string))
+		content, err := movieDetails(c.Param("id"), c.MustGet("userCountry").(string), map[string]string{"append_to_response": "videos,watch/providers"})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -83,7 +83,7 @@ func (b *BaseRouter) addContentRoutes() {
 			c.Status(400)
 			return
 		}
-		content, err := tvDetails(c.Param("id"), c.MustGet("userCountry").(string))
+		content, err := tvDetails(c.Param("id"), c.MustGet("userCountry").(string), map[string]string{"append_to_response": "videos,watch/providers"})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -226,7 +226,7 @@ func (b *BaseRouter) addWatchedRoutes() {
 		var ar WatchedAddRequest
 		err := c.ShouldBindJSON(&ar)
 		if err == nil {
-			response, err := addWatched(b.db, userId, ar)
+			response, err := addWatched(b.db, userId, ar, ADDED_WATCHED)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
@@ -448,5 +448,25 @@ func (b *BaseRouter) addUserRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, response)
+	})
+}
+
+func (b *BaseRouter) addImportRoutes() {
+	imprt := b.rg.Group("/import").Use(AuthRequired(nil))
+
+	imprt.POST("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ar ImportRequest
+		err := c.ShouldBindJSON(&ar)
+		if err == nil {
+			response, err := importContent(b.db, userId, ar)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 }

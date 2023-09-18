@@ -2,11 +2,12 @@
   import type { Icon } from "@/types";
 
   export let i: Icon;
-  export let wh = 24;
+  export let wh: number | string = 24;
+  export let facing: "up" | "down" | "left" | "right" | undefined = undefined;
 </script>
 
 {#if i === "check"}
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={wh} height={wh}>
     <path
       fill="none"
       stroke="currentColor"
@@ -84,7 +85,7 @@
     />
   </svg>
 {:else if i === "close"}
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={wh} height={wh}>
     <path
       fill="none"
       stroke="currentColor"
@@ -131,9 +132,90 @@
       d="m351 151-118 47a64 64 0 0 0-35 35l-47 118a8 8 0 0 0 10 10l118-47a64 64 0 0 0 35-35l47-118a8 8 0 0 0-10-10zm-95 129a24 24 0 1 1 24-24 24 24 0 0 1-24 24z"
     />
   </svg>
+{:else if i === "document"}
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <path
+      d="M416 221.25V416a48 48 0 0 1-48 48H144a48 48 0 0 1-48-48V96a48 48 0 0 1 48-48h98.75a32 32 0 0 1 22.62 9.37l141.26 141.26a32 32 0 0 1 9.37 22.62z"
+      fill="none"
+      stroke="currentColor"
+      stroke-linejoin="round"
+      stroke-width="32"
+    />
+    <path
+      d="M256 56v120a32 32 0 0 0 32 32h120m-232 80h160m-160 80h160"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="32"
+    />
+  </svg>
+{:else if i === "add"}
+  <svg xmlns="http://www.w3.org/2000/svg" width={wh} height={wh} viewBox="0 0 512 512">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="32"
+      d="M256 112v288M400 256H112"
+    />
+  </svg>
+{:else if i === "arrow"}
+  <svg
+    class={facing}
+    xmlns="http://www.w3.org/2000/svg"
+    width={wh}
+    height={wh}
+    viewBox="0 0 512 512"
+  >
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="48"
+      d="M244 400L100 256l144-144M120 256h292"
+    />
+  </svg>
+{:else if i === "chevron"}
+  <svg
+    class={facing}
+    xmlns="http://www.w3.org/2000/svg"
+    width={wh}
+    height={wh}
+    viewBox="0 0 512 512"
+  >
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="48"
+      d="M328 112L184 256l144 144"
+    />
+  </svg>
+{:else if i === "search"}
+  <svg xmlns="http://www.w3.org/2000/svg" width={wh} height={wh} viewBox="0 0 512 512">
+    <path
+      d="M456.69 421.39L362.6 327.3a173.81 173.81 0 0034.84-104.58C397.44 126.38 319.06 48 222.72 48S48 126.38 48 222.72s78.38 174.72 174.72 174.72A173.81 173.81 0 00327.3 362.6l94.09 94.09a25 25 0 0035.3-35.3zM97.92 222.72a124.8 124.8 0 11124.8 124.8 124.95 124.95 0 01-124.8-124.8z"
+    />
+  </svg>
 {/if}
 
 <style lang="scss">
+  svg {
+    transition: transform 100ms ease-in-out;
+
+    &.up {
+      transform: rotate(90deg);
+    }
+
+    &.down {
+      transform: rotate(270deg);
+    }
+  }
+
   #reel {
     path:first-of-type {
       fill: $text-color;

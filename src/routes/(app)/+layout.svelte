@@ -6,7 +6,7 @@
   import Spinner from "@/lib/Spinner.svelte";
   import { isTouch, parseTokenPayload } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
-  import { activeFilter, clearAllStores, userSettings, watchedList } from "@/store";
+  import { activeFilter, clearAllStores, searchQuery, userSettings, watchedList } from "@/store";
   import axios from "axios";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
@@ -162,7 +162,7 @@
     <span class="large">Watcharr</span>
     <span class="small">W</span>
   </a>
-  <input type="text" placeholder="Search" on:keydown={handleSearch} />
+  <input type="text" placeholder="Search" bind:value={$searchQuery} on:keydown={handleSearch} />
   <div class="btns">
     <!-- Only show on watched list -->
     {#if $page.url?.pathname === "/"}

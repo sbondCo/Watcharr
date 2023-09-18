@@ -7,6 +7,7 @@
   --backdrop-filter: blur(4px) grayscale(80%);
   --backdrop-mix-blend-mode: multiply;
   --rating-color: black;
+  --placeholder-color: #8e8e8e;
 }
 
 :root.theme-dark {
@@ -18,10 +19,12 @@
   --backdrop-filter: blur(0.5px) grayscale(50%);
   --backdrop-mix-blend-mode: difference;
   --rating-color: gold;
+  --placeholder-color: #8e8e8e;
 }
 
 $bg-color: var(--bg-color);
 $text-color: var(--text-color);
+$placeholder-color: var(--placeholder-color);
 $accent-color: var(--accent-color);
 $accent-color-hover: var(--accent-color-hover);
 $backdrop-filter: var(--backdrop-filter);

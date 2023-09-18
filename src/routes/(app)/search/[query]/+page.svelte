@@ -1,19 +1,19 @@
 <script lang="ts">
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
-  import { watchedList } from "@/store";
-  import type { ContentSearch } from "./+page";
-  import { removeWatched, updateWatched } from "@/lib/util/api";
+  import { searchQuery, watchedList } from "@/store";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import axios from "axios";
   import { getWatchedDependedProps } from "@/lib/util/helpers";
   import PersonPoster from "@/lib/PersonPoster.svelte";
-  import type { PublicUser } from "@/types";
+  import type { ContentSearch, PublicUser } from "@/types";
   import UsersList from "@/lib/UsersList.svelte";
+  import { onDestroy, onMount } from "svelte";
 
   export let data;
 
+  $: searchQ = $searchQuery;
   $: wList = $watchedList;
 
   async function search(query: string) {
@@ -23,6 +23,16 @@
   async function searchUsers(query: string) {
     return (await axios.get(`/user/search/${query}`)).data as PublicUser[];
   }
+
+  onMount(() => {
+    if (!searchQ && data.slug) {
+      searchQuery.set(data.slug);
+    }
+  });
+
+  onDestroy(() => {
+    searchQuery.set("");
+  });
 </script>
 
 <svelte:head>

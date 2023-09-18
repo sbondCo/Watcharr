@@ -171,3 +171,11 @@ export function parseTokenPayload(): TokenClaims | undefined {
     return;
   }
 }
+
+export async function sleep(ms: number) {
+  return new Promise<void>((r) =>
+    setTimeout(() => {
+      r();
+    }, ms)
+  );
+}

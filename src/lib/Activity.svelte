@@ -36,6 +36,8 @@
         return "thoughts changed";
       case "THOUGHTS_REMOVED":
         return "thoughts removed";
+      case "IMPORTED_WATCHED":
+        return "imported";
       default:
         return a.type;
     }

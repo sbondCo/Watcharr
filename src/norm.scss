@@ -61,8 +61,8 @@
 :global(textarea) {
   padding: 5px;
   max-width: 100%;
-  background-color: transparent;
   color: $text-color;
+  background-color: transparent;
   border-color: $text-color;
 }
 
@@ -91,12 +91,19 @@
     width: auto;
   }
 
-  &:hover,
-  &:focus-visible {
-    background-color: $text-color;
-    color: $bg-color;
-    fill: $bg-color;
-    opacity: 1;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled) {
+    &:hover,
+    &:focus-visible {
+      background-color: $text-color;
+      color: $bg-color;
+      fill: $bg-color;
+      opacity: 1;
+    }
   }
 }
 

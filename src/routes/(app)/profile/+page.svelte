@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import Checkbox from "@/lib/Checkbox.svelte";
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
@@ -87,6 +88,10 @@
             });
           }}
         />
+      </div>
+
+      <div class="row btns">
+        <button on:click={() => goto("/import")}>Import</button>
       </div>
     </div>
   </div>
@@ -181,6 +186,10 @@
 
         & > div:first-of-type {
           margin-right: auto;
+        }
+
+        &.btns button {
+          width: min-content;
         }
       }
     }
