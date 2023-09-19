@@ -28,6 +28,7 @@
     z-index: 9998;
     backdrop-filter: blur(2px) saturate(180%);
     background-color: color-mix(in srgb, black 85%, transparent);
+    position: fixed;
   }
 
   .modal {
