@@ -101,6 +101,7 @@
   async function startImport() {
     console.log(rList);
     isImporting = true;
+    window.scrollTo(0, 0);
     for (let i = 0; i < rList.length; i++) {
       if (cancelled) {
         notify({ type: "error", text: "Importing Cancelled" });
