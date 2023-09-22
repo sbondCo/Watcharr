@@ -6,18 +6,28 @@
   import Spinner from "@/lib/Spinner.svelte";
   import { isTouch, parseTokenPayload } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
-  import { activeFilter, clearAllStores, searchQuery, userSettings, watchedList } from "@/store";
+  import {
+    activeFilter,
+    activeSort,
+    clearAllStores,
+    searchQuery,
+    userSettings,
+    watchedList
+  } from "@/store";
   import axios from "axios";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
 
   const username = localStorage.getItem("username");
+  const filters = ["watched", "planned", "finished", "hold", "dropped"];
 
   let navEl: HTMLElement;
   let searchTimeout: number;
   let subMenuShown = false;
   let filterMenuShown = false;
+  let sortMenuShown = false;
 
+  $: sort = $activeSort;
   $: filter = $activeFilter;
   $: settings = $userSettings;
 
@@ -27,12 +37,8 @@
     } else {
       subMenuShown = !subMenuShown;
       filterMenuShown = false;
+      sortMenuShown = false;
     }
-  }
-
-  function handleFilterClick() {
-    filterMenuShown = !filterMenuShown;
-    subMenuShown = false;
   }
 
   function handleSearch(ev: KeyboardEvent) {
@@ -112,8 +118,8 @@
     }
   }
 
-  function filterClicked(type: string, modeType: string = "UPDOWN") {
-    const af = get(activeFilter);
+  function sortClicked(type: string, modeType: string = "UPDOWN") {
+    const af = get(activeSort);
     let mode: string;
     if (modeType === "UPDOWN") {
       mode = "UP";
@@ -135,7 +141,16 @@
       console.error("filterClicked() ran without a valid modeType:", modeType);
       return;
     }
-    activeFilter.update((af) => (af = [type, mode]));
+    activeSort.update((af) => (af = [type, mode]));
+  }
+
+  function filterClicked(type: string) {
+    const af = get(activeFilter);
+    if (af === type) {
+      activeFilter.update((af) => (af = ""));
+    } else {
+      activeFilter.update((af) => (af = type));
+    }
   }
 
   onMount(() => {
@@ -148,6 +163,7 @@
           navEl.classList.add("scrolled-down");
           subMenuShown = false;
           filterMenuShown = false;
+          sortMenuShown = false;
         }
         scroll = window.scrollY;
       });
@@ -166,35 +182,61 @@
   <div class="btns">
     <!-- Only show on watched list -->
     {#if $page.url?.pathname === "/"}
-      <button class="plain other" on:click={handleFilterClick}>
+      <button
+        class="plain other"
+        on:click={() => {
+          filterMenuShown = !filterMenuShown;
+          sortMenuShown = false;
+          subMenuShown = false;
+        }}
+      >
         <Icon i="filter" />
       </button>
-      {#if filterMenuShown}
-        <div class="filter-menu">
+      <button
+        class="plain other"
+        on:click={() => {
+          sortMenuShown = !sortMenuShown;
+          filterMenuShown = false;
+          subMenuShown = false;
+        }}
+      >
+        <Icon i="sort" />
+      </button>
+      {#if sortMenuShown}
+        <div class="sort-menu">
           <button
-            class={`plain ${filter[0] == "DATEADDED" ? filter[1].toLowerCase() : ""}`}
-            on:click={() => filterClicked("DATEADDED")}
+            class={`plain ${sort[0] == "DATEADDED" ? sort[1].toLowerCase() : ""}`}
+            on:click={() => sortClicked("DATEADDED")}
           >
             Date Added
           </button>
           <button
-            class={`plain ${filter[0] == "LASTCHANGED" ? filter[1].toLowerCase() : ""}`}
-            on:click={() => filterClicked("LASTCHANGED")}
+            class={`plain ${sort[0] == "LASTCHANGED" ? sort[1].toLowerCase() : ""}`}
+            on:click={() => sortClicked("LASTCHANGED")}
           >
             Last Changed
           </button>
           <button
-            class={`plain ${filter[0] == "RATING" ? filter[1].toLowerCase() : ""}`}
-            on:click={() => filterClicked("RATING")}
+            class={`plain ${sort[0] == "RATING" ? sort[1].toLowerCase() : ""}`}
+            on:click={() => sortClicked("RATING")}
           >
             Rating
           </button>
           <button
-            class={`plain ${filter[0] == "ALPHA" ? filter[1].toLowerCase() : ""}`}
-            on:click={() => filterClicked("ALPHA")}
+            class={`plain ${sort[0] == "ALPHA" ? sort[1].toLowerCase() : ""}`}
+            on:click={() => sortClicked("ALPHA")}
           >
             Alphabetical
           </button>
+        </div>
+      {/if}
+      {#if filterMenuShown}
+        <div class="filter-menu">
+          {#each filters as f}
+            <button class={`plain ${filter == f ? "on" : ""}`} on:click={() => filterClicked(f)}>
+              {f}
+            </button>
+          {/each}
         </div>
       {/if}
     {/if}
@@ -356,7 +398,7 @@
         }
       }
 
-      div.filter-menu {
+      div.sort-menu {
         width: 180px;
 
         & > button {
@@ -387,11 +429,36 @@
         }
       }
 
+      div.filter-menu {
+        width: 180px;
+        right: 35px;
+
+        & > button {
+          text-transform: capitalize;
+          position: relative;
+
+          &.on::before {
+            content: "\2713";
+          }
+
+          &::before {
+            position: absolute;
+            top: 4px;
+            left: 12px;
+            font-family:
+              system-ui,
+              -apple-system,
+              BlinkMacSystemFont;
+            font-size: 18px;
+          }
+        }
+      }
+
       div {
         display: flex;
         flex-flow: column;
         position: absolute;
-        right: 0;
+        right: 3px;
         top: 55px;
         width: 125px;
         padding: 10px;
