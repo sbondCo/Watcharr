@@ -266,7 +266,7 @@
     </button>
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
-      <div class="face-menu">
+      <div class="menu face-menu">
         {#if username}
           <h5 title={username}>Hi {username}!</h5>
         {/if}
