@@ -412,6 +412,12 @@
 
       button.filter {
         margin-right: 15px;
+        &:hover,
+        &:focus-visible {
+          :global(path) {
+            stroke-width: 15px;
+          }
+        }
       }
 
       button.sort {
