@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import type { FileWithData, ImportedList, Theme, UserSettings, Watched } from "./types";
+import type { FileWithData, Filters, ImportedList, Theme, UserSettings, Watched } from "./types";
 import type { Notification } from "./lib/util/notify";
 import { browser } from "$app/environment";
 import { toggleTheme } from "./lib/util/helpers";
@@ -8,7 +8,7 @@ export const userSettings = writable<UserSettings>();
 export const watchedList = writable<Watched[]>([]);
 export const notifications = writable<Notification[]>([]);
 export const activeSort = writable<string[]>(["DATEADDED", "DOWN"]);
-export const activeFilter = writable<string>("");
+export const activeFilters = writable<Filters>({ type: [], status: [] });
 export const appTheme = writable<Theme>();
 export const importedList = writable<FileWithData | undefined>();
 export const parsedImportedList = writable<ImportedList[] | undefined>();

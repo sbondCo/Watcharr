@@ -7,19 +7,20 @@
   import { isTouch, parseTokenPayload } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import {
-    activeFilter,
+    activeFilters,
     activeSort,
     clearAllStores,
     searchQuery,
     userSettings,
     watchedList
   } from "@/store";
+  import type { Filters } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
 
   const username = localStorage.getItem("username");
-  const filters = ["watched", "planned", "finished", "hold", "dropped"];
+  const filters = ["planned", "watching", "finished", "hold", "dropped"];
 
   let navEl: HTMLElement;
   let searchTimeout: number;
@@ -28,7 +29,7 @@
   let sortMenuShown = false;
 
   $: sort = $activeSort;
-  $: filter = $activeFilter;
+  $: filter = $activeFilters;
   $: settings = $userSettings;
 
   function handleProfileClick() {
@@ -144,13 +145,14 @@
     activeSort.update((af) => (af = [type, mode]));
   }
 
-  function filterClicked(type: string) {
-    const af = get(activeFilter);
-    if (af === type) {
-      activeFilter.update((af) => (af = ""));
+  function filterClicked(type: keyof Filters, f: string) {
+    const af = get(activeFilters);
+    if (af[type]?.includes(f)) {
+      af[type] = af[type]?.filter((a) => a !== f);
     } else {
-      activeFilter.update((af) => (af = type));
+      af[type]?.push(f);
     }
+    activeFilters.update((a) => (a = af));
   }
 
   onMount(() => {
@@ -203,7 +205,7 @@
         <Icon i="sort" />
       </button>
       {#if sortMenuShown}
-        <div class="sort-menu">
+        <div class="menu sort-menu">
           <button
             class={`plain ${sort[0] == "DATEADDED" ? sort[1].toLowerCase() : ""}`}
             on:click={() => sortClicked("DATEADDED")}
@@ -231,9 +233,28 @@
         </div>
       {/if}
       {#if filterMenuShown}
-        <div class="filter-menu">
+        <div class="menu filter-menu">
+          <h4 class="norm sm-caps">type</h4>
+          <div class="type-filter">
+            <button
+              class={`${filter.type.includes("tv") ? "active" : ""}`}
+              on:click={() => filterClicked("type", "tv")}
+            >
+              SHOW
+            </button>
+            <button
+              class={`${filter.type.includes("movie") ? "active" : ""}`}
+              on:click={() => filterClicked("type", "movie")}
+            >
+              MOVIE
+            </button>
+          </div>
+          <h4 class="norm sm-caps">status</h4>
           {#each filters as f}
-            <button class={`plain ${filter == f ? "on" : ""}`} on:click={() => filterClicked(f)}>
+            <button
+              class={`plain ${filter.status.includes(f) ? "on" : ""}`}
+              on:click={() => filterClicked("status", f)}
+            >
               {f}
             </button>
           {/each}
@@ -398,63 +419,7 @@
         }
       }
 
-      div.sort-menu {
-        width: 180px;
-
-        & > button {
-          position: relative;
-
-          &.down::before {
-            content: "\2193";
-          }
-
-          &.up::before {
-            content: "\2191";
-          }
-
-          &.on::before {
-            content: "\2713";
-          }
-
-          &::before {
-            position: absolute;
-            top: 4px;
-            left: 12px;
-            font-family:
-              system-ui,
-              -apple-system,
-              BlinkMacSystemFont;
-            font-size: 18px;
-          }
-        }
-      }
-
-      div.filter-menu {
-        width: 180px;
-        right: 35px;
-
-        & > button {
-          text-transform: capitalize;
-          position: relative;
-
-          &.on::before {
-            content: "\2713";
-          }
-
-          &::before {
-            position: absolute;
-            top: 4px;
-            left: 12px;
-            font-family:
-              system-ui,
-              -apple-system,
-              BlinkMacSystemFont;
-            font-size: 18px;
-          }
-        }
-      }
-
-      div {
+      div.menu {
         display: flex;
         flex-flow: column;
         position: absolute;
@@ -493,6 +458,91 @@
           font-size: 11px;
           color: gray;
           text-align: center;
+        }
+      }
+
+      div.sort-menu {
+        width: 180px;
+
+        & > button {
+          position: relative;
+
+          &.down::before {
+            content: "\2193";
+          }
+
+          &.up::before {
+            content: "\2191";
+          }
+
+          &.on::before {
+            content: "\2713";
+          }
+
+          &::before {
+            position: absolute;
+            top: 4px;
+            left: 12px;
+            font-family:
+              system-ui,
+              -apple-system,
+              BlinkMacSystemFont;
+            font-size: 18px;
+          }
+        }
+      }
+
+      div.filter-menu {
+        width: 180px;
+        right: 35px;
+
+        h4 {
+          margin-bottom: 8px;
+
+          &:not(:first-of-type) {
+            margin-top: 8px;
+          }
+        }
+
+        & > button {
+          text-transform: capitalize;
+          position: relative;
+
+          &.on::before {
+            content: "\2713";
+          }
+
+          &::before {
+            position: absolute;
+            top: 4px;
+            left: 12px;
+            font-family:
+              system-ui,
+              -apple-system,
+              BlinkMacSystemFont;
+            font-size: 18px;
+          }
+        }
+
+        .type-filter {
+          display: flex;
+          flex-flow: row;
+          width: 100%;
+
+          button {
+            border-radius: 0;
+            padding: 8px 0;
+            width: 100%;
+
+            &:first-of-type {
+              border-right: 0;
+              border-radius: 5px 0 0 5px;
+            }
+
+            &:last-of-type {
+              border-radius: 0 5px 5px 0;
+            }
+          }
         }
       }
     }

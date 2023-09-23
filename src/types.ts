@@ -569,3 +569,8 @@ export interface ImportedList {
   type?: ContentType;
   state?: string;
 }
+
+export interface Filters {
+  type: string[];
+  status: string[];
+}
