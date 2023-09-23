@@ -20,7 +20,6 @@
   import { get } from "svelte/store";
 
   const username = localStorage.getItem("username");
-  const filters = ["planned", "watching", "finished", "hold", "dropped"];
 
   let navEl: HTMLElement;
   let searchTimeout: number;
@@ -250,14 +249,36 @@
             </button>
           </div>
           <h4 class="norm sm-caps">status</h4>
-          {#each filters as f}
-            <button
-              class={`plain ${filter.status.includes(f) ? "on" : ""}`}
-              on:click={() => filterClicked("status", f)}
-            >
-              {f}
-            </button>
-          {/each}
+          <button
+            class={`plain ${filter.status.includes("planned") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "planned")}
+          >
+            planned
+          </button>
+          <button
+            class={`plain ${filter.status.includes("watching") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "watching")}
+          >
+            watching
+          </button>
+          <button
+            class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "finished")}
+          >
+            finished
+          </button>
+          <button
+            class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "hold")}
+          >
+            held
+          </button>
+          <button
+            class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "dropped")}
+          >
+            dropped
+          </button>
         </div>
       {/if}
     {/if}
