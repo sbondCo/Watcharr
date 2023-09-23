@@ -184,7 +184,7 @@
     <!-- Only show on watched list -->
     {#if $page.url?.pathname === "/"}
       <button
-        class="plain other"
+        class="plain other filter"
         on:click={() => {
           filterMenuShown = !filterMenuShown;
           sortMenuShown = false;
@@ -194,7 +194,7 @@
         <Icon i="filter" />
       </button>
       <button
-        class="plain other"
+        class="plain other sort"
         on:click={() => {
           sortMenuShown = !sortMenuShown;
           filterMenuShown = false;
@@ -388,7 +388,7 @@
     .btns {
       display: flex;
       flex-flow: row;
-      gap: 20px;
+      /* gap: 20px; */
 
       button.other {
         padding-top: 2px;
@@ -401,12 +401,25 @@
 
         &:hover,
         &:focus-visible {
-          stroke: $bg-color;
-          stroke-width: 10px;
+          :global(path) {
+            fill: none;
+            stroke: black;
+            stroke-width: 30px;
+            stroke-linejoin: round;
+          }
         }
       }
 
+      button.filter {
+        margin-right: 15px;
+      }
+
+      button.sort {
+        margin-right: 12px;
+      }
+
       button.discover {
+        margin-right: 17px;
         transition:
           fill 150ms ease,
           stroke 150ms ease,
