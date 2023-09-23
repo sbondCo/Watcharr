@@ -18,6 +18,7 @@ export const clearAllStores = () => {
   watchedList.set([]);
   notifications.set([]);
   activeSort.set(["DATEADDED", "DOWN"]);
+  activeFilters.set({ type: [], status: [] });
   importedList.set(undefined);
   parsedImportedList.set(undefined);
   searchQuery.set("");
@@ -28,6 +29,11 @@ if (browser) {
   const raf = localStorage.getItem("activeFilter");
   if (raf) {
     activeSort.update((v) => (v = JSON.parse(raf)));
+  }
+
+  const filters = localStorage.getItem("activeFilterReal");
+  if (filters) {
+    activeFilters.update((v) => (v = JSON.parse(filters)));
   }
 
   const theme = localStorage.getItem("theme") as Theme;
@@ -47,6 +53,10 @@ if (browser) {
   // Save changes
   activeSort.subscribe((v) => {
     localStorage.setItem("activeFilter", JSON.stringify(v));
+  });
+
+  activeFilters.subscribe((v) => {
+    localStorage.setItem("activeFilterReal", JSON.stringify(v));
   });
 
   appTheme.subscribe((v) => {
