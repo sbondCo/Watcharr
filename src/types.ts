@@ -20,7 +20,8 @@ export type Icon =
   | "add"
   | "arrow"
   | "chevron"
-  | "search";
+  | "search"
+  | "sort";
 
 export type Theme = "light" | "dark";
 
@@ -567,4 +568,9 @@ export interface ImportedList {
   year?: string;
   type?: ContentType;
   state?: string;
+}
+
+export interface Filters {
+  type: string[];
+  status: string[];
 }

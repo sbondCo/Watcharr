@@ -46,6 +46,10 @@
     BlinkMacSystemFont;
 }
 
+:global(.sm-caps) {
+  font-variant: small-caps;
+}
+
 :global(a) {
   text-decoration: none;
   color: $text-color;
@@ -98,7 +102,8 @@
 
   &:not(:disabled) {
     &:hover,
-    &:focus-visible {
+    &:focus-visible,
+    &.active {
       background-color: $text-color;
       color: $bg-color;
       fill: $bg-color;

@@ -6,7 +6,15 @@
   import Spinner from "@/lib/Spinner.svelte";
   import { isTouch, parseTokenPayload } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
-  import { activeFilter, clearAllStores, searchQuery, userSettings, watchedList } from "@/store";
+  import {
+    activeFilters,
+    activeSort,
+    clearAllStores,
+    searchQuery,
+    userSettings,
+    watchedList
+  } from "@/store";
+  import type { Filters } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
@@ -17,8 +25,10 @@
   let searchTimeout: number;
   let subMenuShown = false;
   let filterMenuShown = false;
+  let sortMenuShown = false;
 
-  $: filter = $activeFilter;
+  $: sort = $activeSort;
+  $: filter = $activeFilters;
   $: settings = $userSettings;
 
   function handleProfileClick() {
@@ -27,12 +37,8 @@
     } else {
       subMenuShown = !subMenuShown;
       filterMenuShown = false;
+      sortMenuShown = false;
     }
-  }
-
-  function handleFilterClick() {
-    filterMenuShown = !filterMenuShown;
-    subMenuShown = false;
   }
 
   function handleSearch(ev: KeyboardEvent) {
@@ -112,8 +118,8 @@
     }
   }
 
-  function filterClicked(type: string, modeType: string = "UPDOWN") {
-    const af = get(activeFilter);
+  function sortClicked(type: string, modeType: string = "UPDOWN") {
+    const af = get(activeSort);
     let mode: string;
     if (modeType === "UPDOWN") {
       mode = "UP";
@@ -135,7 +141,17 @@
       console.error("filterClicked() ran without a valid modeType:", modeType);
       return;
     }
-    activeFilter.update((af) => (af = [type, mode]));
+    activeSort.update((af) => (af = [type, mode]));
+  }
+
+  function filterClicked(type: keyof Filters, f: string) {
+    const af = get(activeFilters);
+    if (af[type]?.includes(f)) {
+      af[type] = af[type]?.filter((a) => a !== f);
+    } else {
+      af[type]?.push(f);
+    }
+    activeFilters.update((a) => (a = af));
   }
 
   onMount(() => {
@@ -148,6 +164,7 @@
           navEl.classList.add("scrolled-down");
           subMenuShown = false;
           filterMenuShown = false;
+          sortMenuShown = false;
         }
         scroll = window.scrollY;
       });
@@ -166,34 +183,101 @@
   <div class="btns">
     <!-- Only show on watched list -->
     {#if $page.url?.pathname === "/"}
-      <button class="plain other" on:click={handleFilterClick}>
+      <button
+        class="plain other filter"
+        on:click={() => {
+          filterMenuShown = !filterMenuShown;
+          sortMenuShown = false;
+          subMenuShown = false;
+        }}
+      >
         <Icon i="filter" />
       </button>
-      {#if filterMenuShown}
-        <div class="filter-menu">
+      <button
+        class="plain other sort"
+        on:click={() => {
+          sortMenuShown = !sortMenuShown;
+          filterMenuShown = false;
+          subMenuShown = false;
+        }}
+      >
+        <Icon i="sort" />
+      </button>
+      {#if sortMenuShown}
+        <div class="menu sort-menu">
           <button
-            class={`plain ${filter[0] == "DATEADDED" ? filter[1].toLowerCase() : ""}`}
-            on:click={() => filterClicked("DATEADDED")}
+            class={`plain ${sort[0] == "DATEADDED" ? sort[1].toLowerCase() : ""}`}
+            on:click={() => sortClicked("DATEADDED")}
           >
             Date Added
           </button>
           <button
-            class={`plain ${filter[0] == "LASTCHANGED" ? filter[1].toLowerCase() : ""}`}
-            on:click={() => filterClicked("LASTCHANGED")}
+            class={`plain ${sort[0] == "LASTCHANGED" ? sort[1].toLowerCase() : ""}`}
+            on:click={() => sortClicked("LASTCHANGED")}
           >
             Last Changed
           </button>
           <button
-            class={`plain ${filter[0] == "RATING" ? filter[1].toLowerCase() : ""}`}
-            on:click={() => filterClicked("RATING")}
+            class={`plain ${sort[0] == "RATING" ? sort[1].toLowerCase() : ""}`}
+            on:click={() => sortClicked("RATING")}
           >
             Rating
           </button>
           <button
-            class={`plain ${filter[0] == "ALPHA" ? filter[1].toLowerCase() : ""}`}
-            on:click={() => filterClicked("ALPHA")}
+            class={`plain ${sort[0] == "ALPHA" ? sort[1].toLowerCase() : ""}`}
+            on:click={() => sortClicked("ALPHA")}
           >
             Alphabetical
+          </button>
+        </div>
+      {/if}
+      {#if filterMenuShown}
+        <div class="menu filter-menu">
+          <h4 class="norm sm-caps">type</h4>
+          <div class="type-filter">
+            <button
+              class={`${filter.type.includes("tv") ? "active" : ""}`}
+              on:click={() => filterClicked("type", "tv")}
+            >
+              SHOW
+            </button>
+            <button
+              class={`${filter.type.includes("movie") ? "active" : ""}`}
+              on:click={() => filterClicked("type", "movie")}
+            >
+              MOVIE
+            </button>
+          </div>
+          <h4 class="norm sm-caps">status</h4>
+          <button
+            class={`plain ${filter.status.includes("planned") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "planned")}
+          >
+            planned
+          </button>
+          <button
+            class={`plain ${filter.status.includes("watching") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "watching")}
+          >
+            watching
+          </button>
+          <button
+            class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "finished")}
+          >
+            finished
+          </button>
+          <button
+            class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "hold")}
+          >
+            held
+          </button>
+          <button
+            class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
+            on:click={() => filterClicked("status", "dropped")}
+          >
+            dropped
           </button>
         </div>
       {/if}
@@ -203,7 +287,7 @@
     </button>
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
-      <div class="face-menu">
+      <div class="menu face-menu">
         {#if username}
           <h5 title={username}>Hi {username}!</h5>
         {/if}
@@ -304,7 +388,7 @@
     .btns {
       display: flex;
       flex-flow: row;
-      gap: 20px;
+      /* gap: 20px; */
 
       button.other {
         padding-top: 2px;
@@ -317,12 +401,31 @@
 
         &:hover,
         &:focus-visible {
-          stroke: $bg-color;
-          stroke-width: 10px;
+          :global(path) {
+            fill: none;
+            stroke: black;
+            stroke-width: 30px;
+            stroke-linejoin: round;
+          }
         }
       }
 
+      button.filter {
+        margin-right: 15px;
+        &:hover,
+        &:focus-visible {
+          :global(path) {
+            stroke-width: 15px;
+          }
+        }
+      }
+
+      button.sort {
+        margin-right: 12px;
+      }
+
       button.discover {
+        margin-right: 17px;
         transition:
           fill 150ms ease,
           stroke 150ms ease,
@@ -356,42 +459,11 @@
         }
       }
 
-      div.filter-menu {
-        width: 180px;
-
-        & > button {
-          position: relative;
-
-          &.down::before {
-            content: "\2193";
-          }
-
-          &.up::before {
-            content: "\2191";
-          }
-
-          &.on::before {
-            content: "\2713";
-          }
-
-          &::before {
-            position: absolute;
-            top: 4px;
-            left: 12px;
-            font-family:
-              system-ui,
-              -apple-system,
-              BlinkMacSystemFont;
-            font-size: 18px;
-          }
-        }
-      }
-
-      div {
+      div.menu {
         display: flex;
         flex-flow: column;
         position: absolute;
-        right: 0;
+        right: 3px;
         top: 55px;
         width: 125px;
         padding: 10px;
@@ -426,6 +498,91 @@
           font-size: 11px;
           color: gray;
           text-align: center;
+        }
+      }
+
+      div.sort-menu {
+        width: 180px;
+
+        & > button {
+          position: relative;
+
+          &.down::before {
+            content: "\2193";
+          }
+
+          &.up::before {
+            content: "\2191";
+          }
+
+          &.on::before {
+            content: "\2713";
+          }
+
+          &::before {
+            position: absolute;
+            top: 4px;
+            left: 12px;
+            font-family:
+              system-ui,
+              -apple-system,
+              BlinkMacSystemFont;
+            font-size: 18px;
+          }
+        }
+      }
+
+      div.filter-menu {
+        width: 180px;
+        right: 35px;
+
+        h4 {
+          margin-bottom: 8px;
+
+          &:not(:first-of-type) {
+            margin-top: 8px;
+          }
+        }
+
+        & > button {
+          text-transform: capitalize;
+          position: relative;
+
+          &.on::before {
+            content: "\2713";
+          }
+
+          &::before {
+            position: absolute;
+            top: 4px;
+            left: 12px;
+            font-family:
+              system-ui,
+              -apple-system,
+              BlinkMacSystemFont;
+            font-size: 18px;
+          }
+        }
+
+        .type-filter {
+          display: flex;
+          flex-flow: row;
+          width: 100%;
+
+          button {
+            border-radius: 0;
+            padding: 8px 0;
+            width: 100%;
+
+            &:first-of-type {
+              border-right: 0;
+              border-radius: 5px 0 0 5px;
+            }
+
+            &:last-of-type {
+              border-radius: 0 5px 5px 0;
+            }
+          }
         }
       }
     }

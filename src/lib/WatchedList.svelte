@@ -3,29 +3,45 @@
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/Poster.svelte";
   import PosterList from "@/lib/PosterList.svelte";
-  import { activeFilter } from "@/store";
+  import { activeFilters, activeSort } from "@/store";
   import type { Watched } from "@/types";
 
   export let list: Watched[];
   export let isPublicList: boolean = false;
 
-  $: filter = $activeFilter;
-  $: watched = list.sort((a, b) => {
-    if (filter[0] === "DATEADDED" && filter[1] === "UP") {
-      return Date.parse(a.createdAt) - Date.parse(b.createdAt);
-    } else if (filter[0] === "ALPHA") {
-      if (filter[1] === "UP") return a.content.title.localeCompare(b.content.title);
-      else if (filter[1] === "DOWN") return b.content.title.localeCompare(a.content.title);
-    } else if (filter[0] === "LASTCHANGED") {
-      if (filter[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
-      else if (filter[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
-    } else if (filter[0] === "RATING") {
-      if (filter[1] === "UP") return (a.rating ?? 0) - (b.rating ?? 0);
-      else if (filter[1] === "DOWN") return (b.rating ?? 0) - (a.rating ?? 0);
-    }
-    // default DATEADDED DOWN
-    return Date.parse(b.createdAt) - Date.parse(a.createdAt);
-  });
+  $: sort = $activeSort;
+  $: filters = $activeFilters;
+  $: watched = list
+    .sort((a, b) => {
+      if (sort[0] === "DATEADDED" && sort[1] === "UP") {
+        return Date.parse(a.createdAt) - Date.parse(b.createdAt);
+      } else if (sort[0] === "ALPHA") {
+        if (sort[1] === "UP") return a.content.title.localeCompare(b.content.title);
+        else if (sort[1] === "DOWN") return b.content.title.localeCompare(a.content.title);
+      } else if (sort[0] === "LASTCHANGED") {
+        if (sort[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
+        else if (sort[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
+      } else if (sort[0] === "RATING") {
+        if (sort[1] === "UP") return (a.rating ?? 0) - (b.rating ?? 0);
+        else if (sort[1] === "DOWN") return (b.rating ?? 0) - (a.rating ?? 0);
+      }
+      // default DATEADDED DOWN
+      return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+    })
+    .filter((w) => {
+      if (filters.status.length <= 0 && filters.type.length <= 0) return w;
+      if (filters.status.length > 0 && filters.type.length > 0) {
+        return (
+          filters.status.includes(w.status?.toLowerCase()) && filters.type.includes(w.content.type)
+        );
+      }
+      if (filters.type.length > 0) {
+        return filters.type.includes(w.content.type);
+      }
+      if (filters.status.length > 0) {
+        return filters.status.includes(w.status?.toLowerCase());
+      }
+    });
 </script>
 
 <PosterList>
