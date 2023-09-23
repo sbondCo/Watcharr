@@ -71,6 +71,9 @@
   }
 
   onMount(() => {
+    if (!localStorage.getItem("token")) {
+      goto("/login");
+    }
     if (fileInput) {
       fileInput.addEventListener("change", (ev) => {
         processFiles(fileInput.files);
