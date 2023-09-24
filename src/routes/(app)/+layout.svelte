@@ -403,7 +403,7 @@
         &:focus-visible {
           :global(path) {
             fill: none;
-            stroke: black;
+            stroke: $text-color;
             stroke-width: 30px;
             stroke-linejoin: round;
           }
@@ -454,8 +454,8 @@
 
         &:hover,
         &:focus-visible {
-          color: white;
-          -webkit-text-stroke: 1.5px black;
+          color: $bg-color;
+          -webkit-text-stroke: 1.5px $text-color;
         }
       }
 
@@ -487,9 +487,10 @@
           cursor: pointer;
           transition: background-color 200ms ease;
 
-          &:hover {
-            background-color: rgba(0, 0, 0, 1);
-            color: white;
+          &:hover,
+          &:focus-visible {
+            background-color: $text-color;
+            color: $bg-color;
           }
         }
 
