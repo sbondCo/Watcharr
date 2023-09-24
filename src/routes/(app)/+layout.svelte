@@ -403,7 +403,7 @@
         &:focus-visible {
           :global(path) {
             fill: none;
-            stroke: black;
+            stroke: $text-color;
             stroke-width: 30px;
             stroke-linejoin: round;
           }
