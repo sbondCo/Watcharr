@@ -74,7 +74,8 @@
   cursor: pointer;
 }
 
-:global(button:not(.plain)) {
+:global(button:not(.plain)),
+:global(a.btn) {
   display: flex;
   align-items: center;
   justify-content: center;
