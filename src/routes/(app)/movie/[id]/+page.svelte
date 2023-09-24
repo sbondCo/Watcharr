@@ -114,8 +114,8 @@
                 {/if}
               {/if}
               {#if jellyfinUrl}
-                <a href={jellyfinUrl} target="_blank">
-                  <button><Icon i="jellyfin" wh={14} />Play On Jellyfin</button>
+                <a class="btn" href={jellyfinUrl} target="_blank">
+                  <Icon i="jellyfin" wh={14} />Play On Jellyfin
                 </a>
               {/if}
             </div>
@@ -255,6 +255,7 @@
           gap: 8px;
           margin-top: 18px;
 
+          a.btn,
           button {
             max-width: fit-content;
             overflow: hidden;
@@ -262,6 +263,7 @@
             white-space: nowrap;
             gap: 6px;
             justify-content: flex-start;
+            font-size: 14px;
 
             @keyframes otherbtn {
               from {
