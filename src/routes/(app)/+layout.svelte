@@ -487,9 +487,10 @@
           cursor: pointer;
           transition: background-color 200ms ease;
 
-          &:hover {
-            background-color: rgba(0, 0, 0, 1);
-            color: white;
+          &:hover,
+          &:focus-visible {
+            background-color: $text-color;
+            color: $bg-color;
           }
         }
 
