@@ -454,8 +454,8 @@
 
         &:hover,
         &:focus-visible {
-          color: white;
-          -webkit-text-stroke: 1.5px black;
+          color: $bg-color;
+          -webkit-text-stroke: 1.5px $text-color;
         }
       }
 
