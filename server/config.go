@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	b64 "encoding/base64"
 	"encoding/json"
+	"log"
+	"log/slog"
 	"os"
 )
 
@@ -35,10 +37,51 @@ type ServerConfig struct {
 	// MODE string
 }
 
-var Config ServerConfig
+var (
+	Config                 ServerConfig
+	AvailableAuthProviders = []string{}
+	TMDBKey                = "d047fa61d926371f277e7a83c9c4ff2c"
+)
 
-func readConfig() {
+// Read config file
+// Calls generateConfig if file doesn't exist
+func readConfig() error {
+	cfg, err := os.Open("./data/watcharr.json")
+	if err != nil {
+		if os.IsNotExist(err) {
+			slog.Info("Config file doesn't exist... generating.")
+			if err = generateConfig(); err == nil {
+				return nil
+			}
+		}
+		return err
+	}
+	defer cfg.Close()
+	jsonParser := json.NewDecoder(cfg)
+	if err = jsonParser.Decode(&Config); err != nil {
+		return err
+	}
+	initFromConfig()
+	return nil
+}
 
+// Ensure required config is provided
+// and initialize from the config if required (update vars)
+func initFromConfig() error {
+	if Config.JWT_SECRET == "" {
+		log.Fatal("JWT_SECRET missing from config!")
+	}
+
+	if Config.JELLYFIN_HOST != "" {
+		slog.Info("Adding J1`ellyfin as an auth provider.")
+		AvailableAuthProviders = append(AvailableAuthProviders, "jellyfin")
+	}
+
+	if Config.TMDB_KEY != "" {
+		slog.Info("Default TMDBKey being overriden by TMDB_KEY from config.")
+		TMDBKey = Config.TMDB_KEY
+	}
+	return nil
 }
 
 // Generate new barebones watcharr.json config file.
@@ -51,9 +94,11 @@ func generateConfig() error {
 		return err
 	}
 	encKey := b64.StdEncoding.EncodeToString([]byte(key))
-	barej, err := json.MarshalIndent(ServerConfig{JWT_SECRET: encKey}, "", "\t")
+	cfg := ServerConfig{JWT_SECRET: encKey}
+	barej, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
 		return err
 	}
+	Config = cfg
 	return os.WriteFile("./data/watcharr.json", barej, 0755)
 }

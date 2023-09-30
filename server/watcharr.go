@@ -27,11 +27,6 @@ type GormModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
 }
 
-var (
-	AvailableAuthProviders = []string{}
-	TMDBKey                = "d047fa61d926371f277e7a83c9c4ff2c"
-)
-
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -44,17 +39,9 @@ func main() {
 	multiw := setupLogging()
 	slog.Info("Watcharr Starting")
 
-	// Check if server is initialized
-	if _, err := os.Stat("./data/watcharr.json"); os.IsNotExist(err) {
-		slog.Warn("Config not found. Generating a new config.")
-		err := generateConfig()
-		if err != nil {
-			log.Fatal("Generating new server config failed!", err)
-		}
+	if err = readConfig(); err != nil {
+		log.Fatal("Failed to read server config!", err)
 	}
-
-	readConfig()
-	// ensureEnv()
 
 	// Ensure data dir exists
 	err = ensureDirExists("./data")
@@ -116,22 +103,6 @@ func main() {
 
 	gine.Run("0.0.0.0:3080")
 }
-
-// Ensure all required environment variables are set.
-// func ensureEnv() {
-// 	if os.Getenv("JWT_SECRET") == "" {
-// 		log.Fatal("JWT_SECRET env var missing!")
-// 	}
-
-// 	if os.Getenv("JELLYFIN_HOST") != "" {
-// 		AvailableAuthProviders = append(AvailableAuthProviders, "jellyfin")
-// 	}
-
-// 	if os.Getenv("TMDB_KEY") != "" {
-// 		slog.Info("Default TMDBKey being overriden by TMDB_KEY.")
-// 		TMDBKey = os.Getenv("TMDB_KEY")
-// 	}
-// }
 
 // Setup slog defaults
 func setupLogging() io.Writer {
