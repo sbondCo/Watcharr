@@ -99,13 +99,18 @@ func main() {
 		})
 	}
 	br := newBaseRouter(db, gine.Group("/api"))
-	var user User
 	// Only add setup routes if there are no users found in db.
-	if uresp := db.First(&user); uresp.Error == gorm.ErrRecordNotFound {
-		slog.Info("No users found.. creating setup routes.")
-		br.addSetupRoutes()
+	var userCount int64
+	if uresp := db.Model(&User{}).Count(&userCount); uresp.Error == nil {
+		if userCount != 0 {
+			slog.Debug("registered users found.. skipped creating setup routes.")
+		} else {
+			slog.Info("No users found.. creating setup routes.")
+			ServerInSetup = true
+			br.addSetupRoutes()
+		}
 	} else {
-		slog.Debug("Users found.. skip creating setup routes.")
+		slog.Error("Failed to check if any users exist.. not registering setup routes", "error", uresp.Error)
 	}
 	br.addAuthRoutes()
 	br.addContentRoutes()

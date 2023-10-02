@@ -222,10 +222,15 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 }
 
 func registerFirstUser(user *UserRegisterRequest, db *gorm.DB) (AuthResponse, error) {
-	var usert User
-	// We have to check if user exists again, since we can't remove the setup routes after setup complete.
-	if uresp := db.First(&usert); uresp.Error != gorm.ErrRecordNotFound {
-		slog.Info("registerFirstUser: Users already exist or another error encountered querying db.")
+	// Ensure no users exist
+	var userCount int64
+	uresp := db.Model(&User{}).Count(&userCount)
+	if uresp.Error != nil {
+		slog.Error("registerFirstUser: User count query failed!", "error", uresp.Error)
+		return AuthResponse{}, errors.New("failed to query db for a count of users")
+	}
+	if userCount != 0 {
+		slog.Warn("registerFirstUser: registered users already exist.")
 		return AuthResponse{}, errors.New("first user already registered")
 	}
 	slog.Info("Registering first user.")
