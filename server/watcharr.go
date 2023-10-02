@@ -146,7 +146,7 @@ func runUI() {
 	cmd := exec.Command("node", "ui/index.js")
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatal("UI ERR ", err)
+		log.Fatal("UI ERR @ get stdout read pipe: ", err)
 	}
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
@@ -155,10 +155,10 @@ func runUI() {
 		}
 	}()
 	if err := cmd.Start(); err != nil {
-		log.Fatal("UI ERR ", err)
+		log.Fatal("UI ERR @ command start: ", err)
 	}
 	if err := cmd.Wait(); err != nil {
-		log.Fatal("UI ERR ", err)
+		log.Fatal("UI ERR @ command wait: ", err)
 	}
 }
 
