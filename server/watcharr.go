@@ -27,6 +27,11 @@ type GormModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
 }
 
+var (
+	ServerInSetup = false
+	logLevel      = new(slog.LevelVar)
+)
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -41,6 +46,10 @@ func main() {
 
 	if err = readConfig(); err != nil {
 		log.Fatal("Failed to read server config!", err)
+	}
+
+	if Config.DEBUG {
+		logLevel.Set(slog.LevelDebug)
 	}
 
 	// Ensure data dir exists
@@ -115,10 +124,7 @@ func main() {
 
 // Setup slog defaults
 func setupLogging() io.Writer {
-	level := slog.LevelInfo
-	if os.Getenv("DEBUG") == "true" {
-		level = slog.LevelDebug
-	}
+	// level := slog.LevelInfo
 	multiw := io.MultiWriter(&lumberjack.Logger{
 		Filename:   "./data/watcharr.log",
 		MaxSize:    1, // megabytes
@@ -127,9 +133,9 @@ func setupLogging() io.Writer {
 		Compress:   false,
 	}, os.Stdout)
 	slog.SetDefault(slog.New(
-		slog.NewTextHandler(multiw, &slog.HandlerOptions{Level: level}),
+		slog.NewTextHandler(multiw, &slog.HandlerOptions{Level: logLevel}),
 	))
-	slog.Info("Logging level set", "logging_level", level)
+	slog.Info("Logging level set", "logging_level", logLevel)
 	return multiw
 }
 
