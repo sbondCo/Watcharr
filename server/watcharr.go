@@ -27,10 +27,7 @@ type GormModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
 }
 
-var (
-	ServerInSetup = false
-	logLevel      = new(slog.LevelVar)
-)
+var ServerInSetup = false
 
 func main() {
 	err := godotenv.Load()
@@ -41,7 +38,7 @@ func main() {
 		}
 	}
 
-	multiw := setupLogging()
+	multiw, logLevel := setupLogging()
 	slog.Info("Watcharr Starting")
 
 	if err = readConfig(); err != nil {
@@ -51,6 +48,7 @@ func main() {
 	if Config.DEBUG {
 		logLevel.Set(slog.LevelDebug)
 	}
+	slog.Info("Logging level set", "logging_level", logLevel)
 
 	// Ensure data dir exists
 	err = ensureDirExists("./data")
@@ -123,8 +121,8 @@ func main() {
 }
 
 // Setup slog defaults
-func setupLogging() io.Writer {
-	// level := slog.LevelInfo
+func setupLogging() (io.Writer, *slog.LevelVar) {
+	logLevel := new(slog.LevelVar)
 	multiw := io.MultiWriter(&lumberjack.Logger{
 		Filename:   "./data/watcharr.log",
 		MaxSize:    1, // megabytes
@@ -135,8 +133,7 @@ func setupLogging() io.Writer {
 	slog.SetDefault(slog.New(
 		slog.NewTextHandler(multiw, &slog.HandlerOptions{Level: logLevel}),
 	))
-	slog.Info("Logging level set", "logging_level", logLevel)
-	return multiw
+	return multiw, logLevel
 }
 
 // Run UI server
