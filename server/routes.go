@@ -403,6 +403,7 @@ func (b *BaseRouter) addAuthRoutes() {
 		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
 			AvailableAuthProviders: AvailableAuthProviders,
 			SignupEnabled:          signupEnabled,
+			IsInSetup:              ServerInSetup,
 		})
 	})
 }
