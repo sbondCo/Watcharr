@@ -105,6 +105,7 @@ export interface JellyfinFoundContent {
 export interface AvailableAuthProviders {
   available: string[];
   signupEnabled: boolean;
+  isInSetup: boolean;
 }
 
 export interface TokenClaims {
