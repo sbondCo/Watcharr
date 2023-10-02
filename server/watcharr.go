@@ -52,12 +52,13 @@ func main() {
 	// Check if we want to be in DEV or PROD
 	isProd := true
 	if os.Getenv("MODE") == "DEV" {
+		slog.Info("Starting in DEV mode")
 		isProd = false
 	}
 
 	db, err := gorm.Open(sqlite.Open("./data/watcharr.db"), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect to database")
+		log.Fatal("Failed to connect to database:", err)
 	}
 
 	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &Activity{})
@@ -91,6 +92,14 @@ func main() {
 		})
 	}
 	br := newBaseRouter(db, gine.Group("/api"))
+	var user User
+	// Only add setup routes if there are no users found in db.
+	if uresp := db.First(&user); uresp.Error == gorm.ErrRecordNotFound {
+		slog.Info("No users found.. creating setup routes.")
+		br.addSetupRoutes()
+	} else {
+		slog.Debug("Users found.. skip creating setup routes.")
+	}
 	br.addAuthRoutes()
 	br.addContentRoutes()
 	br.addWatchedRoutes()

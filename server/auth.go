@@ -30,6 +30,16 @@ var (
 	JELLYFIN_USER UserType = 1
 )
 
+// User Perms
+// iota auto increments for us so when adding new
+// perms, add to bottom as to not change other perm
+// values.
+const (
+	PERM_NONE int = 1 << iota
+	PERM_ADMIN
+	PERM_REQUEST_CONTENT
+)
+
 // uniqueIndex applied between Username and UserType, so same usernames can exist, but only with different types.
 // This is incase different users with same name from different services try to signup.
 type User struct {
@@ -44,6 +54,7 @@ type User struct {
 	// Auth token from third party (jellyfin)
 	ThirdPartyAuth string `json:"-"`
 	Watched        []Watched
+	Permissions    int `gorm:"default:1" json:"-"`
 	// All user settings cols, in another struct for reusability
 	UserSettings
 }
@@ -51,6 +62,14 @@ type User struct {
 type UserSettings struct {
 	// Is profile private
 	Private bool `gorm:"default:false" json:"private"`
+}
+
+// We use a separate struct for registration to avoid confusion
+// and possible accidents where we allow a user to pass in a
+// property from the main User struct that shouldn't be allowed.
+type UserRegisterRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type JellyfinAuth struct {
@@ -149,11 +168,12 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-func register(user *User, db *gorm.DB) (AuthResponse, error) {
+func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthResponse, error) {
 	if os.Getenv("SIGNUP_ENABLED") == "false" {
 		slog.Warn("Register called, but signing up is disabled via env variable.")
 		return AuthResponse{}, errors.New("registering is disabled")
 	}
+	var user User = User{Username: ur.Username, Password: ur.Password}
 	slog.Info("A user is registering", "username", user.Username)
 	hash, err := hashPassword(user.Password, &ArgonParams{
 		memory:      64 * 1024,
@@ -168,6 +188,12 @@ func register(user *User, db *gorm.DB) (AuthResponse, error) {
 
 	// Update user obj to replace the plaintext pass with hash
 	user.Password = hash
+
+	// Update user permissions if an initial perm is passed in (1 is default)
+	if initialPerm != 0 && initialPerm != PERM_NONE {
+		slog.Info("User being registered has been given extra initial permissions", "initial_perm", initialPerm)
+		user.Permissions = initialPerm
+	}
 
 	res := db.Create(&user)
 	if res.Error != nil {
@@ -187,12 +213,23 @@ func register(user *User, db *gorm.DB) (AuthResponse, error) {
 		return AuthResponse{}, errors.New("failed to get user id, try login")
 	}
 
-	token, err := signJWT(user)
+	token, err := signJWT(&user)
 	if err != nil {
 		slog.Error("Registration: Failed to sign new jwt", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
+}
+
+func registerFirstUser(user *UserRegisterRequest, db *gorm.DB) (AuthResponse, error) {
+	var usert User
+	// We have to check if user exists again, since we can't remove the setup routes after setup complete.
+	if uresp := db.First(&usert); uresp.Error != gorm.ErrRecordNotFound {
+		slog.Info("registerFirstUser: Users already exist or another error encountered querying db.")
+		return AuthResponse{}, errors.New("first user already registered")
+	}
+	slog.Info("Registering first user.")
+	return register(user, PERM_ADMIN, db)
 }
 
 func login(user *User, db *gorm.DB) (AuthResponse, error) {
@@ -409,4 +446,12 @@ func decodeHash(encodedHash string) (p *ArgonParams, salt, hash []byte, err erro
 	p.keyLength = uint32(len(hash))
 
 	return p, salt, hash, nil
+}
+
+func hasPermission(perms int, reqPerm int) bool {
+	// Admins have permission for everything.
+	if perms&PERM_ADMIN == PERM_ADMIN {
+		return true
+	}
+	return (perms & reqPerm) == reqPerm
 }

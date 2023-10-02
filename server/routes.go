@@ -29,6 +29,28 @@ func newBaseRouter(db *gorm.DB, rg *gin.RouterGroup) *BaseRouter {
 	}
 }
 
+// Since we cannot remove these setup routes after they are registered,
+// each route/service should ensure we are still in setup before continuing.
+// After server restart, these routes shouldn't exist if setup finished
+// (currently it is finished if a user is created)
+func (b *BaseRouter) addSetupRoutes() {
+	setup := b.rg.Group("/setup")
+
+	setup.POST("/create_admin", func(c *gin.Context) {
+		var user UserRegisterRequest
+		if c.ShouldBindJSON(&user) == nil {
+			response, err := registerFirstUser(&user, b.db)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.Status(400)
+	})
+}
+
 func (b *BaseRouter) addContentRoutes() {
 	content := b.rg.Group("/content").Use(AuthRequired(nil))
 	exp := time.Hour * 24
@@ -348,9 +370,9 @@ func (b *BaseRouter) addAuthRoutes() {
 
 	// Register
 	auth.POST("/register", func(c *gin.Context) {
-		var user User
+		var user UserRegisterRequest
 		if c.ShouldBindJSON(&user) == nil {
-			response, err := register(&user, b.db)
+			response, err := register(&user, PERM_NONE, b.db)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
