@@ -170,8 +170,8 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 }
 
 func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthResponse, error) {
-	if os.Getenv("SIGNUP_ENABLED") == "false" {
-		slog.Warn("Register called, but signing up is disabled via env variable.")
+	if !Config.SIGNUP_ENABLED {
+		slog.Warn("Register called, but signing up is disabled.")
 		return AuthResponse{}, errors.New("registering is disabled")
 	}
 	var user User = User{Username: ur.Username, Password: ur.Password}

@@ -3,7 +3,6 @@ package main
 import (
 	"log/slog"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -396,13 +395,9 @@ func (b *BaseRouter) addAuthRoutes() {
 
 	// Get available auth providers
 	auth.GET("/available", func(c *gin.Context) {
-		signupEnabled := true
-		if os.Getenv("SIGNUP_ENABLED") == "false" {
-			signupEnabled = false
-		}
 		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
 			AvailableAuthProviders: AvailableAuthProviders,
-			SignupEnabled:          signupEnabled,
+			SignupEnabled:          Config.SIGNUP_ENABLED,
 			IsInSetup:              ServerInSetup,
 		})
 	})

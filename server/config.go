@@ -38,7 +38,11 @@ type ServerConfig struct {
 }
 
 var (
-	Config                 ServerConfig
+	// Our server config.. set defaults here, then `readConfig`
+	// will overwrite if provided in watcharr.json cfg file.
+	Config = ServerConfig{
+		SIGNUP_ENABLED: true,
+	}
 	AvailableAuthProviders = []string{}
 	TMDBKey                = "d047fa61d926371f277e7a83c9c4ff2c"
 )
