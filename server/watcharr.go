@@ -27,10 +27,7 @@ type GormModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
 }
 
-var (
-	AvailableAuthProviders = []string{}
-	TMDBKey                = "d047fa61d926371f277e7a83c9c4ff2c"
-)
+var ServerInSetup = false
 
 func main() {
 	err := godotenv.Load()
@@ -41,10 +38,17 @@ func main() {
 		}
 	}
 
-	multiw := setupLogging()
+	multiw, logLevel := setupLogging()
 	slog.Info("Watcharr Starting")
 
-	ensureEnv()
+	if err = readConfig(); err != nil {
+		log.Fatal("Failed to read server config!", err)
+	}
+
+	if Config.DEBUG {
+		logLevel.Set(slog.LevelDebug)
+	}
+	slog.Info("Logging level set", "logging_level", logLevel)
 
 	// Ensure data dir exists
 	err = ensureDirExists("./data")
@@ -55,12 +59,13 @@ func main() {
 	// Check if we want to be in DEV or PROD
 	isProd := true
 	if os.Getenv("MODE") == "DEV" {
+		slog.Info("Starting in DEV mode")
 		isProd = false
 	}
 
 	db, err := gorm.Open(sqlite.Open("./data/watcharr.db"), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect to database")
+		log.Fatal("Failed to connect to database:", err)
 	}
 
 	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &Activity{})
@@ -94,6 +99,19 @@ func main() {
 		})
 	}
 	br := newBaseRouter(db, gine.Group("/api"))
+	// Only add setup routes if there are no users found in db.
+	var userCount int64
+	if uresp := db.Model(&User{}).Count(&userCount); uresp.Error == nil {
+		if userCount != 0 {
+			slog.Debug("registered users found.. skipped creating setup routes.")
+		} else {
+			slog.Info("No users found.. creating setup routes.")
+			ServerInSetup = true
+			br.addSetupRoutes()
+		}
+	} else {
+		slog.Error("Failed to check if any users exist.. not registering setup routes", "error", uresp.Error)
+	}
 	br.addAuthRoutes()
 	br.addContentRoutes()
 	br.addWatchedRoutes()
@@ -107,28 +125,9 @@ func main() {
 	gine.Run("0.0.0.0:3080")
 }
 
-// Ensure all required environment variables are set.
-func ensureEnv() {
-	if os.Getenv("JWT_SECRET") == "" {
-		log.Fatal("JWT_SECRET env var missing!")
-	}
-
-	if os.Getenv("JELLYFIN_HOST") != "" {
-		AvailableAuthProviders = append(AvailableAuthProviders, "jellyfin")
-	}
-
-	if os.Getenv("TMDB_KEY") != "" {
-		slog.Info("Default TMDBKey being overriden by TMDB_KEY.")
-		TMDBKey = os.Getenv("TMDB_KEY")
-	}
-}
-
 // Setup slog defaults
-func setupLogging() io.Writer {
-	level := slog.LevelInfo
-	if os.Getenv("DEBUG") == "true" {
-		level = slog.LevelDebug
-	}
+func setupLogging() (io.Writer, *slog.LevelVar) {
+	logLevel := new(slog.LevelVar)
 	multiw := io.MultiWriter(&lumberjack.Logger{
 		Filename:   "./data/watcharr.log",
 		MaxSize:    1, // megabytes
@@ -137,10 +136,9 @@ func setupLogging() io.Writer {
 		Compress:   false,
 	}, os.Stdout)
 	slog.SetDefault(slog.New(
-		slog.NewTextHandler(multiw, &slog.HandlerOptions{Level: level}),
+		slog.NewTextHandler(multiw, &slog.HandlerOptions{Level: logLevel}),
 	))
-	slog.Info("Logging level set", "logging_level", level)
-	return multiw
+	return multiw, logLevel
 }
 
 // Run UI server
@@ -148,7 +146,7 @@ func runUI() {
 	cmd := exec.Command("node", "ui/index.js")
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatal("UI ERR ", err)
+		log.Fatal("UI ERR @ get stdout read pipe: ", err)
 	}
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
@@ -157,10 +155,10 @@ func runUI() {
 		}
 	}()
 	if err := cmd.Start(); err != nil {
-		log.Fatal("UI ERR ", err)
+		log.Fatal("UI ERR @ command start: ", err)
 	}
 	if err := cmd.Wait(); err != nil {
-		log.Fatal("UI ERR ", err)
+		log.Fatal("UI ERR @ command wait: ", err)
 	}
 }
 

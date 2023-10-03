@@ -3,7 +3,6 @@ package main
 import (
 	"log/slog"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -27,6 +26,39 @@ func newBaseRouter(db *gorm.DB, rg *gin.RouterGroup) *BaseRouter {
 		db: db,
 		rg: rg,
 	}
+}
+
+// Since we cannot remove these setup routes after they are registered,
+// each route/service should ensure we are still in setup before continuing.
+// After server restart, these routes shouldn't exist if setup finished
+// (currently it is finished if a user is created).
+//
+// Each controller can check ServerInSetup var first, then each service
+// can double check what it needs to (eg create_admin service, registerFirstUser,
+// will check that no users exist).
+func (b *BaseRouter) addSetupRoutes() {
+	setup := b.rg.Group("/setup")
+
+	setup.POST("/create_admin", func(c *gin.Context) {
+		if !ServerInSetup {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "not in setup"})
+			return
+		}
+		var user UserRegisterRequest
+		if c.ShouldBindJSON(&user) == nil {
+			response, err := registerFirstUser(&user, b.db)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			} else {
+				// Set in setup to false after first user registered successfully
+				ServerInSetup = false
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.Status(400)
+	})
 }
 
 func (b *BaseRouter) addContentRoutes() {
@@ -348,9 +380,9 @@ func (b *BaseRouter) addAuthRoutes() {
 
 	// Register
 	auth.POST("/register", func(c *gin.Context) {
-		var user User
+		var user UserRegisterRequest
 		if c.ShouldBindJSON(&user) == nil {
-			response, err := register(&user, b.db)
+			response, err := register(&user, PERM_NONE, b.db)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
@@ -363,13 +395,10 @@ func (b *BaseRouter) addAuthRoutes() {
 
 	// Get available auth providers
 	auth.GET("/available", func(c *gin.Context) {
-		signupEnabled := true
-		if os.Getenv("SIGNUP_ENABLED") == "false" {
-			signupEnabled = false
-		}
 		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
 			AvailableAuthProviders: AvailableAuthProviders,
-			SignupEnabled:          signupEnabled,
+			SignupEnabled:          Config.SIGNUP_ENABLED,
+			IsInSetup:              ServerInSetup,
 		})
 	})
 }

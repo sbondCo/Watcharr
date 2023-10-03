@@ -1,16 +1,11 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
-  import Icon from "@/lib/Icon.svelte";
-  import { UserType, type Icon as Icons, type AvailableAuthProviders } from "@/types";
+  import type { AvailableAuthProviders } from "@/types";
   import { noAuthAxios } from "@/lib/util/api";
-  import { onMount, afterUpdate } from "svelte";
+  import { onMount } from "svelte";
   import { notify, unNotify } from "@/lib/util/notify";
 
   let error: string;
-  let login = true;
-  let availableProviders: string[] = [];
-  let signupEnabled = true;
 
   onMount(() => {
     if (localStorage.getItem("token")) {
@@ -19,20 +14,12 @@
 
     noAuthAxios.get<AvailableAuthProviders>("/auth/available").then((r) => {
       if (r?.data) {
-        if (r?.data?.isInSetup) {
-          console.log("Server is in setup.. navigating to web setup page.");
-          goto("/setup");
+        if (!r?.data?.isInSetup) {
+          console.log("Server not in setup.. navigating to login page.");
+          goto("/login");
         }
-        availableProviders = r?.data?.available;
-        signupEnabled = r?.data?.signupEnabled;
       }
     });
-  });
-
-  afterUpdate(() => {
-    if (!error && $page.url.searchParams.get("again")) {
-      error = "Please Login Again";
-    }
   });
 
   function handleLogin(ev: SubmitEvent) {
@@ -45,14 +32,9 @@
       return;
     }
 
-    let customAuthEP = "";
-    if ((ev.submitter as HTMLButtonElement)?.name === "jellyfin") {
-      customAuthEP = "jellyfin";
-    }
-
-    const nid = notify({ text: "Logging in", type: "loading" });
+    const nid = notify({ text: "Setting Up Admin User", type: "loading" });
     noAuthAxios
-      .post(`/auth${login ? `/${customAuthEP}` : "/register"}`, {
+      .post("/setup/create_admin", {
         username: user,
         password: pass
       })
@@ -61,9 +43,6 @@
           console.log("Received token... logging in.");
           localStorage.setItem("token", resp.data.token);
           localStorage.setItem("username", String(user));
-          let userType = 0;
-          if (customAuthEP == "jellyfin") userType = UserType.Jellyfin;
-          localStorage.setItem("userType", String(userType));
           goto("/");
           notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
         }
@@ -79,15 +58,16 @@
   }
 </script>
 
+<svelte:head>
+  <title>Setup Watcharr</title>
+</svelte:head>
+
 <div>
   <div class="inner">
-    <h2>
-      {#if login}
-        Get Back In!
-      {:else}
-        Lucky You Found Us!
-      {/if}
-    </h2>
+    <div class="headers">
+      <h2>Setup Admin User</h2>
+      <h5 class="norm">Welcome to Watcharr! Setup your admin acount below.</h5>
+    </div>
 
     {#if error}
       <span class="error">{error}!</span>
@@ -100,37 +80,10 @@
       <label for="password">Password</label>
       <input type="password" name="password" placeholder="Password" />
 
-      {#if login}
-        <span class="login-with" style="font-weight: bold">Login With</span>
-        <div class="login-btns">
-          <button type="submit"><span class="watcharr">W</span>Watcharr</button>
-          {#if availableProviders}
-            {#each availableProviders as p}
-              <button type="submit" name="jellyfin" class="other"><Icon i={p} wh={18} />{p}</button>
-            {/each}
-          {/if}
-        </div>
-      {:else}
-        <div class="login-btns">
-          <button type="submit">Sign Up</button>
-        </div>
-      {/if}
+      <div class="login-btns">
+        <button type="submit"><span class="watcharr">W</span>Set Up</button>
+      </div>
     </form>
-
-    {#if signupEnabled}
-      <button
-        class="plain"
-        on:click={() => {
-          login = !login;
-        }}
-      >
-        {#if login}
-          Not a user?
-        {:else}
-          Already a user?
-        {/if}
-      </button>
-    {/if}
   </div>
 </div>
 
@@ -154,13 +107,17 @@
     font-weight: normal;
   }
 
+  .headers {
+    display: flex;
+    flex-flow: column;
+    width: 100%;
+    gap: 0;
+    margin-bottom: 10px;
+  }
+
   label {
     align-self: flex-start;
     font-weight: bold;
-  }
-
-  span.login-with {
-    font-size: 14px;
   }
 
   .login-btns {
@@ -178,20 +135,6 @@
         font-family: "Rampart One";
         font-size: 18px;
         line-height: 18px;
-      }
-
-      &.other {
-        overflow: hidden;
-        animation: 250ms ease otherbtn;
-
-        @keyframes otherbtn {
-          from {
-            width: 0px;
-          }
-          to {
-            width: 100%;
-          }
-        }
       }
     }
   }
