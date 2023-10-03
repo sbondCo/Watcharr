@@ -266,13 +266,12 @@ func login(user *User, db *gorm.DB) (AuthResponse, error) {
 }
 
 func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
-	jellyfinHost := os.Getenv("JELLYFIN_HOST")
-	if jellyfinHost == "" {
-		slog.Error("Request made to login via Jellyfin, but JELLYFIN_HOST environment variable is not set.")
+	if Config.JELLYFIN_HOST == "" {
+		slog.Error("Request made to login via Jellyfin, but JELLYFIN_HOST has not been configured.")
 		return AuthResponse{}, errors.New("jellyfin login not enabled")
 	}
 
-	base, err := url.Parse(jellyfinHost + "/Users/AuthenticateByName")
+	base, err := url.Parse(Config.JELLYFIN_HOST + "/Users/AuthenticateByName")
 	if err != nil {
 		slog.Error("Failed to parse AuthenticateByName api endpoint url", "error", err.Error())
 		return AuthResponse{}, errors.New("failed to parse api uri")

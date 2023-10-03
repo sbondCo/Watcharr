@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
 )
 
 type JellyfinItemSearchResponse struct {
@@ -30,13 +29,12 @@ type JFContentFindResponse struct {
 }
 
 func jellyfinAPIRequest(method string, ep string, p map[string]string, username string, userToken string, resp interface{}) error {
-	jellyfinHost := os.Getenv("JELLYFIN_HOST")
-	if jellyfinHost == "" {
-		slog.Error("jellyfinAPIRequest: JELLYFIN_HOST environment variable is not set.")
+	if Config.JELLYFIN_HOST == "" {
+		slog.Error("jellyfinAPIRequest: JELLYFIN_HOST not configured.")
 		return errors.New("jellyfin not enabled")
 	}
 	slog.Debug("jellyfinAPIRequest", "endpoint", ep, "params", p)
-	base, err := url.Parse(jellyfinHost)
+	base, err := url.Parse(Config.JELLYFIN_HOST)
 	if err != nil {
 		return errors.New("failed to parse api uri")
 	}
@@ -99,9 +97,8 @@ func jellyfinContentFind(
 	contentName string,
 	contentTmdbId string,
 ) (JFContentFindResponse, error) {
-	jellyfinHost := os.Getenv("JELLYFIN_HOST")
-	if jellyfinHost == "" {
-		slog.Error("Request made to login via Jellyfin, but JELLYFIN_HOST environment variable is not set.")
+	if Config.JELLYFIN_HOST == "" {
+		slog.Error("Request made to login via Jellyfin, but JELLYFIN_HOST has not been configured.")
 		return JFContentFindResponse{}, errors.New("jellyfin login not enabled")
 	}
 	if userType != JELLYFIN_USER || userThirdPartyId == "" {
@@ -154,7 +151,7 @@ func jellyfinContentFind(
 	for _, i := range resp.Items {
 		if i.ProviderIds.Tmdb == contentTmdbId {
 			ret.HasContent = true
-			ret.Url = jellyfinHost + "/web/index.html#!/details?id=" + i.Id + "&serverId=" + i.ServerID
+			ret.Url = Config.JELLYFIN_HOST + "/web/index.html#!/details?id=" + i.Id + "&serverId=" + i.ServerID
 		}
 	}
 	return *ret, nil

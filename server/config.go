@@ -77,7 +77,7 @@ func initFromConfig() error {
 	}
 
 	if Config.JELLYFIN_HOST != "" {
-		slog.Info("Adding J1`ellyfin as an auth provider.")
+		slog.Info("Adding Jellyfin as an auth provider.")
 		AvailableAuthProviders = append(AvailableAuthProviders, "jellyfin")
 	}
 
