@@ -401,6 +401,17 @@ func (b *BaseRouter) addAuthRoutes() {
 			IsInSetup:              ServerInSetup,
 		})
 	})
+
+	// Request admin token
+	auth.Use(AuthRequired(nil)).GET("/admin_token", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		err := createOneUseToken(b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusNoContent)
+	})
 }
 
 func (b *BaseRouter) addProfileRoutes() {

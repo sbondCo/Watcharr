@@ -68,7 +68,7 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &Activity{})
+	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &Activity{}, &Token{})
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
@@ -121,6 +121,8 @@ func main() {
 	br.addUserRoutes()
 	br.addImportRoutes()
 	br.rg.Static("/img", "./data/img")
+
+	go setupTasks(db)
 
 	gine.Run("0.0.0.0:3080")
 }

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
-	b64 "encoding/base64"
 	"encoding/json"
 	"log"
 	"log/slog"
@@ -92,13 +90,11 @@ func initFromConfig() error {
 // Currently only JWT_SECRET is required, so this method
 // generates a secret.
 func generateConfig() error {
-	key := make([]byte, 64)
-	_, err := rand.Read(key)
+	key, err := generateString(64)
 	if err != nil {
 		return err
 	}
-	encKey := b64.StdEncoding.EncodeToString([]byte(key))
-	cfg := ServerConfig{JWT_SECRET: encKey}
+	cfg := ServerConfig{JWT_SECRET: key}
 	barej, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
 		return err
