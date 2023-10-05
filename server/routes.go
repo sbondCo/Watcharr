@@ -405,11 +405,12 @@ func (b *BaseRouter) addAuthRoutes() {
 	// Request admin token
 	auth.Use(AuthRequired(nil)).GET("/admin_token", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
-		err := createOneUseToken(b.db, userId)
+		token, err := createOneUseToken(b.db, TOKENTYPE_ADMIN, userId)
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return
 		}
+		slog.Info("Admin token generated. Type this token into the web ui to gain admin access on your account.", "token", token, "generated_for", userId)
 		c.Status(http.StatusNoContent)
 	})
 }

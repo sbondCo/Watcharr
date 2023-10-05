@@ -11,7 +11,7 @@ import (
 type TokenType string
 
 var (
-	TOKEN_ADMIN TokenType = "ADMIN"
+	TOKENTYPE_ADMIN TokenType = "ADMIN"
 )
 
 type Token struct {
@@ -22,18 +22,18 @@ type Token struct {
 	UserID    uint      `gorm:"not null"`
 }
 
-func createOneUseToken(db *gorm.DB, t TokenType, userId uint) error {
+func createOneUseToken(db *gorm.DB, t TokenType, userId uint) (string, error) {
 	token, err := generateString(8)
 	if err != nil {
 		slog.Error("createOneUseToken: Failed to generate string!", "error", err)
-		return errors.New("failed to generate token")
+		return "", errors.New("failed to generate token")
 	}
-	res := db.Create(Token{Type: t, Value: token, UserID: userId})
+	res := db.Create(&Token{Type: t, Value: token, UserID: userId})
 	if res.Error != nil {
 		slog.Error("createOneUseToken: Failed to insert token into db!", "error", res.Error)
-		return errors.New("failed to generate token")
+		return "", errors.New("failed to generate token")
 	}
-	return nil
+	return token, nil
 }
 
 // Cleans up tokens older than 2m.
