@@ -30,7 +30,7 @@
         goto("/");
       })
       .catch((err) => {
-        console.error("Failed to use admin token", err);
+        console.error("Failed to use admin token", err?.response?.data?.error || err);
         notify({ type: "error", text: "Failed to use admin token!" });
       });
   }

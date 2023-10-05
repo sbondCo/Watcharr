@@ -358,7 +358,7 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 
 func useAdminToken(req *UseAdminTokenRequest, db *gorm.DB, userId uint) error {
 	var dbToken Token
-	resp := db.Take(&dbToken).Where("value = ?", req.Token)
+	resp := db.Where("value = ?", req.Token).Take(&dbToken)
 	if resp.Error != nil {
 		slog.Info("useAdminToken failed", "error", "token not found in db")
 		return errors.New("invalid token")
@@ -368,7 +368,6 @@ func useAdminToken(req *UseAdminTokenRequest, db *gorm.DB, userId uint) error {
 		return errors.New("invalid token")
 	}
 	dur := time.Since(dbToken.CreatedAt)
-	slog.Info("useAdminToken duration since", "dur", dur)
 	if dur > tokenMaxAge {
 		slog.Info("useAdminToken failed", "error", "token in db has expired")
 		return errors.New("invalid token")
