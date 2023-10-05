@@ -401,6 +401,34 @@ func (b *BaseRouter) addAuthRoutes() {
 			IsInSetup:              ServerInSetup,
 		})
 	})
+
+	// Request admin token
+	auth.Use(AuthRequired(nil)).GET("/admin_token", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		token, err := createOneUseToken(b.db, TOKENTYPE_ADMIN, userId)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		slog.Info("Admin token generated. Type this token into the web ui to gain admin access on your account.", "token", token, "generated_for", userId)
+		c.Status(http.StatusNoContent)
+	})
+
+	// Use admin token
+	auth.Use(AuthRequired(nil)).POST("/admin_token", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var atr UseAdminTokenRequest
+		if c.ShouldBindJSON(&atr) == nil {
+			err := useAdminToken(&atr, b.db, userId)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusNoContent)
+			return
+		}
+		c.Status(400)
+	})
 }
 
 func (b *BaseRouter) addProfileRoutes() {
