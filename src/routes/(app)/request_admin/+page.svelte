@@ -1,10 +1,38 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
+  import { notify } from "@/lib/util/notify";
   import axios from "axios";
 
   let page = 0;
+  let adminToken: string;
 
   function generateAdminToken() {
-    axios.get("/auth/admin_token");
+    axios
+      .get("/auth/admin_token")
+      .then(() => {
+        page = 1;
+      })
+      .catch((err) => {
+        console.error("Failed to generate admin token", err);
+        notify({ type: "error", text: "Failed to generate a token" });
+      });
+  }
+
+  function useAdminToken() {
+    if (!adminToken) {
+      console.error("useAdminToken: No admin token provided!");
+      return;
+    }
+    axios
+      .post("/auth/admin_token", { token: adminToken })
+      .then(() => {
+        notify({ type: "success", text: "You now have admin!" });
+        goto("/");
+      })
+      .catch((err) => {
+        console.error("Failed to use admin token", err);
+        notify({ type: "error", text: "Failed to use admin token!" });
+      });
   }
 </script>
 
@@ -16,8 +44,8 @@
       <button on:click={generateAdminToken}>Request</button>
     {:else if page == 1}
       <p>Check your sever log to view you token. Once you have it type it down below.</p>
-      <input type="text" />
-      <button>Check Token</button>
+      <input bind:value={adminToken} type="text" placeholder="Admin Token" />
+      <button on:click={useAdminToken}>Check Token</button>
     {/if}
   </div>
 </div>
@@ -30,6 +58,9 @@
     padding: 0 30px 0 30px;
 
     .inner {
+      display: flex;
+      flex-flow: column;
+      gap: 10px;
       min-width: 400px;
       max-width: 400px;
       overflow: hidden;

@@ -72,6 +72,10 @@ type UserRegisterRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type UseAdminTokenRequest struct {
+	Token string `json:"token" binding:"required"`
+}
+
 type JellyfinAuth struct {
 	Username string `json:"Username"`
 	Pw       string `json:"Pw"`
@@ -350,6 +354,48 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
+}
+
+func useAdminToken(req *UseAdminTokenRequest, db *gorm.DB, userId uint) error {
+	var dbToken Token
+	resp := db.Take(&dbToken).Where("value = ?", req.Token)
+	if resp.Error != nil {
+		slog.Info("useAdminToken failed", "error", "token not found in db")
+		return errors.New("invalid token")
+	}
+	if dbToken.Type != TOKENTYPE_ADMIN {
+		slog.Info("useAdminToken failed", "error", "token is of wrong type", "type_wanted", TOKENTYPE_ADMIN, "type_actual", dbToken.Type)
+		return errors.New("invalid token")
+	}
+	dur := time.Since(dbToken.CreatedAt)
+	slog.Info("useAdminToken duration since", "dur", dur)
+	if dur > tokenMaxAge {
+		slog.Info("useAdminToken failed", "error", "token in db has expired")
+		return errors.New("invalid token")
+	}
+	if dbToken.UserID != userId {
+		slog.Info("useAdminToken failed", "error", "token in db is not for this user")
+		return errors.New("invalid token")
+	}
+	// Token is valid and for current user.. give user admin.
+	// Incase removing the token after used fails, this is in a transaction so user wont be admin.
+	err := db.Transaction(func(tx *gorm.DB) error {
+		// Give user admin
+		if err := tx.Model(&User{}).Where("id = ?", userId).Update("permissions", PERM_ADMIN).Error; err != nil {
+			return err
+		}
+		// Delete used token
+		if err := tx.Where("value = ?", req.Token).Delete(&Token{}).Error; err != nil {
+			return err
+		}
+		// commit transaction if no errors
+		return nil
+	})
+	if err != nil {
+		slog.Info("useAdminToken failed", "error", err, "error_pretty", "using token transaction failed")
+		return errors.New("failed to use token")
+	}
+	return nil
 }
 
 func signJWT(user *User) (token string, err error) {

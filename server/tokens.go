@@ -22,6 +22,8 @@ type Token struct {
 	UserID    uint      `gorm:"not null"`
 }
 
+const tokenMaxAge = 2 * time.Minute
+
 func createOneUseToken(db *gorm.DB, t TokenType, userId uint) (string, error) {
 	token, err := generateString(8)
 	if err != nil {
@@ -38,6 +40,6 @@ func createOneUseToken(db *gorm.DB, t TokenType, userId uint) (string, error) {
 
 // Cleans up tokens older than 2m.
 func cleanupTokens(db *gorm.DB) {
-	fiveMinsAgo := time.Now().Add(-2 * time.Minute)
-	db.Where("created_at < ?", fiveMinsAgo).Delete(&Token{})
+	twoMinsAgo := time.Now().Add(-tokenMaxAge)
+	db.Where("created_at < ?", twoMinsAgo).Delete(&Token{})
 }
