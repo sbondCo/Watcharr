@@ -40,6 +40,10 @@ func createOneUseToken(db *gorm.DB, t TokenType, userId uint) (string, error) {
 
 // Cleans up tokens older than 2m.
 func cleanupTokens(db *gorm.DB) {
+	slog.Debug("cleanupTokens: Cleaning up old tokens from db")
 	twoMinsAgo := time.Now().Add(-tokenMaxAge)
-	db.Where("created_at < ?", twoMinsAgo).Delete(&Token{})
+	resp := db.Where("created_at < ?", twoMinsAgo).Delete(&Token{})
+	if resp.Error != nil {
+		slog.Error("cleanupTokens: Failed to run DELETE on old tokens!", "error", resp.Error)
+	}
 }
