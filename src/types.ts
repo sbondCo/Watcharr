@@ -97,6 +97,13 @@ export interface PublicUser {
   username: string;
 }
 
+// PrivateUser - Current users info
+export interface PrivateUser {
+  username: string;
+  type: UserType;
+  permissions: number;
+}
+
 export interface JellyfinFoundContent {
   hasContent: boolean;
   url: string;

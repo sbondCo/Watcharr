@@ -42,7 +42,6 @@
         if (resp.data?.token) {
           console.log("Received token... logging in.");
           localStorage.setItem("token", resp.data.token);
-          localStorage.setItem("username", String(user));
           goto("/");
           notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
         }

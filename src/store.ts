@@ -1,9 +1,18 @@
 import { writable } from "svelte/store";
-import type { FileWithData, Filters, ImportedList, Theme, UserSettings, Watched } from "./types";
+import type {
+  FileWithData,
+  Filters,
+  ImportedList,
+  PrivateUser,
+  Theme,
+  UserSettings,
+  Watched
+} from "./types";
 import type { Notification } from "./lib/util/notify";
 import { browser } from "$app/environment";
 import { toggleTheme } from "./lib/util/helpers";
 
+export const userInfo = writable<PrivateUser>();
 export const userSettings = writable<UserSettings>();
 export const watchedList = writable<Watched[]>([]);
 export const notifications = writable<Notification[]>([]);

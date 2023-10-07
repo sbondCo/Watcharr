@@ -468,6 +468,17 @@ func (b *BaseRouter) addJellyfinRoutes() {
 func (b *BaseRouter) addUserRoutes() {
 	u := b.rg.Group("/user").Use(AuthRequired(b.db))
 
+	// Get current user info
+	u.GET("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		response, err := getUserInfo(b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
 	// Update current user settings
 	u.POST("/update", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)

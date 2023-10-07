@@ -5,10 +5,11 @@
   import Spinner from "@/lib/Spinner.svelte";
   import { updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
-  import { appTheme, userSettings } from "@/store";
+  import { appTheme, userInfo, userSettings } from "@/store";
   import type { Profile } from "@/types";
   import axios from "axios";
 
+  $: user = $userInfo;
   $: settings = $userSettings;
   $: selectedTheme = $appTheme;
 
@@ -27,7 +28,7 @@
 
 <div class="content">
   <div class="inner">
-    <h2 title={localStorage.getItem("username")}>Hey {localStorage.getItem("username")}</h2>
+    <h2 title={user.username}>Hey {user.username}</h2>
 
     <div class="stats">
       {#await getProfile()}
