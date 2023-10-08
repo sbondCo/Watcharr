@@ -69,6 +69,7 @@
             <h5 class="norm">Allow signing up with web ui</h5>
           </div>
           <Checkbox
+            name="SIGNUP_ENABLED"
             disabled={signupDisabled}
             value={serverConfig.SIGNUP_ENABLED}
             toggled={(on) => {
@@ -85,6 +86,7 @@
             <h5 class="norm">Enable debug logging</h5>
           </div>
           <Checkbox
+            name="DEBUG"
             disabled={debugDisabled}
             value={serverConfig.DEBUG}
             toggled={(on) => {

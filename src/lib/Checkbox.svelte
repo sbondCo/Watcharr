@@ -1,4 +1,5 @@
 <script lang="ts">
+  export let name: string;
   export let value: boolean = false;
   export let toggled: (on: boolean) => void;
   export let disabled = false;
@@ -29,10 +30,10 @@
     bind:checked={value}
     disabled={actualDisabled}
     type="checkbox"
-    id="checkbox"
+    id={name}
     on:change={checkboxChange}
   />
-  <label for="checkbox"></label>
+  <label for={name}></label>
 </div>
 
 <style lang="scss">

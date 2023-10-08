@@ -80,6 +80,7 @@
           <h5 class="norm">Hide your profile from others?</h5>
         </div>
         <Checkbox
+          name="private"
           disabled={privateDisabled}
           value={settings.private}
           toggled={(on) => {
