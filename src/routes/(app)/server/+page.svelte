@@ -7,8 +7,11 @@
   import axios from "axios";
 
   let serverConfig: ServerConfig;
+  // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
+  let jfDisabled = false;
+  let tmdbkDisabled = false;
 
   async function getServerConfig() {
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
@@ -56,12 +59,30 @@
             type="text"
             placeholder="https://jellyfin.example.com"
             bind:value={serverConfig.JELLYFIN_HOST}
+            on:blur={() => {
+              jfDisabled = true;
+              updateServerConfig("JELLYFIN_HOST", serverConfig.JELLYFIN_HOST, () => {
+                jfDisabled = false;
+              });
+            }}
+            disabled={jfDisabled}
           />
         </div>
         <div>
           <h4 class="norm">TMDB Key</h4>
           <h5 class="norm">Provide your own TMDB API Key</h5>
-          <input type="password" placeholder="TMDB Key" bind:value={serverConfig.TMDB_KEY} />
+          <input
+            type="password"
+            placeholder="TMDB Key"
+            bind:value={serverConfig.TMDB_KEY}
+            on:blur={() => {
+              tmdbkDisabled = true;
+              updateServerConfig("TMDB_KEY", serverConfig.TMDB_KEY, () => {
+                tmdbkDisabled = false;
+              });
+            }}
+            disabled={tmdbkDisabled}
+          />
         </div>
         <div class="row">
           <div>
