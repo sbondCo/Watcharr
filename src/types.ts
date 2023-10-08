@@ -101,7 +101,13 @@ export interface PublicUser {
 export interface PrivateUser {
   username: string;
   type: UserType;
-  permissions: number;
+  permissions: UserPermission;
+}
+
+export enum UserPermission {
+  PERM_NONE = 1,
+  PERM_ADMIN = 2,
+  PERM_REQUEST_CONTENT = 4
 }
 
 export interface JellyfinFoundContent {
@@ -581,4 +587,11 @@ export interface ImportedList {
 export interface Filters {
   type: string[];
   status: string[];
+}
+
+export interface ServerConfig {
+  JELLYFIN_HOST: string;
+  SIGNUP_ENABLED: boolean;
+  TMDB_KEY: string;
+  DEBUG: boolean;
 }

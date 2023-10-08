@@ -4,7 +4,7 @@
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import { isTouch, parseTokenPayload } from "@/lib/util/helpers";
+  import { isTouch, parseTokenPayload, userHasPermission } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import {
     activeFilters,
@@ -15,7 +15,7 @@
     userSettings,
     watchedList
   } from "@/store";
-  import type { Filters } from "@/types";
+  import { type Filters, UserPermission } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
@@ -301,6 +301,9 @@
         <button class="plain" on:click={() => profile()}>Profile</button>
         {#if !settings.private}
           <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+        {/if}
+        {#if userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
+          <button class="plain" on:click={() => goto("/server")}>Settings</button>
         {/if}
         <button class="plain" on:click={() => logout()}>Logout</button>
         <!-- svelte-ignore missing-declaration -->

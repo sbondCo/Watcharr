@@ -16,6 +16,11 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+type KeyValueRequest struct {
+	Key   string `json:"key"`
+	Value any    `json:"value"`
+}
+
 type BaseRouter struct {
 	db *gorm.DB
 	rg *gin.RouterGroup
@@ -533,6 +538,37 @@ func (b *BaseRouter) addImportRoutes() {
 				return
 			}
 			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
+
+func (b *BaseRouter) addServerRoutes() {
+	server := b.rg.Group("/server").Use(AuthRequired(b.db), AdminRequired())
+
+	// Get server config (minus very sensitive fields, like JWT_SECRET)
+	server.GET("/config", func(c *gin.Context) {
+		// Return new ServerConfig with only the fields we want to show in settings ui
+		c.JSON(http.StatusOK, ServerConfig{
+			SIGNUP_ENABLED: Config.SIGNUP_ENABLED,
+			JELLYFIN_HOST:  Config.JELLYFIN_HOST,
+			TMDB_KEY:       Config.TMDB_KEY,
+			DEBUG:          Config.DEBUG,
+		})
+	})
+
+	// Update config
+	server.POST("/config", func(c *gin.Context) {
+		var ur KeyValueRequest
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			err := updateConfig(ur.Key, ur.Value)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})

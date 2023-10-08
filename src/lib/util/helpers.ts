@@ -1,12 +1,13 @@
 import { appTheme } from "@/store";
-import type {
-  Icon,
-  MediaType,
-  TMDBContentCreditsCrew,
-  Theme,
-  TokenClaims,
-  Watched,
-  WatchedStatus
+import {
+  UserPermission,
+  type Icon,
+  type MediaType,
+  type TMDBContentCreditsCrew,
+  type Theme,
+  type TokenClaims,
+  type Watched,
+  type WatchedStatus
 } from "@/types";
 
 export const watchedStatuses: {
@@ -178,4 +179,12 @@ export async function sleep(ms: number) {
       r();
     }, ms)
   );
+}
+
+export function userHasPermission(perms: UserPermission, reqPerm: UserPermission): boolean {
+  // Admins have permission for everything.
+  if (perms & UserPermission.PERM_ADMIN) {
+    return true;
+  }
+  return (perms & reqPerm) == reqPerm;
 }

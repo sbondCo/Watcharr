@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"log/slog"
 	"os"
@@ -10,7 +11,7 @@ import (
 type ServerConfig struct {
 	// Used to sign JWT tokens. Make sure to make
 	// it strong, just like a very long, complicated password.
-	JWT_SECRET string
+	JWT_SECRET string `json:",omitempty"`
 
 	// Optional: Point to your Jellyfin install
 	// to enable it as an auth provider.
@@ -29,10 +30,6 @@ type ServerConfig struct {
 	// of failure.
 	// Set to `true` to enable.
 	DEBUG bool `json:",omitempty"`
-
-	// Optional: When not set we assume production, should only
-	// be set to DEV when developing the app.
-	// MODE string
 }
 
 var (
@@ -100,5 +97,31 @@ func generateConfig() error {
 		return err
 	}
 	Config = cfg
+	return os.WriteFile("./data/watcharr.json", barej, 0755)
+}
+
+// Update server config property
+func updateConfig(k string, v any) error {
+	slog.Debug("updateConfig", "k", k, "v", v)
+	if k == "JELLYFIN_HOST" {
+		Config.JELLYFIN_HOST = v.(string)
+	} else if k == "SIGNUP_ENABLED" {
+		Config.SIGNUP_ENABLED = v.(bool)
+	} else if k == "TMDB_KEY" {
+		Config.TMDB_KEY = v.(string)
+	} else if k == "DEBUG" {
+		Config.DEBUG = v.(bool)
+	} else {
+		return errors.New("invalid setting")
+	}
+	return writeConfig()
+}
+
+// Write current Config to file
+func writeConfig() error {
+	barej, err := json.MarshalIndent(Config, "", "\t")
+	if err != nil {
+		return err
+	}
 	return os.WriteFile("./data/watcharr.json", barej, 0755)
 }

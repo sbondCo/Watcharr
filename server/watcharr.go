@@ -120,6 +120,7 @@ func main() {
 	br.addJellyfinRoutes()
 	br.addUserRoutes()
 	br.addImportRoutes()
+	br.addServerRoutes()
 	br.rg.Static("/img", "./data/img")
 
 	go setupTasks(db)
