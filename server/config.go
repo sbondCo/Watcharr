@@ -38,8 +38,7 @@ var (
 	Config = ServerConfig{
 		SIGNUP_ENABLED: true,
 	}
-	AvailableAuthProviders = []string{}
-	TMDBKey                = "d047fa61d926371f277e7a83c9c4ff2c"
+	TMDBKey = "d047fa61d926371f277e7a83c9c4ff2c"
 )
 
 // Read config file
@@ -69,11 +68,6 @@ func readConfig() error {
 func initFromConfig() error {
 	if Config.JWT_SECRET == "" {
 		log.Fatal("JWT_SECRET missing from config!")
-	}
-
-	if Config.JELLYFIN_HOST != "" {
-		slog.Info("Adding Jellyfin as an auth provider.")
-		AvailableAuthProviders = append(AvailableAuthProviders, "jellyfin")
 	}
 
 	if Config.TMDB_KEY != "" {

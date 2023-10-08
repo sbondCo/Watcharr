@@ -400,8 +400,12 @@ func (b *BaseRouter) addAuthRoutes() {
 
 	// Get available auth providers
 	auth.GET("/available", func(c *gin.Context) {
+		availableAuthProviders := []string{}
+		if Config.JELLYFIN_HOST != "" {
+			availableAuthProviders = append(availableAuthProviders, "jellyfin")
+		}
 		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
-			AvailableAuthProviders: AvailableAuthProviders,
+			AvailableAuthProviders: availableAuthProviders,
 			SignupEnabled:          Config.SIGNUP_ENABLED,
 			IsInSetup:              ServerInSetup,
 		})
