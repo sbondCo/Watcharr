@@ -39,6 +39,8 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 
 Currently only a [docker image](https://github.com/sbondCo/Watcharr/pkgs/container/watcharr) is provided (**v1.9.1 and newer no longer require the `watcharr-ui` package, it is bundled inside the main `watcharr` package**).
 
+**Note:** When first running, make sure only you have access. The first user created will become admin.
+
 Here is a simple setup you can use yourself, using docker compose:
 
 **docker-compose.yml**
@@ -61,35 +63,9 @@ services:
       - ./data:/data
 ```
 
-**.env**
+After loading up Watcharr, you will be greeted with a menu to setup the first account (which will be admin).
 
-```
-# Used to sign JWT tokens. Make sure to make
-# it strong, just like a very long, complicated password.
-JWT_SECRET=MAKE_ME_RANDOM_AND_LONG
-
-# Optional: Point to your Jellyfin install
-# to enable it as an auth provider.
-JELLYFIN_HOST=https://my.jellyfin.example
-
-# Enable/disable signup functionality.
-# Set to `false` to disable registering an account.
-SIGNUP_ENABLED=true
-
-# Optional: Provide your own TMDB API Key.
-# If unprovided, the default Watcharr API key will be used.
-# TMDB_KEY=
-
-# Enable/disable debug logging. Useful for when trying
-# to figure out exactly what the server is doing at a point
-# of failure.
-# Set to `true` to enable.
-DEBUG=false
-
-# Optional: When not set we assume production, should only
-# be set to DEV when developing the app.
-MODE=prod
-```
+When logged in you can then configure the server settings from the nav face menu > settings option.
 
 # Getting Help
 
