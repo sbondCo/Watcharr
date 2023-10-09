@@ -51,7 +51,7 @@
     {#if page == 0}
       <button on:click={generateAdminToken}>Request</button>
     {:else if page == 1}
-      <p>Check your sever log to view you token. Once you have it type it down below.</p>
+      <p>Check your sever log to retrieve your token. Once you have it type it down below.</p>
       <input bind:value={adminToken} type="text" placeholder="Admin Token" />
       <button on:click={useAdminToken}>Check Token</button>
     {/if}
