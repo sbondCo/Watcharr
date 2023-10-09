@@ -10,5 +10,4 @@ services:
     ports:
       - 3080:3080
     volumes:
-      - ./server/.env:/.env
       - ./container_data:/data
