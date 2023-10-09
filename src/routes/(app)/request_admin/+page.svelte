@@ -1,7 +1,10 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { notify } from "@/lib/util/notify";
+  import { userInfo } from "@/store";
+  import { UserPermission } from "@/types";
   import axios from "axios";
+  import { get } from "svelte/store";
 
   let page = 0;
   let adminToken: string;
@@ -27,6 +30,11 @@
       .post("/auth/admin_token", { token: adminToken })
       .then(() => {
         notify({ type: "success", text: "You now have admin!" });
+        const uinf = get(userInfo);
+        if (uinf) {
+          uinf.permissions = UserPermission.PERM_ADMIN;
+          userInfo.update((ui) => (ui = uinf));
+        }
         goto("/");
       })
       .catch((err) => {
@@ -43,7 +51,7 @@
     {#if page == 0}
       <button on:click={generateAdminToken}>Request</button>
     {:else if page == 1}
-      <p>Check your sever log to view you token. Once you have it type it down below.</p>
+      <p>Check your sever log to retrieve your token. Once you have it type it down below.</p>
       <input bind:value={adminToken} type="text" placeholder="Admin Token" />
       <button on:click={useAdminToken}>Check Token</button>
     {/if}

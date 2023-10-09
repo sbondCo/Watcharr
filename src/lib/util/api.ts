@@ -126,7 +126,7 @@ export async function contentExistsOnJellyfin(
 ): Promise<JellyfinFoundContent | undefined> {
   try {
     const user = get(userInfo);
-    if (Number(user.type) == UserType.Jellyfin) {
+    if (Number(user?.type) == UserType.Jellyfin) {
       const resp = await axios.get(`/jellyfin/${type}/${name}/${tmdbId}`);
       console.log("contentExistsOnJellyfin response:", resp.data);
       return resp.data as JellyfinFoundContent;
@@ -144,6 +144,10 @@ export function updateUserSetting<K extends keyof UserSettings>(
 ) {
   console.log("Updating user setting", name, "to", value);
   const uSettings = get(userSettings);
+  if (!uSettings) {
+    console.log("updateUserSetting: userSettings not set..");
+    return;
+  }
   const originalValue = uSettings[name];
   const nid = notify({ type: "loading", text: "Updating" });
   axios
