@@ -98,7 +98,6 @@ func updateConfig(k string, v any) error {
 		Config.TMDB_KEY = v.(string)
 	} else if k == "DEBUG" {
 		Config.DEBUG = v.(bool)
-		slog.Info("update debug", "new", v, "actual", v.(bool), "var", Config.DEBUG)
 		setLoggingLevel()
 	} else {
 		return errors.New("invalid setting")
