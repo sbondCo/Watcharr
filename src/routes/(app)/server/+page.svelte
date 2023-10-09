@@ -54,7 +54,10 @@
       {:then}
         <div>
           <h4 class="norm">Jellyfin Host</h4>
-          <h5 class="norm">Point to your Jellyfin server to enable related features.</h5>
+          <h5 class="norm">
+            Point to your Jellyfin server to enable related features. Don't change server after
+            already using another.
+          </h5>
           <input
             type="text"
             placeholder="https://jellyfin.example.com"
