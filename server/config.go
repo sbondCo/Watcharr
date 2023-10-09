@@ -83,7 +83,7 @@ func generateConfig() error {
 	if err != nil {
 		return err
 	}
-	Config = cfg
+	Config.JWT_SECRET = cfg.JWT_SECRET
 	return os.WriteFile("./data/watcharr.json", barej, 0755)
 }
 
