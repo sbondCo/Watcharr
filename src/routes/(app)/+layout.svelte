@@ -79,6 +79,11 @@
     subMenuShown = false;
   }
 
+  function serverSettings() {
+    goto("/server");
+    subMenuShown = false;
+  }
+
   function shareWatchedList() {
     const nid = notify({ type: "loading", text: "Getting link" });
     const ud = parseTokenPayload();
@@ -303,7 +308,7 @@
           <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
         {/if}
         {#if userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
-          <button class="plain" on:click={() => goto("/server")}>Settings</button>
+          <button class="plain" on:click={() => serverSettings()}>Settings</button>
         {/if}
         <button class="plain" on:click={() => logout()}>Logout</button>
         <!-- svelte-ignore missing-declaration -->
