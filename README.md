@@ -57,8 +57,6 @@ services:
     ports:
       - 3080:3080
     volumes:
-      # .env file used to configure watcharr
-      - .env:/.env
       # Contains all of watcharr data (database & cache)
       - ./data:/data
 ```
