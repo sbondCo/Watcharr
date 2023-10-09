@@ -1,7 +1,10 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { notify } from "@/lib/util/notify";
+  import { userInfo } from "@/store";
+  import { UserPermission } from "@/types";
   import axios from "axios";
+  import { get } from "svelte/store";
 
   let page = 0;
   let adminToken: string;
@@ -27,6 +30,11 @@
       .post("/auth/admin_token", { token: adminToken })
       .then(() => {
         notify({ type: "success", text: "You now have admin!" });
+        const uinf = get(userInfo);
+        if (uinf) {
+          uinf.permissions = UserPermission.PERM_ADMIN;
+          userInfo.update((ui) => (ui = uinf));
+        }
         goto("/");
       })
       .catch((err) => {

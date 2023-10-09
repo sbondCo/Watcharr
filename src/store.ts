@@ -12,8 +12,8 @@ import type { Notification } from "./lib/util/notify";
 import { browser } from "$app/environment";
 import { toggleTheme } from "./lib/util/helpers";
 
-export const userInfo = writable<PrivateUser>();
-export const userSettings = writable<UserSettings>();
+export const userInfo = writable<PrivateUser | undefined>();
+export const userSettings = writable<UserSettings | undefined>();
 export const watchedList = writable<Watched[]>([]);
 export const notifications = writable<Notification[]>([]);
 export const activeSort = writable<string[]>(["DATEADDED", "DOWN"]);
@@ -31,6 +31,8 @@ export const clearAllStores = () => {
   importedList.set(undefined);
   parsedImportedList.set(undefined);
   searchQuery.set("");
+  userInfo.set(undefined);
+  userSettings.set(undefined);
 };
 
 if (browser) {

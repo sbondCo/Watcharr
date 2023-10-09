@@ -28,7 +28,7 @@
 
 <div class="content">
   <div class="inner">
-    <h2 title={user.username}>Hey {user.username}</h2>
+    <h2 title={user?.username}>Hey {user?.username}</h2>
 
     <div class="stats">
       {#await getProfile()}
@@ -82,7 +82,7 @@
         <Checkbox
           name="private"
           disabled={privateDisabled}
-          value={settings.private}
+          value={settings?.private}
           toggled={(on) => {
             privateDisabled = true;
             updateUserSetting("private", on, () => {
