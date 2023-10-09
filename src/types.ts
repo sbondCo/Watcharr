@@ -97,6 +97,19 @@ export interface PublicUser {
   username: string;
 }
 
+// PrivateUser - Current users info
+export interface PrivateUser {
+  username: string;
+  type: UserType;
+  permissions: UserPermission;
+}
+
+export enum UserPermission {
+  PERM_NONE = 1,
+  PERM_ADMIN = 2,
+  PERM_REQUEST_CONTENT = 4
+}
+
 export interface JellyfinFoundContent {
   hasContent: boolean;
   url: string;
@@ -574,4 +587,11 @@ export interface ImportedList {
 export interface Filters {
   type: string[];
   status: string[];
+}
+
+export interface ServerConfig {
+  JELLYFIN_HOST: string;
+  SIGNUP_ENABLED: boolean;
+  TMDB_KEY: string;
+  DEBUG: boolean;
 }

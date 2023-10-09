@@ -4,22 +4,21 @@
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import { isTouch, parseTokenPayload } from "@/lib/util/helpers";
+  import { isTouch, parseTokenPayload, userHasPermission } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import {
     activeFilters,
     activeSort,
     clearAllStores,
     searchQuery,
+    userInfo,
     userSettings,
     watchedList
   } from "@/store";
-  import type { Filters } from "@/types";
+  import { type Filters, UserPermission } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
-
-  const username = localStorage.getItem("username");
 
   let navEl: HTMLElement;
   let searchTimeout: number;
@@ -30,6 +29,7 @@
   $: sort = $activeSort;
   $: filter = $activeFilters;
   $: settings = $userSettings;
+  $: user = $userInfo;
 
   function handleProfileClick() {
     if (!localStorage.getItem("token")) {
@@ -79,6 +79,11 @@
     subMenuShown = false;
   }
 
+  function serverSettings() {
+    goto("/server");
+    subMenuShown = false;
+  }
+
   function shareWatchedList() {
     const nid = notify({ type: "loading", text: "Getting link" });
     const ud = parseTokenPayload();
@@ -106,12 +111,19 @@
 
   async function getInitialData() {
     if (localStorage.getItem("token")) {
-      const [w, u] = await Promise.all([axios.get("/watched"), axios.get("/user/settings")]);
+      const [w, u, s] = await Promise.all([
+        axios.get("/watched"),
+        axios.get("/user"),
+        axios.get("/user/settings")
+      ]);
       if (w?.data?.length > 0) {
         watchedList.update((wl) => (wl = w.data));
       }
       if (u?.data) {
-        userSettings.update((us) => (us = u.data));
+        userInfo.update((ui) => (ui = u.data));
+      }
+      if (s?.data) {
+        userSettings.update((us) => (us = s.data));
       }
     } else {
       goto("/login?again=1");
@@ -288,12 +300,15 @@
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
       <div class="menu face-menu">
-        {#if username}
-          <h5 title={username}>Hi {username}!</h5>
+        {#if user.username}
+          <h5 title={user.username}>Hi {user.username}!</h5>
         {/if}
         <button class="plain" on:click={() => profile()}>Profile</button>
         {#if !settings.private}
           <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+        {/if}
+        {#if userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
+          <button class="plain" on:click={() => serverSettings()}>Settings</button>
         {/if}
         <button class="plain" on:click={() => logout()}>Logout</button>
         <!-- svelte-ignore missing-declaration -->

@@ -163,6 +163,7 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 				c.Set("userThirdPartyId", dbUser.ThirdPartyID)
 				c.Set("userThirdPartyAuth", dbUser.ThirdPartyAuth)
 				c.Set("username", dbUser.Username)
+				c.Set("userPermissions", dbUser.Permissions)
 			}
 			c.Next()
 		} else {
@@ -170,6 +171,21 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 			c.AbortWithStatus(401)
 			return
 		}
+	}
+}
+
+// Admin only middleware (use after AuthRequired with extra info!)
+func AdminRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId := c.GetUint("userId")
+		perms := c.GetInt("userPermissions")
+		if hasPermission(perms, PERM_ADMIN) {
+			slog.Debug("AdminRequired: User has permission to access admin only route", "user_id", userId)
+			c.Next()
+			return
+		}
+		slog.Info("AdminRequired: User denied permission to access admin only route", "user_id", userId)
+		c.AbortWithStatus(401)
 	}
 }
 

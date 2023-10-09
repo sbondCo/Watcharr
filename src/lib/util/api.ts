@@ -1,4 +1,4 @@
-import { userSettings, watchedList } from "@/store";
+import { userInfo, userSettings, watchedList } from "@/store";
 import {
   UserType,
   type JellyfinFoundContent,
@@ -125,7 +125,8 @@ export async function contentExistsOnJellyfin(
   tmdbId: number
 ): Promise<JellyfinFoundContent | undefined> {
   try {
-    if (Number(localStorage.getItem("userType")) == UserType.Jellyfin) {
+    const user = get(userInfo);
+    if (Number(user.type) == UserType.Jellyfin) {
       const resp = await axios.get(`/jellyfin/${type}/${name}/${tmdbId}`);
       console.log("contentExistsOnJellyfin response:", resp.data);
       return resp.data as JellyfinFoundContent;

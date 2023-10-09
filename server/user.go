@@ -13,6 +13,13 @@ type PublicUser struct {
 	Username string `json:"username"`
 }
 
+// Private user details, for returning users details to themselves
+type PrivateUser struct {
+	Username    string   `json:"username"`
+	Type        UserType `json:"type"`
+	Permissions int      `json:"permissions"`
+}
+
 // This really only works if all settings are repassed in, otherwise they
 // will be reset to their default value.
 // When more settings are added in, this should be updated to work so you
@@ -50,4 +57,15 @@ func userSearch(db *gorm.DB, currentUsersId uint, q string) ([]PublicUser, error
 		return []PublicUser{}, errors.New("failed to find users")
 	}
 	return *users, nil
+}
+
+func getUserInfo(db *gorm.DB, currentUsersId uint) (PrivateUser, error) {
+	slog.Debug("user get info request running")
+	user := new(PrivateUser)
+	res := db.Where("id = ?", currentUsersId).Table("users").Take(&user)
+	if res.Error != nil {
+		slog.Error("user get info failed", "error", res.Error)
+		return PrivateUser{}, errors.New("failed to find current user")
+	}
+	return *user, nil
 }

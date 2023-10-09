@@ -60,10 +60,6 @@
         if (resp.data?.token) {
           console.log("Received token... logging in.");
           localStorage.setItem("token", resp.data.token);
-          localStorage.setItem("username", String(user));
-          let userType = 0;
-          if (customAuthEP == "jellyfin") userType = UserType.Jellyfin;
-          localStorage.setItem("userType", String(userType));
           goto("/");
           notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
         }
