@@ -90,6 +90,9 @@ func generateConfig() error {
 // Update server config property
 func updateConfig(k string, v any) error {
 	slog.Debug("updateConfig", "k", k, "v", v)
+	if v == nil {
+		return errors.New("invalid value")
+	}
 	if k == "JELLYFIN_HOST" {
 		Config.JELLYFIN_HOST = v.(string)
 	} else if k == "SIGNUP_ENABLED" {
