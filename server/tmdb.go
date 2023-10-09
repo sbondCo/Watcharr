@@ -413,6 +413,13 @@ type TMDBUpcomingShows struct {
 	TotalResults int `json:"total_results"`
 }
 
+func getTMDBKey() string {
+	if Config.TMDB_KEY != "" {
+		return Config.TMDB_KEY
+	}
+	return "d047fa61d926371f277e7a83c9c4ff2c"
+}
+
 func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
 	slog.Debug("tmdbAPIRequest", "endpoint", ep, "params", p)
 	base, err := url.Parse("https://api.themoviedb.org/3")
@@ -425,7 +432,7 @@ func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
 
 	// Query params
 	params := url.Values{}
-	params.Add("api_key", TMDBKey)
+	params.Add("api_key", getTMDBKey())
 	params.Add("language", "en-US")
 	for k, v := range p {
 		params.Add(k, v)
