@@ -39,7 +39,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Build output to publish to the `gh-pages` branch:
-          publish_dir: ./build
+          publish_dir: ./doc/build
           cname: watcharr.app
           # The following lines assign commit authorship to the official
           # GH-Actions bot for deploys to `gh-pages` branch:
