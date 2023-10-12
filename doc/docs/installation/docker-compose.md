@@ -24,6 +24,12 @@ services:
       - ./data:/data
 ```
 
+:::danger first account
+
+When **first** running Watcharr, make sure only you have access. The first user created will become admin.
+
+:::
+
 You can now start `Watcharr` like so:
 
 ```bash

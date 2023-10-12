@@ -39,6 +39,12 @@ sidebar_position: 10
 
 4. Run the server
 
+   :::danger first account
+
+   When **first** running Watcharr, make sure only you have access. The first user created will become admin.
+
+   :::
+
    ```bash
    ./watcharr
    ```
@@ -46,6 +52,15 @@ sidebar_position: 10
 5. Visit [http://localhost:3080/](http://localhost:3080/) and setup Watcharr.
 
 ## Updating
+
+:::danger Take care
+
+We try taking care as to not release breaking changes, however it is still recommended that
+you lookover changelogs before updating!
+
+Breaking changes are marked at the top of releases: https://github.com/sbondCo/Watcharr/releases
+
+:::
 
 Updating is the same as installing except:
 
