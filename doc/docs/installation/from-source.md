@@ -13,10 +13,10 @@ sidebar_position: 10
    cd Watcharr
    ```
 
-   If you want a specific version, checkout a version tag (replace `v1.19.0` with the tag):
+   If you want a specific version, checkout a version tag (replace `<tag>` with the tag):
 
    ```bash
-   git checkout v1.19.0
+   git checkout <tag>
    ```
 
 2. Build the frontend
