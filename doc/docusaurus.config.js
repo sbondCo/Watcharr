@@ -88,8 +88,13 @@ const config = {
         ]
       },
       prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme
+        theme: lightCodeTheme
+        // darkTheme: darkCodeTheme
+      },
+      colorMode: {
+        defaultMode: "light",
+        // Dark theme currently disabled.. no time to fix the icons etc.
+        disableSwitch: true
       }
     })
 };
