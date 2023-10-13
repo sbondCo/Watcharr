@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - dev
+    paths:
+      - ".github/workflows/test-docs.yml"
+      - "doc/**"
 
 jobs:
   test-deploy:
