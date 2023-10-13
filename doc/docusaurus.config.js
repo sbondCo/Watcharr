@@ -62,12 +62,11 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
-      image: "img/docusaurus-social-card.jpg",
+      image: "img/social-card.png",
       navbar: {
         title: "Watcharr",
         logo: {
-          alt: "My Site Logo",
+          alt: "Watcharr Logo",
           src: "img/favicon.png"
         },
         items: [
@@ -75,7 +74,7 @@ const config = {
             type: "docSidebar",
             sidebarId: "tutorialSidebar",
             position: "left",
-            label: "Tutorial"
+            label: "Docs"
           },
           {
             type: "docsVersionDropdown"
