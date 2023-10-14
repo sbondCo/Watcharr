@@ -59,9 +59,13 @@ type User struct {
 	UserSettings
 }
 
+// This struct uses pointer to the values, so in update user settings,
+// we can tell which setting is being updated (if not nil..).
 type UserSettings struct {
 	// Is profile private
-	Private bool `gorm:"default:false" json:"private"`
+	Private *bool `gorm:"default:false" json:"private"`
+	// If ui 'spoilers' should be shown
+	HideSpoilers *bool `gorm:"default:false" json:"hideSpoilers"`
 }
 
 // We use a separate struct for registration to avoid confusion

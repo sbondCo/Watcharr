@@ -81,7 +81,7 @@ func getPublicWatched(db *gorm.DB, userId uint, username string) ([]Watched, err
 		slog.Error("Failed to get user for getPublicWatched request")
 		return []Watched{}, errors.New("failed to check privacy settings")
 	}
-	if user.Private {
+	if user.Private != nil && *user.Private {
 		slog.Error("getPublicWatched attempted to get a private list")
 		return []Watched{}, errors.New("this watched list is private")
 	}

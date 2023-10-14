@@ -89,6 +89,7 @@ export interface Profile {
 
 export interface UserSettings {
   private: boolean;
+  hideSpoilers: boolean;
 }
 
 // What the user search returns
