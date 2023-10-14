@@ -1,0 +1,27 @@
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  # Web UI
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ui"
+      
+  # Server
+  - package-ecosystem: "gomod"
+    directory: "/server"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "server"
+
+  # Workflows
+  - package-ecosystem: "github-actions"
+    directory: "/" # / will look in /.github/workflows directory by default
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "workflow"
