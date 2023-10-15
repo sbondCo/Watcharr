@@ -117,6 +117,11 @@
       }
     }
 
+    .episode-name,
+    img {
+      transition: filter 150ms ease-out;
+    }
+
     &.dont-spoil {
       .episode-name {
         filter: blur(4px);
