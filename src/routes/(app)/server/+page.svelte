@@ -11,6 +11,10 @@
   let signupDisabled = false;
   let debugDisabled = false;
   let jfDisabled = false;
+  let soDisabled = false;
+  let soaDisabled = false;
+  let raDisabled = false;
+  let raaDisabled = false;
   let tmdbkDisabled = false;
 
   async function getServerConfig() {
@@ -71,6 +75,74 @@
             disabled={jfDisabled}
           />
         </div>
+        <div>
+          <h4 class="norm">Sonarr Host</h4>
+          <h5 class="norm">Point to your Sonarr server to enable tv show requesting.</h5>
+          <input
+            type="text"
+            placeholder="https://sonarr.example.com"
+            bind:value={serverConfig.SONARR_HOST}
+            on:blur={() => {
+              soDisabled = true;
+              updateServerConfig("SONARR_HOST", serverConfig.SONARR_HOST, () => {
+                soDisabled = false;
+              });
+            }}
+            disabled={soDisabled}
+          />
+        </div>
+        {#if serverConfig.SONARR_HOST}
+          <div>
+            <h4 class="norm">Sonarr Key</h4>
+            <h5 class="norm">API key for your Sonarr instance.</h5>
+            <input
+              type="text"
+              placeholder="dGhhbmtzIGZvciB1c2luZyB3YXRjaGFyciA6KQ=="
+              bind:value={serverConfig.SONARR_KEY}
+              on:blur={() => {
+                soaDisabled = true;
+                updateServerConfig("SONARR_KEY", serverConfig.SONARR_KEY, () => {
+                  soaDisabled = false;
+                });
+              }}
+              disabled={soaDisabled}
+            />
+          </div>
+        {/if}
+        <div>
+          <h4 class="norm">Radarr Host</h4>
+          <h5 class="norm">Point to your Radarr server to enable movie requesting.</h5>
+          <input
+            type="text"
+            placeholder="https://radarr.example.com"
+            bind:value={serverConfig.RADARR_HOST}
+            on:blur={() => {
+              raDisabled = true;
+              updateServerConfig("RADARR_HOST", serverConfig.RADARR_HOST, () => {
+                raDisabled = false;
+              });
+            }}
+            disabled={raDisabled}
+          />
+        </div>
+        {#if serverConfig.RADARR_HOST}
+          <div>
+            <h4 class="norm">Radarr Key</h4>
+            <h5 class="norm">API key for your Radarr instance.</h5>
+            <input
+              type="text"
+              placeholder="bm8gcmVhbGx5IGkgYXBwcmVjaWF0ZSB5b3UgOik="
+              bind:value={serverConfig.RADARR_KEY}
+              on:blur={() => {
+                raaDisabled = true;
+                updateServerConfig("RADARR_KEY", serverConfig.RADARR_KEY, () => {
+                  raaDisabled = false;
+                });
+              }}
+              disabled={raaDisabled}
+            />
+          </div>
+        {/if}
         <div>
           <h4 class="norm">TMDB Key</h4>
           <h5 class="norm">Provide your own TMDB API Key</h5>

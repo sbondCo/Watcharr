@@ -657,5 +657,9 @@ export interface ServerConfig {
   JELLYFIN_HOST: string;
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;
+  SONARR_HOST: string;
+  SONARR_KEY: string;
+  RADARR_HOST: string;
+  RADARR_KEY: string;
   DEBUG: boolean;
 }

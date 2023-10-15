@@ -25,6 +25,18 @@ type ServerConfig struct {
 	// If unprovided, the default Watcharr API key will be used.
 	TMDB_KEY string `json:",omitempty"`
 
+	// Optional: Points to Sonarr install.
+	SONARR_HOST string `json:",omitempty"`
+
+	// Optional: Sonarr API Key.
+	SONARR_KEY string `json:",omitempty"`
+
+	// Optional: Points to Radarr install.
+	RADARR_HOST string `json:",omitempty"`
+
+	// Optional: Radarr API Key.
+	RADARR_KEY string `json:",omitempty"`
+
 	// Enable/disable debug logging. Useful for when trying
 	// to figure out exactly what the server is doing at a point
 	// of failure.
@@ -99,6 +111,14 @@ func updateConfig(k string, v any) error {
 		Config.SIGNUP_ENABLED = v.(bool)
 	} else if k == "TMDB_KEY" {
 		Config.TMDB_KEY = v.(string)
+	} else if k == "SONARR_HOST" {
+		Config.SONARR_HOST = v.(string)
+	} else if k == "SONARR_KEY" {
+		Config.SONARR_KEY = v.(string)
+	} else if k == "RADARR_HOST" {
+		Config.RADARR_HOST = v.(string)
+	} else if k == "RADARR_KEY" {
+		Config.RADARR_KEY = v.(string)
 	} else if k == "DEBUG" {
 		Config.DEBUG = v.(bool)
 		setLoggingLevel()
