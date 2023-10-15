@@ -14,6 +14,7 @@
   $: selectedTheme = $appTheme;
 
   let privateDisabled = false;
+  let hideSpoilersDisabled = false;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -87,6 +88,24 @@
             privateDisabled = true;
             updateUserSetting("private", on, () => {
               privateDisabled = false;
+            });
+          }}
+        />
+      </div>
+
+      <div class="row">
+        <div>
+          <h4 class="norm">Hide Spoilers</h4>
+          <h5 class="norm">Do you want to hide episode info?</h5>
+        </div>
+        <Checkbox
+          name="hideSpoilers"
+          disabled={hideSpoilersDisabled}
+          value={settings?.hideSpoilers}
+          toggled={(on) => {
+            hideSpoilersDisabled = true;
+            updateUserSetting("hideSpoilers", on, () => {
+              hideSpoilersDisabled = false;
             });
           }}
         />
