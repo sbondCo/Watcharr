@@ -180,6 +180,7 @@ export interface TMDBMovieDetails extends TMDBContentDetails {
   video: boolean;
   videos: TMDBContentVideos;
   "watch/providers": TMDBContentWatchProviders;
+  similar: TMDBMovieSimilar;
 }
 
 export interface TMDBShowDetails extends TMDBContentDetails {
@@ -223,6 +224,7 @@ export interface TMDBShowDetails extends TMDBContentDetails {
   type: string;
   videos: TMDBContentVideos;
   "watch/providers": TMDBContentWatchProviders;
+  similar: TMDBShowSimilar;
 }
 
 export interface TMDBWatchProvider {
@@ -347,6 +349,50 @@ export interface TMDBContentCreditsCrew {
   credit_id: string;
   department: string;
   job: string;
+}
+
+export interface TMDBShowSimilar {
+  page: number;
+  results: {
+    adult: boolean;
+    backdrop_path: string;
+    genre_ids: number[];
+    id: number;
+    origin_country: string[];
+    original_language: string;
+    original_name: string;
+    overview: string;
+    popularity: number;
+    poster_path: string;
+    first_air_date: string;
+    name: string;
+    vote_average: number;
+    vote_count: number;
+  }[];
+  total_pages: number;
+  total_results: number;
+}
+
+export interface TMDBMovieSimilar {
+  page: number;
+  results: {
+    adult: boolean;
+    backdrop_path: string;
+    genre_ids: number[];
+    id: number;
+    original_language: string;
+    original_title: string;
+    overview: string;
+    popularity: number;
+    poster_path: string;
+    release_date: string;
+    title: string;
+    video: boolean;
+    vote_average: number;
+    vote_count: number;
+  }[];
+  total_pages: number;
+  total_results: number;
 }
 
 export interface TMDBPersonDetails {
