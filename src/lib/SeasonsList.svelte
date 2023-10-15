@@ -3,13 +3,13 @@
   import axios from "axios";
   import Spinner from "./Spinner.svelte";
   import Error from "./Error.svelte";
+  import SeasonsListEpisode from "./SeasonsListEpisode.svelte";
 
   export let tvId: number;
   export let seasons: TMDBShowSeason[];
 
   let activeSeason = 1;
   let seasonDetailsReq: Promise<TMDBSeasonDetails>;
-  let seasonsEl: HTMLUListElement, episodesEl: HTMLDivElement;
 
   async function sdr(seasonNum: number) {
     return (await axios.get(`/content/tv/${tvId}/season/${seasonNum}`)).data as TMDBSeasonDetails;
@@ -18,18 +18,10 @@
   $: {
     seasonDetailsReq = sdr(activeSeason);
   }
-
-  // onMount(() => {
-  //   episodesEl.style.height = `${seasonsEl.clientHeight}px`;
-  //   seasonsEl.addEventListener("resize", () => {
-  //     console.log("resize");
-  //     episodesEl.style.height = `${seasonsEl.clientHeight}px`;
-  //   });
-  // });
 </script>
 
 <div class="ctr">
-  <ul class="seasons" bind:this={seasonsEl}>
+  <ul class="seasons">
     <!-- {#each seasons.sort((a, b) => Date.parse(b.air_date) - Date.parse(a.air_date)) as season} -->
     {#each seasons as season}
       <button
@@ -49,34 +41,14 @@
     <div class="last" />
   </ul>
 
-  <div class="episodes" bind:this={episodesEl}>
+  <div class="episodes">
     {#await seasonDetailsReq}
       <Spinner />
     {:then season}
       {#if season?.episodes?.length > 0}
         <ul>
           {#each season.episodes as ep}
-            <li>
-              {#if ep.still_path}
-                <img
-                  src={`https://www.themoviedb.org/t/p/w227_and_h127_bestv2/${ep.still_path}`}
-                  alt=""
-                />
-              {:else}
-                <div class="no-still" />
-              {/if}
-              <span>
-                <b>{ep.episode_number}</b>
-                {ep.name}
-              </span>
-              <span
-                class="rating"
-                title={`TMDB Rating: ${ep.vote_average} out of 10 (based on ${ep.vote_count} votes)`}
-              >
-                <span>*</span>
-                {Math.round(ep.vote_average * 10) / 10}
-              </span>
-            </li>
+            <SeasonsListEpisode {ep} />
           {/each}
         </ul>
       {:else}
@@ -104,67 +76,6 @@
       flex-flow: column;
       list-style: none;
       gap: 20px;
-    }
-
-    li {
-      display: flex;
-      flex-flow: row;
-      gap: 8px;
-
-      img,
-      .no-still {
-        width: 227px;
-        min-width: 227px;
-        height: 127px;
-        min-height: 127px;
-        border-radius: 10px;
-        background-color: rgb(0, 0, 0);
-        object-fit: fill;
-
-        @media screen and (max-width: 590px) {
-          width: 80%;
-          height: auto;
-        }
-
-        @media screen and (max-width: 450px) {
-          width: 100%;
-        }
-      }
-
-      span {
-        padding: 3px 5px;
-
-        @media screen and (max-width: 590px) {
-          text-align: center;
-        }
-      }
-
-      .rating {
-        display: flex;
-        align-items: start;
-        justify-content: center;
-        font-size: 15px;
-        color: $rating-color;
-        font-weight: bolder;
-        overflow: hidden;
-
-        span {
-          font-family: "Rampart One";
-          -webkit-text-stroke: 1px $rating-color;
-          font-size: 25px;
-          line-height: 0.7;
-          margin-top: 1.5px;
-        }
-      }
-    }
-
-    @media screen and (max-width: 590px) {
-      li {
-        align-items: center;
-        flex-flow: column;
-        width: 100%;
-        height: 100%;
-      }
     }
   }
 
