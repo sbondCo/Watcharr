@@ -94,7 +94,7 @@
 </script>
 
 {#if pageError}
-  <PageError pretty="Failed to load tv show!" error={err} />
+  <PageError pretty="Failed to load tv show!" error={pageError} />
 {:else if !show}
   <Spinner />
 {:else if Object.keys(show).length > 0}
