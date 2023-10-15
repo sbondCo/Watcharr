@@ -1,10 +1,20 @@
 <script lang="ts">
   import type { TMDBSeasonDetailsEpisode } from "@/types";
+  import Icon from "./Icon.svelte";
+  import { userSettings } from "@/store";
+
+  $: settings = $userSettings;
 
   export let ep: TMDBSeasonDetailsEpisode;
+
+  let isHidden = false;
+
+  $: {
+    if (settings) isHidden = settings.hideSpoilers;
+  }
 </script>
 
-<li>
+<li class={isHidden ? "dont-spoil" : ""}>
   {#if ep.still_path}
     <img src={`https://www.themoviedb.org/t/p/w227_and_h127_bestv2/${ep.still_path}`} alt="" />
   {:else}
@@ -12,7 +22,7 @@
   {/if}
   <span>
     <b>{ep.episode_number}</b>
-    {ep.name}
+    <span class="episode-name">{ep.name}</span>
   </span>
   <span
     class="rating"
@@ -21,6 +31,12 @@
     <span>*</span>
     {Math.round(ep.vote_average * 10) / 10}
   </span>
+  {#if isHidden}
+    <button class="plain spoiler-text" on:click={() => (isHidden = false)}>
+      <Icon i="eye-closed" wh={34} />
+      <span>Click To Reveal</span>
+    </button>
+  {/if}
 </li>
 
 <style lang="scss">
@@ -28,6 +44,7 @@
     display: flex;
     flex-flow: row;
     gap: 8px;
+    position: relative;
 
     img,
     .no-still {
@@ -72,6 +89,41 @@
         font-size: 25px;
         line-height: 0.7;
         margin-top: 1.5px;
+      }
+    }
+
+    .spoiler-text {
+      display: flex;
+      flex-flow: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      font-weight: bolder;
+      font-size: 20px;
+      fill: $text-color;
+      opacity: 0;
+      transition:
+        visibility 150ms ease-in,
+        opacity 150ms ease-in;
+      cursor: pointer;
+
+      &:hover,
+      &:active,
+      &:focus {
+        opacity: 1;
+      }
+    }
+
+    &.dont-spoil {
+      .episode-name {
+        filter: blur(4px);
+      }
+
+      img {
+        filter: blur(6px);
       }
     }
   }

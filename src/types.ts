@@ -21,7 +21,8 @@ export type Icon =
   | "arrow"
   | "chevron"
   | "search"
-  | "sort";
+  | "sort"
+  | "eye-closed";
 
 export type Theme = "light" | "dark";
 
