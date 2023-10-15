@@ -108,6 +108,7 @@
       h1 {
         font-size: 18px;
         font-family: sans-serif;
+        max-width: 150px;
       }
 
       h2 {
