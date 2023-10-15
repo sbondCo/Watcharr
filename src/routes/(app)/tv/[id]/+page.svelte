@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from "$app/stores";
   import Activity from "@/lib/Activity.svelte";
   import Error from "@/lib/Error.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
@@ -10,6 +11,7 @@
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import ProvidersList from "@/lib/content/ProvidersList.svelte";
+  import SimilarContent from "@/lib/content/SimilarContent.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
   import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
@@ -22,6 +24,7 @@
     WatchedStatus
   } from "@/types";
   import axios from "axios";
+  import { onMount } from "svelte";
 
   export let data;
 
@@ -31,22 +34,49 @@
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.tvId);
 
-  async function getShow() {
-    const show = (await axios.get(`/content/tv/${data.tvId}`)).data as TMDBShowDetails;
-    if (show.videos?.results?.length > 0) {
-      const t = show.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
-      if (t?.key) {
-        if (t?.site?.toLowerCase() === "youtube") {
-          trailer = `https://www.youtube.com/embed/${t?.key}`;
-        }
-      }
-    }
-    contentExistsOnJellyfin("tv", show.name, show.id).then((j) => {
-      if (j?.hasContent && j?.url !== "") {
-        jellyfinUrl = j.url;
+  let showId: number | undefined;
+  let show: TMDBShowDetails | undefined;
+  let pageError: Error | undefined;
+
+  onMount(() => {
+    const unsubscribe = page.subscribe((value) => {
+      console.log(value);
+      const params = value.params;
+      if (params && params.id) {
+        showId = Number(params.id);
       }
     });
-    return show;
+    return unsubscribe;
+  });
+
+  $: {
+    (async () => {
+      try {
+        show = undefined;
+        pageError = undefined;
+        if (!showId) {
+          return;
+        }
+        const data = (await axios.get(`/content/tv/${showId}`)).data as TMDBShowDetails;
+        if (data.videos?.results?.length > 0) {
+          const t = data.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
+          if (t?.key) {
+            if (t?.site?.toLowerCase() === "youtube") {
+              trailer = `https://www.youtube.com/embed/${t?.key}`;
+            }
+          }
+        }
+        contentExistsOnJellyfin("tv", data.name, data.id).then((j) => {
+          if (j?.hasContent && j?.url !== "") {
+            jellyfinUrl = j.url;
+          }
+        });
+        show = data;
+      } catch (err: any) {
+        show = undefined;
+        pageError = err;
+      }
+    })();
   }
 
   async function getTvCredits() {
@@ -63,128 +93,128 @@
   }
 </script>
 
-{#await getShow()}
+{#if pageError}
+  <PageError pretty="Failed to load tv show!" error={pageError} />
+{:else if !show}
   <Spinner />
-{:then show}
-  {#if Object.keys(show).length > 0}
-    <div>
-      <div class="content">
-        {#if show?.backdrop_path}
-          <img
-            class="backdrop"
-            src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + show.backdrop_path}
-            alt=""
+{:else if Object.keys(show).length > 0}
+  <div>
+    <div class="content">
+      {#if show?.backdrop_path}
+        <img
+          class="backdrop"
+          src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + show.backdrop_path}
+          alt=""
+        />
+      {/if}
+      <div class="vignette" />
+
+      <div class="details-container">
+        <img class="poster" src={"https://image.tmdb.org/t/p/w500" + show.poster_path} alt="" />
+
+        <div class="details">
+          <Title
+            title={show.name}
+            homepage={show.homepage}
+            releaseDate={show.first_air_date}
+            voteAverage={show.vote_average}
+            voteCount={show.vote_count}
           />
-        {/if}
-        <div class="vignette" />
 
-        <div class="details-container">
-          <img class="poster" src={"https://image.tmdb.org/t/p/w500" + show.poster_path} alt="" />
+          <span class="quick-info">
+            {#if show?.episode_run_time?.length > 0}
+              <span>{show.episode_run_time.join(",")}m</span>
+            {/if}
 
-          <div class="details">
-            <Title
-              title={show.name}
-              homepage={show.homepage}
-              releaseDate={show.first_air_date}
-              voteAverage={show.vote_average}
-              voteCount={show.vote_count}
-            />
-
-            <span class="quick-info">
-              {#if show?.episode_run_time?.length > 0}
-                <span>{show.episode_run_time.join(",")}m</span>
-              {/if}
-
-              <div>
-                {#each show.genres as g, i}
-                  <span>{g.name}{i !== show.genres.length - 1 ? ", " : ""}</span>
-                {/each}
-              </div>
-            </span>
-
-            <span style="font-weight: bold; font-size: 14px;">Overview</span>
-            <p>{show.overview}</p>
-
-            <div class="btns">
-              {#if trailer}
-                <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
-                {#if trailerShown}
-                  <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
-                {/if}
-              {/if}
-              {#if jellyfinUrl}
-                <a class="btn" href={jellyfinUrl} target="_blank">
-                  <Icon i="jellyfin" wh={14} />Play On Jellyfin
-                </a>
-              {/if}
+            <div>
+              {#each show.genres as g, i}
+                <span>{g.name}{i !== show.genres.length - 1 ? ", " : ""}</span>
+              {/each}
             </div>
+          </span>
 
-            <ProvidersList providers={show["watch/providers"]} />
+          <span style="font-weight: bold; font-size: 14px;">Overview</span>
+          <p>{show.overview}</p>
+
+          <div class="btns">
+            {#if trailer}
+              <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
+              {#if trailerShown}
+                <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
+              {/if}
+            {/if}
+            {#if jellyfinUrl}
+              <a class="btn" href={jellyfinUrl} target="_blank">
+                <Icon i="jellyfin" wh={14} />Play On Jellyfin
+              </a>
+            {/if}
           </div>
+
+          <ProvidersList providers={show["watch/providers"]} />
         </div>
-      </div>
-
-      <div class="page">
-        <div class="review">
-          <!-- <span>What did you think?</span> -->
-          <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
-          <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
-          {#if wListItem}
-            <textarea
-              name="Thoughts"
-              rows="3"
-              placeholder={`My thoughts on ${show.name}`}
-              value={wListItem?.thoughts}
-              on:blur={(e) => {
-                contentChanged(undefined, undefined, e.currentTarget?.value);
-              }}
-            />
-          {/if}
-        </div>
-
-        {#await getTvCredits()}
-          <Spinner />
-        {:then credits}
-          {#if credits.topCrew?.length > 0}
-            <div class="creators">
-              {#each credits.topCrew as crew}
-                <div>
-                  <span>{crew.name}</span>
-                  <span>{crew.job}</span>
-                </div>
-              {/each}
-            </div>
-          {/if}
-
-          {#if credits.cast?.length > 0}
-            <HorizontalList title="Cast">
-              {#each credits.cast?.slice(0, 50) as cast}
-                <PersonPoster
-                  id={cast.id}
-                  name={cast.name}
-                  path={cast.profile_path}
-                  role={cast.character}
-                  zoomOnHover={false}
-                />
-              {/each}
-            </HorizontalList>
-          {/if}
-        {:catch err}
-          <Error error={err} pretty="Failed to load cast!" />
-        {/await}
-
-        {#if wListItem}
-          <Activity activity={wListItem?.activity} />
-        {/if}
-        <SeasonsList tvId={data.tvId} seasons={show.seasons} />
       </div>
     </div>
-  {:else}
-    Show not found
-  {/if}
-{:catch err}
-  <PageError pretty="Failed to load tv show!" error={err} />
-{/await}
+
+    <div class="page">
+      <div class="review">
+        <!-- <span>What did you think?</span> -->
+        <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
+        <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
+        {#if wListItem}
+          <textarea
+            name="Thoughts"
+            rows="3"
+            placeholder={`My thoughts on ${show.name}`}
+            value={wListItem?.thoughts}
+            on:blur={(e) => {
+              contentChanged(undefined, undefined, e.currentTarget?.value);
+            }}
+          />
+        {/if}
+      </div>
+
+      {#await getTvCredits()}
+        <Spinner />
+      {:then credits}
+        {#if credits.topCrew?.length > 0}
+          <div class="creators">
+            {#each credits.topCrew as crew}
+              <div>
+                <span>{crew.name}</span>
+                <span>{crew.job}</span>
+              </div>
+            {/each}
+          </div>
+        {/if}
+
+        {#if credits.cast?.length > 0}
+          <HorizontalList title="Cast">
+            {#each credits.cast?.slice(0, 50) as cast}
+              <PersonPoster
+                id={cast.id}
+                name={cast.name}
+                path={cast.profile_path}
+                role={cast.character}
+                zoomOnHover={false}
+              />
+            {/each}
+          </HorizontalList>
+        {/if}
+      {:catch err}
+        <Error error={err} pretty="Failed to load cast!" />
+      {/await}
+
+      <SimilarContent type="tv" similar={show.similar} />
+
+      {#if wListItem}
+        <Activity activity={wListItem?.activity} />
+      {/if}
+      <SeasonsList tvId={data.tvId} seasons={show.seasons} />
+    </div>
+  </div>
+{:else}
+  Show not found
+{/if}
 
 <style lang="scss">
   .content {

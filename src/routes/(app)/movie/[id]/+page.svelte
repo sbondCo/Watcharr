@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Error from "@/lib/Error.svelte";
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/PersonPoster.svelte";
   import Rating from "@/lib/Rating.svelte";
@@ -21,6 +20,9 @@
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
   import ProvidersList from "@/lib/content/ProvidersList.svelte";
   import Icon from "@/lib/Icon.svelte";
+  import SimilarContent from "@/lib/content/SimilarContent.svelte";
+  import { onMount } from "svelte";
+  import { page } from "$app/stores";
 
   export let data;
 
@@ -30,22 +32,50 @@
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.movieId);
 
-  async function getMovie() {
-    const movie = (await axios.get(`/content/movie/${data.movieId}`)).data as TMDBMovieDetails;
-    if (movie.videos?.results?.length > 0) {
-      const t = movie.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
-      if (t?.key) {
-        if (t?.site?.toLowerCase() === "youtube") {
-          trailer = `https://www.youtube.com/embed/${t?.key}`;
-        }
-      }
-    }
-    contentExistsOnJellyfin("movie", movie.title, movie.id).then((j) => {
-      if (j?.hasContent && j?.url !== "") {
-        jellyfinUrl = j.url;
+  let movieId: number | undefined;
+  let movie: TMDBMovieDetails | undefined;
+  let pageError: Error | undefined;
+
+  onMount(() => {
+    const unsubscribe = page.subscribe((value) => {
+      console.log(value);
+      const params = value.params;
+      if (params && params.id) {
+        movieId = Number(params.id);
       }
     });
-    return movie;
+
+    return unsubscribe;
+  });
+
+  $: {
+    (async () => {
+      try {
+        movie = undefined;
+        pageError = undefined;
+        if (!movieId) {
+          return;
+        }
+        const data = (await axios.get(`/content/movie/${movieId}`)).data as TMDBMovieDetails;
+        if (data.videos?.results?.length > 0) {
+          const t = data.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
+          if (t?.key) {
+            if (t?.site?.toLowerCase() === "youtube") {
+              trailer = `https://www.youtube.com/embed/${t?.key}`;
+            }
+          }
+        }
+        contentExistsOnJellyfin("movie", data.title, data.id).then((j) => {
+          if (j?.hasContent && j?.url !== "") {
+            jellyfinUrl = j.url;
+          }
+        });
+        movie = data;
+      } catch (err: any) {
+        movie = undefined;
+        pageError = err;
+      }
+    })();
   }
 
   async function getMovieCredits() {
@@ -62,130 +92,130 @@
   }
 </script>
 
-{#await getMovie()}
+{#if pageError}
+  <PageError pretty="Failed to load movie!" error={pageError} />
+{:else if !movie}
   <Spinner />
-{:then movie}
-  {#if Object.keys(movie).length > 0}
-    <div>
-      <div class="content">
-        {#if movie?.backdrop_path}
-          <img
-            class="backdrop"
-            src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + movie.backdrop_path}
-            alt=""
+{:else if Object.keys(movie).length > 0}
+  <div>
+    <div class="content">
+      {#if movie?.backdrop_path}
+        <img
+          class="backdrop"
+          src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + movie.backdrop_path}
+          alt=""
+        />
+      {/if}
+      <div class="vignette" />
+
+      <div class="details-container">
+        <img class="poster" src={"https://image.tmdb.org/t/p/w500" + movie.poster_path} alt="" />
+
+        <div class="details">
+          <Title
+            title={movie.title}
+            homepage={movie.homepage}
+            releaseDate={movie.release_date}
+            voteAverage={movie.vote_average}
+            voteCount={movie.vote_count}
           />
-        {/if}
-        <div class="vignette" />
 
-        <div class="details-container">
-          <img class="poster" src={"https://image.tmdb.org/t/p/w500" + movie.poster_path} alt="" />
+          <span class="quick-info">
+            <span>{movie.runtime}m</span>
 
-          <div class="details">
-            <Title
-              title={movie.title}
-              homepage={movie.homepage}
-              releaseDate={movie.release_date}
-              voteAverage={movie.vote_average}
-              voteCount={movie.vote_count}
-            />
-
-            <span class="quick-info">
-              <span>{movie.runtime}m</span>
-
-              <div>
-                {#each movie.genres as g, i}
-                  <span>{g.name}{i !== movie.genres.length - 1 ? ", " : ""}</span>
-                {/each}
-              </div>
-            </span>
-
-            <!-- <span>{movie.tagline}</span> -->
-
-            <!-- {movie.status} -->
-
-            <span style="font-weight: bold; font-size: 14px;">Overview</span>
-            <p>{movie.overview}</p>
-
-            <div class="btns">
-              {#if trailer}
-                <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
-                {#if trailerShown}
-                  <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
-                {/if}
-              {/if}
-              {#if jellyfinUrl}
-                <a class="btn" href={jellyfinUrl} target="_blank">
-                  <Icon i="jellyfin" wh={14} />Play On Jellyfin
-                </a>
-              {/if}
+            <div>
+              {#each movie.genres as g, i}
+                <span>{g.name}{i !== movie.genres.length - 1 ? ", " : ""}</span>
+              {/each}
             </div>
+          </span>
 
-            <ProvidersList providers={movie["watch/providers"]} />
+          <!-- <span>{movie.tagline}</span> -->
+
+          <!-- {movie.status} -->
+
+          <span style="font-weight: bold; font-size: 14px;">Overview</span>
+          <p>{movie.overview}</p>
+
+          <div class="btns">
+            {#if trailer}
+              <button on:click={() => (trailerShown = !trailerShown)}>View Trailer</button>
+              {#if trailerShown}
+                <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
+              {/if}
+            {/if}
+            {#if jellyfinUrl}
+              <a class="btn" href={jellyfinUrl} target="_blank">
+                <Icon i="jellyfin" wh={14} />Play On Jellyfin
+              </a>
+            {/if}
           </div>
+
+          <ProvidersList providers={movie["watch/providers"]} />
         </div>
-      </div>
-
-      <div class="page">
-        <div class="review">
-          <!-- <span>What did you think?</span> -->
-          <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
-          <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
-          {#if wListItem}
-            <textarea
-              name="Thoughts"
-              rows="3"
-              placeholder={`My thoughts on ${movie.title}`}
-              value={wListItem?.thoughts}
-              on:blur={(e) => {
-                console.log(e.currentTarget?.value);
-                contentChanged(undefined, undefined, e.currentTarget?.value);
-              }}
-            />
-          {/if}
-        </div>
-
-        {#await getMovieCredits()}
-          <Spinner />
-        {:then credits}
-          {#if credits.topCrew?.length > 0}
-            <div class="creators">
-              {#each credits.topCrew as crew}
-                <div>
-                  <span>{crew.name}</span>
-                  <span>{crew.job}</span>
-                </div>
-              {/each}
-            </div>
-          {/if}
-
-          {#if credits.cast?.length > 0}
-            <HorizontalList title="Cast">
-              {#each credits.cast?.slice(0, 50) as cast}
-                <PersonPoster
-                  id={cast.id}
-                  name={cast.name}
-                  path={cast.profile_path}
-                  role={cast.character}
-                  zoomOnHover={false}
-                />
-              {/each}
-            </HorizontalList>
-          {/if}
-        {:catch err}
-          <Error error={err} pretty="Failed to load cast!" />
-        {/await}
-
-        {#if wListItem}
-          <Activity activity={wListItem?.activity} />
-        {/if}
       </div>
     </div>
-  {:else}
-    Movie not found
-  {/if}
-{:catch err}
-  <PageError pretty="Failed to load movie!" error={err} />
-{/await}
+
+    <div class="page">
+      <div class="review">
+        <!-- <span>What did you think?</span> -->
+        <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
+        <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
+        {#if wListItem}
+          <textarea
+            name="Thoughts"
+            rows="3"
+            placeholder={`My thoughts on ${movie.title}`}
+            value={wListItem?.thoughts}
+            on:blur={(e) => {
+              console.log(e.currentTarget?.value);
+              contentChanged(undefined, undefined, e.currentTarget?.value);
+            }}
+          />
+        {/if}
+      </div>
+
+      {#await getMovieCredits()}
+        <Spinner />
+      {:then credits}
+        {#if credits.topCrew?.length > 0}
+          <div class="creators">
+            {#each credits.topCrew as crew}
+              <div>
+                <span>{crew.name}</span>
+                <span>{crew.job}</span>
+              </div>
+            {/each}
+          </div>
+        {/if}
+
+        {#if credits.cast?.length > 0}
+          <HorizontalList title="Cast">
+            {#each credits.cast?.slice(0, 50) as cast}
+              <PersonPoster
+                id={cast.id}
+                name={cast.name}
+                path={cast.profile_path}
+                role={cast.character}
+                zoomOnHover={false}
+              />
+            {/each}
+          </HorizontalList>
+        {/if}
+      {:catch err}
+        <Error error={err} pretty="Failed to load cast!" />
+      {/await}
+
+      <SimilarContent type="movie" similar={movie.similar} />
+
+      {#if wListItem}
+        <Activity activity={wListItem?.activity} />
+      {/if}
+    </div>
+  </div>
+{:else}
+  Movie not found
+{/if}
 
 <style lang="scss">
   .content {
