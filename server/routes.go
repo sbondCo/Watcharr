@@ -609,3 +609,26 @@ func (b *BaseRouter) addServerRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 }
+
+func (b *BaseRouter) addArrRoutes() {
+	s := b.rg.Group("/arr/son").Use(AuthRequired(b.db), AdminRequired())
+	r := b.rg.Group("/arr/rad").Use(AuthRequired(b.db), AdminRequired())
+
+	s.GET("/quality_profiles", func(c *gin.Context) {
+		response, err := sonarr.GetQualityProfiles()
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	r.GET("/quality_profiles", func(c *gin.Context) {
+		response, err := radarr.GetQualityProfiles()
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+}

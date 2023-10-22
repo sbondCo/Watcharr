@@ -121,6 +121,7 @@ func main() {
 	br.addUserRoutes()
 	br.addImportRoutes()
 	br.addServerRoutes()
+	br.addArrRoutes()
 	br.rg.Static("/img", "./data/img")
 
 	go setupTasks(db)

@@ -6,6 +6,8 @@ import (
 	"log"
 	"log/slog"
 	"os"
+
+	"github.com/sbondCo/Watcharr/arr"
 )
 
 type ServerConfig struct {
@@ -50,6 +52,8 @@ var (
 	Config = ServerConfig{
 		SIGNUP_ENABLED: true,
 	}
+	sonarr = arr.New(arr.SONARR, &Config.SONARR_HOST, &Config.SONARR_KEY)
+	radarr = arr.New(arr.RADARR, &Config.RADARR_HOST, &Config.RADARR_KEY)
 )
 
 // Read config file
