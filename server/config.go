@@ -33,6 +33,8 @@ type ServerConfig struct {
 	// Optional: Sonarr API Key.
 	SONARR_KEY string `json:",omitempty"`
 
+	SONARR_QUALITY_PROFILE int `json:",omitempty"`
+
 	// Optional: Points to Radarr install.
 	RADARR_HOST string `json:",omitempty"`
 
@@ -44,6 +46,26 @@ type ServerConfig struct {
 	// of failure.
 	// Set to `true` to enable.
 	DEBUG bool `json:",omitempty"`
+}
+
+// ServerConfig, but with JWT_SECRET removed from json.
+// Used for returning to user from get config api request.
+//
+// Technically only admins will have access to that api route,
+// but I feel more comfortable removing it anyways (+ this is
+// not editable on frontend, so not needed).
+func (c *ServerConfig) GetSafe() ServerConfig {
+	return ServerConfig{
+		SIGNUP_ENABLED:         c.SIGNUP_ENABLED,
+		JELLYFIN_HOST:          c.JELLYFIN_HOST,
+		TMDB_KEY:               c.TMDB_KEY,
+		DEBUG:                  c.DEBUG,
+		SONARR_HOST:            c.SONARR_HOST,
+		SONARR_KEY:             c.SONARR_KEY,
+		SONARR_QUALITY_PROFILE: c.SONARR_QUALITY_PROFILE,
+		RADARR_HOST:            c.RADARR_HOST,
+		RADARR_KEY:             c.RADARR_KEY,
+	}
 }
 
 var (
@@ -119,6 +141,9 @@ func updateConfig(k string, v any) error {
 		Config.SONARR_HOST = v.(string)
 	} else if k == "SONARR_KEY" {
 		Config.SONARR_KEY = v.(string)
+	} else if k == "SONARR_QUALITY_PROFILE" {
+		// Not sure why v insists its a float64 but just going with it..
+		Config.SONARR_QUALITY_PROFILE = int(v.(float64))
 	} else if k == "RADARR_HOST" {
 		Config.RADARR_HOST = v.(string)
 	} else if k == "RADARR_KEY" {

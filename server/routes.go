@@ -585,12 +585,7 @@ func (b *BaseRouter) addServerRoutes() {
 	// Get server config (minus very sensitive fields, like JWT_SECRET)
 	server.GET("/config", func(c *gin.Context) {
 		// Return new ServerConfig with only the fields we want to show in settings ui
-		c.JSON(http.StatusOK, ServerConfig{
-			SIGNUP_ENABLED: Config.SIGNUP_ENABLED,
-			JELLYFIN_HOST:  Config.JELLYFIN_HOST,
-			TMDB_KEY:       Config.TMDB_KEY,
-			DEBUG:          Config.DEBUG,
-		})
+		c.JSON(http.StatusOK, Config.GetSafe())
 	})
 
 	// Update config
