@@ -1,6 +1,8 @@
 <script lang="ts">
   import DropDown from "@/lib/DropDown.svelte";
   import Modal from "@/lib/Modal.svelte";
+  import Setting from "@/lib/settings/Setting.svelte";
+  import SettingsList from "@/lib/settings/SettingsList.svelte";
   import type { DropDownItem, QualityProfile, ServerConfig } from "@/types";
   import axios from "axios";
 
@@ -43,10 +45,8 @@
 </script>
 
 <Modal title="Sonarr" desc="Setup a connection to your Sonarr server" {onClose}>
-  <div class="settings modal">
-    <div>
-      <h4 class="norm">Sonarr Host</h4>
-      <h5 class="norm">Point to your Sonarr server to enable tv show requesting.</h5>
+  <SettingsList>
+    <Setting title="Sonarr Host" desc="Point to your Sonarr server to enable tv show requesting.">
       <input
         type="text"
         placeholder="https://sonarr.example.com"
@@ -60,10 +60,8 @@
         }}
         disabled={soDisabled}
       />
-    </div>
-    <div>
-      <h4 class="norm">Sonarr Key</h4>
-      <h5 class="norm">API key for your Sonarr instance.</h5>
+    </Setting>
+    <Setting title="Sonarr Key" desc="API key for your Sonarr instance.">
       <input
         type="text"
         placeholder="dGhhbmtzIGZvciB1c2luZyB3YXRjaGFyciA6KQ=="
@@ -77,10 +75,8 @@
         }}
         disabled={soaDisabled}
       />
-    </div>
-    <div>
-      <h4 class="norm">Quality Profile</h4>
-      <h5 class="norm">Default quality profile when adding shows.</h5>
+    </Setting>
+    <Setting title="Quality Profile" desc="Default quality profile when adding shows.">
       <DropDown
         placeholder={qualityProfiles?.length == 0
           ? "Add a Host and Key to view"
@@ -95,13 +91,6 @@
         }}
         disabled={qpDisabled}
       />
-    </div>
-  </div>
+    </Setting>
+  </SettingsList>
 </Modal>
-
-<style lang="scss">
-  // Settings in modals
-  .modal {
-    margin-top: 15px;
-  }
-</style>

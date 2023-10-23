@@ -7,6 +7,9 @@
   import type { ServerConfig } from "@/types";
   import axios from "axios";
   import SonarrModal from "./modals/SonarrModal.svelte";
+  import SettingsList from "@/lib/settings/SettingsList.svelte";
+  import Setting from "@/lib/settings/Setting.svelte";
+  import SettingButton from "@/lib/settings/SettingButton.svelte";
 
   let serverConfig: ServerConfig;
   let sonarrModalOpen = false;
@@ -50,18 +53,17 @@
 
 <div class="content">
   <div class="inner">
-    <div class="settings">
+    <SettingsList>
       <h2>Server Settings</h2>
       {#await getServerConfig()}
         <Spinner />
       {:then}
         <h3>General</h3>
-        <div>
-          <h4 class="norm">Jellyfin Host</h4>
-          <h5 class="norm">
-            Point to your Jellyfin server to enable related features. Don't change server after
-            already using another.
-          </h5>
+        <Setting
+          title="Jellyfin Host"
+          desc="Point to your Jellyfin server to enable related features. Don't change server after
+        already using another."
+        >
           <input
             type="text"
             placeholder="https://jellyfin.example.com"
@@ -74,10 +76,8 @@
             }}
             disabled={jfDisabled}
           />
-        </div>
-        <div>
-          <h4 class="norm">TMDB Key</h4>
-          <h5 class="norm">Provide your own TMDB API Key</h5>
+        </Setting>
+        <Setting title="TMDB Key" desc="Provide your own TMDB API Key">
           <input
             type="password"
             placeholder="TMDB Key"
@@ -90,12 +90,8 @@
             }}
             disabled={tmdbkDisabled}
           />
-        </div>
-        <div class="row">
-          <div>
-            <h4 class="norm">Signup</h4>
-            <h5 class="norm">Allow signing up with web ui</h5>
-          </div>
+        </Setting>
+        <Setting title="Signup" desc="Allow signing up with web ui" row>
           <Checkbox
             name="SIGNUP_ENABLED"
             disabled={signupDisabled}
@@ -107,12 +103,8 @@
               });
             }}
           />
-        </div>
-        <div class="row">
-          <div>
-            <h4 class="norm">Debug</h4>
-            <h5 class="norm">Enable debug logging</h5>
-          </div>
+        </Setting>
+        <Setting title="Debug" desc="Enable debug logging" row>
           <Checkbox
             name="DEBUG"
             disabled={debugDisabled}
@@ -124,17 +116,13 @@
               });
             }}
           />
-        </div>
+        </Setting>
         <h3>Services</h3>
-        <div>
-          <button class="plain configure" on:click={() => (sonarrModalOpen = !sonarrModalOpen)}>
-            <div>
-              <h4 class="norm">Sonarr</h4>
-              <h5 class="norm">Configure your Sonarr server.</h5>
-            </div>
-            <Icon i="arrow" facing="right" />
-          </button>
-        </div>
+        <SettingButton
+          title="Sonarr"
+          desc="Configure your Sonarr server."
+          onClick={() => (sonarrModalOpen = !sonarrModalOpen)}
+        />
 
         {#if sonarrModalOpen}
           <SonarrModal
@@ -146,7 +134,7 @@
       {:catch err}
         <PageError error={err} pretty="Failed to load server config" />
       {/await}
-    </div>
+    </SettingsList>
   </div>
 </div>
 

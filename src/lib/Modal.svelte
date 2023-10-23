@@ -54,6 +54,10 @@
       margin: 20px 100px;
       transition: margin 100ms ease;
 
+      h5 {
+        margin-bottom: 15px;
+      }
+
       button.close {
         position: absolute;
         top: 8px;

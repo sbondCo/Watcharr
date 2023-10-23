@@ -1,9 +1,24 @@
-:global(.settings) {
-  display: flex;
-  flex-flow: column;
-  gap: 20px;
-  width: 100%;
+<script lang="ts">
+  export let title: string;
+  export let desc: string;
+  export let row: boolean = false;
+</script>
 
+<div class={[row ? "row" : "", "setting-ctr"].join(" ")}>
+  {#if row}
+    <div>
+      <h4 class="norm">{title}</h4>
+      <h5 class="norm">{desc}</h5>
+    </div>
+  {:else}
+    <h4 class="norm">{title}</h4>
+    <h5 class="norm">{desc}</h5>
+  {/if}
+
+  <slot />
+</div>
+
+<style lang="scss">
   h3 {
     font-variant: small-caps;
   }
@@ -17,7 +32,7 @@
     font-size: 13.28px;
   }
 
-  & > div {
+  .setting-ctr {
     margin: 0 15px;
   }
 
@@ -42,24 +57,4 @@
       }
     }
   }
-
-  button.configure {
-    display: flex;
-    flex-flow: row;
-    align-items: center;
-    text-align: left;
-    width: 100%;
-    border: 2px dashed $text-color;
-    border-radius: 10px;
-    padding: 15px;
-    transition: all 200ms ease;
-
-    & > div {
-      margin-right: auto;
-    }
-
-    &:hover {
-      border-style: solid;
-    }
-  }
-}
+</style>
