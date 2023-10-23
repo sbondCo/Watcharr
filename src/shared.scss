@@ -1,0 +1,65 @@
+:global(.settings) {
+  display: flex;
+  flex-flow: column;
+  gap: 20px;
+  width: 100%;
+
+  h3 {
+    font-variant: small-caps;
+  }
+
+  h4 {
+    font-size: 16px;
+  }
+
+  h5 {
+    font-weight: normal;
+    font-size: 13.28px;
+  }
+
+  & > div {
+    margin: 0 15px;
+  }
+
+  div {
+    input[type="text"],
+    input[type="password"] {
+      margin-top: 1px;
+    }
+
+    &.row {
+      display: flex;
+      flex-flow: row;
+      gap: 10px;
+      align-items: center;
+
+      & > div:first-of-type {
+        margin-right: auto;
+      }
+
+      &.btns button {
+        width: min-content;
+      }
+    }
+  }
+
+  button.configure {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    text-align: left;
+    width: 100%;
+    border: 2px dashed $text-color;
+    border-radius: 10px;
+    padding: 15px;
+    transition: all 200ms ease;
+
+    & > div {
+      margin-right: auto;
+    }
+
+    &:hover {
+      border-style: solid;
+    }
+  }
+}

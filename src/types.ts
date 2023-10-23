@@ -659,7 +659,32 @@ export interface ServerConfig {
   TMDB_KEY: string;
   SONARR_HOST: string;
   SONARR_KEY: string;
+  SONARR_QUALITY_PROFILE: number;
   RADARR_HOST: string;
   RADARR_KEY: string;
   DEBUG: boolean;
+}
+
+export interface DropDownItem {
+  id: number;
+  value: string;
+}
+
+export interface QualityProfile {
+  name: string;
+  upgradeAllowed: boolean;
+  cutoff: number;
+  items: {
+    quality?: {
+      id: number;
+      name: string;
+      source: string;
+      resolution: number;
+    };
+    items: any[];
+    allowed: boolean;
+    name?: string;
+    id?: number;
+  }[];
+  id: number;
 }

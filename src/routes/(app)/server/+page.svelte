@@ -1,20 +1,19 @@
 <script lang="ts">
   import Checkbox from "@/lib/Checkbox.svelte";
+  import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
   import type { ServerConfig } from "@/types";
   import axios from "axios";
+  import SonarrModal from "./modals/SonarrModal.svelte";
 
   let serverConfig: ServerConfig;
+  let sonarrModalOpen = false;
   // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
   let jfDisabled = false;
-  let soDisabled = false;
-  let soaDisabled = false;
-  let raDisabled = false;
-  let raaDisabled = false;
   let tmdbkDisabled = false;
 
   async function getServerConfig() {
@@ -56,6 +55,7 @@
       {#await getServerConfig()}
         <Spinner />
       {:then}
+        <h3>General</h3>
         <div>
           <h4 class="norm">Jellyfin Host</h4>
           <h5 class="norm">
@@ -75,74 +75,6 @@
             disabled={jfDisabled}
           />
         </div>
-        <div>
-          <h4 class="norm">Sonarr Host</h4>
-          <h5 class="norm">Point to your Sonarr server to enable tv show requesting.</h5>
-          <input
-            type="text"
-            placeholder="https://sonarr.example.com"
-            bind:value={serverConfig.SONARR_HOST}
-            on:blur={() => {
-              soDisabled = true;
-              updateServerConfig("SONARR_HOST", serverConfig.SONARR_HOST, () => {
-                soDisabled = false;
-              });
-            }}
-            disabled={soDisabled}
-          />
-        </div>
-        {#if serverConfig.SONARR_HOST}
-          <div>
-            <h4 class="norm">Sonarr Key</h4>
-            <h5 class="norm">API key for your Sonarr instance.</h5>
-            <input
-              type="text"
-              placeholder="dGhhbmtzIGZvciB1c2luZyB3YXRjaGFyciA6KQ=="
-              bind:value={serverConfig.SONARR_KEY}
-              on:blur={() => {
-                soaDisabled = true;
-                updateServerConfig("SONARR_KEY", serverConfig.SONARR_KEY, () => {
-                  soaDisabled = false;
-                });
-              }}
-              disabled={soaDisabled}
-            />
-          </div>
-        {/if}
-        <div>
-          <h4 class="norm">Radarr Host</h4>
-          <h5 class="norm">Point to your Radarr server to enable movie requesting.</h5>
-          <input
-            type="text"
-            placeholder="https://radarr.example.com"
-            bind:value={serverConfig.RADARR_HOST}
-            on:blur={() => {
-              raDisabled = true;
-              updateServerConfig("RADARR_HOST", serverConfig.RADARR_HOST, () => {
-                raDisabled = false;
-              });
-            }}
-            disabled={raDisabled}
-          />
-        </div>
-        {#if serverConfig.RADARR_HOST}
-          <div>
-            <h4 class="norm">Radarr Key</h4>
-            <h5 class="norm">API key for your Radarr instance.</h5>
-            <input
-              type="text"
-              placeholder="bm8gcmVhbGx5IGkgYXBwcmVjaWF0ZSB5b3UgOik="
-              bind:value={serverConfig.RADARR_KEY}
-              on:blur={() => {
-                raaDisabled = true;
-                updateServerConfig("RADARR_KEY", serverConfig.RADARR_KEY, () => {
-                  raaDisabled = false;
-                });
-              }}
-              disabled={raaDisabled}
-            />
-          </div>
-        {/if}
         <div>
           <h4 class="norm">TMDB Key</h4>
           <h5 class="norm">Provide your own TMDB API Key</h5>
@@ -193,6 +125,24 @@
             }}
           />
         </div>
+        <h3>Services</h3>
+        <div>
+          <button class="plain configure" on:click={() => (sonarrModalOpen = !sonarrModalOpen)}>
+            <div>
+              <h4 class="norm">Sonarr</h4>
+              <h5 class="norm">Configure your Sonarr server.</h5>
+            </div>
+            <Icon i="arrow" facing="right" />
+          </button>
+        </div>
+
+        {#if sonarrModalOpen}
+          <SonarrModal
+            onUpdate={updateServerConfig}
+            {serverConfig}
+            onClose={() => (sonarrModalOpen = false)}
+          />
+        {/if}
       {:catch err}
         <PageError error={err} pretty="Failed to load server config" />
       {/await}
@@ -225,47 +175,6 @@
       @media screen and (max-width: 440px) {
         width: 100%;
         min-width: unset;
-      }
-    }
-  }
-
-  .settings {
-    display: flex;
-    flex-flow: column;
-    gap: 20px;
-    width: 100%;
-
-    h3 {
-      font-variant: small-caps;
-    }
-
-    h5 {
-      font-weight: normal;
-    }
-
-    & > div {
-      margin: 0 15px;
-    }
-
-    div {
-      input[type="text"],
-      input[type="password"] {
-        margin-top: 1px;
-      }
-
-      &.row {
-        display: flex;
-        flex-flow: row;
-        gap: 10px;
-        align-items: center;
-
-        & > div:first-of-type {
-          margin-right: auto;
-        }
-
-        &.btns button {
-          width: min-content;
-        }
       }
     }
   }
