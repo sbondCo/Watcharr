@@ -27,19 +27,7 @@ type ServerConfig struct {
 	// If unprovided, the default Watcharr API key will be used.
 	TMDB_KEY string `json:",omitempty"`
 
-	// Optional: Points to Sonarr install.
-	SONARR_HOST string `json:",omitempty"`
-
-	// Optional: Sonarr API Key.
-	SONARR_KEY string `json:",omitempty"`
-
-	SONARR_QUALITY_PROFILE int `json:",omitempty"`
-
-	// Optional: Points to Radarr install.
-	RADARR_HOST string `json:",omitempty"`
-
-	// Optional: Radarr API Key.
-	RADARR_KEY string `json:",omitempty"`
+	SONARR []arr.SonarrSettings `json:",omitempty"`
 
 	// Enable/disable debug logging. Useful for when trying
 	// to figure out exactly what the server is doing at a point
@@ -56,15 +44,11 @@ type ServerConfig struct {
 // not editable on frontend, so not needed).
 func (c *ServerConfig) GetSafe() ServerConfig {
 	return ServerConfig{
-		SIGNUP_ENABLED:         c.SIGNUP_ENABLED,
-		JELLYFIN_HOST:          c.JELLYFIN_HOST,
-		TMDB_KEY:               c.TMDB_KEY,
-		DEBUG:                  c.DEBUG,
-		SONARR_HOST:            c.SONARR_HOST,
-		SONARR_KEY:             c.SONARR_KEY,
-		SONARR_QUALITY_PROFILE: c.SONARR_QUALITY_PROFILE,
-		RADARR_HOST:            c.RADARR_HOST,
-		RADARR_KEY:             c.RADARR_KEY,
+		SIGNUP_ENABLED: c.SIGNUP_ENABLED,
+		JELLYFIN_HOST:  c.JELLYFIN_HOST,
+		TMDB_KEY:       c.TMDB_KEY,
+		DEBUG:          c.DEBUG,
+		SONARR:         c.SONARR,
 	}
 }
 
@@ -74,8 +58,6 @@ var (
 	Config = ServerConfig{
 		SIGNUP_ENABLED: true,
 	}
-	sonarr = arr.New(arr.SONARR, &Config.SONARR_HOST, &Config.SONARR_KEY)
-	radarr = arr.New(arr.RADARR, &Config.RADARR_HOST, &Config.RADARR_KEY)
 )
 
 // Read config file
@@ -137,17 +119,6 @@ func updateConfig(k string, v any) error {
 		Config.SIGNUP_ENABLED = v.(bool)
 	} else if k == "TMDB_KEY" {
 		Config.TMDB_KEY = v.(string)
-	} else if k == "SONARR_HOST" {
-		Config.SONARR_HOST = v.(string)
-	} else if k == "SONARR_KEY" {
-		Config.SONARR_KEY = v.(string)
-	} else if k == "SONARR_QUALITY_PROFILE" {
-		// Not sure why v insists its a float64 but just going with it..
-		Config.SONARR_QUALITY_PROFILE = int(v.(float64))
-	} else if k == "RADARR_HOST" {
-		Config.RADARR_HOST = v.(string)
-	} else if k == "RADARR_KEY" {
-		Config.RADARR_KEY = v.(string)
 	} else if k == "DEBUG" {
 		Config.DEBUG = v.(bool)
 		setLoggingLevel()

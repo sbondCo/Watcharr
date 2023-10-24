@@ -4,7 +4,7 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
-  import type { ServerConfig } from "@/types";
+  import type { ServerConfig, SonarrSettings } from "@/types";
   import axios from "axios";
   import SonarrModal from "./modals/SonarrModal.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
@@ -13,6 +13,7 @@
 
   let serverConfig: ServerConfig;
   let sonarrModalOpen = false;
+  let sonarrServerEditing: SonarrSettings;
   // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
@@ -118,16 +119,31 @@
           />
         </Setting>
         <h3>Services</h3>
+        {#if serverConfig.SONARR?.length > 0}
+          {#each serverConfig.SONARR as server}
+            <SettingButton
+              title={server.name}
+              desc="Configure your Sonarr server."
+              onClick={() => {
+                sonarrServerEditing = server;
+                sonarrModalOpen = true;
+              }}
+            />
+          {/each}
+        {/if}
         <SettingButton
           title="Sonarr"
-          desc="Configure your Sonarr server."
-          onClick={() => (sonarrModalOpen = !sonarrModalOpen)}
+          desc="Add a Sonarr server."
+          onClick={() => {
+            sonarrServerEditing = { name: "Sonarr" };
+            sonarrModalOpen = true;
+          }}
         />
 
         {#if sonarrModalOpen}
           <SonarrModal
             onUpdate={updateServerConfig}
-            {serverConfig}
+            servarr={sonarrServerEditing}
             onClose={() => (sonarrModalOpen = false)}
           />
         {/if}

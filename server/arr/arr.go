@@ -48,6 +48,29 @@ func (a *Arr) GetQualityProfiles() ([]QualityProfile, error) {
 	return resp, nil
 }
 
+func (a *Arr) GetRootFolders() ([]RootFolder, error) {
+	slog.Info("GetRootFolders", "type", a.Type, "host", *a.Host, "key", *a.Key)
+	var resp []RootFolder
+	err := request(*a.Host, "/rootfolder", map[string]string{"apikey": *a.Key}, &resp)
+	if err != nil {
+		slog.Error("GetRootFolders request failed", "service", a.Type, "error", err)
+		return []RootFolder{}, errors.New("request to service failed")
+	}
+	return resp, nil
+}
+
+func (a *Arr) GetLangaugeProfiles() ([]LanguageProfile, error) {
+	slog.Info("GetLangaugeProfiles", "type", a.Type, "host", *a.Host, "key", *a.Key)
+	var resp []LanguageProfile
+	// languageprofile supposedly deprecated.. but new language endpoint doesnt seem to work.. note probs to switch soon
+	err := request(*a.Host, "/languageprofile", map[string]string{"apikey": *a.Key}, &resp)
+	if err != nil {
+		slog.Error("GetLangaugeProfiles request failed", "service", a.Type, "error", err)
+		return []LanguageProfile{}, errors.New("request to service failed")
+	}
+	return resp, nil
+}
+
 func request(host string, ep string, p map[string]string, resp interface{}) error {
 	slog.Debug("tmdbAPIRequest", "endpoint", ep, "params", p)
 	base, err := url.Parse(host)

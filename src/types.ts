@@ -657,12 +657,18 @@ export interface ServerConfig {
   JELLYFIN_HOST: string;
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;
-  SONARR_HOST: string;
-  SONARR_KEY: string;
-  SONARR_QUALITY_PROFILE: number;
-  RADARR_HOST: string;
-  RADARR_KEY: string;
+  SONARR: SonarrSettings[];
   DEBUG: boolean;
+}
+
+export interface SonarrSettings {
+  name: string;
+  host?: string;
+  key?: string;
+  qualityProfile?: number;
+  rootFolder?: number;
+  languageProfile?: number;
+  automaticSearch?: boolean;
 }
 
 export interface DropDownItem {
@@ -687,4 +693,35 @@ export interface QualityProfile {
     id?: number;
   }[];
   id: number;
+}
+
+export interface RootFolder {
+  path: string;
+  accessible: boolean;
+  freeSpace: number;
+  unmappedFolders: any[];
+  id: number;
+}
+
+export interface LanguageProfile {
+  name: string;
+  upgradeAllowed: boolean;
+  cutoff: {
+    id: number;
+    name: string;
+  };
+  languages: {
+    language: {
+      id: number;
+      name: string;
+    };
+    allowed: boolean;
+  }[];
+  id: number;
+}
+
+export interface SonarrTestResponse {
+  qualityProfiles: QualityProfile[];
+  rootFolders: RootFolder[];
+  languageProfiles: LanguageProfile[];
 }

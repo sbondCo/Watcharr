@@ -607,23 +607,20 @@ func (b *BaseRouter) addServerRoutes() {
 
 func (b *BaseRouter) addArrRoutes() {
 	s := b.rg.Group("/arr/son").Use(AuthRequired(b.db), AdminRequired())
-	r := b.rg.Group("/arr/rad").Use(AuthRequired(b.db), AdminRequired())
+	// r := b.rg.Group("/arr/rad").Use(AuthRequired(b.db), AdminRequired())
 
-	s.GET("/quality_profiles", func(c *gin.Context) {
-		response, err := sonarr.GetQualityProfiles()
-		if err != nil {
-			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+	s.POST("/test", func(c *gin.Context) {
+		var ur ArrTestParams
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			resp, err := testSonarr(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, resp)
 			return
 		}
-		c.JSON(http.StatusOK, response)
-	})
-
-	r.GET("/quality_profiles", func(c *gin.Context) {
-		response, err := radarr.GetQualityProfiles()
-		if err != nil {
-			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 }
