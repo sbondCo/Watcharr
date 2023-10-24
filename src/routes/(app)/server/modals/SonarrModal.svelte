@@ -28,6 +28,9 @@
       getSettingsData();
     } else {
       qualityProfiles = [];
+      languageProfiles = [];
+      rootFolders = [];
+      error = "host and key must be provided to test the connection";
     }
   }
 
@@ -56,7 +59,39 @@
     }
   }
 
-  async function save() {}
+  function checkForm() {
+    let errs: string[] = [];
+    if (!servarr.name) {
+      errs.push("name");
+    }
+    if (!servarr.host) {
+      errs.push("host");
+    }
+    if (!servarr.key) {
+      errs.push("key");
+    }
+    if (!servarr.qualityProfile) {
+      errs.push("qualityProfile");
+    }
+    if (!servarr.rootFolder) {
+      errs.push("rootFolder");
+    }
+    if (!servarr.languageProfile) {
+      errs.push("languageProfile");
+    }
+    if (errs.length > 0) {
+      error = `Missing required params: ${errs.join(", ")}`;
+    } else {
+      error = "";
+    }
+  }
+
+  async function save() {
+    checkForm();
+    if (!error) {
+      console.log(servarr);
+    }
+  }
 </script>
 
 <Modal title="Sonarr" desc="Setup a connection to your Sonarr server" {onClose}>
@@ -147,6 +182,8 @@
   }
 
   .error {
+    position: sticky;
+    top: 0;
     display: flex;
     justify-content: center;
     width: 100%;
@@ -154,5 +191,6 @@
     background-color: rgb(221, 48, 48);
     text-transform: capitalize;
     color: white;
+    margin-bottom: 15px;
   }
 </style>
