@@ -1,17 +1,5 @@
 package arr
 
-type SonarrSettings struct {
-	// ID              int    `json:"id,omitempty"`
-	Name            string `json:"name,omitempty"`
-	Host            string `json:"host,omitempty"`
-	Key             string `json:"key,omitempty"`
-	QualityProfile  int    `json:"qualityProfile,omitempty"`
-	RootFolder      int    `json:"rootFolder,omitempty"`
-	LanguageProfile int    `json:"languageProfile,omitempty"`
-	AutomaticSearch bool   `json:"automaticSearch,omitempty"`
-	// TODO eventually separate profiles and root for anime content (i can see diff language profile being useful)
-}
-
 type QualityProfile struct {
 	Name           string `json:"name"`
 	UpgradeAllowed bool   `json:"upgradeAllowed"`

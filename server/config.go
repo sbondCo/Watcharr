@@ -6,8 +6,6 @@ import (
 	"log"
 	"log/slog"
 	"os"
-
-	"github.com/sbondCo/Watcharr/arr"
 )
 
 type ServerConfig struct {
@@ -27,7 +25,7 @@ type ServerConfig struct {
 	// If unprovided, the default Watcharr API key will be used.
 	TMDB_KEY string `json:",omitempty"`
 
-	SONARR []arr.SonarrSettings `json:",omitempty"`
+	SONARR []SonarrSettings `json:",omitempty"`
 
 	// Enable/disable debug logging. Useful for when trying
 	// to figure out exactly what the server is doing at a point

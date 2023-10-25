@@ -623,4 +623,34 @@ func (b *BaseRouter) addArrRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	s.POST("/add", func(c *gin.Context) {
+		var ur SonarrSettings
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			err := addSonarr(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	s.POST("/edit", func(c *gin.Context) {
+		var ur SonarrSettings
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			err := editSonarr(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
 }

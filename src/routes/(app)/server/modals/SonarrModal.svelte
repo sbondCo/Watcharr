@@ -4,8 +4,9 @@
   import Modal from "@/lib/Modal.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
+  import { notify } from "@/lib/util/notify";
   import type { DropDownItem, ServerConfig, SonarrSettings, SonarrTestResponse } from "@/types";
-  import axios from "axios";
+  import axios, { AxiosError } from "axios";
 
   export let servarr: SonarrSettings;
   export let onUpdate: <K extends keyof ServerConfig>(
@@ -54,7 +55,7 @@
       error = "";
     } catch (err) {
       console.error("getSettingsData failed!", err);
-      error = "Request Failed!";
+      error = `Request Failed, check your Host and Key`;
       formDisabled = false;
     }
   }
@@ -88,8 +89,22 @@
 
   async function save() {
     checkForm();
+    // if no error set from checkForm func, continue
     if (!error) {
       console.log(servarr);
+      try {
+        const res = await axios.post("/arr/son/add", servarr);
+        if (res.status === 200) {
+          notify({ type: "success", text: "Server added successfully!" });
+          onClose();
+        }
+      } catch (err: any) {
+        console.error("Failed to add server!", err);
+        error = "Failed to add";
+        if (err?.response?.data?.error) {
+          error = err.response.data.error;
+        }
+      }
     }
   }
 </script>
