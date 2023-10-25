@@ -5,15 +5,11 @@
   import Setting from "@/lib/settings/Setting.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
   import { notify } from "@/lib/util/notify";
-  import type { DropDownItem, ServerConfig, SonarrSettings, SonarrTestResponse } from "@/types";
-  import axios, { AxiosError } from "axios";
+  import type { DropDownItem, SonarrSettings, SonarrTestResponse } from "@/types";
+  import axios from "axios";
 
   export let servarr: SonarrSettings;
-  export let onUpdate: <K extends keyof ServerConfig>(
-    name: K,
-    value: ServerConfig[K],
-    done?: () => void
-  ) => void;
+  export let isEditing: boolean;
   export let onClose: () => void;
 
   let error: string;
@@ -22,6 +18,13 @@
   let qualityProfiles: DropDownItem[] = [];
   let languageProfiles: DropDownItem[] = [];
   let rootFolders: DropDownItem[] = [];
+
+  $: {
+    console.log("is editing", isEditing);
+    if (isEditing) {
+      getSettingsData();
+    }
+  }
 
   function testIfHostAndKeySet() {
     if (servarr.host && servarr.key) {
@@ -93,14 +96,17 @@
     if (!error) {
       console.log(servarr);
       try {
-        const res = await axios.post("/arr/son/add", servarr);
+        const res = await axios.post(`/arr/son/${isEditing ? "edit" : "add"}`, servarr);
         if (res.status === 200) {
-          notify({ type: "success", text: "Server added successfully!" });
+          notify({
+            type: "success",
+            text: isEditing ? "Changes saved!" : "Server added successfully!"
+          });
           onClose();
         }
       } catch (err: any) {
-        console.error("Failed to add server!", err);
-        error = "Failed to add";
+        console.error("Failed to save server!", err);
+        error = `Failed to ${isEditing ? "edit" : "add"}`;
         if (err?.response?.data?.error) {
           error = err.response.data.error;
         }
@@ -109,19 +115,25 @@
   }
 </script>
 
-<Modal title="Sonarr" desc="Setup a connection to your Sonarr server" {onClose}>
+<Modal
+  title={isEditing ? `Edit ${servarr.name}` : "Add Sonarr Server"}
+  desc="Setup a connection to your Sonarr server"
+  {onClose}
+>
   {#if error}
     <span class="error">{error}!</span>
   {/if}
   <SettingsList>
-    <Setting title="Name" desc="Give your server a memorable name.">
-      <input
-        type="text"
-        placeholder="https://sonarr.example.com"
-        bind:value={servarr.name}
-        disabled={formDisabled}
-      />
-    </Setting>
+    {#if !isEditing}
+      <Setting title="Name" desc="Give your server a memorable name.">
+        <input
+          type="text"
+          placeholder="https://sonarr.example.com"
+          bind:value={servarr.name}
+          disabled={formDisabled}
+        />
+      </Setting>
+    {/if}
     <Setting title="Sonarr Host" desc="Point to your Sonarr server to enable tv show requesting.">
       <input
         type="text"
@@ -177,7 +189,7 @@
     </Setting>
     <div class="btns">
       <button class="secondary" on:click={() => testIfHostAndKeySet()}>Test</button>
-      <button on:click={() => save()}>Save</button>
+      <button on:click={() => save()}>{isEditing ? "Save" : "Add Server"}</button>
     </div>
   </SettingsList>
 </Modal>

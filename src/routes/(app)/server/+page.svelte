@@ -14,6 +14,7 @@
   let serverConfig: ServerConfig;
   let sonarrModalOpen = false;
   let sonarrServerEditing: SonarrSettings;
+  let sonarrModalEditing = false;
   // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
@@ -123,9 +124,10 @@
           {#each serverConfig.SONARR as server}
             <SettingButton
               title={server.name}
-              desc="Configure your Sonarr server."
+              desc={`Configure server at ${server.host}`}
               onClick={() => {
                 sonarrServerEditing = server;
+                sonarrModalEditing = true;
                 sonarrModalOpen = true;
               }}
             />
@@ -134,16 +136,23 @@
         <SettingButton
           title="Sonarr"
           desc="Add a Sonarr server."
+          icon="add"
           onClick={() => {
-            sonarrServerEditing = { name: "Sonarr" };
+            let name = "Sonarr";
+            if (serverConfig.SONARR?.length > 0) {
+              // if this still exists ya on yur own
+              name = `Sonarr${serverConfig.SONARR.length + 1}`;
+            }
+            sonarrServerEditing = { name };
+            sonarrModalEditing = false;
             sonarrModalOpen = true;
           }}
         />
 
         {#if sonarrModalOpen}
           <SonarrModal
-            onUpdate={updateServerConfig}
             servarr={sonarrServerEditing}
+            isEditing={sonarrModalEditing}
             onClose={() => (sonarrModalOpen = false)}
           />
         {/if}

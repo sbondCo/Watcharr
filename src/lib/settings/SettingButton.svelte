@@ -1,8 +1,10 @@
 <script lang="ts">
   import Icon from "../Icon.svelte";
+  import type { Icon as IconT } from "@/types";
 
   export let title: string;
   export let desc: string;
+  export let icon: IconT = "arrow";
   export let onClick: () => void;
 </script>
 
@@ -11,7 +13,7 @@
     <h4 class="norm">{title}</h4>
     <h5 class="norm">{desc}</h5>
   </div>
-  <Icon i="arrow" facing="right" />
+  <Icon i={icon} facing="right" />
 </button>
 
 <style lang="scss">

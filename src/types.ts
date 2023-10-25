@@ -663,12 +663,12 @@ export interface ServerConfig {
 
 export interface SonarrSettings {
   name: string;
-  host: string;
-  key: string;
-  qualityProfile: number;
-  rootFolder: number;
-  languageProfile: number;
-  automaticSearch: boolean;
+  host?: string;
+  key?: string;
+  qualityProfile?: number;
+  rootFolder?: number;
+  languageProfile?: number;
+  automaticSearch?: boolean;
 }
 
 export interface DropDownItem {
