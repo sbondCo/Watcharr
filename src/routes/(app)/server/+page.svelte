@@ -1,6 +1,5 @@
 <script lang="ts">
   import Checkbox from "@/lib/Checkbox.svelte";
-  import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
@@ -153,7 +152,12 @@
           <SonarrModal
             servarr={sonarrServerEditing}
             isEditing={sonarrModalEditing}
-            onClose={() => (sonarrModalOpen = false)}
+            onClose={() => {
+              // "temporary" solution to showing added servers
+              // and reloading data to revert modified but not saved changes.
+              getServerConfig();
+              sonarrModalOpen = false;
+            }}
           />
         {/if}
       {:catch err}
