@@ -1,7 +1,7 @@
 <script lang="ts">
   export let name: string;
   export let value: boolean = false;
-  export let toggled: (on: boolean) => void;
+  export let toggled: (on: boolean) => void = () => {};
   export let disabled = false;
 
   let actualDisabled = false;

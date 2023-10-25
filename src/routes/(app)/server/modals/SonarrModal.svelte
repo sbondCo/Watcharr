@@ -20,7 +20,6 @@
   let rootFolders: DropDownItem[] = [];
 
   $: {
-    console.log("is editing", isEditing);
     if (isEditing) {
       getSettingsData();
     }
@@ -181,11 +180,11 @@
       />
     </Setting>
     <Setting title="Automatic Search" desc="Start missing episode search automatically?" row>
-      <!-- <Checkbox
-        name="searchForMissingEps"
+      <Checkbox
+        name="automaticSearch"
         disabled={formDisabled}
-        value={settings?.hideSpoilers}
-      /> -->
+        bind:value={servarr.automaticSearch}
+      />
     </Setting>
     <div class="btns">
       <button class="secondary" on:click={() => testIfHostAndKeySet()}>Test</button>

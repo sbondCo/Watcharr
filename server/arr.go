@@ -75,7 +75,6 @@ func editSonarr(s SonarrSettings) error {
 	if !edited {
 		return errors.New("can't edit server that does not exist")
 	}
-	Config.SONARR = append(Config.SONARR, s)
 	writeConfig()
 	return nil
 }
