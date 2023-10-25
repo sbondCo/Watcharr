@@ -65,16 +65,23 @@ func addSonarr(s SonarrSettings) error {
 
 // Edit sonarr server in config
 func editSonarr(s SonarrSettings) error {
-	edited := false
 	for i, v := range Config.SONARR {
 		if v.Name == s.Name {
 			Config.SONARR[i] = s
-			edited = true
+			writeConfig()
+			return nil
 		}
 	}
-	if !edited {
-		return errors.New("can't edit server that does not exist")
+	return errors.New("can't edit server that does not exist")
+}
+
+func rmSonarr(name string) error {
+	for i, v := range Config.SONARR {
+		if v.Name == name {
+			Config.SONARR = append(Config.SONARR[:i], Config.SONARR[i+1:]...)
+			writeConfig()
+			return nil
+		}
 	}
-	writeConfig()
-	return nil
+	return errors.New("can't remove a server that does not exist")
 }

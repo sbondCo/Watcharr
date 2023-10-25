@@ -112,6 +112,25 @@
       }
     }
   }
+
+  async function remove() {
+    try {
+      const res = await axios.post(`/arr/son/rm/${servarr.name}`);
+      if (res.status === 200) {
+        notify({
+          type: "success",
+          text: "Removed server"
+        });
+        onClose();
+      }
+    } catch (err: any) {
+      console.error("Failed to remove server!", err);
+      error = `Failed to remove`;
+      if (err?.response?.data?.error) {
+        error = err.response.data.error;
+      }
+    }
+  }
 </script>
 
 <Modal
@@ -187,7 +206,10 @@
       />
     </Setting>
     <div class="btns">
-      <button class="secondary" on:click={() => testIfHostAndKeySet()}>Test</button>
+      {#if isEditing}
+        <button class="danger" on:click={() => remove()}>Delete</button>
+      {/if}
+      <button id="test" class="secondary" on:click={() => testIfHostAndKeySet()}>Test</button>
       <button on:click={() => save()}>{isEditing ? "Save" : "Add Server"}</button>
     </div>
   </SettingsList>
@@ -198,7 +220,10 @@
     display: flex;
     flex-flow: row;
     gap: 10px;
-    margin-left: auto;
+
+    #test {
+      margin-left: auto;
+    }
 
     button {
       width: max-content;

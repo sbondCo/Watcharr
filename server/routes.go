@@ -653,4 +653,13 @@ func (b *BaseRouter) addArrRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	s.POST("/rm/:name", func(c *gin.Context) {
+		err := rmSonarr(c.Param("name"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
 }

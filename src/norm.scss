@@ -124,6 +124,19 @@
   }
 }
 
+:global(button.danger) {
+  border: 2px solid $error;
+  color: $error;
+
+  &:not(:disabled) {
+    &:hover,
+    &:focus-visible {
+      background-color: $error;
+      color: white;
+    }
+  }
+}
+
 :global(button.plain) {
   background-color: transparent;
   color: $text-color;
