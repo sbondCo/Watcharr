@@ -168,7 +168,7 @@
     display: flex;
     width: 100%;
     justify-content: center;
-    padding: 0 30px 0 30px;
+    padding: 0 30px 30px 30px;
 
     .inner {
       min-width: 400px;
