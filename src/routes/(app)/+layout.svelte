@@ -171,9 +171,9 @@
       let scroll = window.scrollY;
       window.document.addEventListener("scroll", (ev: Event) => {
         if (scroll > window.scrollY) {
-          navEl.classList.remove("scrolled-down");
+          navEl?.classList.remove("scrolled-down");
         } else {
-          navEl.classList.add("scrolled-down");
+          navEl?.classList.add("scrolled-down");
           subMenuShown = false;
           filterMenuShown = false;
           sortMenuShown = false;
