@@ -59,8 +59,14 @@
         const query = target?.value.trim();
         if (!query) return;
         if (query) {
+          // Enable autofocus before running `goto` because on chromium
+          // the .focus() call won't work, even after a timeout.
+          // Using autofocus seems to work. Disables after goto runs.
+          // https://github.com/sbondCo/Watcharr/issues/169
+          target.autofocus = true;
           goto(`/search/${query}`).then(() => {
             target?.focus();
+            target.autofocus = false;
           });
         }
       },
@@ -171,9 +177,9 @@
       let scroll = window.scrollY;
       window.document.addEventListener("scroll", (ev: Event) => {
         if (scroll > window.scrollY) {
-          navEl.classList.remove("scrolled-down");
+          navEl?.classList.remove("scrolled-down");
         } else {
-          navEl.classList.add("scrolled-down");
+          navEl?.classList.add("scrolled-down");
           subMenuShown = false;
           filterMenuShown = false;
           sortMenuShown = false;
