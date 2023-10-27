@@ -191,7 +191,16 @@
     <span class="large">Watcharr</span>
     <span class="small">W</span>
   </a>
-  <input type="text" placeholder="Search" bind:value={$searchQuery} on:keydown={handleSearch} />
+  <!-- autofocus fixes the searchbar un-focusing after search loads bug on chromium #169 -->
+  <!-- svelte-ignore a11y-autofocus -->
+  <input
+    id="nav-searchbar"
+    type="text"
+    placeholder="Search"
+    bind:value={$searchQuery}
+    on:keydown={handleSearch}
+    autofocus
+  />
   <div class="btns">
     <!-- Only show on watched list -->
     {#if $page.url?.pathname === "/"}
