@@ -1,9 +1,10 @@
 <script lang="ts">
-  import type { TMDBSeasonDetails, TMDBShowSeason } from "@/types";
+  import type { TMDBSeasonDetails, TMDBShowSeason, WatchedStatus } from "@/types";
   import axios from "axios";
   import Spinner from "./Spinner.svelte";
   import Error from "./Error.svelte";
   import SeasonsListEpisode from "./SeasonsListEpisode.svelte";
+  import PosterStatus from "./poster/PosterStatus.svelte";
 
   export let tvId: number;
   export let seasons: TMDBShowSeason[];
@@ -15,6 +16,18 @@
     return (await axios.get(`/content/tv/${tvId}/season/${seasonNum}`)).data as TMDBSeasonDetails;
   }
 
+  function handleStatusClick(type: WatchedStatus | "DELETE") {
+    // if (type === "DELETE") {
+    //   if (!id) {
+    //     notify({ text: "Content has no watched list id, can't delete.", type: "error" });
+    //     return;
+    //   }
+    //   removeWatched(id);
+    //   return;
+    // }
+    // updateWatched(media.id, media.media_type, type);
+  }
+
   $: {
     seasonDetailsReq = sdr(activeSeason);
   }
@@ -22,7 +35,6 @@
 
 <div class="ctr">
   <ul class="seasons">
-    <!-- {#each seasons.sort((a, b) => Date.parse(b.air_date) - Date.parse(a.air_date)) as season} -->
     {#each seasons as season}
       <button
         class={`plain${activeSeason === season.season_number ? " active" : ""}`}
@@ -45,6 +57,12 @@
     {#await seasonDetailsReq}
       <Spinner />
     {:then season}
+      <div class="episodes-topbar">
+        <h3>{season.name}</h3>
+        <div>
+          <PosterStatus {handleStatusClick} direction="bot" width="100%" />
+        </div>
+      </div>
       {#if season?.episodes?.length > 0}
         <ul>
           {#each season.episodes as ep}
@@ -133,6 +151,18 @@
     /* hack to get extra scroll space under last el */
     .last {
       padding: 1px;
+    }
+  }
+
+  .episodes-topbar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+
+    div {
+      width: 45px;
+      overflow: visible;
+      margin-left: auto;
     }
   }
 
