@@ -6,12 +6,15 @@
 
   export let status: WatchedStatus | undefined = undefined;
   export let handleStatusClick: (status: WatchedStatus | "DELETE") => void;
+  export let direction: "top" | "bot" = "top";
+  export let width = "40%";
 
   let statusesShown = false;
 </script>
 
 <button
   class="status"
+  style={`width: ${width};`}
   on:click={(ev) => {
     ev.stopPropagation();
     statusesShown = !statusesShown;
@@ -20,6 +23,7 @@
     statusesShown = false;
     ev.currentTarget.blur();
   }}
+  use:tooltip={{ text: "Set Seasons Status", pos: "top", condition: !statusesShown }}
 >
   {#if status}
     <Icon i={watchedStatuses[status]} />
@@ -27,7 +31,7 @@
     <span class="no-icon">+</span>
   {/if}
   {#if statusesShown}
-    <div class={["small-scrollbar", status ? "has-status" : ""].join(" ")}>
+    <div class={["small-scrollbar", status ? "has-status" : "", direction].join(" ")}>
       {#each Object.entries(watchedStatuses) as [statusName, icon]}
         <button
           class="plain{status && status !== statusName ? ' not-active' : ''}"
@@ -55,7 +59,6 @@
     padding: 3px;
     position: relative;
     font-family: "Rampart One";
-    width: 40%;
 
     .no-icon {
       color: $text-color;
@@ -81,6 +84,12 @@
       border-radius: 4px 4px 0 0;
       overflow: auto;
       scrollbar-width: thin;
+      z-index: 40;
+
+      &.bot {
+        top: 100%;
+        border-radius: 0 0 4px 4px;
+      }
 
       button {
         width: 100%;
