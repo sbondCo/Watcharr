@@ -163,7 +163,7 @@
               {rating ? rating : disableInteraction ? "Unrated" : "Rate"}
             </span>
             {#if ratingsShown}
-              <div>
+              <div class="small-scrollbar">
                 {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
                   <button
                     class="plain{rating === v ? ' active' : ''}"
@@ -195,7 +195,7 @@
               <span class="no-icon">+</span>
             {/if}
             {#if statusesShown}
-              <div>
+              <div class="small-scrollbar">
                 {#each Object.entries(watchedStatuses) as [statusName, icon]}
                   <button
                     class="plain{status && status !== statusName ? ' not-active' : ''}"
