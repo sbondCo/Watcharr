@@ -1,13 +1,19 @@
 export interface ToolTipOptions {
   text: string;
   pos?: "left" | "top";
+
+  /**
+   * Only show tooltip if this condition is true.
+   */
+  condition?: boolean;
 }
 
 export default function tooltip(node: HTMLElement, opts: ToolTipOptions) {
-  const { text, pos = "left" } = opts;
+  let { text, pos = "left", condition = true } = opts;
   const tooltip = document.getElementById("tooltip");
 
   const show = () => {
+    if (!condition) return;
     if (tooltip) {
       tooltip.innerHTML = text;
       const nrect = node.getBoundingClientRect();
@@ -37,6 +43,9 @@ export default function tooltip(node: HTMLElement, opts: ToolTipOptions) {
   node.addEventListener("click", hide);
 
   return {
+    update(opts: ToolTipOptions) {
+      condition = opts.condition ?? true;
+    },
     destroy() {
       node.removeEventListener("mouseover", show);
       node.removeEventListener("touchstart", show);
