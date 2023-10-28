@@ -27,7 +27,7 @@
     <span class="no-icon">+</span>
   {/if}
   {#if statusesShown}
-    <div class="small-scrollbar">
+    <div class={["small-scrollbar", status ? "has-status" : ""].join(" ")}>
       {#each Object.entries(watchedStatuses) as [statusName, icon]}
         <button
           class="plain{status && status !== statusName ? ' not-active' : ''}"
@@ -90,13 +90,17 @@
 
         & :global(svg) {
           width: 100%;
-          padding: 0 4.5px;
+          padding: 0 2px;
         }
 
         &:hover,
         &:focus-visible {
           background-color: rgb(100, 100, 100, 0.5);
         }
+      }
+
+      &.has-status :global(svg) {
+        padding: 0 4.5px;
       }
     }
   }
