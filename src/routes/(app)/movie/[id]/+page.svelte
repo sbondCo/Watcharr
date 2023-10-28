@@ -1,6 +1,6 @@
 <script lang="ts">
   import PageError from "@/lib/PageError.svelte";
-  import PersonPoster from "@/lib/PersonPoster.svelte";
+  import PersonPoster from "@/lib/poster/PersonPoster.svelte";
   import Rating from "@/lib/Rating.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";

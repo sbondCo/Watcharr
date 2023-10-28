@@ -10,8 +10,8 @@
   import Error from "@/lib/Error.svelte";
   import Icon from "@/lib/Icon.svelte";
   import Modal from "@/lib/Modal.svelte";
-  import Poster from "@/lib/Poster.svelte";
-  import PosterList from "@/lib/PosterList.svelte";
+  import Poster from "@/lib/poster/Poster.svelte";
+  import PosterList from "@/lib/poster/PosterList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { sleep } from "@/lib/util/helpers";

@@ -5,7 +5,7 @@
   import HorizontalList from "@/lib/HorizontalList.svelte";
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
-  import PersonPoster from "@/lib/PersonPoster.svelte";
+  import PersonPoster from "@/lib/poster/PersonPoster.svelte";
   import Rating from "@/lib/Rating.svelte";
   import SeasonsList from "@/lib/SeasonsList.svelte";
   import Spinner from "@/lib/Spinner.svelte";

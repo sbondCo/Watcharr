@@ -1,8 +1,8 @@
 <script lang="ts">
   import Error from "@/lib/Error.svelte";
   import PageError from "@/lib/PageError.svelte";
-  import Poster from "@/lib/Poster.svelte";
-  import PosterList from "@/lib/PosterList.svelte";
+  import Poster from "@/lib/poster/Poster.svelte";
+  import PosterList from "@/lib/poster/PosterList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { removeWatched, updateWatched } from "@/lib/util/api";
   import { getWatchedDependedProps } from "@/lib/util/helpers";

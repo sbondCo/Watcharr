@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { MediaType, WatchedStatus } from "@/types";
-  import Icon from "./Icon.svelte";
+  import Icon from "../Icon.svelte";
   import {
     addClassToParent,
     calculateTransformOrigin,
@@ -8,9 +8,9 @@
     watchedStatuses
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
-  import tooltip from "./actions/tooltip";
-  import { removeWatched, updateWatched } from "./util/api";
-  import { notify } from "./util/notify";
+  import tooltip from "../actions/tooltip";
+  import { removeWatched, updateWatched } from "../util/api";
+  import { notify } from "../util/notify";
   import { onMount } from "svelte";
 
   export let id: number | undefined = undefined; // Watched list id
