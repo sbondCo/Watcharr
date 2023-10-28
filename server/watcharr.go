@@ -68,7 +68,7 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &Activity{}, &Token{})
+	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &WatchedSeason{}, &Activity{}, &Token{})
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
