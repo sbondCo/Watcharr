@@ -8,6 +8,8 @@
   export let handleStatusClick: (status: WatchedStatus | "DELETE") => void;
   export let direction: "top" | "bot" = "top";
   export let width = "40%";
+  export let small = false;
+  export let btnTooltip: string = "";
 
   let statusesShown = false;
 </script>
@@ -23,12 +25,12 @@
     statusesShown = false;
     ev.currentTarget.blur();
   }}
-  use:tooltip={{ text: "Set Seasons Status", pos: "top", condition: !statusesShown }}
+  use:tooltip={{ text: btnTooltip, pos: "top", condition: !!btnTooltip && !statusesShown }}
 >
   {#if status}
     <Icon i={watchedStatuses[status]} />
   {:else}
-    <span class="no-icon">+</span>
+    <span class={["no-icon", small ? "small" : ""].join(" ")}>+</span>
   {/if}
   {#if statusesShown}
     <div class={["small-scrollbar", status ? "has-status" : "", direction].join(" ")}>
@@ -64,6 +66,11 @@
       color: $text-color;
       font-size: 30px;
       height: 52px;
+
+      &.small {
+        height: 30px;
+        line-height: 22px;
+      }
     }
 
     &:hover .no-icon,
@@ -85,9 +92,10 @@
       overflow: auto;
       scrollbar-width: thin;
       z-index: 40;
+      box-shadow: 0px 0px 1px #000;
 
       &.bot {
-        top: 100%;
+        top: calc(100% + 2px);
         border-radius: 0 0 4px 4px;
       }
 

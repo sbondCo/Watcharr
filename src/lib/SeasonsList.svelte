@@ -60,7 +60,13 @@
       <div class="episodes-topbar">
         <h3>{season.name}</h3>
         <div>
-          <PosterStatus {handleStatusClick} direction="bot" width="100%" />
+          <PosterStatus
+            btnTooltip="Season Status"
+            {handleStatusClick}
+            direction="bot"
+            width="100%"
+            small
+          />
         </div>
       </div>
       {#if season?.episodes?.length > 0}
@@ -88,6 +94,7 @@
 
   .episodes {
     overflow: auto;
+    width: 100%;
 
     ul {
       display: flex;
