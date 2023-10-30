@@ -1,5 +1,11 @@
 <script lang="ts">
-  import type { TMDBSeasonDetails, TMDBShowSeason, Watched, WatchedStatus } from "@/types";
+  import type {
+    TMDBSeasonDetails,
+    TMDBShowSeason,
+    Watched,
+    WatchedSeasonAddResponse,
+    WatchedStatus
+  } from "@/types";
   import axios from "axios";
   import Spinner from "./Spinner.svelte";
   import Error from "./Error.svelte";
@@ -25,7 +31,7 @@
   function updateWatchedSeason(seasonNumber: number, status?: WatchedStatus, rating?: number) {
     const nid = notify({ text: `Saving`, type: "loading" });
     axios
-      .post(`/watched/season`, {
+      .post<WatchedSeasonAddResponse>(`/watched/season`, {
         watchedId: watchedItem.id,
         seasonNumber: seasonNumber,
         status,
@@ -43,7 +49,12 @@
           return;
         }
         if (r.status === 200) {
-          wEntry.watchedSeasons = r.data;
+          wEntry.watchedSeasons = r.data.watchedSeasons;
+          if (wEntry.activity?.length > 0) {
+            wEntry.activity.push(r.data.addedActivity);
+          } else {
+            wEntry.activity = [r.data.addedActivity];
+          }
           watchedList.update((w) => w);
           notify({ id: nid, text: `Saved!`, type: "success" });
         }

@@ -91,6 +91,11 @@ export interface WatchedUpdateResponse {
   newActivity: Activity;
 }
 
+export interface WatchedSeasonAddResponse {
+  watchedSeasons: WatchedSeason[];
+  addedActivity: Activity;
+}
+
 export interface Profile {
   joined: Date;
   showsWatched: number;

@@ -1,18 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 
 	"gorm.io/gorm"
 )
 
+// UniqueIndex applied between WatchedID and SeasonNumber to avoid duplicates incase logic fails.
 type WatchedSeason struct {
 	GormModel
 	UserID       uint          `json:"-" gorm:"not null"`
 	User         User          `json:"-"`
-	WatchedID    uint          `json:"-" gorm:"not null"`
-	SeasonNumber int           `json:"seasonNumber" gorm:"not null"`
+	WatchedID    uint          `json:"-" gorm:"uniqueIndex:ws_watched_to_season_num;not null"`
+	SeasonNumber int           `json:"seasonNumber" gorm:"uniqueIndex:ws_watched_to_season_num;not null"`
 	Status       WatchedStatus `json:"status"`
 	Rating       int8          `json:"rating"`
 }
@@ -24,21 +26,26 @@ type WatchedSeasonAddRequest struct {
 	Rating       int8          `json:"rating"`
 }
 
+type WatchedSeasonAddResponse struct {
+	WatchedSeasons []WatchedSeason `json:"watchedSeasons"`
+	AddedActivity  Activity        `json:"addedActivity"`
+}
+
 // Add/edit a watched season.
-func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at ActivityType) ([]WatchedSeason, error) {
+func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at ActivityType) (WatchedSeasonAddResponse, error) {
 	slog.Debug("Adding watched season item", "userId", userId, "watchedID", ar.WatchedID, "season", ar.SeasonNumber)
 	// 1. Make sure watched item exists and it is the correct type (TV)
 	var w Watched
 	if resp := db.Where("id = ? AND user_id = ?", ar.WatchedID, userId).Preload("Content").Preload("WatchedSeasons").Find(&w); resp.Error != nil {
 		slog.Error("Failed when adding a watched season", "error", "failed to get watched item from db")
-		return []WatchedSeason{}, errors.New("failed when retrieving watched item")
+		return WatchedSeasonAddResponse{}, errors.New("failed when retrieving watched item")
 	}
 	if w.ID == 0 {
 		slog.Error("Failed when adding a watched season", "error", "watched item does not exist in db")
-		return []WatchedSeason{}, errors.New("can't add a watched season for a show that doesnt have a status itself")
+		return WatchedSeasonAddResponse{}, errors.New("can't add a watched season for a show that doesnt have a status itself")
 	}
 	if w.Content.Type != SHOW {
-		return []WatchedSeason{}, errors.New("can't add watched season for non show content")
+		return WatchedSeasonAddResponse{}, errors.New("can't add watched season for non show content")
 	}
 	var found bool
 	for i, ws := range w.WatchedSeasons {
@@ -54,6 +61,7 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at A
 			break
 		}
 	}
+	var addedActivity Activity
 	if !found {
 		slog.Debug("Existing watched season not found, adding as new entry")
 		w.WatchedSeasons = append(w.WatchedSeasons, WatchedSeason{
@@ -66,9 +74,26 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at A
 	}
 	if resp := db.Save(&w.WatchedSeasons); resp.Error != nil {
 		slog.Debug("Failed to save watched season item in db", "error", resp.Error)
-		return []WatchedSeason{}, errors.New("failed to save")
+		return WatchedSeasonAddResponse{}, errors.New("failed to save")
 	}
-	return w.WatchedSeasons, nil
+	// Add activity
+	if found {
+		if ar.Status != "" {
+			json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status})
+			addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: SEASON_STATUS_CHANGED, Data: string(json)})
+		}
+		if ar.Rating != 0 {
+			json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "rating": ar.Rating})
+			addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: SEASON_RATING_CHANGED, Data: string(json)})
+		}
+	} else {
+		json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status, "rating": ar.Rating})
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: SEASON_ADDED, Data: string(json)})
+	}
+	return WatchedSeasonAddResponse{
+		WatchedSeasons: w.WatchedSeasons,
+		AddedActivity:  addedActivity,
+	}, nil
 }
 
 // Remove a watched season
