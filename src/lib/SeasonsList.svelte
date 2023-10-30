@@ -21,6 +21,39 @@
     return (await axios.get(`/content/tv/${tvId}/season/${seasonNum}`)).data as TMDBSeasonDetails;
   }
 
+  // Add/update watched season
+  function updateWatchedSeason(seasonNumber: number, status?: WatchedStatus, rating?: number) {
+    const nid = notify({ text: `Saving`, type: "loading" });
+    axios
+      .post(`/watched/season`, {
+        watchedId: watchedItem.id,
+        seasonNumber: seasonNumber,
+        status,
+        rating
+      })
+      .then((r) => {
+        const wList = get(watchedList);
+        const wEntry = wList.find((w) => w.id === watchedItem.id);
+        if (!wEntry) {
+          notify({
+            id: nid,
+            text: `Request succeeded, but failed to find local data. Please refresh.`,
+            type: "error"
+          });
+          return;
+        }
+        if (r.status === 200) {
+          wEntry.watchedSeasons = r.data;
+          watchedList.update((w) => w);
+          notify({ id: nid, text: `Saved!`, type: "success" });
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        notify({ id: nid, text: "Failed To Update!", type: "error" });
+      });
+  }
+
   function handleStatusClick(type: WatchedStatus | "DELETE", seasonNumber: number) {
     if (type === "DELETE") {
       const ws = watchedItem.watchedSeasons?.find((s) => s.seasonNumber === seasonNumber);
@@ -54,65 +87,11 @@
         });
       return;
     }
-    const nid = notify({ text: `Saving`, type: "loading" });
-    axios
-      .post(`/watched/season`, {
-        watchedId: watchedItem.id,
-        seasonNumber: seasonNumber,
-        status: type
-      })
-      .then((r) => {
-        const wList = get(watchedList);
-        const wEntry = wList.find((w) => w.id === watchedItem.id);
-        if (!wEntry) {
-          notify({
-            id: nid,
-            text: `Request succeeded, but failed to find local data. Please refresh.`,
-            type: "error"
-          });
-          return;
-        }
-        if (r.status === 200) {
-          wEntry.watchedSeasons = r.data;
-          watchedList.update((w) => w);
-          notify({ id: nid, text: `Saved!`, type: "success" });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        notify({ id: nid, text: "Failed To Update!", type: "error" });
-      });
+    updateWatchedSeason(seasonNumber, type);
   }
 
   function handleStarClick(rating: number, seasonNumber: number) {
-    const nid = notify({ text: `Saving`, type: "loading" });
-    axios
-      .post(`/watched/season`, {
-        watchedId: watchedItem.id,
-        seasonNumber: seasonNumber,
-        rating
-      })
-      .then((r) => {
-        const wList = get(watchedList);
-        const wEntry = wList.find((w) => w.id === watchedItem.id);
-        if (!wEntry) {
-          notify({
-            id: nid,
-            text: `Request succeeded, but failed to find local data. Please refresh.`,
-            type: "error"
-          });
-          return;
-        }
-        if (r.status === 200) {
-          wEntry.watchedSeasons = r.data;
-          watchedList.update((w) => w);
-          notify({ id: nid, text: `Saved!`, type: "success" });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        notify({ id: nid, text: "Failed To Update!", type: "error" });
-      });
+    updateWatchedSeason(seasonNumber, undefined, rating);
   }
 
   $: {
