@@ -1,13 +1,17 @@
 <script lang="ts">
-  import type { TMDBSeasonDetails, TMDBShowSeason, WatchedStatus } from "@/types";
+  import type { TMDBSeasonDetails, TMDBShowSeason, Watched, WatchedStatus } from "@/types";
   import axios from "axios";
   import Spinner from "./Spinner.svelte";
   import Error from "./Error.svelte";
   import SeasonsListEpisode from "./SeasonsListEpisode.svelte";
   import PosterStatus from "./poster/PosterStatus.svelte";
+  import { notify } from "./util/notify";
+  import { get } from "svelte/store";
+  import { watchedList } from "@/store";
 
   export let tvId: number;
   export let seasons: TMDBShowSeason[];
+  export let watchedItem: Watched; // Watched list item id
 
   let activeSeason = 1;
   let seasonDetailsReq: Promise<TMDBSeasonDetails>;
@@ -16,16 +20,43 @@
     return (await axios.get(`/content/tv/${tvId}/season/${seasonNum}`)).data as TMDBSeasonDetails;
   }
 
-  function handleStatusClick(type: WatchedStatus | "DELETE") {
-    // if (type === "DELETE") {
-    //   if (!id) {
-    //     notify({ text: "Content has no watched list id, can't delete.", type: "error" });
-    //     return;
-    //   }
-    //   removeWatched(id);
-    //   return;
-    // }
-    // updateWatched(media.id, media.media_type, type);
+  function handleStatusClick(type: WatchedStatus | "DELETE", seasonNumber: number) {
+    if (type === "DELETE") {
+      // if (!id) {
+      //   notify({ text: "Content has no watched list id, can't delete.", type: "error" });
+      //   return;
+      // }
+      // removeWatched(id);
+      return;
+    }
+    const nid = notify({ text: `Saving`, type: "loading" });
+    axios
+      .post(`/watched/season`, {
+        watchedId: watchedItem.id,
+        seasonNumber: seasonNumber,
+        status: type
+      })
+      .then((r) => {
+        const wList = get(watchedList);
+        const wEntry = wList.find((w) => w.id === watchedItem.id);
+        if (!wEntry) {
+          notify({
+            id: nid,
+            text: `Request succeeded, but failed to find local data. Please refresh.`,
+            type: "error"
+          });
+          return;
+        }
+        if (r.status === 200) {
+          wEntry.watchedSeasons = r.data;
+          watchedList.update((w) => w);
+          notify({ id: nid, text: `Saved!`, type: "success" });
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        notify({ id: nid, text: "Failed To Update!", type: "error" });
+      });
   }
 
   $: {
@@ -61,8 +92,11 @@
         <h3>{season.name}</h3>
         <div>
           <PosterStatus
+            status={watchedItem?.watchedSeasons?.find(
+              (s) => s.seasonNumber === season.season_number
+            )?.status}
             btnTooltip="Season Status"
-            {handleStatusClick}
+            handleStatusClick={(t) => handleStatusClick(t, season.season_number)}
             direction="bot"
             width="100%"
             small
@@ -168,6 +202,8 @@
 
     div {
       width: 45px;
+      min-height: 40px;
+      height: 40px;
       overflow: visible;
       margin-left: auto;
     }

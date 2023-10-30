@@ -23,20 +23,20 @@ type WatchedSeasonAddRequest struct {
 }
 
 // Add/edit a watched season.
-func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at ActivityType) (Watched, error) {
+func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at ActivityType) ([]WatchedSeason, error) {
 	slog.Debug("Adding watched season item", "userId", userId, "watchedID", ar.WatchedID, "season", ar.SeasonNumber)
 	// 1. Make sure watched item exists and it is the correct type (TV)
 	var w Watched
 	if resp := db.Where("id = ? AND user_id = ?", ar.WatchedID, userId).Preload("Content").Preload("WatchedSeasons").Find(&w); resp.Error != nil {
 		slog.Error("Failed when adding a watched season", "error", "failed to get watched item from db")
-		return Watched{}, errors.New("failed when retrieving watched item")
+		return []WatchedSeason{}, errors.New("failed when retrieving watched item")
 	}
 	if w.ID == 0 {
 		slog.Error("Failed when adding a watched season", "error", "watched item does not exist in db")
-		return Watched{}, errors.New("can't add a watched season for a show that doesnt have a status itself")
+		return []WatchedSeason{}, errors.New("can't add a watched season for a show that doesnt have a status itself")
 	}
 	if w.Content.Type != SHOW {
-		return Watched{}, errors.New("can't add watched season for non show content")
+		return []WatchedSeason{}, errors.New("can't add watched season for non show content")
 	}
 	var found bool
 	for i, ws := range w.WatchedSeasons {
@@ -60,7 +60,7 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at A
 	}
 	if resp := db.Save(&w.WatchedSeasons); resp.Error != nil {
 		slog.Debug("Failed to save watched season item in db", "error", resp.Error)
-		return Watched{}, errors.New("failed to save")
+		return []WatchedSeason{}, errors.New("failed to save")
 	}
-	return w, nil
+	return w.WatchedSeasons, nil
 }

@@ -58,6 +58,7 @@ export interface WatchedSeason {
   watchedID: number;
   status: WatchedStatus;
   rating: number;
+  seasonNumber: number;
 }
 
 export interface Watched extends dbModel {

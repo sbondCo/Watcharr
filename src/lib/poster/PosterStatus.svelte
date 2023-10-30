@@ -61,6 +61,7 @@
     padding: 3px;
     position: relative;
     font-family: "Rampart One";
+    height: 100%;
 
     .no-icon {
       color: $text-color;
