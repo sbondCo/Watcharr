@@ -9,7 +9,9 @@ import (
 
 type WatchedSeason struct {
 	GormModel
-	WatchedID    uint          `json:"watchedId" gorm:"not null"`
+	UserID       uint          `json:"-" gorm:"not null"`
+	User         User          `json:"-"`
+	WatchedID    uint          `json:"-" gorm:"not null"`
 	SeasonNumber int           `json:"seasonNumber" gorm:"not null"`
 	Status       WatchedStatus `json:"status"`
 	Rating       int8          `json:"rating"`
@@ -52,6 +54,7 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at A
 	if !found {
 		slog.Debug("Existing watched season not found, adding as new entry")
 		w.WatchedSeasons = append(w.WatchedSeasons, WatchedSeason{
+			UserID:       userId,
 			WatchedID:    ar.WatchedID,
 			SeasonNumber: ar.SeasonNumber,
 			Status:       ar.Status,
@@ -63,4 +66,14 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at A
 		return []WatchedSeason{}, errors.New("failed to save")
 	}
 	return w.WatchedSeasons, nil
+}
+
+// Remove a watched season
+func rmWatchedSeason(db *gorm.DB, userId uint, seasonId uint) error {
+	slog.Debug("rmWatchedSeason called", "user_id", userId, "season_id", seasonId)
+	if resp := db.Model(&WatchedSeason{}).Unscoped().Where("id = ? AND user_id = ?", seasonId, userId).Delete(&WatchedSeason{}); resp.Error != nil {
+		slog.Error("Failed when removing a watched season", "error", resp.Error)
+		return errors.New("failed when removing watched season")
+	}
+	return nil
 }

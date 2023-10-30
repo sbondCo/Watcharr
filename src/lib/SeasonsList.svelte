@@ -22,11 +22,35 @@
 
   function handleStatusClick(type: WatchedStatus | "DELETE", seasonNumber: number) {
     if (type === "DELETE") {
-      // if (!id) {
-      //   notify({ text: "Content has no watched list id, can't delete.", type: "error" });
-      //   return;
-      // }
-      // removeWatched(id);
+      const ws = watchedItem.watchedSeasons?.find((s) => s.seasonNumber === seasonNumber);
+      if (!ws) {
+        notify({ text: "Failed to find watched season id. Please try refreshing.", type: "error" });
+        return;
+      }
+      const nid = notify({ text: `Saving`, type: "loading" });
+      axios
+        .delete(`/watched/season/${ws.id}`)
+        .then((r) => {
+          const wList = get(watchedList);
+          const wEntry = wList.find((w) => w.id === watchedItem.id);
+          if (!wEntry) {
+            notify({
+              id: nid,
+              text: `Request succeeded, but failed to find local data. Please refresh.`,
+              type: "error"
+            });
+            return;
+          }
+          if (r.status === 200) {
+            wEntry.watchedSeasons = wEntry.watchedSeasons?.filter((s) => s.id !== ws.id);
+            watchedList.update((w) => w);
+            notify({ id: nid, text: `Removed!`, type: "success" });
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          notify({ id: nid, text: "Failed To Remove!", type: "error" });
+        });
       return;
     }
     const nid = notify({ text: `Saving`, type: "loading" });
