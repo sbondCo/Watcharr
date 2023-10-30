@@ -8,6 +8,7 @@
   import { notify } from "./util/notify";
   import { get } from "svelte/store";
   import { watchedList } from "@/store";
+  import PosterRating from "./poster/PosterRating.svelte";
 
   export let tvId: number;
   export let seasons: TMDBShowSeason[];
@@ -83,6 +84,37 @@
       });
   }
 
+  function handleStarClick(rating: number, seasonNumber: number) {
+    const nid = notify({ text: `Saving`, type: "loading" });
+    axios
+      .post(`/watched/season`, {
+        watchedId: watchedItem.id,
+        seasonNumber: seasonNumber,
+        rating
+      })
+      .then((r) => {
+        const wList = get(watchedList);
+        const wEntry = wList.find((w) => w.id === watchedItem.id);
+        if (!wEntry) {
+          notify({
+            id: nid,
+            text: `Request succeeded, but failed to find local data. Please refresh.`,
+            type: "error"
+          });
+          return;
+        }
+        if (r.status === 200) {
+          wEntry.watchedSeasons = r.data;
+          watchedList.update((w) => w);
+          notify({ id: nid, text: `Saved!`, type: "success" });
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        notify({ id: nid, text: "Failed To Update!", type: "error" });
+      });
+  }
+
   $: {
     seasonDetailsReq = sdr(activeSeason);
   }
@@ -112,13 +144,25 @@
     {#await seasonDetailsReq}
       <Spinner />
     {:then season}
+      {@const ws = watchedItem?.watchedSeasons?.find(
+        (s) => s.seasonNumber === season.season_number
+      )}
       <div class="episodes-topbar">
         <h3>{season.name}</h3>
-        <div>
+        {#if ws}
+          <div class="rating" style={ws?.rating ? "width: 65px" : "width: 45px"}>
+            <PosterRating
+              rating={ws?.rating}
+              btnTooltip="Season Rating"
+              handleStarClick={(r) => handleStarClick(r, season.season_number)}
+              minimal={true}
+              direction="bot"
+            />
+          </div>
+        {/if}
+        <div class="status">
           <PosterStatus
-            status={watchedItem?.watchedSeasons?.find(
-              (s) => s.seasonNumber === season.season_number
-            )?.status}
+            status={ws?.status}
             btnTooltip="Season Status"
             handleStatusClick={(t) => handleStatusClick(t, season.season_number)}
             direction="bot"
@@ -222,14 +266,27 @@
   .episodes-topbar {
     display: flex;
     align-items: center;
+    gap: 10px;
     margin-bottom: 10px;
 
     div {
-      width: 45px;
-      min-height: 40px;
-      height: 40px;
-      overflow: visible;
-      margin-left: auto;
+      transition: width 100ms ease;
+
+      &:first-of-type {
+        margin-left: auto;
+      }
+
+      &.rating {
+        height: 40px;
+        min-height: 40px;
+      }
+
+      &.status {
+        width: 45px;
+        min-height: 40px;
+        height: 40px;
+        overflow: visible;
+      }
     }
   }
 

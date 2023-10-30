@@ -45,8 +45,12 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at A
 		if ws.SeasonNumber == ar.SeasonNumber {
 			slog.Debug("Existing watched season item found, updating existing")
 			found = true
-			w.WatchedSeasons[i].Status = ar.Status
-			w.WatchedSeasons[i].Rating = ar.Rating
+			if ar.Status != "" {
+				w.WatchedSeasons[i].Status = ar.Status
+			}
+			if ar.Rating != 0 {
+				w.WatchedSeasons[i].Rating = ar.Rating
+			}
 			break
 		}
 	}
