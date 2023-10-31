@@ -110,6 +110,14 @@
         opacity 150ms ease-in;
       cursor: pointer;
 
+      span {
+        text-shadow: 0 0 6px #fff;
+      }
+
+      :global(svg) {
+        filter: drop-shadow(0 0 6px #fff);
+      }
+
       &:hover,
       &:active,
       &:focus {
