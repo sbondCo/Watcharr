@@ -134,32 +134,34 @@
     {#await seasonDetailsReq}
       <Spinner />
     {:then season}
-      {@const ws = watchedItem?.watchedSeasons?.find(
-        (s) => s.seasonNumber === season.season_number
-      )}
       <div class="episodes-topbar">
         <h3>{season.name}</h3>
-        {#if ws}
-          <div class="rating" style={ws?.rating ? "width: 65px" : "width: 45px"}>
-            <PosterRating
-              rating={ws?.rating}
-              btnTooltip="Season Rating"
-              handleStarClick={(r) => handleStarClick(r, season.season_number)}
-              minimal={true}
+        {#if watchedItem}
+          {@const ws = watchedItem?.watchedSeasons?.find(
+            (s) => s.seasonNumber === season.season_number
+          )}
+          {#if ws}
+            <div class="rating" style={ws?.rating ? "width: 65px" : "width: 45px"}>
+              <PosterRating
+                rating={ws?.rating}
+                btnTooltip="Season Rating"
+                handleStarClick={(r) => handleStarClick(r, season.season_number)}
+                minimal={true}
+                direction="bot"
+              />
+            </div>
+          {/if}
+          <div class="status">
+            <PosterStatus
+              status={ws?.status}
+              btnTooltip="Season Status"
+              handleStatusClick={(t) => handleStatusClick(t, season.season_number)}
               direction="bot"
+              width="100%"
+              small
             />
           </div>
         {/if}
-        <div class="status">
-          <PosterStatus
-            status={ws?.status}
-            btnTooltip="Season Status"
-            handleStatusClick={(t) => handleStatusClick(t, season.season_number)}
-            direction="bot"
-            width="100%"
-            small
-          />
-        </div>
       </div>
       {#if season?.episodes?.length > 0}
         <ul>
@@ -258,6 +260,7 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
+    min-height: 40px;
 
     div {
       transition: width 100ms ease;
