@@ -111,11 +111,11 @@
       cursor: pointer;
 
       span {
-        text-shadow: 0 0 6px #fff;
+        text-shadow: 0 0 6px $bg-color;
       }
 
       :global(svg) {
-        filter: drop-shadow(0 0 6px #fff);
+        filter: drop-shadow(0 0 8px $bg-color);
       }
 
       &:hover,
