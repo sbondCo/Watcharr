@@ -38,6 +38,24 @@
         return "thoughts removed";
       case "IMPORTED_WATCHED":
         return "imported";
+      case "SEASON_ADDED":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `season ${data.season} added as ${data.status?.toLowerCase()}`;
+        }
+        return "season added";
+      case "SEASON_RATING_CHANGED":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `changed season ${data.season} rating to ${data.rating}`;
+        }
+        return "season rating changed";
+      case "SEASON_STATUS_CHANGED":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `changed season ${data.season} status to ${data.status?.toLowerCase()}`;
+        }
+        return "season status changed";
       default:
         return a.type;
     }
