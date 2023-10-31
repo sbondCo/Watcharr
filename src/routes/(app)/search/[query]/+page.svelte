@@ -1,12 +1,12 @@
 <script lang="ts">
-  import Poster from "@/lib/Poster.svelte";
-  import PosterList from "@/lib/PosterList.svelte";
+  import Poster from "@/lib/poster/Poster.svelte";
+  import PosterList from "@/lib/poster/PosterList.svelte";
   import { searchQuery, watchedList } from "@/store";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import axios from "axios";
   import { getWatchedDependedProps } from "@/lib/util/helpers";
-  import PersonPoster from "@/lib/PersonPoster.svelte";
+  import PersonPoster from "@/lib/poster/PersonPoster.svelte";
   import type { ContentSearch, PublicUser } from "@/types";
   import UsersList from "@/lib/UsersList.svelte";
   import { onDestroy, onMount } from "svelte";

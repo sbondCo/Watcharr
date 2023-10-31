@@ -10,9 +10,9 @@
     TMDBUpcomingMovies,
     TMDBUpcomingShows
   } from "@/types";
-  import Poster from "@/lib/Poster.svelte";
+  import Poster from "@/lib/poster/Poster.svelte";
   import { getWatchedDependedProps } from "@/lib/util/helpers";
-  import PosterList from "@/lib/PosterList.svelte";
+  import PosterList from "@/lib/poster/PosterList.svelte";
 
   $: wList = $watchedList;
 

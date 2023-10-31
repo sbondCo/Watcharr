@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { MediaType, WatchedStatus } from "@/types";
-  import Icon from "./Icon.svelte";
+  import Icon from "../Icon.svelte";
   import {
     addClassToParent,
     calculateTransformOrigin,
@@ -8,10 +8,12 @@
     watchedStatuses
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
-  import tooltip from "./actions/tooltip";
-  import { removeWatched, updateWatched } from "./util/api";
-  import { notify } from "./util/notify";
+  import tooltip from "../actions/tooltip";
+  import { removeWatched, updateWatched } from "../util/api";
+  import { notify } from "../util/notify";
   import { onMount } from "svelte";
+  import PosterStatus from "./PosterStatus.svelte";
+  import PosterRating from "./PosterRating.svelte";
 
   export let id: number | undefined = undefined; // Watched list id
   export let media: {
@@ -34,10 +36,6 @@
 
   // If poster is active (scaled up)
   let posterActive = false;
-  // If ratings are shown
-  let ratingsShown = false;
-  // If statuses are shown
-  let statusesShown = false;
 
   let containerEl: HTMLDivElement;
 
@@ -50,7 +48,6 @@
   function handleStarClick(r: number) {
     if (r == rating) return;
     updateWatched(media.id, media.media_type, undefined, r);
-    ratingsShown = false;
   }
 
   function handleStatusClick(type: WatchedStatus | "DELETE") {
@@ -147,76 +144,8 @@
 
       {#if !hideButtons}
         <div class="buttons">
-          <button
-            class="rating"
-            on:click={(ev) => {
-              ev.stopPropagation();
-              ratingsShown = !ratingsShown;
-            }}
-            on:mouseleave={(ev) => {
-              ratingsShown = false;
-              ev.currentTarget.blur();
-            }}
-          >
-            <span>*</span>
-            <span class={!rating && disableInteraction ? "unrated-text" : ""}>
-              {rating ? rating : disableInteraction ? "Unrated" : "Rate"}
-            </span>
-            {#if ratingsShown}
-              <div class="small-scrollbar">
-                {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
-                  <button
-                    class="plain{rating === v ? ' active' : ''}"
-                    on:click={(ev) => {
-                      ev.stopPropagation();
-                      handleStarClick(v);
-                    }}
-                  >
-                    {v}
-                  </button>
-                {/each}
-              </div>
-            {/if}
-          </button>
-          <button
-            class="status"
-            on:click={(ev) => {
-              ev.stopPropagation();
-              statusesShown = !statusesShown;
-            }}
-            on:mouseleave={(ev) => {
-              statusesShown = false;
-              ev.currentTarget.blur();
-            }}
-          >
-            {#if status}
-              <Icon i={watchedStatuses[status]} />
-            {:else}
-              <span class="no-icon">+</span>
-            {/if}
-            {#if statusesShown}
-              <div class="small-scrollbar">
-                {#each Object.entries(watchedStatuses) as [statusName, icon]}
-                  <button
-                    class="plain{status && status !== statusName ? ' not-active' : ''}"
-                    on:click={() => handleStatusClick(statusName)}
-                    use:tooltip={{ text: statusName }}
-                  >
-                    <Icon i={icon} />
-                  </button>
-                {/each}
-                {#if status}
-                  <button
-                    class="plain not-active"
-                    on:click={() => handleStatusClick("DELETE")}
-                    use:tooltip={{ text: "Delete" }}
-                  >
-                    <Icon i="trash" />
-                  </button>
-                {/if}
-              </div>
-            {/if}
-          </button>
+          <PosterRating {rating} {handleStarClick} {disableInteraction} />
+          <PosterStatus {status} {handleStatusClick} />
         </div>
       {/if}
     </div>
@@ -345,95 +274,6 @@
         margin-top: auto;
         gap: 10px;
         height: 35px;
-
-        button {
-          padding: 3px;
-          position: relative;
-          font-family: "Rampart One";
-
-          /** Rating */
-          &.rating {
-            span {
-              &:first-child {
-                color: $text-color;
-                font-size: 39px;
-                letter-spacing: 10px;
-                line-height: 52px;
-                height: 42px;
-              }
-
-              &:nth-child(2) {
-                color: $text-color;
-                font-size: 22px;
-                height: 35px; // quick fix to make the rating num look centered - text-stroke makes it look not centered
-              }
-            }
-
-            &:hover span,
-            &:focus-visible span {
-              color: gold;
-            }
-
-            div button {
-              font-size: 20px;
-            }
-          }
-
-          /** Status */
-          &.status {
-            width: 40%;
-
-            .no-icon {
-              color: $text-color;
-              font-size: 30px;
-              height: 52px;
-            }
-
-            &:hover,
-            &:hover .no-icon,
-            &:focus-visible .no-icon {
-              color: white;
-              fill: white;
-            }
-          }
-
-          div {
-            display: flex;
-            flex-flow: column;
-            position: absolute;
-            width: 100%;
-            height: 200px;
-            background-color: $bg-color;
-            top: calc(-100% - 170px);
-            list-style: none;
-            border-radius: 4px 4px 0 0;
-            overflow: auto;
-            scrollbar-width: thin;
-
-            button {
-              width: 100%;
-              color: $text-color;
-              fill: $text-color;
-              -webkit-text-stroke: 0.5px $text-color;
-
-              & :global(svg) {
-                width: 100%;
-                padding: 0 2px;
-              }
-
-              &:hover,
-              &:focus-visible {
-                background-color: rgb(100, 100, 100, 0.25);
-              }
-            }
-          }
-
-          &:hover,
-          &:focus-visible {
-            background-color: black;
-            border-color: black;
-          }
-        }
       }
     }
 

@@ -1,18 +1,108 @@
 <script lang="ts">
-  import type { TMDBSeasonDetails, TMDBShowSeason } from "@/types";
+  import type {
+    TMDBSeasonDetails,
+    TMDBShowSeason,
+    Watched,
+    WatchedSeasonAddResponse,
+    WatchedStatus
+  } from "@/types";
   import axios from "axios";
   import Spinner from "./Spinner.svelte";
   import Error from "./Error.svelte";
   import SeasonsListEpisode from "./SeasonsListEpisode.svelte";
+  import PosterStatus from "./poster/PosterStatus.svelte";
+  import { notify } from "./util/notify";
+  import { get } from "svelte/store";
+  import { watchedList } from "@/store";
+  import PosterRating from "./poster/PosterRating.svelte";
 
   export let tvId: number;
   export let seasons: TMDBShowSeason[];
+  export let watchedItem: Watched; // Watched list item id
 
   let activeSeason = 1;
   let seasonDetailsReq: Promise<TMDBSeasonDetails>;
 
   async function sdr(seasonNum: number) {
     return (await axios.get(`/content/tv/${tvId}/season/${seasonNum}`)).data as TMDBSeasonDetails;
+  }
+
+  // Add/update watched season
+  function updateWatchedSeason(seasonNumber: number, status?: WatchedStatus, rating?: number) {
+    const nid = notify({ text: `Saving`, type: "loading" });
+    axios
+      .post<WatchedSeasonAddResponse>(`/watched/season`, {
+        watchedId: watchedItem.id,
+        seasonNumber: seasonNumber,
+        status,
+        rating
+      })
+      .then((r) => {
+        const wList = get(watchedList);
+        const wEntry = wList.find((w) => w.id === watchedItem.id);
+        if (!wEntry) {
+          notify({
+            id: nid,
+            text: `Request succeeded, but failed to find local data. Please refresh.`,
+            type: "error"
+          });
+          return;
+        }
+        if (r.status === 200) {
+          wEntry.watchedSeasons = r.data.watchedSeasons;
+          if (wEntry.activity?.length > 0) {
+            wEntry.activity.push(r.data.addedActivity);
+          } else {
+            wEntry.activity = [r.data.addedActivity];
+          }
+          watchedList.update((w) => w);
+          notify({ id: nid, text: `Saved!`, type: "success" });
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        notify({ id: nid, text: "Failed To Update!", type: "error" });
+      });
+  }
+
+  function handleStatusClick(type: WatchedStatus | "DELETE", seasonNumber: number) {
+    if (type === "DELETE") {
+      const ws = watchedItem.watchedSeasons?.find((s) => s.seasonNumber === seasonNumber);
+      if (!ws) {
+        notify({ text: "Failed to find watched season id. Please try refreshing.", type: "error" });
+        return;
+      }
+      const nid = notify({ text: `Saving`, type: "loading" });
+      axios
+        .delete(`/watched/season/${ws.id}`)
+        .then((r) => {
+          const wList = get(watchedList);
+          const wEntry = wList.find((w) => w.id === watchedItem.id);
+          if (!wEntry) {
+            notify({
+              id: nid,
+              text: `Request succeeded, but failed to find local data. Please refresh.`,
+              type: "error"
+            });
+            return;
+          }
+          if (r.status === 200) {
+            wEntry.watchedSeasons = wEntry.watchedSeasons?.filter((s) => s.id !== ws.id);
+            watchedList.update((w) => w);
+            notify({ id: nid, text: `Removed!`, type: "success" });
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          notify({ id: nid, text: "Failed To Remove!", type: "error" });
+        });
+      return;
+    }
+    updateWatchedSeason(seasonNumber, type);
+  }
+
+  function handleStarClick(rating: number, seasonNumber: number) {
+    updateWatchedSeason(seasonNumber, undefined, rating);
   }
 
   $: {
@@ -22,7 +112,6 @@
 
 <div class="ctr">
   <ul class="seasons">
-    <!-- {#each seasons.sort((a, b) => Date.parse(b.air_date) - Date.parse(a.air_date)) as season} -->
     {#each seasons as season}
       <button
         class={`plain${activeSeason === season.season_number ? " active" : ""}`}
@@ -45,6 +134,35 @@
     {#await seasonDetailsReq}
       <Spinner />
     {:then season}
+      <div class="episodes-topbar">
+        <h3>{season.name}</h3>
+        {#if watchedItem}
+          {@const ws = watchedItem?.watchedSeasons?.find(
+            (s) => s.seasonNumber === season.season_number
+          )}
+          {#if ws}
+            <div class="rating" style={ws?.rating ? "width: 65px" : "width: 45px"}>
+              <PosterRating
+                rating={ws?.rating}
+                btnTooltip="Season Rating"
+                handleStarClick={(r) => handleStarClick(r, season.season_number)}
+                minimal={true}
+                direction="bot"
+              />
+            </div>
+          {/if}
+          <div class="status">
+            <PosterStatus
+              status={ws?.status}
+              btnTooltip="Season Status"
+              handleStatusClick={(t) => handleStatusClick(t, season.season_number)}
+              direction="bot"
+              width="100%"
+              small
+            />
+          </div>
+        {/if}
+      </div>
       {#if season?.episodes?.length > 0}
         <ul>
           {#each season.episodes as ep}
@@ -70,6 +188,7 @@
 
   .episodes {
     overflow: auto;
+    width: 100%;
 
     ul {
       display: flex;
@@ -133,6 +252,34 @@
     /* hack to get extra scroll space under last el */
     .last {
       padding: 1px;
+    }
+  }
+
+  .episodes-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    min-height: 40px;
+
+    div {
+      transition: width 100ms ease;
+
+      &:first-of-type {
+        margin-left: auto;
+      }
+
+      &.rating {
+        height: 40px;
+        min-height: 40px;
+      }
+
+      &.status {
+        width: 45px;
+        min-height: 40px;
+        height: 40px;
+        overflow: visible;
+      }
     }
   }
 

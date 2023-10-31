@@ -28,13 +28,14 @@ const (
 
 type Watched struct {
 	GormModel
-	Status    WatchedStatus `json:"status"`
-	Rating    int8          `json:"rating"`
-	Thoughts  string        `json:"thoughts"`
-	UserID    uint          `json:"-" gorm:"uniqueIndex:usernctnidx"`
-	ContentID int           `json:"-" gorm:"uniqueIndex:usernctnidx"`
-	Content   Content       `json:"content"`
-	Activity  []Activity    `json:"activity"`
+	Status         WatchedStatus   `json:"status"`
+	Rating         int8            `json:"rating"`
+	Thoughts       string          `json:"thoughts"`
+	UserID         uint            `json:"-" gorm:"uniqueIndex:usernctnidx"`
+	ContentID      int             `json:"-" gorm:"uniqueIndex:usernctnidx"`
+	Content        Content         `json:"content"`
+	Activity       []Activity      `json:"activity"`
+	WatchedSeasons []WatchedSeason `json:"watchedSeasons,omitempty"` // For shows
 }
 
 type WatchedAddRequest struct {
@@ -61,7 +62,7 @@ type WatchedRemoveResponse struct {
 
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
-	res := db.Model(&Watched{}).Preload("Content").Preload("Activity").Where("user_id = ?", userId).Find(&watched)
+	res := db.Model(&Watched{}).Preload("Content").Preload("Activity").Preload("WatchedSeasons").Where("user_id = ?", userId).Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}

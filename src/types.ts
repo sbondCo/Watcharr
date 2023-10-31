@@ -54,6 +54,14 @@ export interface Activity extends dbModel {
   data: string;
 }
 
+export interface WatchedSeason {
+  id: number;
+  watchedID: number;
+  status: WatchedStatus;
+  rating: number;
+  seasonNumber: number;
+}
+
 export interface Watched extends dbModel {
   id: number;
   watched: boolean;
@@ -62,6 +70,7 @@ export interface Watched extends dbModel {
   activity: Activity[];
   status: WatchedStatus;
   thoughts: string;
+  watchedSeasons?: WatchedSeason[];
 }
 
 export interface WatchedAddRequest {
@@ -80,6 +89,11 @@ export interface WatchedUpdateRequest {
 
 export interface WatchedUpdateResponse {
   newActivity: Activity;
+}
+
+export interface WatchedSeasonAddResponse {
+  watchedSeasons: WatchedSeason[];
+  addedActivity: Activity;
 }
 
 export interface Profile {

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import Icon from "@/lib/Icon.svelte";
-  import Poster from "@/lib/Poster.svelte";
-  import PosterList from "@/lib/PosterList.svelte";
+  import Poster from "@/lib/poster/Poster.svelte";
+  import PosterList from "@/lib/poster/PosterList.svelte";
   import { activeFilters, activeSort } from "@/store";
   import type { Watched } from "@/types";
 

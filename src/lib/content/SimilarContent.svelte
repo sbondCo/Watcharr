@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { ContentType, TMDBMovieSimilar, TMDBShowSimilar } from "@/types";
   import HorizontalList from "../HorizontalList.svelte";
-  import Poster from "../Poster.svelte";
   import { watchedList } from "@/store";
   import { getWatchedDependedProps } from "@/lib/util/helpers";
+  import Poster from "../poster/Poster.svelte";
 
   $: wList = $watchedList;
 

@@ -313,6 +313,37 @@ func (b *BaseRouter) addWatchedRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	watched.POST("/season", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ar WatchedSeasonAddRequest
+		err := c.ShouldBindJSON(&ar)
+		if err == nil {
+			response, err := addWatchedSeason(b.db, userId, ar, ADDED_WATCHED)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	watched.DELETE("/season/:id", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.Status(400)
+			return
+		}
+		userId := c.MustGet("userId").(uint)
+		err = rmWatchedSeason(b.db, userId, uint(id))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
 }
 
 func (b *BaseRouter) addActivityRoutes() {
