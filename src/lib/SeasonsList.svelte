@@ -198,6 +198,11 @@
     }
   }
 
+  :global(body.nav-shown) ul.seasons {
+    top: $nav-height;
+    height: calc(100vh - $nav-height);
+  }
+
   ul.seasons {
     display: flex;
     flex-flow: column;
@@ -208,6 +213,7 @@
     overflow: auto;
     position: sticky;
     top: 0px;
+    transition: top 200ms ease-in-out;
 
     button {
       display: flex;
