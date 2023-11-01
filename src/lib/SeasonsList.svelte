@@ -218,12 +218,14 @@
     button {
       display: flex;
       flex-flow: row;
-      gap: 18px;
+      flex-wrap: wrap;
+      gap: 0 18px;
       align-items: center;
       padding: 10px;
       border: 2px solid #302d2d;
       border-radius: 8px;
       cursor: pointer;
+      max-width: 220px;
       transition: background-color 100ms ease;
 
       &:first-of-type {
@@ -233,7 +235,6 @@
       h1 {
         font-size: 18px;
         font-family: sans-serif;
-        max-width: 150px;
       }
 
       h2 {
