@@ -187,7 +187,6 @@
   }
 
   .episodes {
-    overflow: auto;
     width: 100%;
 
     ul {
