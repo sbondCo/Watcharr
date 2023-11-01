@@ -88,6 +88,13 @@
           }
           if (r.status === 200) {
             wEntry.watchedSeasons = wEntry.watchedSeasons?.filter((s) => s.id !== ws.id);
+            if (r.data) {
+              if (wEntry.activity?.length > 0) {
+                wEntry.activity.push(r.data);
+              } else {
+                wEntry.activity = [r.data];
+              }
+            }
             watchedList.update((w) => w);
             notify({ id: nid, text: `Removed!`, type: "success" });
           }

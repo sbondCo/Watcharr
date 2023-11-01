@@ -56,6 +56,12 @@
           return `changed season ${data.season} status to ${data.status?.toLowerCase()}`;
         }
         return "season status changed";
+      case "SEASON_REMOVED":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `season ${data.season} status removed`;
+        }
+        return "season removed";
       default:
         return a.type;
     }

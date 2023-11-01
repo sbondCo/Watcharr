@@ -337,12 +337,12 @@ func (b *BaseRouter) addWatchedRoutes() {
 			return
 		}
 		userId := c.MustGet("userId").(uint)
-		err = rmWatchedSeason(b.db, userId, uint(id))
+		response, err := rmWatchedSeason(b.db, userId, uint(id))
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return
 		}
-		c.Status(http.StatusOK)
+		c.JSON(http.StatusOK, response)
 	})
 }
 

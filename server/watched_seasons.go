@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // UniqueIndex applied between WatchedID and SeasonNumber to avoid duplicates incase logic fails.
@@ -97,11 +98,27 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at A
 }
 
 // Remove a watched season
-func rmWatchedSeason(db *gorm.DB, userId uint, seasonId uint) error {
+func rmWatchedSeason(db *gorm.DB, userId uint, seasonId uint) (Activity, error) {
 	slog.Debug("rmWatchedSeason called", "user_id", userId, "season_id", seasonId)
-	if resp := db.Model(&WatchedSeason{}).Unscoped().Where("id = ? AND user_id = ?", seasonId, userId).Delete(&WatchedSeason{}); resp.Error != nil {
+	var watchedSeason WatchedSeason
+	resp := db.Clauses(clause.Returning{}).Model(&WatchedSeason{}).Unscoped().Where("id = ? AND user_id = ?", seasonId, userId).Delete(&watchedSeason)
+	if resp.Error != nil {
 		slog.Error("Failed when removing a watched season", "error", resp.Error)
-		return errors.New("failed when removing watched season")
+		return Activity{}, errors.New("failed when removing watched season")
 	}
-	return nil
+	if resp.RowsAffected == 0 {
+		slog.Error("Failed when removing a watched season", "error", "zero rows affected")
+		return Activity{}, errors.New("wasn't removed from db.. may not exist")
+	}
+	slog.Debug("rmWatchedSeason, deleted row", "row", watchedSeason)
+	if watchedSeason.ID != 0 {
+		json, _ := json.Marshal(map[string]interface{}{
+			"season": watchedSeason.SeasonNumber,
+			"status": watchedSeason.Status,
+			"rating": watchedSeason.Rating,
+		})
+		addedActivity, _ := addActivity(db, userId, ActivityAddRequest{WatchedID: watchedSeason.WatchedID, Type: SEASON_REMOVED, Data: string(json)})
+		return addedActivity, nil
+	}
+	return Activity{}, errors.New("removed, but failed to add activity entry")
 }
