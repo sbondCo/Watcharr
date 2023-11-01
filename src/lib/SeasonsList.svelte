@@ -199,7 +199,8 @@
   }
 
   :global(body.nav-shown) ul.seasons {
-    top: $nav-height !important;
+    top: $nav-height;
+    height: calc(100vh - $nav-height);
   }
 
   ul.seasons {
