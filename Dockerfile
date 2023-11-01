@@ -22,7 +22,7 @@ FROM node:20 AS runner
 COPY --from=server /server/watcharr /
 COPY --from=ui /app/build /ui
 COPY --from=ui /app/package.json /app/package-lock.json /ui
-RUN cd /ui && npm ci
+RUN cd /ui && npm ci --omit=dev
 
 EXPOSE 3080
 
