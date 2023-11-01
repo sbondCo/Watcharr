@@ -198,11 +198,6 @@
     }
   }
 
-  :global(body.nav-shown) ul.seasons {
-    top: $nav-height;
-    height: calc(100vh - $nav-height);
-  }
-
   ul.seasons {
     display: flex;
     flex-flow: column;
@@ -287,6 +282,13 @@
         height: 40px;
         overflow: visible;
       }
+    }
+  }
+
+  @media screen and (min-width: 960px) {
+    :global(body.nav-shown) ul.seasons {
+      top: $nav-height;
+      height: calc(100vh - $nav-height);
     }
   }
 
