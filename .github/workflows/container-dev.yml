@@ -1,4 +1,4 @@
-name: Development Watcharr Container Release
+name: Development Watcharr Image Release
 
 on:
   workflow_dispatch:
