@@ -1,13 +1,16 @@
 # Backend
-FROM golang:1.21 AS server
+FROM golang:1.21-alpine AS server
 
 WORKDIR /server
 COPY server/*.go server/go.* ./
 
-RUN go mod download && GOOS=linux go build -o ./watcharr
+# Required so we can build with cgo
+RUN apk update && apk add --no-cache musl-dev gcc build-base
+
+RUN go mod download && GOOS=linux CGO_ENABLED=1 go build -o ./watcharr
 
 # Frontend
-FROM node:20 AS ui
+FROM node:20-alpine AS ui
 
 WORKDIR /app
 COPY package*.json vite.config.ts svelte.config.js tsconfig.json ./
@@ -17,7 +20,7 @@ COPY ./static ./static
 RUN npm install && npm run build
 
 # Production
-FROM node:20 AS runner
+FROM node:20-alpine AS runner
 
 COPY --from=server /server/watcharr /
 COPY --from=ui /app/build /ui
