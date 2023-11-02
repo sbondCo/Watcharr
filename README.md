@@ -4,6 +4,7 @@
 <p align="center">
   <a href="https://github.com/sbondCo/Watcharr/pkgs/container/watcharr"><img src="https://img.shields.io/github/v/release/sbondCo/Watcharr?label=version&style=for-the-badge" /></a>
   <a href="https://beta.watcharr.app"><img src="https://img.shields.io/website?label=DEMO&style=for-the-badge&url=https%3A%2F%2Fbeta.watcharr.app" /></a>
+  <a href="https://watcharr.app"><img src="https://img.shields.io/website?label=DOCS&style=for-the-badge&url=https%3A%2F%2Fwatcharr.app" /></a>
   <a href="https://github.com/sbondCo/Watcharr/issues"><img src="https://img.shields.io/github/issues-raw/sbondCo/Watcharr?label=ISSUES&style=for-the-badge" /></a>
   <a href="/LICENSE"><img src="https://img.shields.io/github/license/sbondCo/Watcharr?style=for-the-badge" /></a>
 </p>
@@ -37,33 +38,7 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 
 # Set Up
 
-Currently only a [docker image](https://github.com/sbondCo/Watcharr/pkgs/container/watcharr) is provided (**v1.9.1 and newer no longer require the `watcharr-ui` package, it is bundled inside the main `watcharr` package**).
-
-**Note:** When first running, make sure only you have access. The first user created will become admin.
-
-Here is a simple setup you can use yourself, using docker compose:
-
-**docker-compose.yml**
-
-```
-version: "3"
-
-services:
-  watcharr:
-    # The :latest tag is used for simplicity, it is recommended
-    # to use an actual version, then when updating check the releases for changelogs.
-    image: ghcr.io/sbondco/watcharr:latest
-    container_name: watcharr
-    ports:
-      - 3080:3080
-    volumes:
-      # Contains all of watcharr data (database & cache)
-      - ./data:/data
-```
-
-After loading up Watcharr, you will be greeted with a menu to setup the first account (which will be admin).
-
-When logged in you can then configure the server settings from the nav face menu > settings option.
+[Checkout our documentation](https://watcharr.app/docs/category/installation) for an up to date guide on setup! If you hate manuals, but love docker, this [docker-compose.yml](./docker-compose.yml) file is your friend.
 
 # Getting Help
 
