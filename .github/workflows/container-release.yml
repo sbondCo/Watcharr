@@ -1,7 +1,6 @@
-name: Release Watcharr Containers
+name: Release Watcharr Image
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - v*
