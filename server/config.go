@@ -46,7 +46,7 @@ func (c *ServerConfig) GetSafe() ServerConfig {
 		JELLYFIN_HOST:  c.JELLYFIN_HOST,
 		TMDB_KEY:       c.TMDB_KEY,
 		DEBUG:          c.DEBUG,
-		SONARR:         c.SONARR,
+		SONARR:         c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
 	}
 }
 

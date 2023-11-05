@@ -87,9 +87,10 @@ type TMDBMovieDetails struct {
 	Video               bool   `json:"video"`
 
 	// Extra items because we use `append_to_response` on the request
-	Videos         TMDBContentVideos `json:"videos"`
-	WatchProviders interface{}       `json:"watch/providers"`
-	Similar        TMDBMovieSimilar  `json:"similar"`
+	Videos         TMDBContentVideos    `json:"videos"`
+	WatchProviders interface{}          `json:"watch/providers"`
+	Similar        TMDBMovieSimilar     `json:"similar"`
+	ExternalIds    TMDBExternalIdsMovie `json:"external_ids"`
 }
 
 type TMDBShowDetails struct {
@@ -142,9 +143,11 @@ type TMDBShowDetails struct {
 	Type string `json:"type"`
 
 	// Extra items because we use `append_to_response` on the request
-	Videos         TMDBContentVideos `json:"videos"`
-	WatchProviders interface{}       `json:"watch/providers"`
-	Similar        TMDBShowSimilar   `json:"similar"`
+	Videos         TMDBContentVideos   `json:"videos"`
+	WatchProviders interface{}         `json:"watch/providers"`
+	Similar        TMDBShowSimilar     `json:"similar"`
+	ExternalIds    TMDBExternalIdsShow `json:"external_ids"`
+	Keywords       TMDBKeywords        `json:"keywords"`
 }
 
 type WatchProvider struct {
@@ -457,6 +460,35 @@ type TMDBUpcomingShows struct {
 	} `json:"results"`
 	TotalPages   int `json:"total_pages"`
 	TotalResults int `json:"total_results"`
+}
+
+type TMDBExternalIds struct {
+	ID          int    `json:"id"`
+	ImdbID      string `json:"imdb_id"`
+	WikidataID  string `json:"wikidata_id"`
+	FacebookID  string `json:"facebook_id"`
+	InstagramID string `json:"instagram_id"`
+	TwitterID   string `json:"twitter_id"`
+}
+
+type TMDBExternalIdsMovie struct {
+	TMDBExternalIds
+}
+
+type TMDBExternalIdsShow struct {
+	TMDBExternalIds
+	FreebaseMid string `json:"freebase_mid"`
+	FreebaseID  string `json:"freebase_id"`
+	TvdbID      int    `json:"tvdb_id"`
+	TvrageID    int    `json:"tvrage_id"`
+}
+
+type TMDBKeywords struct {
+	// ID      int `json:"id"`
+	Results []struct {
+		Name string `json:"name"`
+		ID   int    `json:"id"`
+	} `json:"results"`
 }
 
 func getTMDBKey() string {

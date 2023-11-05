@@ -3,6 +3,7 @@
 package arr
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -27,6 +28,15 @@ type Arr struct {
 	Host *string
 	// Api key for the Arr server.
 	Key *string
+}
+
+type SonarrRequest struct {
+	ServerName      string `json:"serverName"`
+	QualityProfile  int    `json:"qualityProfile"`  // id
+	RootFolder      string `json:"rootFolder"`      // path
+	LanguageProfile int    `json:"languageProfile"` // id
+	TVDBID          int    `json:"tvdbId"`
+	SeriesType      string `json:"seriesType"`
 }
 
 func New(t ArrType, host *string, key *string) *Arr {
@@ -71,6 +81,35 @@ func (a *Arr) GetLangaugeProfiles() ([]LanguageProfile, error) {
 	return resp, nil
 }
 
+func (a *Arr) AddContent(r SonarrRequest) error {
+	var resp interface{}
+	err := requestPost(*a.Host, "/series", *a.Key, map[string]interface{}{
+		"title": "Marvel Future Avengers",
+		// "seasons": [
+		// 	{
+		// 		"seasonNumber": 2,
+		// 		"monitored": false
+		// 	}
+		// ],
+		"qualityProfileId":  r.QualityProfile,
+		"languageProfileId": r.LanguageProfile,
+		"seasonFolder":      true,
+		"monitored":         true,
+		"tvdbId":            r.TVDBID,
+		"seriesType":        r.SeriesType,
+		// "addOptions": {
+		// 	"searchForMissingEpisodes":     false,
+		// 	"searchForCutoffUnmetEpisodes": false,
+		// },
+		"rootFolderPath": r.RootFolder,
+	}, &resp)
+	if err != nil {
+		slog.Error("AddContent request failed", "service", a.Type, "error", err)
+		return errors.New("request to service failed")
+	}
+	return nil
+}
+
 func request(host string, ep string, p map[string]string, resp interface{}) error {
 	slog.Debug("tmdbAPIRequest", "endpoint", ep, "params", p)
 	base, err := url.Parse(host)
@@ -105,6 +144,49 @@ func request(host string, ep string, p map[string]string, resp interface{}) erro
 		return errors.New(string(body))
 	}
 	// slog.Info("", "body", body)
+	err = json.Unmarshal([]byte(body), &resp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func requestPost(host string, ep string, key string, p map[string]interface{}, resp interface{}) error {
+	base, err := url.Parse(host)
+	if err != nil {
+		return errors.New("failed to parse api uri")
+	}
+
+	// Path params
+	base.Path += "/api/v3" + ep
+
+	var res *http.Response
+
+	// Query params
+	params := url.Values{}
+	params.Add("apikey", key)
+
+	// Add params to url
+	base.RawQuery = params.Encode()
+
+	jsonp, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+	res, err = http.Post(base.String(), "application/json", bytes.NewBuffer(jsonp))
+	if err != nil {
+		return err
+	}
+
+	body, err := io.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		return err
+	}
+	if !(res.StatusCode >= 200 && res.StatusCode <= 299) {
+		slog.Error("arr non 2xx status code:", "status_code", res.StatusCode)
+		return errors.New(string(body))
+	}
 	err = json.Unmarshal([]byte(body), &resp)
 	if err != nil {
 		return err

@@ -195,6 +195,7 @@ export interface TMDBMovieDetails extends TMDBContentDetails {
   videos: TMDBContentVideos;
   "watch/providers": TMDBContentWatchProviders;
   similar: TMDBMovieSimilar;
+  external_ids: TMDBExternalIdsMovie;
 }
 
 export interface TMDBShowDetails extends TMDBContentDetails {
@@ -239,6 +240,8 @@ export interface TMDBShowDetails extends TMDBContentDetails {
   videos: TMDBContentVideos;
   "watch/providers": TMDBContentWatchProviders;
   similar: TMDBShowSimilar;
+  external_ids: TMDBExternalIdsShow;
+  keywords: TMDBKeywords;
 }
 
 export interface TMDBWatchProvider {
@@ -571,6 +574,31 @@ export interface TMDBUpcomingShows {
   }[];
   total_pages: number;
   total_results: number;
+}
+
+export interface TMDBExternalIds {
+  id: number;
+  imdb_id: string;
+  wikidata_id: string;
+  facebook_id: string;
+  instagram_id: string;
+  twitter_id: string;
+}
+
+export interface TMDBExternalIdsMovie extends TMDBExternalIds {}
+
+export interface TMDBExternalIdsShow extends TMDBExternalIds {
+  freebase_mid: string;
+  freebase_id: string;
+  tvdb_id: number;
+  tvrage_id: number;
+}
+
+export interface TMDBKeywords {
+  results: {
+    name: string;
+    id: number;
+  }[];
 }
 
 export interface ContentSearch {

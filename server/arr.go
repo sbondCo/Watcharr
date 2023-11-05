@@ -19,6 +19,11 @@ type SonarrSettings struct {
 	// TODO eventually separate profiles and root for anime content (i can see diff language profile being useful)
 }
 
+func (s *SonarrSettings) safe() SonarrSettings {
+	s.Key = ""
+	return *s
+}
+
 type ArrTestParams struct {
 	Host string `json:"host,omitempty"`
 	Key  string `json:"key,omitempty"`
@@ -84,4 +89,23 @@ func rmSonarr(name string) error {
 		}
 	}
 	return errors.New("can't remove a server that does not exist")
+}
+
+func getSonarr(name string) (SonarrSettings, error) {
+	for i, v := range Config.SONARR {
+		if v.Name == name {
+			return Config.SONARR[i], nil
+		}
+	}
+	return SonarrSettings{}, errors.New("server not found")
+}
+
+// Get list of sonarr servers without api keys.
+// Regular users with access to adding to sonarr will request this.
+func getSonarrsSafe() []SonarrSettings {
+	s := []SonarrSettings{}
+	for _, v := range Config.SONARR {
+		s = append(s, v.safe())
+	}
+	return s
 }

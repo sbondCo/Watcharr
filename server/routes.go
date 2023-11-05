@@ -9,6 +9,7 @@ import (
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-gonic/gin"
+	"github.com/sbondCo/Watcharr/arr"
 	"gorm.io/gorm"
 )
 
@@ -120,7 +121,7 @@ func (b *BaseRouter) addContentRoutes() {
 			c.Status(400)
 			return
 		}
-		content, err := tvDetails(c.Param("id"), c.MustGet("userCountry").(string), map[string]string{"append_to_response": "videos,watch/providers,similar"})
+		content, err := tvDetails(c.Param("id"), c.MustGet("userCountry").(string), map[string]string{"append_to_response": "videos,watch/providers,similar,external_ids,keywords"})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -624,6 +625,20 @@ func (b *BaseRouter) addArrRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
+	s.GET("/config/:name", func(c *gin.Context) {
+		server, err := getSonarr(c.Param("name"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		resp, err := testSonarr(ArrTestParams{Host: server.Host, Key: server.Key})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+
 	s.POST("/add", func(c *gin.Context) {
 		var ur SonarrSettings
 		err := c.ShouldBindJSON(&ur)
@@ -661,5 +676,31 @@ func (b *BaseRouter) addArrRoutes() {
 			return
 		}
 		c.Status(http.StatusOK)
+	})
+
+	s.GET("", func(c *gin.Context) {
+		response := getSonarrsSafe()
+		c.JSON(http.StatusOK, response)
+	})
+
+	s.POST("/request", func(c *gin.Context) {
+		var ur arr.SonarrRequest
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			server, err := getSonarr(ur.ServerName)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			sonarr := arr.New(arr.SONARR, &server.Host, &server.Key)
+			err = sonarr.AddContent(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 }

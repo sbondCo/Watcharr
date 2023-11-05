@@ -25,7 +25,7 @@
 <div
   class={[
     open ? "is-open" : "",
-    !active ? "placeholder-shown" : "",
+    typeof active === "undefined" ? "placeholder-shown" : "",
     blendIn ? "blend-in" : ""
   ].join(" ")}
 >
