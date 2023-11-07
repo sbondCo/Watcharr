@@ -1,6 +1,6 @@
 <script lang="ts">
   export let title: string;
-  export let desc: string;
+  export let desc: string = "";
   export let row: boolean = false;
 </script>
 

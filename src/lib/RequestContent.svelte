@@ -4,6 +4,8 @@
   import type { DropDownItem, SonarrSettings, SonarrTestResponse, TMDBShowDetails } from "@/types";
   import { notify } from "./util/notify";
   import DropDown from "./DropDown.svelte";
+  import Setting from "./settings/Setting.svelte";
+  import Spinner from "./Spinner.svelte";
 
   const animeKeywordId = 210024;
 
@@ -76,23 +78,31 @@
   getServers();
 </script>
 
-<Modal title="Request" desc="Add Show To Sonarr" {onClose}>
-  <div>Content</div>
+<Modal title="Request" desc={content.name} {onClose}>
+  {#if servarrs}
+    {@const server = servarrs[selectedServarrIndex]}
 
-  <DropDown
-    placeholder="Select a server"
-    active={selectedServarrIndex}
-    options={servarrs?.length > 0
-      ? servarrs.map((s, i) => {
-          return { id: i, value: s.name };
-        })
-      : []}
-  />
+    {#if servarrs?.length > 1}
+      <Setting title="Select the server to use">
+        <DropDown
+          placeholder="Select a server"
+          active={selectedServarrIndex}
+          options={servarrs?.length > 0
+            ? servarrs.map((s, i) => {
+                return { id: i, value: s.name };
+              })
+            : []}
+        />
+      </Setting>
+    {/if}
 
-  {servarrs ? servarrs[selectedServarrIndex]?.host : ""}
+    {servarrs ? JSON.stringify(server) : ""}
 
-  {JSON.stringify(content.external_ids, undefined, 2)}
+    <!-- {JSON.stringify(content.external_ids, undefined, 2)} -->
 
-  {content.keywords.results?.find((k) => k.id == animeKeywordId) ? "anime" : "standard"}
-  <button on:click={request}>Request</button>
+    {content.keywords.results?.find((k) => k.id == animeKeywordId) ? "anime" : "standard"}
+    <button on:click={request}>Request</button>
+  {:else}
+    <Spinner />
+  {/if}
 </Modal>
