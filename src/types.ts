@@ -704,6 +704,12 @@ export interface DropDownItem {
   value: string;
 }
 
+export interface ListBoxItem {
+  id: number;
+  value: boolean;
+  displayValue: string;
+}
+
 export interface QualityProfile {
   name: string;
   upgradeAllowed: boolean;

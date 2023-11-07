@@ -1,11 +1,18 @@
 <script lang="ts">
   import axios from "axios";
   import Modal from "./Modal.svelte";
-  import type { DropDownItem, SonarrSettings, SonarrTestResponse, TMDBShowDetails } from "@/types";
+  import type {
+    DropDownItem,
+    ListBoxItem,
+    SonarrSettings,
+    SonarrTestResponse,
+    TMDBShowDetails
+  } from "@/types";
   import { notify } from "./util/notify";
   import DropDown from "./DropDown.svelte";
   import Setting from "./settings/Setting.svelte";
   import Spinner from "./Spinner.svelte";
+  import ListBox from "./ListBox.svelte";
 
   const animeKeywordId = 210024;
 
@@ -16,6 +23,13 @@
   let selectedServarrIndex: number;
   let inputsDisabled = true;
   let selectedServerCfg: SonarrTestResponse | undefined;
+  let seasonItems: ListBoxItem[] = content.seasons.map((s) => {
+    return {
+      id: s.id,
+      value: false,
+      displayValue: s.name
+    };
+  });
 
   async function getServers() {
     try {
@@ -79,30 +93,51 @@
 </script>
 
 <Modal title="Request" desc={content.name} {onClose}>
-  {#if servarrs}
-    {@const server = servarrs[selectedServarrIndex]}
+  <div class="req-ctr">
+    {#if servarrs}
+      {@const server = servarrs[selectedServarrIndex]}
 
-    {#if servarrs?.length > 1}
-      <Setting title="Select the server to use">
-        <DropDown
-          placeholder="Select a server"
-          active={selectedServarrIndex}
-          options={servarrs?.length > 0
-            ? servarrs.map((s, i) => {
-                return { id: i, value: s.name };
-              })
-            : []}
-        />
-      </Setting>
+      <ListBox bind:options={seasonItems} allCheckBox="All Seasons" />
+
+      {JSON.stringify(seasonItems)}
+
+      {#if servarrs?.length > 1}
+        <Setting title="Select the server to use">
+          <DropDown
+            placeholder="Select a server"
+            active={selectedServarrIndex}
+            options={servarrs?.length > 0
+              ? servarrs.map((s, i) => {
+                  return { id: i, value: s.name };
+                })
+              : []}
+          />
+        </Setting>
+      {/if}
+
+      <!-- {servarrs ? JSON.stringify(server) : ""} -->
+
+      <!-- {JSON.stringify(content.external_ids, undefined, 2)} -->
+
+      <!-- {content.keywords.results?.find((k) => k.id == animeKeywordId) ? "anime" : "standard"} -->
+      <button on:click={request}>Request</button>
+    {:else}
+      <Spinner />
     {/if}
-
-    {servarrs ? JSON.stringify(server) : ""}
-
-    <!-- {JSON.stringify(content.external_ids, undefined, 2)} -->
-
-    {content.keywords.results?.find((k) => k.id == animeKeywordId) ? "anime" : "standard"}
-    <button on:click={request}>Request</button>
-  {:else}
-    <Spinner />
-  {/if}
+  </div>
 </Modal>
+
+<style lang="scss">
+  .req-ctr {
+    display: flex;
+    flex-flow: column;
+    gap: 10px;
+    height: 100%;
+
+    button {
+      margin-top: auto;
+      margin-left: auto;
+      width: max-content;
+    }
+  }
+</style>

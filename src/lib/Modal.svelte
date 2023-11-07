@@ -45,6 +45,8 @@
 
     & > div {
       position: relative;
+      display: flex;
+      flex-flow: column;
       min-width: 300px;
       min-height: 300px;
       width: 100%;
