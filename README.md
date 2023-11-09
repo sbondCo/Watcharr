@@ -26,13 +26,23 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 
 # Screenshots
 
-<h3 align="center">Watched List</h3>
 <p align="center">
-<img src="./screenshot/homepage.png" alt="Watched List" />
 
-| Watched Show Hover                                                      | Watched Show Status Change                                                              | Show Details                                                                |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| <img src="./screenshot/homepage-poster-hover.png" alt="Watched List" /> | <img src="./screenshot/homepage-poster-change-status.png" alt="Changing Show Status" /> | <img src="./screenshot/show-details-page.png" alt="Content Details Page" /> |
+| Homepage | Watched Show Hover |
+| -------- | ------------------ |
+| <img src="./screenshot/homepage.png" alt="Watched List" /> | <img src="./screenshot/homepage-poster-hover.png" alt="Watched List" /> |
+
+| Watched Show Status Change | Movie Details |
+| -------------------------- | ------------- |
+| <img src="./screenshot/homepage-poster-change-status.png" alt="Changing Show Status" /> | <img src="./screenshot/content-details-page.png" alt="Content Details Page" /> |
+
+| User Profile | Discover |
+| ------------ | -------- |
+| <img src="./screenshot/user-profile.png" alt="User Profile Page" /> | <img src="./screenshot/discover-page.png" alt="Discover Page" /> |
+
+| Dark Homepage | Dark Content Details |
+| ------------- | -------------------- |
+| <img src="./screenshot/homepage-dark.png" alt="Dark Theme Homepage" /> | <img src="./screenshot/content-details-page-dark.png" alt="Dark Theme Content Page" /> |
 
 </p>
 
