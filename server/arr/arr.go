@@ -31,12 +31,18 @@ type Arr struct {
 }
 
 type SonarrRequest struct {
-	ServerName      string `json:"serverName"`
-	QualityProfile  int    `json:"qualityProfile"`  // id
-	RootFolder      string `json:"rootFolder"`      // path
-	LanguageProfile int    `json:"languageProfile"` // id
-	TVDBID          int    `json:"tvdbId"`
-	SeriesType      string `json:"seriesType"`
+	ServerName      string          `json:"serverName"`
+	QualityProfile  int             `json:"qualityProfile"`  // id
+	RootFolder      string          `json:"rootFolder"`      // path
+	LanguageProfile int             `json:"languageProfile"` // id
+	TVDBID          int             `json:"tvdbId"`
+	SeriesType      string          `json:"seriesType"`
+	Seasons         []SonarrSeasons `json:"seasons"`
+}
+
+type SonarrSeasons struct {
+	SeasonNumber int  `json:"seasonNumber"`
+	Monitored    bool `json:"monitored"`
 }
 
 func New(t ArrType, host *string, key *string) *Arr {
@@ -82,27 +88,24 @@ func (a *Arr) GetLangaugeProfiles() ([]LanguageProfile, error) {
 }
 
 func (a *Arr) AddContent(r SonarrRequest) error {
-	var resp interface{}
-	err := requestPost(*a.Host, "/series", *a.Key, map[string]interface{}{
-		"title": "Marvel Future Avengers",
-		// "seasons": [
-		// 	{
-		// 		"seasonNumber": 2,
-		// 		"monitored": false
-		// 	}
-		// ],
+	req := map[string]interface{}{
+		"title":             "Marvel Future Avengers",
 		"qualityProfileId":  r.QualityProfile,
 		"languageProfileId": r.LanguageProfile,
 		"seasonFolder":      true,
 		"monitored":         true,
 		"tvdbId":            r.TVDBID,
 		"seriesType":        r.SeriesType,
-		// "addOptions": {
-		// 	"searchForMissingEpisodes":     false,
-		// 	"searchForCutoffUnmetEpisodes": false,
-		// },
+		"seasons":           r.Seasons,
+		"addOptions": map[string]interface{}{
+			"ignoreEpisodesWithFiles":  true,
+			"searchForMissingEpisodes": false,
+		},
 		"rootFolderPath": r.RootFolder,
-	}, &resp)
+	}
+	slog.Debug("AddContent", "req", req)
+	var resp interface{}
+	err := requestPost(*a.Host, "/series", *a.Key, req, &resp)
 	if err != nil {
 		slog.Error("AddContent request failed", "service", a.Type, "error", err)
 		return errors.New("request to service failed")

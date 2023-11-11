@@ -48,7 +48,6 @@
       display: flex;
       flex-flow: column;
       min-width: 300px;
-      min-height: 300px;
       width: 100%;
       max-width: 1000px;
       max-height: calc(100% - 20px);

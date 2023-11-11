@@ -25,7 +25,7 @@
   let selectedServerCfg: SonarrTestResponse | undefined;
   let seasonItems: ListBoxItem[] = content.seasons.map((s) => {
     return {
-      id: s.id,
+      id: s.season_number,
       value: false,
       displayValue: s.name
     };
@@ -74,7 +74,13 @@
         : "standard",
       qualityProfile: server.qualityProfile,
       rootFolder: selectedServerCfg.rootFolders[0].path,
-      languageProfile: server.languageProfile
+      languageProfile: server.languageProfile,
+      seasons: seasonItems.map((s) => {
+        return {
+          seasonNumber: s.id,
+          monitored: s.value
+        };
+      })
     });
   }
 
@@ -97,9 +103,9 @@
     {#if servarrs}
       {@const server = servarrs[selectedServarrIndex]}
 
-      <ListBox bind:options={seasonItems} allCheckBox="All Seasons" />
-
-      {JSON.stringify(seasonItems)}
+      <div class="seasons-list">
+        <ListBox bind:options={seasonItems} allCheckBox="All Seasons" />
+      </div>
 
       {#if servarrs?.length > 1}
         <Setting title="Select the server to use">
@@ -115,11 +121,6 @@
         </Setting>
       {/if}
 
-      <!-- {servarrs ? JSON.stringify(server) : ""} -->
-
-      <!-- {JSON.stringify(content.external_ids, undefined, 2)} -->
-
-      <!-- {content.keywords.results?.find((k) => k.id == animeKeywordId) ? "anime" : "standard"} -->
       <button on:click={request}>Request</button>
     {:else}
       <Spinner />
@@ -133,6 +134,11 @@
     flex-flow: column;
     gap: 10px;
     height: 100%;
+
+    .seasons-list {
+      max-height: 500px;
+      overflow: auto;
+    }
 
     button {
       margin-top: auto;
