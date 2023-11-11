@@ -25,11 +25,10 @@
     left: 0;
     width: 100dvw;
     height: 100dvh;
-    z-index: 9998;
     backdrop-filter: blur(2px) saturate(180%);
     background-color: color-mix(in srgb, black 85%, transparent);
     position: fixed;
-    z-index: 99999999999;
+    z-index: 99998;
   }
 
   .modal {
@@ -41,7 +40,7 @@
     top: 0;
     left: 0;
     position: fixed;
-    z-index: 99999999999;
+    z-index: 99998;
 
     & > div {
       position: relative;

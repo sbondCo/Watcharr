@@ -1,13 +1,7 @@
 <script lang="ts">
   import axios from "axios";
   import Modal from "./Modal.svelte";
-  import type {
-    DropDownItem,
-    ListBoxItem,
-    SonarrSettings,
-    SonarrTestResponse,
-    TMDBShowDetails
-  } from "@/types";
+  import type { ListBoxItem, SonarrSettings, SonarrTestResponse, TMDBShowDetails } from "@/types";
   import { notify } from "./util/notify";
   import DropDown from "./DropDown.svelte";
   import Setting from "./settings/Setting.svelte";
@@ -30,6 +24,7 @@
       displayValue: s.name
     };
   });
+  let addRequestRunning = false;
 
   async function getServers() {
     try {
@@ -57,31 +52,43 @@
   }
 
   async function request() {
-    if (!servarrs || !servarrs[selectedServarrIndex]) {
-      notify({ text: "Must select a server", type: "error" });
-      return;
+    let nid;
+    try {
+      if (!servarrs || !servarrs[selectedServarrIndex]) {
+        notify({ text: "Must select a server", type: "error" });
+        return;
+      }
+      if (!selectedServerCfg) {
+        notify({ text: "No selected server config found", type: "error" });
+        return;
+      }
+      addRequestRunning = true;
+      nid = notify({ text: "Requesting", type: "loading" });
+      const server = servarrs[selectedServarrIndex];
+      await axios.post("/arr/son/request", {
+        serverName: "Sonarr",
+        tvdbId: content.external_ids.tvdb_id,
+        seriesType: content.keywords.results?.find((k) => k.id == animeKeywordId)
+          ? "anime"
+          : "standard",
+        qualityProfile: server.qualityProfile,
+        rootFolder: selectedServerCfg.rootFolders[0].path,
+        languageProfile: server.languageProfile,
+        seasons: seasonItems.map((s) => {
+          return {
+            seasonNumber: s.id,
+            monitored: s.value
+          };
+        })
+      });
+      notify({ id: nid, text: "Request complete", type: "success" });
+      addRequestRunning = false;
+      onClose();
+    } catch (err) {
+      console.error("content request failed!", err);
+      addRequestRunning = false;
+      notify({ id: nid, text: "Request failed!", type: "error" });
     }
-    if (!selectedServerCfg) {
-      notify({ text: "No selected server config found", type: "error" });
-      return;
-    }
-    const server = servarrs[selectedServarrIndex];
-    axios.post("/arr/son/request", {
-      serverName: "Sonarr",
-      tvdbId: content.external_ids.tvdb_id,
-      seriesType: content.keywords.results?.find((k) => k.id == animeKeywordId)
-        ? "anime"
-        : "standard",
-      qualityProfile: server.qualityProfile,
-      rootFolder: selectedServerCfg.rootFolders[0].path,
-      languageProfile: server.languageProfile,
-      seasons: seasonItems.map((s) => {
-        return {
-          seasonNumber: s.id,
-          monitored: s.value
-        };
-      })
-    });
   }
 
   $: {
@@ -121,7 +128,7 @@
         </Setting>
       {/if}
 
-      <button on:click={request}>Request</button>
+      <button on:click={request} disabled={addRequestRunning}>Request</button>
     {:else}
       <Spinner />
     {/if}
