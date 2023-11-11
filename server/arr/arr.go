@@ -38,6 +38,7 @@ type SonarrRequest struct {
 	TVDBID          int             `json:"tvdbId"`
 	SeriesType      string          `json:"seriesType"`
 	Seasons         []SonarrSeasons `json:"seasons"`
+	AutomaticSearch bool            `json:"automaticSearch"`
 }
 
 type SonarrSeasons struct {
@@ -99,7 +100,7 @@ func (a *Arr) AddContent(r SonarrRequest) error {
 		"seasons":           r.Seasons,
 		"addOptions": map[string]interface{}{
 			"ignoreEpisodesWithFiles":  true,
-			"searchForMissingEpisodes": false,
+			"searchForMissingEpisodes": r.AutomaticSearch,
 		},
 		"rootFolderPath": r.RootFolder,
 	}

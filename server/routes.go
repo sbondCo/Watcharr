@@ -692,6 +692,7 @@ func (b *BaseRouter) addArrRoutes() {
 				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 				return
 			}
+			ur.AutomaticSearch = server.AutomaticSearch
 			sonarr := arr.New(arr.SONARR, &server.Host, &server.Key)
 			err = sonarr.AddContent(ur)
 			if err != nil {
