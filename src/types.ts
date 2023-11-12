@@ -585,7 +585,7 @@ export interface TMDBExternalIds {
   twitter_id: string;
 }
 
-export interface TMDBExternalIdsMovie extends TMDBExternalIds {}
+export interface TMDBExternalIdsMovie extends TMDBExternalIds { }
 
 export interface TMDBExternalIdsShow extends TMDBExternalIds {
   freebase_mid: string;
@@ -674,8 +674,9 @@ export interface ImportedList {
   year?: string;
   type?: ContentType;
   state?: string;
+  dateRated?: Date;
+  rating?: number;
 }
-
 export interface Filters {
   type: string[];
   status: string[];
@@ -758,4 +759,17 @@ export interface SonarrTestResponse {
   qualityProfiles: QualityProfile[];
   rootFolders: RootFolder[];
   languageProfiles: LanguageProfile[];
+}
+
+export interface TMDBRating {
+  "TMDb ID": number;
+  "IMDb ID": string;
+  Type: ContentType;
+  Name: string;
+  "Release Date": Date;
+  "Season Number": string | null;
+  "Episode Number": string | null;
+  Rating: number;
+  "Your Rating": number;
+  "Date Rated": Date;
 }

@@ -35,7 +35,7 @@
       }
       // Currently only support for importing one file at a time
       const file = files[0];
-      if (file.type !== "text/plain") {
+      if (file.type !== "text/plain" && file.type !== "text/csv") {
         notify({
           type: "error",
           text: "Currently only text files are supported"

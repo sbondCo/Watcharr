@@ -22,11 +22,26 @@
     type ImportResponse,
     type ContentSearchTv,
     type ContentSearchMovie,
-    type ImportedList
+    type ImportedList,
+    type ContentType
   } from "@/types";
   import axios from "axios";
   import { onDestroy } from "svelte";
   import { get } from "svelte/store";
+  import Papa from "papaparse";
+
+  type TMDBRating = {
+    "TMDb ID": number;
+    "IMDb ID": string;
+    Type: ContentType;
+    Name: string;
+    "Release Date": string;
+    "Season Number": string | null;
+    "Episode Number": string | null;
+    Rating: number;
+    "Your Rating": number;
+    "Date Rated": string;
+  };
 
   const wList = get(watchedList);
 
@@ -73,9 +88,46 @@
           rList.push(l);
         }
       }
+    } else if (list?.file.type === "text/csv") {
+      // Using the file name can be unreliable, I think matching the headers work pretty well
+      if (
+        list.data.split("\n")[0] ===
+        "TMDb ID,IMDb ID,Type,Name,Release Date,Season Number,Episode Number,Rating,Your Rating,Date Rated"
+      ) {
+        console.log("TMDB import detected.");
+      }
+      parseCSV(list.data)
+        .then((TMDBRatings) => {
+          TMDBRatings.forEach((r) => {
+            const l: ImportedList = {
+              name: r.Name,
+              tmdbId: r["TMDb ID"],
+              type: r.Type
+            };
+            rList.push(l);
+          });
+        })
+        .catch((error) => {
+          console.error("Error parsing CSV:", error);
+        });
     }
     // TODO: remove duplicate names in list
     return list;
+  }
+
+  function parseCSV(csvContent: string): Promise<TMDBRating[]> {
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvContent, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          // Assuming that results.data is of type MovieRating[] here.
+          // If your CSV has different headers, you would need to change the MovieRating type accordingly.
+          resolve(results.data as TMDBRating[]);
+        },
+        error: (error: any) => reject(error)
+      });
+    });
   }
 
   function addRow(ev: FocusEvent & { currentTarget: EventTarget & HTMLInputElement }) {
@@ -211,13 +263,13 @@
         <table class={isImporting ? "is-importing" : ""}>
           <tr>
             {#if isImporting}
-              <th class="loading-col"></th>
+              <th class="loading-col" />
             {/if}
             <th>Name</th>
             <th>Year</th>
             <th>Type</th>
             {#if !isImporting}
-              <th></th>
+              <th />
             {/if}
           </tr>
           {#each rList as l}
@@ -278,8 +330,8 @@
               <td class="year">
                 <input class="plain" id="addYear" placeholder="YYYY" type="number" />
               </td>
-              <td class="type"></td>
-              <td></td>
+              <td class="type" />
+              <td />
             </tr>
           {/if}
         </table>
