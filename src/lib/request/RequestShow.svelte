@@ -65,6 +65,17 @@
       addRequestRunning = true;
       nid = notify({ text: "Requesting", type: "loading" });
       const server = servarrs[selectedServarrIndex];
+      const rootFolder = selectedServerCfg.rootFolders?.find((f) => f.id === server.rootFolder);
+      if (!rootFolder) {
+        console.error(
+          "show request.. no root folder found with id:",
+          server.rootFolder,
+          "rf:",
+          rootFolder
+        );
+        notify({ id: nid, text: "No Root Folder Found", type: "error" });
+        return;
+      }
       await axios.post("/arr/son/request", {
         serverName: server.name,
         title: content.name,
@@ -74,7 +85,7 @@
           ? "anime"
           : "standard",
         qualityProfile: server.qualityProfile,
-        rootFolder: selectedServerCfg.rootFolders[0].path,
+        rootFolder: rootFolder.path,
         languageProfile: server.languageProfile,
         seasons: seasonItems.map((s) => {
           return {

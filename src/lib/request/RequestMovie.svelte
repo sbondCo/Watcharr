@@ -55,13 +55,24 @@
       addRequestRunning = true;
       nid = notify({ text: "Requesting", type: "loading" });
       const server = servarrs[selectedServarrIndex];
+      const rootFolder = selectedServerCfg.rootFolders?.find((f) => f.id === server.rootFolder);
+      if (!rootFolder) {
+        console.error(
+          "movie request.. no root folder found with id:",
+          server.rootFolder,
+          "rf:",
+          rootFolder
+        );
+        notify({ id: nid, text: "No Root Folder Found", type: "error" });
+        return;
+      }
       await axios.post("/arr/rad/request", {
         serverName: server.name,
         title: content.title,
         year: new Date(content.release_date)?.getFullYear(),
         tmdbId: content.id,
         qualityProfile: server.qualityProfile,
-        rootFolder: selectedServerCfg.rootFolders[0].path
+        rootFolder: rootFolder.path
       });
       notify({ id: nid, text: "Request complete", type: "success" });
       addRequestRunning = false;
