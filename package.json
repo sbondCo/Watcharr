@@ -32,6 +32,9 @@
   },
   "type": "module",
   "dependencies": {
-    "axios": "^1.6.0"
+    "@types/papaparse": "^5.3.11",
+    "axios": "^1.6.0",
+    "papaparse": "^5.4.1",
+    "sass": "^1.69.5"
   }
 }
