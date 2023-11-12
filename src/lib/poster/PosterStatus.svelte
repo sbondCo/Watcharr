@@ -76,8 +76,8 @@
 
     &:hover .no-icon,
     &:focus-visible .no-icon {
-      color: white;
-      fill: white;
+      color: $bg-color;
+      fill: $bg-color;
     }
 
     div {

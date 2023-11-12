@@ -8,6 +8,7 @@
   --backdrop-mix-blend-mode: multiply;
   --rating-color: black;
   --placeholder-color: #8e8e8e;
+  --poster-rating-color: gold;
 }
 
 :root.theme-dark {
@@ -20,6 +21,7 @@
   --backdrop-mix-blend-mode: difference;
   --rating-color: gold;
   --placeholder-color: #8e8e8e;
+  --poster-rating-color: black;
 }
 
 $bg-color: var(--bg-color);
@@ -32,6 +34,7 @@ $backdrop-mix-blend-mode: var(--backdrop-mix-blend-mode);
 $backdrop-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0));
 $nav-color: var(--nav-color);
 $nav-height: 71px; // How tall the nav is naturally, usefull in some places.
+$poster-rating-color: var(--poster-rating-color);
 $error: #f3555a;
 $success: #28a745;
 
