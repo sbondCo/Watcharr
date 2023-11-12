@@ -686,6 +686,7 @@ export interface ServerConfig {
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;
   SONARR: SonarrSettings[];
+  RADARR: RadarrSettings[];
   DEBUG: boolean;
 }
 
@@ -696,6 +697,15 @@ export interface SonarrSettings {
   qualityProfile?: number;
   rootFolder?: number;
   languageProfile?: number;
+  automaticSearch?: boolean;
+}
+
+export interface RadarrSettings {
+  name: string;
+  host?: string;
+  key?: string;
+  qualityProfile?: number;
+  rootFolder?: number;
   automaticSearch?: boolean;
 }
 
@@ -758,4 +768,9 @@ export interface SonarrTestResponse {
   qualityProfiles: QualityProfile[];
   rootFolders: RootFolder[];
   languageProfiles: LanguageProfile[];
+}
+
+export interface RadarrTestResponse {
+  qualityProfiles: QualityProfile[];
+  rootFolders: RootFolder[];
 }
