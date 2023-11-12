@@ -66,7 +66,9 @@
       nid = notify({ text: "Requesting", type: "loading" });
       const server = servarrs[selectedServarrIndex];
       await axios.post("/arr/son/request", {
-        serverName: "Sonarr",
+        serverName: server.name,
+        title: content.name,
+        year: new Date(content.first_air_date)?.getFullYear(),
         tvdbId: content.external_ids.tvdb_id,
         seriesType: content.keywords.results?.find((k) => k.id == animeKeywordId)
           ? "anime"

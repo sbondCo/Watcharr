@@ -56,7 +56,9 @@
       nid = notify({ text: "Requesting", type: "loading" });
       const server = servarrs[selectedServarrIndex];
       await axios.post("/arr/rad/request", {
-        serverName: "Radarr",
+        serverName: server.name,
+        title: content.title,
+        year: new Date(content.release_date)?.getFullYear(),
         tmdbId: content.id,
         qualityProfile: server.qualityProfile,
         rootFolder: selectedServerCfg.rootFolders[0].path

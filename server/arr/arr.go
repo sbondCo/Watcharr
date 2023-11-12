@@ -102,7 +102,8 @@ func (a *Arr) GetLangaugeProfiles() ([]LanguageProfile, error) {
 // TODO do title! and year?
 func (a *Arr) BuildAddShowBody(r SonarrRequest) map[string]interface{} {
 	req := map[string]interface{}{
-		"title":             "Marvel Future Avengers",
+		"title":             r.Title,
+		"year":              r.Year,
 		"qualityProfileId":  r.QualityProfile,
 		"languageProfileId": r.LanguageProfile,
 		"seasonFolder":      true,
