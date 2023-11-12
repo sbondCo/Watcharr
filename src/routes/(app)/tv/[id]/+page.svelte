@@ -25,7 +25,7 @@
   } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
-  import RequestContent from "@/lib/RequestContent.svelte";
+  import RequestShow from "@/lib/request/RequestShow.svelte";
 
   export let data;
 
@@ -159,7 +159,7 @@
     </div>
 
     {#if requestModalShown}
-      <RequestContent content={show} onClose={() => (requestModalShown = false)} />
+      <RequestShow content={show} onClose={() => (requestModalShown = false)} />
     {/if}
 
     <div class="page">

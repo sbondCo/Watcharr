@@ -1,35 +1,25 @@
 <script lang="ts">
   import axios from "axios";
-  import Modal from "./Modal.svelte";
-  import type { ListBoxItem, SonarrSettings, SonarrTestResponse, TMDBShowDetails } from "@/types";
-  import { notify } from "./util/notify";
-  import DropDown from "./DropDown.svelte";
-  import Setting from "./settings/Setting.svelte";
-  import Spinner from "./Spinner.svelte";
-  import ListBox from "./ListBox.svelte";
+  import Modal from "../Modal.svelte";
+  import type { RadarrSettings, RadarrTestResponse, TMDBMovieDetails } from "@/types";
+  import { notify } from "../util/notify";
+  import DropDown from "../DropDown.svelte";
+  import Setting from "../settings/Setting.svelte";
+  import Spinner from "../Spinner.svelte";
 
-  const animeKeywordId = 210024;
-
-  export let content: TMDBShowDetails;
+  export let content: TMDBMovieDetails;
   export let onClose: () => void;
 
-  let servarrs: SonarrSettings[];
+  let servarrs: RadarrSettings[];
   let selectedServarrIndex: number;
   let inputsDisabled = true;
-  let selectedServerCfg: SonarrTestResponse | undefined;
-  let seasonItems: ListBoxItem[] = content.seasons.map((s) => {
-    return {
-      id: s.season_number,
-      value: false,
-      displayValue: s.name
-    };
-  });
+  let selectedServerCfg: RadarrTestResponse | undefined;
   let addRequestRunning = false;
 
   async function getServers() {
     try {
       inputsDisabled = true;
-      const r = await axios.get("/arr/son");
+      const r = await axios.get("/arr/rad");
       if (r.data?.length > 0) {
         servarrs = r.data;
         selectedServarrIndex = 0;
@@ -45,7 +35,7 @@
   async function getConfig(name: string) {
     try {
       inputsDisabled = true;
-      const r = await axios.get<SonarrTestResponse>(`/arr/son/config/${name}`);
+      const r = await axios.get<RadarrTestResponse>(`/arr/rad/config/${name}`);
       selectedServerCfg = r.data;
       inputsDisabled = false;
     } catch (err) {}
@@ -65,21 +55,11 @@
       addRequestRunning = true;
       nid = notify({ text: "Requesting", type: "loading" });
       const server = servarrs[selectedServarrIndex];
-      await axios.post("/arr/son/request", {
-        serverName: "Sonarr",
-        tvdbId: content.external_ids.tvdb_id,
-        seriesType: content.keywords.results?.find((k) => k.id == animeKeywordId)
-          ? "anime"
-          : "standard",
+      await axios.post("/arr/rad/request", {
+        serverName: "Radarr",
+        tmdbId: content.id,
         qualityProfile: server.qualityProfile,
-        rootFolder: selectedServerCfg.rootFolders[0].path,
-        languageProfile: server.languageProfile,
-        seasons: seasonItems.map((s) => {
-          return {
-            seasonNumber: s.id,
-            monitored: s.value
-          };
-        })
+        rootFolder: selectedServerCfg.rootFolders[0].path
       });
       notify({ id: nid, text: "Request complete", type: "success" });
       addRequestRunning = false;
@@ -105,14 +85,10 @@
   getServers();
 </script>
 
-<Modal title="Request" desc={content.name} {onClose}>
+<Modal title="Request" desc={content.title} {onClose}>
   <div class="req-ctr">
     {#if servarrs}
       {@const server = servarrs[selectedServarrIndex]}
-
-      <div class="seasons-list">
-        <ListBox bind:options={seasonItems} allCheckBox="All Seasons" />
-      </div>
 
       {#if servarrs?.length > 1}
         <Setting title="Select the server to use">
@@ -141,11 +117,6 @@
     flex-flow: column;
     gap: 10px;
     height: 100%;
-
-    .seasons-list {
-      max-height: 500px;
-      overflow: auto;
-    }
 
     button {
       margin-top: auto;

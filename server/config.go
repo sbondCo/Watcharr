@@ -26,6 +26,7 @@ type ServerConfig struct {
 	TMDB_KEY string `json:",omitempty"`
 
 	SONARR []SonarrSettings `json:",omitempty"`
+	RADARR []RadarrSettings `json:",omitempty"`
 
 	// Enable/disable debug logging. Useful for when trying
 	// to figure out exactly what the server is doing at a point
@@ -47,6 +48,7 @@ func (c *ServerConfig) GetSafe() ServerConfig {
 		TMDB_KEY:       c.TMDB_KEY,
 		DEBUG:          c.DEBUG,
 		SONARR:         c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
+		RADARR:         c.RADARR, // Dont act safe, this contains radarr api key, needed for config
 	}
 }
 

@@ -208,7 +208,7 @@
               // "temporary" solution to showing added servers
               // and reloading data to revert modified but not saved changes.
               getServerConfig();
-              sonarrModalOpen = false;
+              radarrModalOpen = false;
             }}
           />
         {/if}
