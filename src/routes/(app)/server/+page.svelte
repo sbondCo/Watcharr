@@ -3,10 +3,17 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
-  import type { ServerConfig } from "@/types";
+  import type { ServerConfig, SonarrSettings } from "@/types";
   import axios from "axios";
+  import SonarrModal from "./modals/SonarrModal.svelte";
+  import SettingsList from "@/lib/settings/SettingsList.svelte";
+  import Setting from "@/lib/settings/Setting.svelte";
+  import SettingButton from "@/lib/settings/SettingButton.svelte";
 
   let serverConfig: ServerConfig;
+  let sonarrModalOpen = false;
+  let sonarrServerEditing: SonarrSettings;
+  let sonarrModalEditing = false;
   // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
@@ -47,17 +54,17 @@
 
 <div class="content">
   <div class="inner">
-    <div class="settings">
+    <SettingsList>
       <h2>Server Settings</h2>
       {#await getServerConfig()}
         <Spinner />
       {:then}
-        <div>
-          <h4 class="norm">Jellyfin Host</h4>
-          <h5 class="norm">
-            Point to your Jellyfin server to enable related features. Don't change server after
-            already using another.
-          </h5>
+        <h3>General</h3>
+        <Setting
+          title="Jellyfin Host"
+          desc="Point to your Jellyfin server to enable related features. Don't change server after
+        already using another."
+        >
           <input
             type="text"
             placeholder="https://jellyfin.example.com"
@@ -70,10 +77,8 @@
             }}
             disabled={jfDisabled}
           />
-        </div>
-        <div>
-          <h4 class="norm">TMDB Key</h4>
-          <h5 class="norm">Provide your own TMDB API Key</h5>
+        </Setting>
+        <Setting title="TMDB Key" desc="Provide your own TMDB API Key">
           <input
             type="password"
             placeholder="TMDB Key"
@@ -86,12 +91,8 @@
             }}
             disabled={tmdbkDisabled}
           />
-        </div>
-        <div class="row">
-          <div>
-            <h4 class="norm">Signup</h4>
-            <h5 class="norm">Allow signing up with web ui</h5>
-          </div>
+        </Setting>
+        <Setting title="Signup" desc="Allow signing up with web ui" row>
           <Checkbox
             name="SIGNUP_ENABLED"
             disabled={signupDisabled}
@@ -103,12 +104,8 @@
               });
             }}
           />
-        </div>
-        <div class="row">
-          <div>
-            <h4 class="norm">Debug</h4>
-            <h5 class="norm">Enable debug logging</h5>
-          </div>
+        </Setting>
+        <Setting title="Debug" desc="Enable debug logging" row>
           <Checkbox
             name="DEBUG"
             disabled={debugDisabled}
@@ -120,11 +117,53 @@
               });
             }}
           />
-        </div>
+        </Setting>
+        <h3>Services</h3>
+        {#if serverConfig.SONARR?.length > 0}
+          {#each serverConfig.SONARR as server}
+            <SettingButton
+              title={server.name}
+              desc={`Configure server at ${server.host}`}
+              onClick={() => {
+                sonarrServerEditing = server;
+                sonarrModalEditing = true;
+                sonarrModalOpen = true;
+              }}
+            />
+          {/each}
+        {/if}
+        <SettingButton
+          title="Sonarr"
+          desc="Add a Sonarr server."
+          icon="add"
+          onClick={() => {
+            let name = "Sonarr";
+            if (serverConfig.SONARR?.length > 0) {
+              // if this still exists ya on yur own
+              name = `Sonarr${serverConfig.SONARR.length + 1}`;
+            }
+            sonarrServerEditing = { name };
+            sonarrModalEditing = false;
+            sonarrModalOpen = true;
+          }}
+        />
+
+        {#if sonarrModalOpen}
+          <SonarrModal
+            servarr={sonarrServerEditing}
+            isEditing={sonarrModalEditing}
+            onClose={() => {
+              // "temporary" solution to showing added servers
+              // and reloading data to revert modified but not saved changes.
+              getServerConfig();
+              sonarrModalOpen = false;
+            }}
+          />
+        {/if}
       {:catch err}
         <PageError error={err} pretty="Failed to load server config" />
       {/await}
-    </div>
+    </SettingsList>
   </div>
 </div>
 
@@ -133,7 +172,7 @@
     display: flex;
     width: 100%;
     justify-content: center;
-    padding: 0 30px 0 30px;
+    padding: 0 30px 30px 30px;
 
     .inner {
       min-width: 400px;
@@ -153,47 +192,6 @@
       @media screen and (max-width: 440px) {
         width: 100%;
         min-width: unset;
-      }
-    }
-  }
-
-  .settings {
-    display: flex;
-    flex-flow: column;
-    gap: 20px;
-    width: 100%;
-
-    h3 {
-      font-variant: small-caps;
-    }
-
-    h5 {
-      font-weight: normal;
-    }
-
-    & > div {
-      margin: 0 15px;
-    }
-
-    div {
-      input[type="text"],
-      input[type="password"] {
-        margin-top: 1px;
-      }
-
-      &.row {
-        display: flex;
-        flex-flow: row;
-        gap: 10px;
-        align-items: center;
-
-        & > div:first-of-type {
-          margin-right: auto;
-        }
-
-        &.btns button {
-          width: min-content;
-        }
       }
     }
   }

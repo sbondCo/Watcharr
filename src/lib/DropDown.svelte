@@ -1,38 +1,50 @@
 <script lang="ts">
+  import type { DropDownItem } from "@/types";
   import Icon from "./Icon.svelte";
 
-  export let options: string[];
-  export let active: string | undefined;
+  export let options: string[] | DropDownItem[];
+  export let active: string | number | undefined = undefined;
   export let placeholder: string;
   export let blendIn: boolean = false;
   export let disabled = false;
+  export let onChange: () => void = () => {};
 
-  let availableOptions = options.filter((o) => o !== active);
+  let activeValue: string;
   let open = false;
+
+  $: {
+    if (typeof active === "string") {
+      activeValue = active;
+    } else {
+      const v = options.find((o) => (typeof o !== "string" ? o.id === active : false));
+      if (v && typeof v !== "string") activeValue = v.value;
+    }
+  }
 </script>
 
 <div
   class={[
     open ? "is-open" : "",
-    !active ? "placeholder-shown" : "",
+    typeof active === "undefined" ? "placeholder-shown" : "",
     blendIn ? "blend-in" : ""
   ].join(" ")}
 >
   <button on:click={() => (open = !open)} {disabled}>
-    {active ? active : placeholder}
+    {activeValue ? activeValue : placeholder}
     <Icon i="chevron" facing={open ? "up" : "down"} />
   </button>
   <ul>
-    {#each availableOptions as o}
+    {#each options.filter((o) => (typeof o === "string" ? o !== active : o.id !== active)) as o}
       <li>
         <button
           class="plain"
           on:click={() => {
-            active = o;
+            active = typeof o == "string" ? o : o.id;
             open = false;
+            onChange();
           }}
         >
-          {o}
+          {typeof o == "string" ? o : o.value}
         </button>
       </li>
     {/each}

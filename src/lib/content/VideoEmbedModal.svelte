@@ -49,7 +49,7 @@
     width: 100dvw;
     height: 100dvh;
     background-color: rgba($color: #000000, $alpha: 0.5);
-    z-index: 9999999;
+    z-index: 99998;
 
     .wrapper {
       width: 100%;

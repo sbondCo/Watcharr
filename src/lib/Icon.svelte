@@ -229,6 +229,10 @@
     &.down {
       transform: rotate(270deg);
     }
+
+    &.right {
+      transform: rotate(180deg);
+    }
   }
 
   #reel {

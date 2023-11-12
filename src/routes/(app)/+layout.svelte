@@ -344,7 +344,7 @@
     position: sticky;
     top: 0;
     gap: 20px;
-    z-index: 999999999;
+    z-index: 99990;
     backdrop-filter: blur(2.5px) saturate(120%);
     background-color: $nav-color;
     transition: top 200ms ease-in-out;

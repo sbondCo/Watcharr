@@ -9,6 +9,7 @@ import (
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-gonic/gin"
+	"github.com/sbondCo/Watcharr/arr"
 	"gorm.io/gorm"
 )
 
@@ -120,7 +121,7 @@ func (b *BaseRouter) addContentRoutes() {
 			c.Status(400)
 			return
 		}
-		content, err := tvDetails(c.Param("id"), c.MustGet("userCountry").(string), map[string]string{"append_to_response": "videos,watch/providers,similar"})
+		content, err := tvDetails(c.Param("id"), c.MustGet("userCountry").(string), map[string]string{"append_to_response": "videos,watch/providers,similar,external_ids,keywords"})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -585,12 +586,7 @@ func (b *BaseRouter) addServerRoutes() {
 	// Get server config (minus very sensitive fields, like JWT_SECRET)
 	server.GET("/config", func(c *gin.Context) {
 		// Return new ServerConfig with only the fields we want to show in settings ui
-		c.JSON(http.StatusOK, ServerConfig{
-			SIGNUP_ENABLED: Config.SIGNUP_ENABLED,
-			JELLYFIN_HOST:  Config.JELLYFIN_HOST,
-			TMDB_KEY:       Config.TMDB_KEY,
-			DEBUG:          Config.DEBUG,
-		})
+		c.JSON(http.StatusOK, Config.GetSafe())
 	})
 
 	// Update config
@@ -601,6 +597,106 @@ func (b *BaseRouter) addServerRoutes() {
 			err := updateConfig(ur.Key, ur.Value)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
+
+func (b *BaseRouter) addArrRoutes() {
+	s := b.rg.Group("/arr/son").Use(AuthRequired(b.db), AdminRequired())
+	// r := b.rg.Group("/arr/rad").Use(AuthRequired(b.db), AdminRequired())
+
+	s.POST("/test", func(c *gin.Context) {
+		var ur ArrTestParams
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			resp, err := testSonarr(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, resp)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	s.GET("/config/:name", func(c *gin.Context) {
+		server, err := getSonarr(c.Param("name"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		resp, err := testSonarr(ArrTestParams{Host: server.Host, Key: server.Key})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+
+	s.POST("/add", func(c *gin.Context) {
+		var ur SonarrSettings
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			err := addSonarr(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	s.POST("/edit", func(c *gin.Context) {
+		var ur SonarrSettings
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			err := editSonarr(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	s.POST("/rm/:name", func(c *gin.Context) {
+		err := rmSonarr(c.Param("name"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
+
+	s.GET("", func(c *gin.Context) {
+		response := getSonarrsSafe()
+		c.JSON(http.StatusOK, response)
+	})
+
+	s.POST("/request", func(c *gin.Context) {
+		var ur arr.SonarrRequest
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			server, err := getSonarr(ur.ServerName)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			ur.AutomaticSearch = server.AutomaticSearch
+			sonarr := arr.New(arr.SONARR, &server.Host, &server.Key)
+			err = sonarr.AddContent(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 				return
 			}
 			c.Status(http.StatusOK)

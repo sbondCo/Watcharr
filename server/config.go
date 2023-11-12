@@ -25,11 +25,29 @@ type ServerConfig struct {
 	// If unprovided, the default Watcharr API key will be used.
 	TMDB_KEY string `json:",omitempty"`
 
+	SONARR []SonarrSettings `json:",omitempty"`
+
 	// Enable/disable debug logging. Useful for when trying
 	// to figure out exactly what the server is doing at a point
 	// of failure.
 	// Set to `true` to enable.
 	DEBUG bool `json:",omitempty"`
+}
+
+// ServerConfig, but with JWT_SECRET removed from json.
+// Used for returning to user from get config api request.
+//
+// Technically only admins will have access to that api route,
+// but I feel more comfortable removing it anyways (+ this is
+// not editable on frontend, so not needed).
+func (c *ServerConfig) GetSafe() ServerConfig {
+	return ServerConfig{
+		SIGNUP_ENABLED: c.SIGNUP_ENABLED,
+		JELLYFIN_HOST:  c.JELLYFIN_HOST,
+		TMDB_KEY:       c.TMDB_KEY,
+		DEBUG:          c.DEBUG,
+		SONARR:         c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
+	}
 }
 
 var (

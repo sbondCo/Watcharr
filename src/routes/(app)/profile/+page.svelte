@@ -3,6 +3,7 @@
   import Checkbox from "@/lib/Checkbox.svelte";
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
+  import Setting from "@/lib/settings/Setting.svelte";
   import { updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
   import { appTheme, userInfo, userSettings } from "@/store";
@@ -75,11 +76,7 @@
         </div>
       </div>
 
-      <div class="row">
-        <div>
-          <h4 class="norm">Private</h4>
-          <h5 class="norm">Hide your profile from others?</h5>
-        </div>
+      <Setting title="Private" desc="Hide your profile from others?" row>
         <Checkbox
           name="private"
           disabled={privateDisabled}
@@ -91,13 +88,9 @@
             });
           }}
         />
-      </div>
+      </Setting>
 
-      <div class="row">
-        <div>
-          <h4 class="norm">Hide Spoilers</h4>
-          <h5 class="norm">Do you want to hide episode info?</h5>
-        </div>
+      <Setting title="Hide Spoilers" desc="Do you want to hide episode info?" row>
         <Checkbox
           name="hideSpoilers"
           disabled={hideSpoilersDisabled}
@@ -109,7 +102,7 @@
             });
           }}
         />
-      </div>
+      </Setting>
 
       <div class="row btns">
         <button on:click={() => goto("/import")}>Import</button>
@@ -190,10 +183,6 @@
       font-variant: small-caps;
     }
 
-    h5 {
-      font-weight: normal;
-    }
-
     & > div {
       margin: 0 15px;
     }
@@ -204,10 +193,6 @@
         flex-flow: row;
         gap: 10px;
         align-items: center;
-
-        & > div:first-of-type {
-          margin-right: auto;
-        }
 
         &.btns button {
           width: min-content;

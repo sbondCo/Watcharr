@@ -25,11 +25,13 @@
   } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
+  import RequestContent from "@/lib/RequestContent.svelte";
 
   export let data;
 
   let trailer: string | undefined;
   let trailerShown = false;
+  let requestModalShown = false;
   let jellyfinUrl: string | undefined;
 
   $: wListItem = $watchedList.find((w) => w.content.tmdbId === data.tvId);
@@ -148,12 +150,17 @@
                 <Icon i="jellyfin" wh={14} />Play On Jellyfin
               </a>
             {/if}
+            <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
           </div>
 
           <ProvidersList providers={show["watch/providers"]} />
         </div>
       </div>
     </div>
+
+    {#if requestModalShown}
+      <RequestContent content={show} onClose={() => (requestModalShown = false)} />
+    {/if}
 
     <div class="page">
       <div class="review">

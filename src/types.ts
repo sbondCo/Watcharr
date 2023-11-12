@@ -195,6 +195,7 @@ export interface TMDBMovieDetails extends TMDBContentDetails {
   videos: TMDBContentVideos;
   "watch/providers": TMDBContentWatchProviders;
   similar: TMDBMovieSimilar;
+  external_ids: TMDBExternalIdsMovie;
 }
 
 export interface TMDBShowDetails extends TMDBContentDetails {
@@ -239,6 +240,8 @@ export interface TMDBShowDetails extends TMDBContentDetails {
   videos: TMDBContentVideos;
   "watch/providers": TMDBContentWatchProviders;
   similar: TMDBShowSimilar;
+  external_ids: TMDBExternalIdsShow;
+  keywords: TMDBKeywords;
 }
 
 export interface TMDBWatchProvider {
@@ -573,6 +576,31 @@ export interface TMDBUpcomingShows {
   total_results: number;
 }
 
+export interface TMDBExternalIds {
+  id: number;
+  imdb_id: string;
+  wikidata_id: string;
+  facebook_id: string;
+  instagram_id: string;
+  twitter_id: string;
+}
+
+export interface TMDBExternalIdsMovie extends TMDBExternalIds {}
+
+export interface TMDBExternalIdsShow extends TMDBExternalIds {
+  freebase_mid: string;
+  freebase_id: string;
+  tvdb_id: number;
+  tvrage_id: number;
+}
+
+export interface TMDBKeywords {
+  results: {
+    name: string;
+    id: number;
+  }[];
+}
+
 export interface ContentSearch {
   page: number;
   results: (ContentSearchMovie | ContentSearchTv | ContentSearchPerson)[];
@@ -657,5 +685,77 @@ export interface ServerConfig {
   JELLYFIN_HOST: string;
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;
+  SONARR: SonarrSettings[];
   DEBUG: boolean;
+}
+
+export interface SonarrSettings {
+  name: string;
+  host?: string;
+  key?: string;
+  qualityProfile?: number;
+  rootFolder?: number;
+  languageProfile?: number;
+  automaticSearch?: boolean;
+}
+
+export interface DropDownItem {
+  id: number;
+  value: string;
+}
+
+export interface ListBoxItem {
+  id: number;
+  value: boolean;
+  displayValue: string;
+}
+
+export interface QualityProfile {
+  name: string;
+  upgradeAllowed: boolean;
+  cutoff: number;
+  items: {
+    quality?: {
+      id: number;
+      name: string;
+      source: string;
+      resolution: number;
+    };
+    items: any[];
+    allowed: boolean;
+    name?: string;
+    id?: number;
+  }[];
+  id: number;
+}
+
+export interface RootFolder {
+  path: string;
+  accessible: boolean;
+  freeSpace: number;
+  unmappedFolders: any[];
+  id: number;
+}
+
+export interface LanguageProfile {
+  name: string;
+  upgradeAllowed: boolean;
+  cutoff: {
+    id: number;
+    name: string;
+  };
+  languages: {
+    language: {
+      id: number;
+      name: string;
+    };
+    allowed: boolean;
+  }[];
+  id: number;
+}
+
+export interface SonarrTestResponse {
+  qualityProfiles: QualityProfile[];
+  rootFolders: RootFolder[];
+  languageProfiles: LanguageProfile[];
 }
