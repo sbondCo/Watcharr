@@ -30,12 +30,13 @@
     display: flex;
     flex-flow: row;
     align-items: center;
-    margin: 0 15px;
+    width: 100%;
     text-align: left;
     border: 2px dashed $text-color;
     border-radius: 10px;
     padding: 15px;
     transition: all 200ms ease;
+    margin-top: 10px;
 
     & > div {
       margin-right: auto;

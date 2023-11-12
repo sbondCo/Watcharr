@@ -3,17 +3,21 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
-  import type { ServerConfig, SonarrSettings } from "@/types";
+  import type { RadarrSettings, ServerConfig, SonarrSettings } from "@/types";
   import axios from "axios";
   import SonarrModal from "./modals/SonarrModal.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
   import SettingButton from "@/lib/settings/SettingButton.svelte";
+  import RadarrModal from "./modals/RadarrModal.svelte";
 
   let serverConfig: ServerConfig;
   let sonarrModalOpen = false;
   let sonarrServerEditing: SonarrSettings;
   let sonarrModalEditing = false;
+  let radarrModalOpen = false;
+  let radarrServerEditing: RadarrSettings;
+  let radarrModalEditing = false;
   // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
@@ -119,34 +123,69 @@
           />
         </Setting>
         <h3>Services</h3>
-        {#if serverConfig.SONARR?.length > 0}
-          {#each serverConfig.SONARR as server}
-            <SettingButton
-              title={server.name}
-              desc={`Configure server at ${server.host}`}
-              onClick={() => {
-                sonarrServerEditing = server;
-                sonarrModalEditing = true;
-                sonarrModalOpen = true;
-              }}
-            />
-          {/each}
-        {/if}
-        <SettingButton
-          title="Sonarr"
-          desc="Add a Sonarr server."
-          icon="add"
-          onClick={() => {
-            let name = "Sonarr";
-            if (serverConfig.SONARR?.length > 0) {
-              // if this still exists ya on yur own
-              name = `Sonarr${serverConfig.SONARR.length + 1}`;
-            }
-            sonarrServerEditing = { name };
-            sonarrModalEditing = false;
-            sonarrModalOpen = true;
-          }}
-        />
+
+        <!-- <h4>Sonarr</h4> -->
+        <Setting title="Sonarr">
+          {#if serverConfig.SONARR?.length > 0}
+            {#each serverConfig.SONARR as server}
+              <SettingButton
+                title={server.name}
+                desc={`Configure server at ${server.host}`}
+                onClick={() => {
+                  sonarrServerEditing = server;
+                  sonarrModalEditing = true;
+                  sonarrModalOpen = true;
+                }}
+              />
+            {/each}
+          {/if}
+          <SettingButton
+            title="Sonarr"
+            desc="Add a Sonarr server."
+            icon="add"
+            onClick={() => {
+              let name = "Sonarr";
+              if (serverConfig.SONARR?.length > 0) {
+                // if this still exists ya on yur own
+                name = `Sonarr${serverConfig.SONARR.length + 1}`;
+              }
+              sonarrServerEditing = { name };
+              sonarrModalEditing = false;
+              sonarrModalOpen = true;
+            }}
+          />
+        </Setting>
+
+        <Setting title="Radarr">
+          {#if serverConfig.RADARR?.length > 0}
+            {#each serverConfig.RADARR as server}
+              <SettingButton
+                title={server.name}
+                desc={`Configure server at ${server.host}`}
+                onClick={() => {
+                  radarrServerEditing = server;
+                  radarrModalEditing = true;
+                  radarrModalOpen = true;
+                }}
+              />
+            {/each}
+          {/if}
+          <SettingButton
+            title="Radarr"
+            desc="Add a Radarr server."
+            icon="add"
+            onClick={() => {
+              let name = "Radarr";
+              if (serverConfig.RADARR?.length > 0) {
+                // if this still exists ya on yur own
+                name = `Radarr${serverConfig.RADARR.length + 1}`;
+              }
+              radarrServerEditing = { name };
+              radarrModalEditing = false;
+              radarrModalOpen = true;
+            }}
+          />
+        </Setting>
 
         {#if sonarrModalOpen}
           <SonarrModal
@@ -157,6 +196,19 @@
               // and reloading data to revert modified but not saved changes.
               getServerConfig();
               sonarrModalOpen = false;
+            }}
+          />
+        {/if}
+
+        {#if radarrModalOpen}
+          <RadarrModal
+            servarr={radarrServerEditing}
+            isEditing={radarrModalEditing}
+            onClose={() => {
+              // "temporary" solution to showing added servers
+              // and reloading data to revert modified but not saved changes.
+              getServerConfig();
+              radarrModalOpen = false;
             }}
           />
         {/if}

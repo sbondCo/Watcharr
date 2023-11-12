@@ -1,12 +1,12 @@
 <script lang="ts">
   import axios from "axios";
-  import Modal from "./Modal.svelte";
+  import Modal from "../Modal.svelte";
   import type { ListBoxItem, SonarrSettings, SonarrTestResponse, TMDBShowDetails } from "@/types";
-  import { notify } from "./util/notify";
-  import DropDown from "./DropDown.svelte";
-  import Setting from "./settings/Setting.svelte";
-  import Spinner from "./Spinner.svelte";
-  import ListBox from "./ListBox.svelte";
+  import { notify } from "../util/notify";
+  import DropDown from "../DropDown.svelte";
+  import Setting from "../settings/Setting.svelte";
+  import Spinner from "../Spinner.svelte";
+  import ListBox from "../ListBox.svelte";
 
   const animeKeywordId = 210024;
 
@@ -65,14 +65,27 @@
       addRequestRunning = true;
       nid = notify({ text: "Requesting", type: "loading" });
       const server = servarrs[selectedServarrIndex];
+      const rootFolder = selectedServerCfg.rootFolders?.find((f) => f.id === server.rootFolder);
+      if (!rootFolder) {
+        console.error(
+          "show request.. no root folder found with id:",
+          server.rootFolder,
+          "rf:",
+          rootFolder
+        );
+        notify({ id: nid, text: "No Root Folder Found", type: "error" });
+        return;
+      }
       await axios.post("/arr/son/request", {
-        serverName: "Sonarr",
+        serverName: server.name,
+        title: content.name,
+        year: new Date(content.first_air_date)?.getFullYear(),
         tvdbId: content.external_ids.tvdb_id,
         seriesType: content.keywords.results?.find((k) => k.id == animeKeywordId)
           ? "anime"
           : "standard",
         qualityProfile: server.qualityProfile,
-        rootFolder: selectedServerCfg.rootFolders[0].path,
+        rootFolder: rootFolder.path,
         languageProfile: server.languageProfile,
         seasons: seasonItems.map((s) => {
           return {

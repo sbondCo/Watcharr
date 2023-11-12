@@ -23,10 +23,13 @@
   import SimilarContent from "@/lib/content/SimilarContent.svelte";
   import { onMount } from "svelte";
   import { page } from "$app/stores";
+  import RequestMovie from "@/lib/request/RequestMovie.svelte";
+  import Error from "@/lib/Error.svelte";
 
   export let data;
 
   let trailer: string | undefined;
+  let requestModalShown = false;
   let trailerShown = false;
   let jellyfinUrl: string | undefined;
 
@@ -149,12 +152,17 @@
                 <Icon i="jellyfin" wh={14} />Play On Jellyfin
               </a>
             {/if}
+            <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
           </div>
 
           <ProvidersList providers={movie["watch/providers"]} />
         </div>
       </div>
     </div>
+
+    {#if requestModalShown}
+      <RequestMovie content={movie} onClose={() => (requestModalShown = false)} />
+    {/if}
 
     <div class="page">
       <div class="review">

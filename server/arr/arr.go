@@ -30,15 +30,26 @@ type Arr struct {
 	Key *string
 }
 
+type ArrRequest struct {
+	ServerName      string `json:"serverName"`
+	QualityProfile  int    `json:"qualityProfile"` // id
+	RootFolder      string `json:"rootFolder"`     // path
+	AutomaticSearch bool   `json:"automaticSearch"`
+	Title           string `json:"title"` // content name
+	Year            int    `json:"year"`  // content year
+}
+
 type SonarrRequest struct {
-	ServerName      string          `json:"serverName"`
-	QualityProfile  int             `json:"qualityProfile"`  // id
-	RootFolder      string          `json:"rootFolder"`      // path
-	LanguageProfile int             `json:"languageProfile"` // id
+	ArrRequest
 	TVDBID          int             `json:"tvdbId"`
+	LanguageProfile int             `json:"languageProfile"` // id
 	SeriesType      string          `json:"seriesType"`
 	Seasons         []SonarrSeasons `json:"seasons"`
-	AutomaticSearch bool            `json:"automaticSearch"`
+}
+
+type RadarrRequest struct {
+	ArrRequest
+	TMDBID int `json:"tmdbId"`
 }
 
 type SonarrSeasons struct {
@@ -88,9 +99,11 @@ func (a *Arr) GetLangaugeProfiles() ([]LanguageProfile, error) {
 	return resp, nil
 }
 
-func (a *Arr) AddContent(r SonarrRequest) error {
+// TODO do title! and year?
+func (a *Arr) BuildAddShowBody(r SonarrRequest) map[string]interface{} {
 	req := map[string]interface{}{
-		"title":             "Marvel Future Avengers",
+		"title":             r.Title,
+		"year":              r.Year,
 		"qualityProfileId":  r.QualityProfile,
 		"languageProfileId": r.LanguageProfile,
 		"seasonFolder":      true,
@@ -104,9 +117,32 @@ func (a *Arr) AddContent(r SonarrRequest) error {
 		},
 		"rootFolderPath": r.RootFolder,
 	}
-	slog.Debug("AddContent", "req", req)
+	return req
+}
+
+func (a *Arr) BuildAddMovieBody(r RadarrRequest) map[string]interface{} {
+	req := map[string]interface{}{
+		"title":            r.Title,
+		"year":             r.Year,
+		"qualityProfileId": r.QualityProfile,
+		"monitored":        true,
+		"tmdbId":           r.TMDBID,
+		"addOptions": map[string]interface{}{
+			"searchForMovie": r.AutomaticSearch,
+		},
+		"rootFolderPath": r.RootFolder,
+	}
+	return req
+}
+
+func (a *Arr) AddContent(b map[string]interface{}) error {
+	ep := "series"
+	if a.Type == RADARR {
+		ep = "movie"
+	}
+	slog.Debug("AddContent", "type", ep, "body", b)
 	var resp interface{}
-	err := requestPost(*a.Host, "/series", *a.Key, req, &resp)
+	err := requestPost(*a.Host, "/"+ep, *a.Key, b, &resp)
 	if err != nil {
 		slog.Error("AddContent request failed", "service", a.Type, "error", err)
 		return errors.New("request to service failed")

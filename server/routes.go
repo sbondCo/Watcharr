@@ -606,10 +606,10 @@ func (b *BaseRouter) addServerRoutes() {
 	})
 }
 
-func (b *BaseRouter) addArrRoutes() {
+func (b *BaseRouter) addSonarrRoutes() {
 	s := b.rg.Group("/arr/son").Use(AuthRequired(b.db), AdminRequired())
-	// r := b.rg.Group("/arr/rad").Use(AuthRequired(b.db), AdminRequired())
 
+	// Test configuration
 	s.POST("/test", func(c *gin.Context) {
 		var ur ArrTestParams
 		err := c.ShouldBindJSON(&ur)
@@ -625,6 +625,7 @@ func (b *BaseRouter) addArrRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
+	// Used to get config for specific server (quality profile, root folder, etc)
 	s.GET("/config/:name", func(c *gin.Context) {
 		server, err := getSonarr(c.Param("name"))
 		if err != nil {
@@ -639,6 +640,7 @@ func (b *BaseRouter) addArrRoutes() {
 		c.JSON(http.StatusOK, resp)
 	})
 
+	// Add sonarr server into config
 	s.POST("/add", func(c *gin.Context) {
 		var ur SonarrSettings
 		err := c.ShouldBindJSON(&ur)
@@ -654,6 +656,7 @@ func (b *BaseRouter) addArrRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
+	// Edit sonarr servers config
 	s.POST("/edit", func(c *gin.Context) {
 		var ur SonarrSettings
 		err := c.ShouldBindJSON(&ur)
@@ -669,6 +672,7 @@ func (b *BaseRouter) addArrRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
+	// Remove sonarr server
 	s.POST("/rm/:name", func(c *gin.Context) {
 		err := rmSonarr(c.Param("name"))
 		if err != nil {
@@ -678,11 +682,13 @@ func (b *BaseRouter) addArrRoutes() {
 		c.Status(http.StatusOK)
 	})
 
+	// Get safe config for all sonarr servers
 	s.GET("", func(c *gin.Context) {
 		response := getSonarrsSafe()
 		c.JSON(http.StatusOK, response)
 	})
 
+	// Request a show
 	s.POST("/request", func(c *gin.Context) {
 		var ur arr.SonarrRequest
 		err := c.ShouldBindJSON(&ur)
@@ -694,7 +700,108 @@ func (b *BaseRouter) addArrRoutes() {
 			}
 			ur.AutomaticSearch = server.AutomaticSearch
 			sonarr := arr.New(arr.SONARR, &server.Host, &server.Key)
-			err = sonarr.AddContent(ur)
+			err = sonarr.AddContent(sonarr.BuildAddShowBody(ur))
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
+
+func (b *BaseRouter) addRadarrRoutes() {
+	s := b.rg.Group("/arr/rad").Use(AuthRequired(b.db), AdminRequired())
+
+	// Test configuration
+	s.POST("/test", func(c *gin.Context) {
+		var ur ArrTestParams
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			resp, err := testRadarr(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, resp)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	// Get config for specific server
+	s.GET("/config/:name", func(c *gin.Context) {
+		server, err := getRadarr(c.Param("name"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		resp, err := testRadarr(ArrTestParams{Host: server.Host, Key: server.Key})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+
+	s.POST("/add", func(c *gin.Context) {
+		var ur RadarrSettings
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			err := addRadarr(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	s.POST("/edit", func(c *gin.Context) {
+		var ur RadarrSettings
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			err := editRadarr(ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	s.POST("/rm/:name", func(c *gin.Context) {
+		err := rmRadarr(c.Param("name"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
+
+	s.GET("", func(c *gin.Context) {
+		response := getRadarrsSafe()
+		c.JSON(http.StatusOK, response)
+	})
+
+	s.POST("/request", func(c *gin.Context) {
+		var ur arr.RadarrRequest
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			server, err := getRadarr(ur.ServerName)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			ur.AutomaticSearch = server.AutomaticSearch
+			radarr := arr.New(arr.RADARR, &server.Host, &server.Key)
+			err = radarr.AddContent(radarr.BuildAddMovieBody(ur))
 			if err != nil {
 				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 				return
