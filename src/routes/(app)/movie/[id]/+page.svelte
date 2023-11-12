@@ -24,6 +24,7 @@
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import RequestMovie from "@/lib/request/RequestMovie.svelte";
+  import Error from "@/lib/Error.svelte";
 
   export let data;
 
