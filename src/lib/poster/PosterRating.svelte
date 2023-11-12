@@ -85,7 +85,7 @@
 
     &:hover span,
     &:focus-visible span {
-      color: gold;
+      color: $poster-rating-color;
     }
 
     div {
