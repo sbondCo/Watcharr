@@ -34,7 +34,7 @@
         servarrs = r.data;
         selectedServarrIndex = 0;
       } else {
-        notify({ text: "No servers founds", type: "error" });
+        notify({ text: "No servers found", type: "error" });
       }
       inputsDisabled = false;
     } catch (err) {
