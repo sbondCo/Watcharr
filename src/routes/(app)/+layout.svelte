@@ -4,6 +4,7 @@
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
+  import tooltip from "@/lib/actions/tooltip";
   import { isTouch, parseTokenPayload, userHasPermission } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import {
@@ -210,6 +211,7 @@
           sortMenuShown = false;
           subMenuShown = false;
         }}
+        use:tooltip={{ text: "Filter", pos: "bot" }}
       >
         <Icon i="filter" />
       </button>
@@ -220,6 +222,7 @@
           filterMenuShown = false;
           subMenuShown = false;
         }}
+        use:tooltip={{ text: "Sort", pos: "bot" }}
       >
         <Icon i="sort" />
       </button>
@@ -302,7 +305,11 @@
         </div>
       {/if}
     {/if}
-    <button class="plain other discover" on:click={() => goto("/discover")}>
+    <button
+      class="plain other discover"
+      on:click={() => goto("/discover")}
+      use:tooltip={{ text: "Discover", pos: "bot" }}
+    >
       <Icon i="compass" />
     </button>
     <button class="plain face" on:click={handleProfileClick}>:)</button>
