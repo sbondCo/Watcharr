@@ -1,4 +1,4 @@
-import { userInfo, userSettings, watchedList } from "@/store";
+import { serverFeatures, userInfo, userSettings, watchedList } from "@/store";
 import {
   UserType,
   type JellyfinFoundContent,
@@ -167,6 +167,20 @@ export function updateUserSetting<K extends keyof UserSettings>(
       userSettings.update((u) => (u = uSettings));
       if (typeof done !== "undefined") done();
     });
+}
+
+/**
+ * Update serverFeatues store with fresh data.
+ */
+export async function getServerFeatures() {
+  try {
+    const f = await axios.get("/features");
+    if (f?.data) {
+      serverFeatures.update((sf) => (sf = f.data));
+    }
+  } catch (err) {
+    console.error("getServerFeatures failed!", err);
+  }
 }
 
 /**

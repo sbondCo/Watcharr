@@ -10,6 +10,7 @@
   import Setting from "@/lib/settings/Setting.svelte";
   import SettingButton from "@/lib/settings/SettingButton.svelte";
   import RadarrModal from "./modals/RadarrModal.svelte";
+  import { getServerFeatures } from "@/lib/util/api";
 
   let serverConfig: ServerConfig;
   let sonarrModalOpen = false;
@@ -195,6 +196,7 @@
               // "temporary" solution to showing added servers
               // and reloading data to revert modified but not saved changes.
               getServerConfig();
+              getServerFeatures();
               sonarrModalOpen = false;
             }}
           />
@@ -208,6 +210,7 @@
               // "temporary" solution to showing added servers
               // and reloading data to revert modified but not saved changes.
               getServerConfig();
+              getServerFeatures();
               radarrModalOpen = false;
             }}
           />
