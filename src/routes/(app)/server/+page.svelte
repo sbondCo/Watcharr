@@ -123,9 +123,21 @@
             }}
           />
         </Setting>
-        <h3>Services</h3>
+        <div>
+          <h3>Services</h3>
+          <h5 class="norm">
+            These integrations are not in their final stages. Consider them a preview/beta, if you
+            have any issues,
+            <a
+              style="text-decoration: underline;"
+              href="https://github.com/sbondCo/Watcharr/issues/new/choose"
+              target="_blank"
+            >
+              please report them.
+            </a>
+          </h5>
+        </div>
 
-        <!-- <h4>Sonarr</h4> -->
         <Setting title="Sonarr">
           {#if serverConfig.SONARR?.length > 0}
             {#each serverConfig.SONARR as server}
