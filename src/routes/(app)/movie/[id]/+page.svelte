@@ -6,7 +6,7 @@
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
   import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
-  import { watchedList } from "@/store";
+  import { serverFeatures, watchedList } from "@/store";
   import type {
     TMDBContentCredits,
     TMDBContentCreditsCrew,
@@ -152,7 +152,9 @@
                 <Icon i="jellyfin" wh={14} />Play On Jellyfin
               </a>
             {/if}
-            <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
+            {#if $serverFeatures.radarr}
+              <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
+            {/if}
           </div>
 
           <ProvidersList providers={movie["watch/providers"]} />

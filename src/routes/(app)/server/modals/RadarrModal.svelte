@@ -144,7 +144,7 @@
         />
       </Setting>
     {/if}
-    <Setting title="Radarr Host" desc="Point to your Radarr server to enable tv show requesting.">
+    <Setting title="Radarr Host" desc="Point to your Radarr server to enable movie requesting.">
       <input
         type="text"
         placeholder="https://radarr.example.com"
@@ -160,7 +160,7 @@
         disabled={formDisabled}
       />
     </Setting>
-    <Setting title="Quality Profile" desc="Default quality profile when adding shows.">
+    <Setting title="Quality Profile" desc="Default quality profile when adding movies.">
       <DropDown
         placeholder={qualityProfiles?.length == 0
           ? "Add a Host and Key, then press test to view"
@@ -170,7 +170,7 @@
         disabled={formDisabled}
       />
     </Setting>
-    <Setting title="Root Folder" desc="Default root folder when adding shows.">
+    <Setting title="Root Folder" desc="Default root folder when adding movies.">
       <DropDown
         placeholder={rootFolders?.length == 0
           ? "Add a Host and Key, then press test to view"
@@ -180,7 +180,7 @@
         disabled={formDisabled}
       />
     </Setting>
-    <Setting title="Automatic Search" desc="Start missing episode search automatically?" row>
+    <Setting title="Automatic Search" desc="Start movie search automatically?" row>
       <Checkbox
         name="automaticSearch"
         disabled={formDisabled}

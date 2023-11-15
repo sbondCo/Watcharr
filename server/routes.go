@@ -606,6 +606,15 @@ func (b *BaseRouter) addServerRoutes() {
 	})
 }
 
+func (b *BaseRouter) addFeatureRoutes() {
+	feature := b.rg.Group("/features").Use(AuthRequired(b.db))
+
+	// Get enabled features (aka functionality)
+	feature.GET("", func(c *gin.Context) {
+		c.JSON(http.StatusOK, getEnabledFeatures())
+	})
+}
+
 func (b *BaseRouter) addSonarrRoutes() {
 	s := b.rg.Group("/arr/son").Use(AuthRequired(b.db), AdminRequired())
 

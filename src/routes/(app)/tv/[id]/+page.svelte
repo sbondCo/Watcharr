@@ -16,7 +16,7 @@
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
   import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
   import { getTopCrew } from "@/lib/util/helpers.js";
-  import { watchedList } from "@/store";
+  import { serverFeatures, watchedList } from "@/store";
   import type {
     TMDBContentCredits,
     TMDBContentCreditsCrew,
@@ -150,7 +150,9 @@
                 <Icon i="jellyfin" wh={14} />Play On Jellyfin
               </a>
             {/if}
-            <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
+            {#if $serverFeatures.sonarr}
+              <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
+            {/if}
           </div>
 
           <ProvidersList providers={show["watch/providers"]} />

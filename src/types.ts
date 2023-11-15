@@ -774,3 +774,8 @@ export interface RadarrTestResponse {
   qualityProfiles: QualityProfile[];
   rootFolders: RootFolder[];
 }
+
+export interface ServerFeatures {
+  sonarr: boolean;
+  radarr: boolean;
+}

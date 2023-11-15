@@ -4,6 +4,7 @@ import type {
   Filters,
   ImportedList,
   PrivateUser,
+  ServerFeatures,
   Theme,
   UserSettings,
   Watched
@@ -22,6 +23,7 @@ export const appTheme = writable<Theme>();
 export const importedList = writable<FileWithData | undefined>();
 export const parsedImportedList = writable<ImportedList[] | undefined>();
 export const searchQuery = writable<string>("");
+export const serverFeatures = writable<ServerFeatures>();
 
 export const clearAllStores = () => {
   watchedList.set([]);
