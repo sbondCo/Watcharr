@@ -145,8 +145,13 @@ type ServerFeatures struct {
 // Get enabled server functionality from Config.
 // Mainly so the frontend can store this once and know
 // which btns should be shown, etc.
-func getEnabledFeatures() ServerFeatures {
+func getEnabledFeatures(userPerms int) ServerFeatures {
 	var f ServerFeatures
+	// https://github.com/sbondCo/Watcharr/issues/211
+	// Currently requesting permissions have not been setup, only admins for now.
+	if !hasPermission(userPerms, PERM_ADMIN) {
+		return f
+	}
 	if len(Config.SONARR) > 0 {
 		f.Sonarr = true
 	}

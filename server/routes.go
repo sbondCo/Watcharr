@@ -611,7 +611,7 @@ func (b *BaseRouter) addFeatureRoutes() {
 
 	// Get enabled features (aka functionality)
 	feature.GET("", func(c *gin.Context) {
-		c.JSON(http.StatusOK, getEnabledFeatures())
+		c.JSON(http.StatusOK, getEnabledFeatures(c.GetInt("userPermissions")))
 	})
 }
 
