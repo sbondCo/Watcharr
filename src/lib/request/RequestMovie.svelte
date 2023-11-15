@@ -107,7 +107,7 @@
         <Setting title="Select the server to use">
           <DropDown
             placeholder="Select a server"
-            active={selectedServarrIndex}
+            bind:active={selectedServarrIndex}
             options={servarrs?.length > 0
               ? servarrs.map((s, i) => {
                   return { id: i, value: s.name };
