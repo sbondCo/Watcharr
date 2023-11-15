@@ -11,12 +11,14 @@
   export let similar: TMDBShowSimilar | TMDBMovieSimilar;
 </script>
 
-<HorizontalList title="Similar">
-  {#each similar.results as content}
-    <Poster
-      media={{ ...content, media_type: type }}
-      {...getWatchedDependedProps(content.id, type, wList)}
-      small={true}
-    />
-  {/each}
-</HorizontalList>
+{#if similar?.results?.length > 0}
+  <HorizontalList title="Similar">
+    {#each similar.results as content}
+      <Poster
+        media={{ ...content, media_type: type }}
+        {...getWatchedDependedProps(content.id, type, wList)}
+        small={true}
+      />
+    {/each}
+  </HorizontalList>
+{/if}
