@@ -136,3 +136,22 @@ func writeConfig() error {
 	}
 	return os.WriteFile("./data/watcharr.json", barej, 0755)
 }
+
+type ServerFeatures struct {
+	Sonarr bool `json:"sonarr"`
+	Radarr bool `json:"radarr"`
+}
+
+// Get enabled server functionality from Config.
+// Mainly so the frontend can store this once and know
+// which btns should be shown, etc.
+func getEnabledFeatures() ServerFeatures {
+	var f ServerFeatures
+	if len(Config.SONARR) > 0 {
+		f.Sonarr = true
+	}
+	if len(Config.RADARR) > 0 {
+		f.Radarr = true
+	}
+	return f
+}

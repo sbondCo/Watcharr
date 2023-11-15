@@ -12,6 +12,7 @@
     activeSort,
     clearAllStores,
     searchQuery,
+    serverFeatures,
     userInfo,
     userSettings,
     watchedList
@@ -118,10 +119,11 @@
 
   async function getInitialData() {
     if (localStorage.getItem("token")) {
-      const [w, u, s] = await Promise.all([
+      const [w, u, s, f] = await Promise.all([
         axios.get("/watched"),
         axios.get("/user"),
-        axios.get("/user/settings")
+        axios.get("/user/settings"),
+        axios.get("/features")
       ]);
       if (w?.data?.length > 0) {
         watchedList.update((wl) => (wl = w.data));
@@ -131,6 +133,9 @@
       }
       if (s?.data) {
         userSettings.update((us) => (us = s.data));
+      }
+      if (f?.data) {
+        serverFeatures.update((sf) => (sf = f.data));
       }
     } else {
       goto("/login?again=1");

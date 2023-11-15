@@ -121,6 +121,7 @@ func main() {
 	br.addUserRoutes()
 	br.addImportRoutes()
 	br.addServerRoutes()
+	br.addFeatureRoutes()
 	br.addSonarrRoutes()
 	br.addRadarrRoutes()
 	br.rg.Static("/img", "./data/img")
