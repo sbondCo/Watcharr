@@ -6,6 +6,8 @@ import (
 	"log"
 	"log/slog"
 	"os"
+
+	"gorm.io/gorm"
 )
 
 type ServerConfig struct {
@@ -159,4 +161,21 @@ func getEnabledFeatures(userPerms int) ServerFeatures {
 		f.Radarr = true
 	}
 	return f
+}
+
+type ServerStats struct {
+	Users            int64   `json:"users"`
+	PrivateUsers     int64   `json:"privateUsers"`
+	WatchedMovies    int64   `json:"watchedMovies"`
+	WatchedShows     int64   `json:"watchedShows"`
+	WatchedSeasons   int64   `json:"watchedSeasons"`
+	MostWatchedMovie Content `json:"mostWatchedMovie"`
+	MostWatchedShow  Content `json:"mostWatchedShow"`
+	Activities       int64   `json:"activities"`
+}
+
+func getServerStats(db *gorm.DB) ServerStats {
+	stats := ServerStats{}
+	db.Model(&User{}).Count(&stats.Users)
+	return stats
 }

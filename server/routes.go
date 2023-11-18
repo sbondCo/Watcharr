@@ -604,6 +604,16 @@ func (b *BaseRouter) addServerRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	// Get server stats
+	server.GET("/stats", func(c *gin.Context) {
+		// stats, err :=
+		// if err != nil {
+		// 	slog.Error("Failed to get stats!", "error", err)
+		// 	c.AbortWithStatusJSON(500, ErrorResponse{Error: "failed to process server stats"})
+		// }
+		c.JSON(http.StatusOK, getServerStats(b.db))
+	})
 }
 
 func (b *BaseRouter) addFeatureRoutes() {
