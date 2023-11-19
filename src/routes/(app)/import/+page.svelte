@@ -25,7 +25,8 @@
         console.error("processFiles", "No files to process!");
         notify({
           type: "error",
-          text: "File not found in dropped items."
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
         });
         isDragOver = false;
         return;
