@@ -580,6 +580,26 @@ func (b *BaseRouter) addImportRoutes() {
 	})
 }
 
+func (b *BaseRouter) addTmdbImportRoutes() {
+	tmdbImportRouter := b.rg.Group("/tmdb_import").Use(AuthRequired(nil))
+
+	tmdbImportRouter.POST("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ar TMDBImportRequest
+		err := c.ShouldBindJSON(&ar)
+		if err == nil {
+			response, err := importTmdbContent(b.db, userId, ar)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
+
 func (b *BaseRouter) addServerRoutes() {
 	server := b.rg.Group("/server").Use(AuthRequired(b.db), AdminRequired())
 
