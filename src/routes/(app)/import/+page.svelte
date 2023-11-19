@@ -21,8 +21,14 @@
   function processFiles(files?: FileList | null) {
     try {
       console.log("processFiles", files);
-      if (!files) {
+      if (!files || files?.length <= 0) {
         console.error("processFiles", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
+        });
+        isDragOver = false;
         return;
       }
       isLoading = true;
@@ -35,10 +41,10 @@
       }
       // Currently only support for importing one file at a time
       const file = files[0];
-      if (file.type !== "text/plain") {
+      if (file.type !== "text/plain" && file.type !== "text/csv") {
         notify({
           type: "error",
-          text: "Currently only text files are supported"
+          text: "Currently only text and csv (TMDb export) files are supported"
         });
         isLoading = false;
         isDragOver = false;

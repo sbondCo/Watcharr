@@ -27,6 +27,7 @@
   import axios from "axios";
   import { onDestroy } from "svelte";
   import { get } from "svelte/store";
+  import papa from "papaparse";
 
   const wList = get(watchedList);
 
@@ -73,6 +74,31 @@
           rList.push(l);
         }
       }
+    } else if (list?.file.type === "text/csv") {
+      const s = papa.parse(list.data.trim(), { header: true });
+      console.debug("parsed csv", s);
+      for (let i = 0; i < s.data.length; i++) {
+        const el = s.data[i] as any;
+        if (el) {
+          // Skip if no name or tmdb id
+          if (!el.Name && !el["TMDb ID"]) {
+            console.warn("Skipping item with no name or tmdb id", el);
+            return;
+          }
+          const l: ImportedList = { name: el.Name };
+          const year = el["Release Date"] ? new Date(el["Release Date"]) : undefined;
+          if (year) {
+            l.year = String(year.getFullYear());
+          }
+          if (el.Type === "movie" || el.Type === "tv") {
+            l.type = el.Type;
+          }
+          if (el["TMDb ID"]) {
+            l.tmdbId = Number(el["TMDb ID"]);
+          }
+          rList.push(l);
+        }
+      }
     }
     // TODO: remove duplicate names in list
     return list;
@@ -111,10 +137,10 @@
       try {
         console.log("Importing", li);
         await doImport(li);
-        await sleep(2000);
       } catch (err) {
         console.error("Failed to import item:", li, "reason:", err);
       }
+      await sleep(1500);
     }
     importedList.set(undefined);
     if (
