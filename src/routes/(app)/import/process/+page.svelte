@@ -76,10 +76,11 @@
       }
     } else if (list?.file.type === "text/csv") {
       const s = papa.parse(list.data.trim(), { header: true });
-      console.log(s);
+      console.debug("parsed csv", s);
       for (let i = 0; i < s.data.length; i++) {
         const el = s.data[i] as any;
         if (el) {
+          // Skip if no name or tmdb id
           if (!el.Name && !el["TMDb ID"]) {
             console.warn("Skipping item with no name or tmdb id", el);
             return;

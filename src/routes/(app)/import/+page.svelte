@@ -38,7 +38,7 @@
       if (file.type !== "text/plain" && file.type !== "text/csv") {
         notify({
           type: "error",
-          text: "Currently only text and csv files are supported"
+          text: "Currently only text and csv (TMDb export) files are supported"
         });
         isLoading = false;
         isDragOver = false;
