@@ -2,7 +2,7 @@ import { writable } from "svelte/store";
 import type {
   FileWithData,
   Filters,
-  ImportedList,
+  ImportedItem,
   PrivateUser,
   Theme,
   UserSettings,
@@ -20,7 +20,7 @@ export const activeSort = writable<string[]>(["DATEADDED", "DOWN"]);
 export const activeFilters = writable<Filters>({ type: [], status: [] });
 export const appTheme = writable<Theme>();
 export const importedList = writable<FileWithData | undefined>();
-export const parsedImportedList = writable<ImportedList[] | undefined>();
+export const parsedImportedList = writable<ImportedItem[] | undefined>();
 export const searchQuery = writable<string>("");
 
 export const clearAllStores = () => {
