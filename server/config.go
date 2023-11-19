@@ -178,15 +178,39 @@ type ServerStats struct {
 // I cant sql so this the best yall gettin
 func getServerStats(db *gorm.DB) ServerStats {
 	stats := ServerStats{}
-	db.Model(&User{}).Count(&stats.Users).Where("private = 1").Count(&stats.PrivateUsers)
-	db.Model(&WatchedSeason{}).Count(&stats.WatchedSeasons)
-	db.Model(&Activity{}).Count(&stats.Activities)
-	db.Joins("JOIN contents ON contents.id = watcheds.content_id AND contents.type = ?", "tv").Find(&Watched{}).Count(&stats.WatchedShows)
-	db.Joins("JOIN contents ON contents.id = watcheds.content_id AND contents.type = ?", "movie").Find(&Watched{}).Count(&stats.WatchedMovies)
+	resp := db.Model(&User{}).Count(&stats.Users).Where("private = 1").Count(&stats.PrivateUsers)
+	if resp.Error != nil {
+		slog.Error("getServerStats - Users query failed", "error", resp.Error)
+	}
+	resp = db.Model(&WatchedSeason{}).Count(&stats.WatchedSeasons)
+	if resp.Error != nil {
+		slog.Error("getServerStats - WatchedSeasons query failed", "error", resp.Error)
+	}
+	resp = db.Model(&Activity{}).Count(&stats.Activities)
+	if resp.Error != nil {
+		slog.Error("getServerStats - Activities query failed", "error", resp.Error)
+	}
+	resp = db.Joins("JOIN contents ON contents.id = watcheds.content_id AND contents.type = ?", "tv").Find(&Watched{}).Count(&stats.WatchedShows)
+	if resp.Error != nil {
+		slog.Error("getServerStats - WatchedShows query failed", "error", resp.Error)
+	}
+	resp = db.Joins("JOIN contents ON contents.id = watcheds.content_id AND contents.type = ?", "movie").Find(&Watched{}).Count(&stats.WatchedMovies)
+	if resp.Error != nil {
+		slog.Error("getServerStats - WatchedMovies query failed", "error", resp.Error)
+	}
+
 	var w Watched
-	db.Model(&Watched{}).Select("content_id, COUNT(*) AS mag").Joins("JOIN contents ON contents.type = ? AND contents.id = watcheds.content_id", "tv").Group("content_id").Order("mag DESC").Preload("Content").First(&w)
-	stats.MostWatchedShow = w.Content
-	db.Model(&Watched{}).Select("content_id, COUNT(*) AS mag").Joins("JOIN contents ON contents.type = ? AND contents.id = watcheds.content_id", "movie").Group("content_id").Order("mag DESC").Preload("Content").First(&w)
-	stats.MostWatchedMovie = w.Content
+	resp = db.Model(&Watched{}).Select("content_id, COUNT(*) AS mag").Joins("JOIN contents ON contents.type = ? AND contents.id = watcheds.content_id", "tv").Group("content_id").Order("mag DESC").Preload("Content").First(&w)
+	if resp.Error != nil {
+		slog.Error("getServerStats - MostWatchedShow query failed", "error", resp.Error)
+	} else {
+		stats.MostWatchedShow = w.Content
+	}
+	resp = db.Model(&Watched{}).Select("content_id, COUNT(*) AS mag").Joins("JOIN contents ON contents.type = ? AND contents.id = watcheds.content_id", "movie").Group("content_id").Order("mag DESC").Preload("Content").First(&w)
+	if resp.Error != nil {
+		slog.Error("getServerStats - MostWatchedMovie query failed", "error", resp.Error)
+	} else {
+		stats.MostWatchedMovie = w.Content
+	}
 	return stats
 }
