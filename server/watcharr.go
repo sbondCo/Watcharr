@@ -68,7 +68,7 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &WatchedSeason{}, &Activity{}, &Token{})
+	err = db.AutoMigrate(&User{}, &ContentDetails{}, &Watched{}, &WatchedSeason{}, &Activity{}, &Token{})
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
@@ -120,6 +120,7 @@ func main() {
 	br.addJellyfinRoutes()
 	br.addUserRoutes()
 	br.addImportRoutes()
+	br.addTmdbImportRoutes()
 	br.addServerRoutes()
 	br.addArrRoutes()
 	br.rg.Static("/img", "./data/img")

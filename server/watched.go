@@ -33,7 +33,7 @@ type Watched struct {
 	Thoughts       string          `json:"thoughts"`
 	UserID         uint            `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	ContentID      int             `json:"-" gorm:"uniqueIndex:usernctnidx"`
-	Content        Content         `json:"content"`
+	Content        ContentDetails  `json:"content"`
 	Activity       []Activity      `json:"activity"`
 	WatchedSeasons []WatchedSeason `json:"watchedSeasons,omitempty"` // For shows
 }
@@ -98,11 +98,11 @@ func getPublicWatched(db *gorm.DB, userId uint, username string) ([]Watched, err
 func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType) (Watched, error) {
 	slog.Debug("Adding watched item", "userId", userId, "contentType", ar.ContentType, "contentId", ar.ContentID)
 
-	var content Content
+	var content ContentDetails
 	db.Where("tmdb_id = ?", ar.ContentID).Find(&content)
 
 	// Create content if not found from our db
-	if content == (Content{}) {
+	if content == (ContentDetails{}) {
 		slog.Debug("Content not in db, fetching...")
 
 		resp, err := tmdbAPIRequest("/"+string(ar.ContentType)+"/"+strconv.Itoa(ar.ContentID), map[string]string{})
@@ -184,7 +184,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 			slog.Error("addWatched, returned content missing id or title!", "id", id, "title", title)
 			return Watched{}, errors.New("content response missing id or title")
 		}
-		content = Content{
+		content = ContentDetails{
 			TmdbID:           id,
 			Title:            title,
 			Overview:         overview,

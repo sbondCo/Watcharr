@@ -14,7 +14,7 @@ const (
 )
 
 // For storing cached content, so we can serve the basic local data for watched list to work
-type Content struct {
+type ContentDetails struct {
 	ID               int         `json:"id" gorm:"primaryKey;autoIncrement"`
 	TmdbID           int         `json:"tmdbId" gorm:"uniqueIndex:contentidtotypeidx;not null"`
 	Title            string      `json:"title"`
@@ -104,7 +104,7 @@ func tvCredits(id string) (TMDBContentCredits, error) {
 	resp := new(TMDBContentCredits)
 	err := tmdbRequest("/tv/"+id+"/credits", map[string]string{}, &resp)
 	if err != nil {
-		slog.Error("Failed to complete tv cast request!", err.Error())
+		slog.Error("Failed to complete tv cast request!", "error", err.Error())
 		return TMDBContentCredits{}, errors.New("failed to complete tv cast request")
 	}
 	return *resp, nil
