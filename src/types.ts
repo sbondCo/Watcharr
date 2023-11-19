@@ -668,15 +668,20 @@ export interface ImportResponse {
   watchedEntry?: Watched;
 }
 
-export interface ImportedList {
+export interface ImportedItem {
   tmdbId?: number;
-  name: string;
-  year?: string;
+  imdbId?: number;
   type?: ContentType;
-  state?: string;
+  name: string;
+  releaseDate?: Date;
+  seasonNumber?: number;
+  episodeNumber?: number;
+  Rating?: number;
   dateRated?: Date;
-  rating?: number;
+  state?: string;
+  year?: string;
 }
+
 export interface Filters {
   type: string[];
   status: string[];
@@ -761,15 +766,3 @@ export interface SonarrTestResponse {
   languageProfiles: LanguageProfile[];
 }
 
-export interface TMDBRating {
-  "TMDb ID": number;
-  "IMDb ID": string;
-  Type: ContentType;
-  Name: string;
-  "Release Date": Date;
-  "Season Number": string | null;
-  "Episode Number": string | null;
-  Rating: number;
-  "Your Rating": number;
-  "Date Rated": Date;
-}
