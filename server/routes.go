@@ -607,9 +607,9 @@ func (b *BaseRouter) addServerRoutes() {
 	})
 
 	// Get server stats
-	server.GET("/stats", func(c *gin.Context) {
+	server.GET("/stats", cache.CachePage(b.ms, time.Minute*5, func(c *gin.Context) {
 		c.JSON(http.StatusOK, getServerStats(b.db))
-	})
+	}))
 }
 
 func (b *BaseRouter) addFeatureRoutes() {
