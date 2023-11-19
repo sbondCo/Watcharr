@@ -90,10 +90,13 @@
 
 <div class="content">
   <div class="inner">
-    <span class="header">
-      <h2>Import Your Watchlist</h2>
-      <h5 class="norm">beta</h5>
-    </span>
+    <div>
+      <span class="header">
+        <h2>Import Your Watchlist</h2>
+        <h5 class="norm">beta</h5>
+      </span>
+      <h4 class="norm">Currently txt and csv (TMDb export) files are supported.</h4>
+    </div>
     <div class="big-btns">
       {#if isLoading}
         <Spinner />
