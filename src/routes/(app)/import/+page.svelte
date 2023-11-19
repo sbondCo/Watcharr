@@ -21,8 +21,13 @@
   function processFiles(files?: FileList | null) {
     try {
       console.log("processFiles", files);
-      if (!files) {
+      if (!files || files?.length <= 0) {
         console.error("processFiles", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items."
+        });
+        isDragOver = false;
         return;
       }
       isLoading = true;
