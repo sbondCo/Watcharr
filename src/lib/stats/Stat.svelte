@@ -2,15 +2,16 @@
   export let name: string;
   export let value: string | number;
   export let large = false;
+  export let href: string | undefined = undefined;
 </script>
 
-<div>
+<a {href}>
   <span class={large ? "large" : ""}>{value}</span>
   <span>{name}</span>
-</div>
+</a>
 
 <style lang="scss">
-  div {
+  a {
     display: flex;
     flex-flow: column;
     flex-grow: 1;

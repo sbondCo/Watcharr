@@ -91,10 +91,18 @@
           <Stat name="Watched Seasons" value={stats.watchedSeasons} large />
           <Stat name="Activities" value={stats.activities} large />
           {#if stats.mostWatchedMovie?.title}
-            <Stat name="Most Watched Movie" value={stats.mostWatchedMovie.title} />
+            <Stat
+              name="Most Watched Movie"
+              value={stats.mostWatchedMovie.title}
+              href="/movie/{stats.mostWatchedMovie.tmdbId}"
+            />
           {/if}
           {#if stats.mostWatchedShow?.title}
-            <Stat name="Most Watched Show" value={stats.mostWatchedShow.title} />
+            <Stat
+              name="Most Watched Show"
+              value={stats.mostWatchedShow.title}
+              href="/tv/{stats.mostWatchedShow.tmdbId}"
+            />
           {/if}
         {:catch err}
           <Error error={err} pretty="Failed to get server stats!" />
