@@ -4,6 +4,8 @@
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
+  import Stat from "@/lib/stats/Stat.svelte";
+  import Stats from "@/lib/stats/Stats.svelte";
   import { updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
   import { appTheme, userInfo, userSettings } from "@/store";
@@ -32,26 +34,17 @@
   <div class="inner">
     <h2 title={user?.username}>Hey {user?.username}</h2>
 
-    <div class="stats">
+    <Stats>
       {#await getProfile()}
         <Spinner />
       {:then profile}
-        <div>
-          <span>{formatDate(new Date(profile.joined))}</span>
-          <span>Joined</span>
-        </div>
-        <div>
-          <span class="large">{profile.moviesWatched}</span>
-          <span>Movies Watched</span>
-        </div>
-        <div>
-          <span class="large">{profile.showsWatched}</span>
-          <span>Shows Watched</span>
-        </div>
+        <Stat name="Joined" value={formatDate(new Date(profile.joined))} />
+        <Stat name="Movies Watched" value={profile.moviesWatched} large />
+        <Stat name="Shows Watched" value={profile.showsWatched} large />
       {:catch err}
         <Error error={err} pretty="Failed to get stats!" />
       {/await}
-    </div>
+    </Stats>
 
     <div class="settings">
       <h3 class="norm">Settings</h3>
@@ -136,39 +129,6 @@
       @media screen and (max-width: 440px) {
         width: 100%;
         min-width: unset;
-      }
-    }
-  }
-
-  .stats {
-    display: flex;
-    flex-flow: row;
-    gap: 12px;
-    margin-top: 15px;
-
-    @media screen and (max-width: 440px) {
-      flex-wrap: wrap;
-    }
-
-    > div {
-      display: flex;
-      flex-flow: column;
-      flex-grow: 1;
-      padding: 20px 15px;
-      background-color: $accent-color;
-      border-radius: 8px;
-
-      > span:first-child {
-        font-weight: bold;
-        font-size: 20px;
-
-        &.large {
-          font-size: 32px;
-        }
-      }
-
-      > span:last-child {
-        margin-top: auto;
       }
     }
   }

@@ -25,12 +25,14 @@ type KeyValueRequest struct {
 type BaseRouter struct {
 	db *gorm.DB
 	rg *gin.RouterGroup
+	ms *persistence.InMemoryStore
 }
 
 func newBaseRouter(db *gorm.DB, rg *gin.RouterGroup) *BaseRouter {
 	return &BaseRouter{
 		db: db,
 		rg: rg,
+		ms: persistence.NewInMemoryStore(time.Hour * 24),
 	}
 }
 
@@ -70,10 +72,9 @@ func (b *BaseRouter) addSetupRoutes() {
 func (b *BaseRouter) addContentRoutes() {
 	content := b.rg.Group("/content").Use(AuthRequired(nil))
 	exp := time.Hour * 24
-	store := persistence.NewInMemoryStore(exp)
 
 	// Search for content
-	content.GET("/:query", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		// println(c.Param("query"))
 		if c.Param("query") == "" {
 			c.Status(400)
@@ -88,7 +89,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get movie details (for movie page)
-	content.Use(WhereaboutsRequired()).GET("/movie/:id", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.Use(WhereaboutsRequired()).GET("/movie/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -102,7 +103,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get movie cast
-	content.GET("/movie/:id/credits", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/movie/:id/credits", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -116,7 +117,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get tv details (for tv page)
-	content.Use(WhereaboutsRequired()).GET("/tv/:id", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.Use(WhereaboutsRequired()).GET("/tv/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -130,7 +131,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get tv cast
-	content.GET("/tv/:id/credits", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/tv/:id/credits", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -144,7 +145,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get season details
-	content.GET("/tv/:id/season/:num", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/tv/:id/season/:num", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" || c.Param("num") == "" {
 			c.Status(400)
 			return
@@ -158,7 +159,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get person details
-	content.GET("/person/:id", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/person/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -172,7 +173,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get person credits
-	content.GET("/person/:id/credits", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/person/:id/credits", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -186,7 +187,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Discover movies
-	content.GET("/discover/movies", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/discover/movies", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		content, err := discoverMovies()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -196,7 +197,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Discover shows
-	content.GET("/discover/tv", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/discover/tv", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		content, err := discoverTv()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -206,7 +207,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get all trending (movies, tv, people)
-	content.GET("/trending", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/trending", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		content, err := allTrending()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -216,7 +217,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Upcoming Movies
-	content.GET("/upcoming/movies", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/upcoming/movies", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		content, err := upcomingMovies()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -226,7 +227,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Upcoming Tv
-	content.GET("/upcoming/tv", cache.CachePage(store, exp, func(c *gin.Context) {
+	content.GET("/upcoming/tv", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		content, err := upcomingTv()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -604,6 +605,11 @@ func (b *BaseRouter) addServerRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	// Get server stats
+	server.GET("/stats", cache.CachePage(b.ms, time.Minute*5, func(c *gin.Context) {
+		c.JSON(http.StatusOK, getServerStats(b.db))
+	}))
 }
 
 func (b *BaseRouter) addFeatureRoutes() {
