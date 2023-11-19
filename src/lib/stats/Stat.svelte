@@ -14,6 +14,7 @@
     display: flex;
     flex-flow: column;
     flex-grow: 1;
+    flex: 1 1 115px;
     padding: 20px 15px;
     background-color: $accent-color;
     border-radius: 8px;

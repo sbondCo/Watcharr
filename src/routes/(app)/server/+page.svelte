@@ -3,7 +3,7 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
-  import type { RadarrSettings, ServerConfig, SonarrSettings } from "@/types";
+  import type { Content, RadarrSettings, ServerConfig, SonarrSettings } from "@/types";
   import axios from "axios";
   import SonarrModal from "./modals/SonarrModal.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
@@ -11,6 +11,9 @@
   import SettingButton from "@/lib/settings/SettingButton.svelte";
   import RadarrModal from "./modals/RadarrModal.svelte";
   import { getServerFeatures } from "@/lib/util/api";
+  import Stats from "@/lib/stats/Stats.svelte";
+  import Error from "@/lib/Error.svelte";
+  import Stat from "@/lib/stats/Stat.svelte";
 
   let serverConfig: ServerConfig;
   let sonarrModalOpen = false;
@@ -55,12 +58,49 @@
         if (typeof done !== "undefined") done();
       });
   }
+
+  interface ServerStats {
+    users: number;
+    privateUsers: number;
+    watchedMovies: number;
+    watchedShows: number;
+    watchedSeasons: number;
+    mostWatchedMovie: Content;
+    mostWatchedShow: Content;
+    activities: number;
+  }
+
+  async function getServerStats() {
+    return (await axios.get("/server/stats")).data as ServerStats;
+  }
 </script>
 
 <div class="content">
   <div class="inner">
     <SettingsList>
       <h2>Server Settings</h2>
+
+      <Stats>
+        {#await getServerStats()}
+          <Spinner />
+        {:then stats}
+          <Stat name="Users" value={stats.users} large />
+          <Stat name="Private Users" value={stats.privateUsers} large />
+          <Stat name="Watched Movies" value={stats.watchedMovies} large />
+          <Stat name="Watched Shows" value={stats.watchedShows} large />
+          <Stat name="Watched Seasons" value={stats.watchedSeasons} large />
+          <Stat name="Activities" value={stats.activities} large />
+          {#if stats.mostWatchedMovie?.title}
+            <Stat name="Most Watched Movie" value={stats.mostWatchedMovie.title} />
+          {/if}
+          {#if stats.mostWatchedShow?.title}
+            <Stat name="Most Watched Show" value={stats.mostWatchedShow.title} />
+          {/if}
+        {:catch err}
+          <Error error={err} pretty="Failed to get server stats!" />
+        {/await}
+      </Stats>
+
       {#await getServerConfig()}
         <Spinner />
       {:then}

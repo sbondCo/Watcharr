@@ -174,8 +174,19 @@ type ServerStats struct {
 	Activities       int64   `json:"activities"`
 }
 
+// Collect and return server stats
+// I cant sql so this the best yall gettin
 func getServerStats(db *gorm.DB) ServerStats {
 	stats := ServerStats{}
-	db.Model(&User{}).Count(&stats.Users)
+	db.Model(&User{}).Count(&stats.Users).Where("private = 1").Count(&stats.PrivateUsers)
+	db.Model(&WatchedSeason{}).Count(&stats.WatchedSeasons)
+	db.Model(&Activity{}).Count(&stats.Activities)
+	db.Joins("JOIN contents ON contents.id = watcheds.content_id AND contents.type = ?", "tv").Find(&Watched{}).Count(&stats.WatchedShows)
+	db.Joins("JOIN contents ON contents.id = watcheds.content_id AND contents.type = ?", "movie").Find(&Watched{}).Count(&stats.WatchedMovies)
+	var w Watched
+	db.Model(&Watched{}).Select("content_id, COUNT(*) AS mag").Joins("JOIN contents ON contents.type = ? AND contents.id = watcheds.content_id", "tv").Group("content_id").Order("mag DESC").Preload("Content").First(&w)
+	stats.MostWatchedShow = w.Content
+	db.Model(&Watched{}).Select("content_id, COUNT(*) AS mag").Joins("JOIN contents ON contents.type = ? AND contents.id = watcheds.content_id", "movie").Group("content_id").Order("mag DESC").Preload("Content").First(&w)
+	stats.MostWatchedMovie = w.Content
 	return stats
 }
