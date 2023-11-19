@@ -22,7 +22,7 @@
     type ImportResponse,
     type ContentSearchTv,
     type ContentSearchMovie,
-    type ImportedList,
+    type ImportedItem,
     type ContentType
   } from "@/types";
   import axios from "axios";
@@ -30,28 +30,16 @@
   import { get } from "svelte/store";
   import Papa from "papaparse";
 
-  type TMDBRating = {
-    "TMDb ID": number;
-    "IMDb ID": string;
-    Type: ContentType;
-    Name: string;
-    "Release Date": string;
-    "Season Number": string | null;
-    "Episode Number": string | null;
-    Rating: number;
-    "Your Rating": number;
-    "Date Rated": string;
-  };
-
   const wList = get(watchedList);
+  let importEndpoint: string = "/import";
 
   interface ImportedListItemMultiProblem {
-    original: ImportedList;
+    original: ImportedItem;
     results: (ContentSearchMovie | ContentSearchTv)[];
     callback: (err: Error | string | undefined) => void;
   }
 
-  let rList: ImportedList[] = [];
+  let rList: ImportedItem[] = [];
   let isImporting = false;
   let cancelled = false;
 
@@ -79,7 +67,7 @@
       for (let i = 0; i < s.length; i++) {
         const el = s[i]?.trim();
         if (el) {
-          const l: ImportedList = { name: el };
+          const l: ImportedItem = { name: el };
           const year = el.match(yearRegex);
           if (year && year.length > 0) {
             l.year = year[0].replaceAll(/\(|\)/g, "");
@@ -95,35 +83,60 @@
         "TMDb ID,IMDb ID,Type,Name,Release Date,Season Number,Episode Number,Rating,Your Rating,Date Rated"
       ) {
         console.log("TMDB import detected.");
-      }
-      parseCSV(list.data)
-        .then((TMDBRatings) => {
-          TMDBRatings.forEach((r) => {
-            const l: ImportedList = {
-              name: r.Name,
-              tmdbId: r["TMDb ID"],
-              type: r.Type
-            };
-            rList.push(l);
+        importEndpoint = "/tmdb_import";
+        let isEpisodeRatingWarningShown = false;
+        parseCSV(list.data)
+          .then((TMDBRatings) => {
+            console.log("TMDBRatings", TMDBRatings);
+            TMDBRatings.forEach((importedItem) => {
+              if (!Number.isNaN(importedItem.seasonNumber)) {
+                if (!isEpisodeRatingWarningShown) {
+                  console.log("Season/Episode rating not supported yet.");
+                  notify({
+                    text: "Season/Episode rating not supported yet.",
+                    type: "error",
+                    time: 3000
+                  });
+                  isEpisodeRatingWarningShown = true;
+                }
+              } else {
+                rList.push(importedItem);
+              }
+            });
+          })
+          .catch((error) => {
+            console.error("Error parsing CSV:", error);
           });
-        })
-        .catch((error) => {
-          console.error("Error parsing CSV:", error);
-        });
+      } else {
+        console.log("Unsupported import format");
+        notify({ text: "Unsupported import format!", type: "error", time: 5000 });
+        goto("/import");
+      }
     }
     // TODO: remove duplicate names in list
     return list;
   }
 
-  function parseCSV(csvContent: string): Promise<TMDBRating[]> {
+  function parseCSV(csvContent: string): Promise<ImportedItem[]> {
     return new Promise((resolve, reject) => {
       Papa.parse(csvContent, {
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
-          // Assuming that results.data is of type MovieRating[] here.
-          // If your CSV has different headers, you would need to change the MovieRating type accordingly.
-          resolve(results.data as TMDBRating[]);
+          const typedResults = results.data.map((item: any) => ({
+            tmdbId: parseInt(item["TMDb ID"], 10),
+            imdbID: item["IMDb ID"],
+            type: item.Type as ContentType,
+            name: item.Name,
+            releaseDate: new Date(item["Release Date"]),
+            seasonNumber: parseInt(item["Season Number"], 10),
+            episodeNumber: parseInt(item["Episode Number"], 10),
+            rating: parseFloat(item.Rating), // This is the global rating, not too useful
+            Rating: parseFloat(item["Your Rating"]),
+            dateRated: new Date(item["Date Rated"]),
+            year: item["Release Date"].split("-")[0]
+          }));
+          resolve(typedResults as ImportedItem[]);
         },
         error: (error: any) => reject(error)
       });
@@ -134,7 +147,7 @@
     if (!ev.currentTarget.value) {
       return;
     }
-    const lo = { name: ev.currentTarget.value } as ImportedList;
+    const lo = { name: ev.currentTarget.value } as ImportedItem;
     const yearEl = document.getElementById("addYear") as HTMLInputElement;
     if (yearEl?.value) {
       lo.year = yearEl.value;
@@ -145,7 +158,7 @@
     yearEl.value = "";
   }
 
-  function removeRow(l: ImportedList) {
+  function removeRow(l: ImportedItem) {
     rList = rList.filter((r) => r.name !== l.name);
     rList = rList;
   }
@@ -162,8 +175,8 @@
       const li = rList[i];
       try {
         console.log("Importing", li);
-        await doImport(li);
-        await sleep(2000);
+        await doImport(li, importEndpoint);
+        await sleep(200);
       } catch (err) {
         console.error("Failed to import item:", li, "reason:", err);
       }
@@ -185,13 +198,13 @@
     }
   }
 
-  async function doImport(item: ImportedList) {
+  async function doImport(item: ImportedItem, endpoint: string) {
     if (!item.name?.trim()) {
       item.state = ImportResponseType.IMPORT_NOTFOUND;
       rList = rList;
       return;
     }
-    const resp = await axios.post<ImportResponse>("/import", item);
+    const resp = await axios.post<ImportResponse>(endpoint, item);
     return new Promise((res, rej) => {
       if (resp.data.type === ImportResponseType.IMPORT_MULTI) {
         console.log("Import found multiple responses for content", resp.data);
@@ -368,7 +381,7 @@
                 item.tmdbId = r.id;
                 item.type = r.media_type;
                 try {
-                  await doImport(item);
+                  await doImport(item, importEndpoint);
                   importMultiItem?.callback(undefined);
                 } catch (err) {
                   importMultiItem?.callback(String(err));
