@@ -13,11 +13,11 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { parsedImportedList } from "@/store";
-  import { ImportResponseType, type ImportedList } from "@/types";
+  import { ImportResponseType, type ImportedItem } from "@/types";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
 
-  let failed: ImportedList[] = [];
+  let failed: ImportedItem[] = [];
   let successCount = 0;
 
   onMount(() => {
