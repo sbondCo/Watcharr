@@ -40,3 +40,6 @@ vite.config.ts.timestamp-*
 
 # Docker dev volume
 container_data/
+flake.lock
+flake.nix
+pnpm-lock.yaml
