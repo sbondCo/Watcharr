@@ -42,7 +42,9 @@ export function notify(n: Notification) {
     notifs.push({ ...n });
     notifications.update(() => notifs);
   }
-  if (n.type !== "loading") setTimeout(() => unNotify(n.id!), n.time ?? 2500);
+  if (n.type !== "loading" && n.time !== Infinity) {
+    setTimeout(() => unNotify(n.id!), n.time ?? 2500);
+  }
   return n.id;
 }
 

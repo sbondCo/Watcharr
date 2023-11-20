@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"strconv"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -25,10 +27,11 @@ var (
 )
 
 type ImportRequest struct {
-	Name   string      `json:"name"`
-	TmdbID int         `json:"tmdbId"`
-	Type   ContentType `json:"type"`
-	Rating int8        `json:"rating"`
+	Name             string      `json:"name"`
+	TmdbID           int         `json:"tmdbId"`
+	Type             ContentType `json:"type"`
+	Rating           int8        `json:"rating"`
+	RatingCustomDate *time.Time  `json:"ratingCustomDate"`
 }
 
 type ImportResponse struct {
@@ -51,14 +54,14 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 				return ImportResponse{}, errors.New("movie details request failed")
 			}
 			slog.Debug("import: by tmdbid of movie", "cr", cr)
-			return successfulImport(db, userId, cr.ID, MOVIE, ar.Rating)
+			return successfulImport(db, userId, cr.ID, MOVIE, ar)
 		} else if ar.Type == SHOW {
 			cr, err := tvDetails(tid, "", map[string]string{})
 			if err != nil {
 				return ImportResponse{}, errors.New("tv details request failed")
 			}
 			slog.Debug("import: by tmdbid of tv", "cr", cr)
-			return successfulImport(db, userId, cr.ID, SHOW, ar.Rating)
+			return successfulImport(db, userId, cr.ID, SHOW, ar)
 		}
 	}
 	sr, err := searchContent(ar.Name)
@@ -102,21 +105,21 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		// If one perfect match found, import it
 		if perfectMatch.ID != 0 {
 			slog.Debug("import: importing from perfect match")
-			return successfulImport(db, userId, perfectMatch.ID, ContentType(perfectMatch.MediaType), ar.Rating)
+			return successfulImport(db, userId, perfectMatch.ID, ContentType(perfectMatch.MediaType), ar)
 		}
 		return ImportResponse{Type: IMPORT_MULTI, Results: pMatches}, nil
 	} else {
 		slog.Debug("import: success.. only found one result")
-		return successfulImport(db, userId, pMatches[0].ID, ContentType(pMatches[0].MediaType), ar.Rating)
+		return successfulImport(db, userId, pMatches[0].ID, ContentType(pMatches[0].MediaType), ar)
 	}
 }
 
-func successfulImport(db *gorm.DB, userId uint, contentId int, contentType ContentType, rating int8) (ImportResponse, error) {
+func successfulImport(db *gorm.DB, userId uint, contentId int, contentType ContentType, ar ImportRequest) (ImportResponse, error) {
 	w, err := addWatched(db, userId, WatchedAddRequest{
 		Status:      FINISHED,
 		ContentID:   contentId,
 		ContentType: contentType,
-		Rating:      rating,
+		Rating:      ar.Rating,
 	}, IMPORTED_WATCHED)
 	if err != nil {
 		if err.Error() == "content already on watched list" {
@@ -126,5 +129,13 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 		slog.Error("successfulImport: Failed to add content as watched", "error", err)
 		return ImportResponse{Type: IMPORT_FAILED}, nil
 	}
+	var addedActivity Activity
+	if len(w.Activity) > 0 {
+		activityJson, _ := json.Marshal(map[string]interface{}{"rating": ar.Rating, "linkedActivity": w.Activity[0].ID})
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_RATING, Data: string(activityJson), CustomDate: ar.RatingCustomDate})
+	} else {
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_RATING, Data: strconv.Itoa(int(ar.Rating)), CustomDate: ar.RatingCustomDate})
+	}
+	w.Activity = append(w.Activity, addedActivity)
 	return ImportResponse{Type: IMPORT_SUCCESS, WatchedEntry: w}, nil
 }
