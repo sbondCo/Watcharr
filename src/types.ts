@@ -52,6 +52,7 @@ export interface Activity extends dbModel {
   watchedId: number;
   type: string;
   data: string;
+  customDate: string;
 }
 
 export interface WatchedSeason {
