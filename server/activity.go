@@ -18,7 +18,7 @@ var (
 	THOUGHTS_CHANGED      ActivityType = "THOUGHTS_CHANGED"
 	THOUGHTS_REMOVED      ActivityType = "THOUGHTS_REMOVED"
 	IMPORTED_WATCHED      ActivityType = "IMPORTED_WATCHED"
-	IMPORTED_RATING       ActivityType = "IMPORTED_RATING"
+	IMPORTED_RATING       ActivityType = "IMPORTED_RATING" // Imported rating, but with no rating acts as original import of content to old platform (where they are importing from) activity
 	SEASON_ADDED          ActivityType = "SEASON_ADDED"
 	SEASON_REMOVED        ActivityType = "SEASON_REMOVED"
 	SEASON_RATING_CHANGED ActivityType = "SEASON_RATING_CHANGED"

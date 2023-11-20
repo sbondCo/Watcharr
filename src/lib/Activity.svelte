@@ -41,7 +41,11 @@
       case "IMPORTED_RATING":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `rating changed to ${data.rating}`;
+          if (data.rating) {
+            return `rating changed to ${data.rating}`;
+          } else {
+            return "added to watchlist with no rating";
+          }
         }
         return "imported rating";
       case "SEASON_ADDED":

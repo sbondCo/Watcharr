@@ -129,6 +129,7 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 		slog.Error("successfulImport: Failed to add content as watched", "error", err)
 		return ImportResponse{Type: IMPORT_FAILED}, nil
 	}
+	// Add activity of the original time the show was added to the users watchlist on whichever platform they are coming from.
 	var addedActivity Activity
 	if len(w.Activity) > 0 {
 		activityJson, _ := json.Marshal(map[string]interface{}{"rating": ar.Rating, "linkedActivity": w.Activity[0].ID})
