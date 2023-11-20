@@ -96,6 +96,9 @@
           if (el["TMDb ID"]) {
             l.tmdbId = Number(el["TMDb ID"]);
           }
+          if (el["Your Rating"]) {
+            l.rating = Math.floor(Number(el["Your Rating"]));
+          }
           rList.push(l);
         }
       }

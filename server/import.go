@@ -28,6 +28,7 @@ type ImportRequest struct {
 	Name   string      `json:"name"`
 	TmdbID int         `json:"tmdbId"`
 	Type   ContentType `json:"type"`
+	Rating int8        `json:"rating"`
 }
 
 type ImportResponse struct {
@@ -50,14 +51,14 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 				return ImportResponse{}, errors.New("movie details request failed")
 			}
 			slog.Debug("import: by tmdbid of movie", "cr", cr)
-			return successfulImport(db, userId, cr.ID, MOVIE)
+			return successfulImport(db, userId, cr.ID, MOVIE, ar.Rating)
 		} else if ar.Type == SHOW {
 			cr, err := tvDetails(tid, "", map[string]string{})
 			if err != nil {
 				return ImportResponse{}, errors.New("tv details request failed")
 			}
 			slog.Debug("import: by tmdbid of tv", "cr", cr)
-			return successfulImport(db, userId, cr.ID, SHOW)
+			return successfulImport(db, userId, cr.ID, SHOW, ar.Rating)
 		}
 	}
 	sr, err := searchContent(ar.Name)
@@ -101,20 +102,21 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		// If one perfect match found, import it
 		if perfectMatch.ID != 0 {
 			slog.Debug("import: importing from perfect match")
-			return successfulImport(db, userId, perfectMatch.ID, ContentType(perfectMatch.MediaType))
+			return successfulImport(db, userId, perfectMatch.ID, ContentType(perfectMatch.MediaType), ar.Rating)
 		}
 		return ImportResponse{Type: IMPORT_MULTI, Results: pMatches}, nil
 	} else {
 		slog.Debug("import: success.. only found one result")
-		return successfulImport(db, userId, pMatches[0].ID, ContentType(pMatches[0].MediaType))
+		return successfulImport(db, userId, pMatches[0].ID, ContentType(pMatches[0].MediaType), ar.Rating)
 	}
 }
 
-func successfulImport(db *gorm.DB, userId uint, contentId int, contentType ContentType) (ImportResponse, error) {
+func successfulImport(db *gorm.DB, userId uint, contentId int, contentType ContentType, rating int8) (ImportResponse, error) {
 	w, err := addWatched(db, userId, WatchedAddRequest{
 		Status:      FINISHED,
 		ContentID:   contentId,
 		ContentType: contentType,
+		Rating:      rating,
 	}, IMPORTED_WATCHED)
 	if err != nil {
 		if err.Error() == "content already on watched list" {

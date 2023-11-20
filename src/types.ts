@@ -674,6 +674,7 @@ export interface ImportedList {
   year?: string;
   type?: ContentType;
   state?: string;
+  rating?: number;
 }
 
 export interface Filters {
