@@ -130,13 +130,15 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 		return ImportResponse{Type: IMPORT_FAILED}, nil
 	}
 	// Add activity of the original time the show was added to the users watchlist on whichever platform they are coming from.
-	var addedActivity Activity
-	if len(w.Activity) > 0 {
-		activityJson, _ := json.Marshal(map[string]interface{}{"rating": ar.Rating, "linkedActivity": w.Activity[0].ID})
-		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_RATING, Data: string(activityJson), CustomDate: ar.RatingCustomDate})
-	} else {
-		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_RATING, Data: strconv.Itoa(int(ar.Rating)), CustomDate: ar.RatingCustomDate})
+	if !ar.RatingCustomDate.IsZero() {
+		var addedActivity Activity
+		if len(w.Activity) > 0 {
+			activityJson, _ := json.Marshal(map[string]interface{}{"rating": ar.Rating, "linkedActivity": w.Activity[0].ID})
+			addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_RATING, Data: string(activityJson), CustomDate: ar.RatingCustomDate})
+		} else {
+			addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_RATING, Data: strconv.Itoa(int(ar.Rating)), CustomDate: ar.RatingCustomDate})
+		}
+		w.Activity = append(w.Activity, addedActivity)
 	}
-	w.Activity = append(w.Activity, addedActivity)
 	return ImportResponse{Type: IMPORT_SUCCESS, WatchedEntry: w}, nil
 }
