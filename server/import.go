@@ -130,7 +130,7 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 		return ImportResponse{Type: IMPORT_FAILED}, nil
 	}
 	// Add activity of the original time the show was added to the users watchlist on whichever platform they are coming from.
-	if !ar.RatingCustomDate.IsZero() {
+	if ar.RatingCustomDate != nil {
 		var addedActivity Activity
 		if len(w.Activity) > 0 {
 			activityJson, _ := json.Marshal(map[string]interface{}{"rating": ar.Rating, "linkedActivity": w.Activity[0].ID})
