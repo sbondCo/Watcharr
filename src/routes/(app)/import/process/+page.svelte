@@ -78,25 +78,39 @@
       const s = papa.parse(list.data.trim(), { header: true });
       console.debug("parsed csv", s);
       for (let i = 0; i < s.data.length; i++) {
-        const el = s.data[i] as any;
-        if (el) {
-          // Skip if no name or tmdb id
-          if (!el.Name && !el["TMDb ID"]) {
-            console.warn("Skipping item with no name or tmdb id", el);
-            return;
+        try {
+          const el = s.data[i] as any;
+          if (el) {
+            // Skip if no name or tmdb id
+            if (!el.Name && !el["TMDb ID"]) {
+              console.warn("Skipping item with no name or tmdb id", el);
+              return;
+            }
+            const l: ImportedList = { name: el.Name };
+            const year = el["Release Date"] ? new Date(el["Release Date"]) : undefined;
+            if (year) {
+              l.year = String(year.getFullYear());
+            }
+            if (el.Type === "movie" || el.Type === "tv") {
+              l.type = el.Type;
+            }
+            if (el["TMDb ID"]) {
+              l.tmdbId = Number(el["TMDb ID"]);
+            }
+            if (el["Your Rating"]) {
+              l.rating = Math.floor(Number(el["Your Rating"]));
+            }
+            if (el["Date Rated"]) {
+              l.ratingCustomDate = new Date(el["Date Rated"]);
+            }
+            rList.push(l);
           }
-          const l: ImportedList = { name: el.Name };
-          const year = el["Release Date"] ? new Date(el["Release Date"]) : undefined;
-          if (year) {
-            l.year = String(year.getFullYear());
-          }
-          if (el.Type === "movie" || el.Type === "tv") {
-            l.type = el.Type;
-          }
-          if (el["TMDb ID"]) {
-            l.tmdbId = Number(el["TMDb ID"]);
-          }
-          rList.push(l);
+        } catch (err) {
+          console.error("Failed to process an item!", err);
+          notify({
+            type: "error",
+            text: "Failed to process an item!"
+          });
         }
       }
     }
@@ -139,6 +153,11 @@
         await doImport(li);
       } catch (err) {
         console.error("Failed to import item:", li, "reason:", err);
+        notify({
+          type: "error",
+          text: "Failed to import an item! Check console for more info.",
+          time: Infinity
+        });
       }
       await sleep(1500);
     }

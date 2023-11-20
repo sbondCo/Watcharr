@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log/slog"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -17,6 +18,7 @@ var (
 	THOUGHTS_CHANGED      ActivityType = "THOUGHTS_CHANGED"
 	THOUGHTS_REMOVED      ActivityType = "THOUGHTS_REMOVED"
 	IMPORTED_WATCHED      ActivityType = "IMPORTED_WATCHED"
+	IMPORTED_RATING       ActivityType = "IMPORTED_RATING" // Imported rating, but with no rating acts as original import of content to old platform (where they are importing from) activity
 	SEASON_ADDED          ActivityType = "SEASON_ADDED"
 	SEASON_REMOVED        ActivityType = "SEASON_REMOVED"
 	SEASON_RATING_CHANGED ActivityType = "SEASON_RATING_CHANGED"
@@ -35,12 +37,15 @@ type Activity struct {
 	// Holds custom data (ex, if rating changed, this can
 	// hold new rating - if status changed, this will hold that).
 	Data string `json:"data" gorm:"not null"`
+	// Custom date for the activity, that the user can define.
+	CustomDate *time.Time `json:"customDate,omitempty"`
 }
 
 type ActivityAddRequest struct {
-	WatchedID uint         `json:"watchedId" binding:"required"`
-	Type      ActivityType `json:"type" binding:"required"`
-	Data      string       `json:"data" binding:"required"`
+	WatchedID  uint         `json:"watchedId" binding:"required"`
+	Type       ActivityType `json:"type" binding:"required"`
+	Data       string       `json:"data" binding:"required"`
+	CustomDate *time.Time   `json:"customDate,omitempty"`
 }
 
 func getActivity(db *gorm.DB, userId uint, watchedId uint) ([]Activity, error) {
@@ -57,7 +62,7 @@ func addActivity(db *gorm.DB, userId uint, ar ActivityAddRequest) (Activity, err
 	if ar.WatchedID == 0 {
 		return Activity{}, errors.New("watchedId must be set to add an activity")
 	}
-	activity := Activity{UserID: userId, WatchedID: ar.WatchedID, Type: ar.Type, Data: ar.Data}
+	activity := Activity{UserID: userId, WatchedID: ar.WatchedID, Type: ar.Type, Data: ar.Data, CustomDate: ar.CustomDate}
 	res := db.Create(&activity)
 	if res.Error != nil {
 		slog.Error("Error adding activity to database", "error", res.Error.Error())

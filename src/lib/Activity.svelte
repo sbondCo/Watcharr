@@ -38,6 +38,16 @@
         return "thoughts removed";
       case "IMPORTED_WATCHED":
         return "imported";
+      case "IMPORTED_RATING":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          if (data.rating) {
+            return `rating changed to ${data.rating}`;
+          } else {
+            return "added to watchlist with no rating";
+          }
+        }
+        return "imported rating";
       case "SEASON_ADDED":
         if (a.data) {
           const data = JSON.parse(a.data);
@@ -71,14 +81,22 @@
     return `${d.getDate()}${getOrdinalSuffix(d.getDate())} at ${d.toLocaleTimeString()}`;
   }
 
+  /**
+   * Get what will be the visible date the activity was 'created'.
+   * @returns customDate if defined or createdAt if not.
+   */
+  function getCreatedAtVis(a: Activity) {
+    return Date.parse(a.customDate ?? a.createdAt);
+  }
+
   function getGroupedActivity(activities?: Activity[]) {
     activities = activities?.filter((a) => a.type);
-    const a = activities?.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    const a = activities?.sort((a, b) => getCreatedAtVis(b) - getCreatedAtVis(a));
     let grouped: { [index: string]: any } = {};
     if (a) {
       for (let i = 0; i < a.length; i++) {
         const activity = a[i];
-        const date = new Date(Date.parse(activity.createdAt));
+        const date = new Date(getCreatedAtVis(activity));
         const key = `${months[date.getMonth()]} ${date.getFullYear()}`;
         if (grouped[key]) {
           grouped[key].push(activity);
@@ -99,9 +117,10 @@
         <h3>{k}</h3>
 
         {#each groupedActivities[k] as a}
+          {@const d = new Date(getCreatedAtVis(a))}
           <li>
-            <span title={new Date(a.createdAt).toDateString()}>
-              {toDayTime(new Date(a.createdAt))}
+            <span title={d.toDateString()}>
+              {toDayTime(d)}
             </span>
             <span>{getMsg(a)}</span>
           </li>

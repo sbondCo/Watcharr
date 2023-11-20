@@ -52,6 +52,7 @@ export interface Activity extends dbModel {
   watchedId: number;
   type: string;
   data: string;
+  customDate: string;
 }
 
 export interface WatchedSeason {
@@ -674,6 +675,8 @@ export interface ImportedList {
   year?: string;
   type?: ContentType;
   state?: string;
+  rating?: number;
+  ratingCustomDate?: Date;
 }
 
 export interface Filters {
