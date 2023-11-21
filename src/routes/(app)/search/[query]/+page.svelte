@@ -51,6 +51,7 @@
   {#await search(data.slug)}
     <Spinner />
   {:then results}
+    <h2 style="margin-left: 30px;">Results</h2>
     <PosterList>
       {#if results?.results?.length > 0}
         {#each results.results as w (w.id)}
