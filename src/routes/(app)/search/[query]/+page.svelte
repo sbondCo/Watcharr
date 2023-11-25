@@ -39,35 +39,53 @@
   <title>Content Search</title>
 </svelte:head>
 
-{#if data.slug}
-  {#await searchUsers(data.slug) then results}
-    {#if results?.length > 0}
-      <UsersList users={results} />
-    {/if}
-  {:catch err}
-    <PageError pretty="Failed to load watched list!" error={err} />
-  {/await}
+<div class="content">
+  <div class="inner">
+    {#if data.slug}
+      {#await searchUsers(data.slug) then results}
+        {#if results?.length > 0}
+          <UsersList users={results} />
+        {/if}
+      {:catch err}
+        <PageError pretty="Failed to load watched list!" error={err} />
+      {/await}
 
-  {#await search(data.slug)}
-    <Spinner />
-  {:then results}
-    <h2 style="margin-left: 30px;">Results</h2>
-    <PosterList>
-      {#if results?.results?.length > 0}
-        {#each results.results as w (w.id)}
-          {#if w.media_type === "person"}
-            <PersonPoster id={w.id} name={w.name} path={w.profile_path} />
+      {#await search(data.slug)}
+        <Spinner />
+      {:then results}
+        <h2 style="margin-left: 30px;">Results</h2>
+        <PosterList>
+          {#if results?.results?.length > 0}
+            {#each results.results as w (w.id)}
+              {#if w.media_type === "person"}
+                <PersonPoster id={w.id} name={w.name} path={w.profile_path} />
+              {:else}
+                <Poster media={w} {...getWatchedDependedProps(w.id, w.media_type, wList)} />
+              {/if}
+            {/each}
           {:else}
-            <Poster media={w} {...getWatchedDependedProps(w.id, w.media_type, wList)} />
+            No Search Results!
           {/if}
-        {/each}
-      {:else}
-        No Search Results!
-      {/if}
-    </PosterList>
-  {:catch err}
-    <PageError pretty="Failed to load watched list!" error={err} />
-  {/await}
-{:else}
-  <h2>No Search Query!</h2>
-{/if}
+        </PosterList>
+      {:catch err}
+        <PageError pretty="Failed to load watched list!" error={err} />
+      {/await}
+    {:else}
+      <h2>No Search Query!</h2>
+    {/if}
+  </div>
+</div>
+
+<style lang="scss">
+  .content {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    padding: 0 30px 0 30px;
+
+    .inner {
+      width: 100%;
+      max-width: 1200px;
+    }
+  }
+</style>
