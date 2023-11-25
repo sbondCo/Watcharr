@@ -23,6 +23,8 @@
 
 <h2 class="norm">{data.username}'s Watched List</h2>
 
+<button>Follow</button>
+
 {#await getPublicWatchedList(Number(data.id), data.username)}
   <Spinner />
 {:then watched}
