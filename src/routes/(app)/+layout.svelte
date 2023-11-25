@@ -11,6 +11,7 @@
     activeFilters,
     activeSort,
     clearAllStores,
+    follows,
     searchQuery,
     serverFeatures,
     userInfo,
@@ -119,11 +120,12 @@
 
   async function getInitialData() {
     if (localStorage.getItem("token")) {
-      const [w, u, s, f] = await Promise.all([
+      const [w, u, s, f, fo] = await Promise.all([
         axios.get("/watched"),
         axios.get("/user"),
         axios.get("/user/settings"),
-        axios.get("/features")
+        axios.get("/features"),
+        axios.get("/follow")
       ]);
       if (w?.data?.length > 0) {
         watchedList.update((wl) => (wl = w.data));
@@ -136,6 +138,9 @@
       }
       if (f?.data) {
         serverFeatures.update((sf) => (sf = f.data));
+      }
+      if (fo?.data) {
+        follows.update((f) => (f = fo.data));
       }
     } else {
       goto("/login?again=1");
@@ -216,7 +221,7 @@
           sortMenuShown = false;
           subMenuShown = false;
         }}
-        use:tooltip={{ text: "Filter", pos: "bot" }}
+        use:tooltip={{ text: "Filter", pos: "bot", condition: !filterMenuShown }}
       >
         <Icon i="filter" />
       </button>
@@ -227,7 +232,7 @@
           filterMenuShown = false;
           subMenuShown = false;
         }}
-        use:tooltip={{ text: "Sort", pos: "bot" }}
+        use:tooltip={{ text: "Sort", pos: "bot", condition: !sortMenuShown }}
       >
         <Icon i="sort" />
       </button>
@@ -315,7 +320,14 @@
       on:click={() => goto("/discover")}
       use:tooltip={{ text: "Discover", pos: "bot" }}
     >
-      <Icon i="compass" />
+      <Icon i="compass" wh={26} />
+    </button>
+    <button
+      class="plain other following"
+      on:click={() => goto("/discover")}
+      use:tooltip={{ text: "Following", pos: "bot" }}
+    >
+      <Icon i="people" wh={26} />
     </button>
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
@@ -460,7 +472,7 @@
       }
 
       button.discover {
-        margin-right: 17px;
+        margin-right: 12px;
         transition:
           fill 150ms ease,
           stroke 150ms ease,
@@ -471,6 +483,10 @@
         &:focus-visible {
           transform: rotate(60deg);
         }
+      }
+
+      button.following {
+        margin-right: 17px;
       }
 
       button.face {

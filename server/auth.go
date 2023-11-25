@@ -59,6 +59,13 @@ type User struct {
 	UserSettings
 }
 
+func (u *User) GetSafe() PublicUser {
+	return PublicUser{
+		ID:       u.ID,
+		Username: u.Username,
+	}
+}
+
 // This struct uses pointer to the values, so in update user settings,
 // we can tell which setting is being updated (if not nil..).
 type UserSettings struct {
