@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -205,7 +204,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 		res := db.Create(&content)
 		if res.Error != nil {
 			// Error if anything but unique contraint error
-			if !strings.Contains(res.Error.Error(), "UNIQUE") {
+			if res.Error != gorm.ErrDuplicatedKey {
 				slog.Error("Error creating content in database", "error", res.Error.Error())
 				return Watched{}, errors.New("failed to cache content in database")
 			}
@@ -229,7 +228,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 	watched := Watched{Status: ar.Status, Rating: ar.Rating, UserID: userId, ContentID: content.ID}
 	res := db.Create(&watched)
 	if res.Error != nil {
-		if strings.Contains(res.Error.Error(), "UNIQUE") {
+		if res.Error == gorm.ErrDuplicatedKey {
 			res = db.Model(&Watched{}).Unscoped().Preload("Activity").Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Take(&watched)
 			if res.Error != nil {
 				return Watched{}, errors.New("content already on watched list. errored checking for soft deleted record")

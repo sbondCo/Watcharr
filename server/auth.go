@@ -223,7 +223,7 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 	res := db.Create(&user)
 	if res.Error != nil {
 		// If error is because unique contraint failed.. user already exists
-		if strings.Contains(res.Error.Error(), "UNIQUE") {
+		if res.Error == gorm.ErrDuplicatedKey {
 			slog.Error("Registration failed", "error", res.Error.Error(), "error_pretty", "User already exists")
 			return AuthResponse{}, errors.New("User already exists")
 		}
