@@ -119,6 +119,7 @@ func main() {
 	br.addProfileRoutes()
 	br.addJellyfinRoutes()
 	br.addUserRoutes()
+	br.addFollowRoutes()
 	br.addImportRoutes()
 	br.addServerRoutes()
 	br.addFeatureRoutes()

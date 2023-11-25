@@ -561,6 +561,38 @@ func (b *BaseRouter) addUserRoutes() {
 	})
 }
 
+func (b *BaseRouter) addFollowRoutes() {
+	f := b.rg.Group("/follow").Use(AuthRequired(b.db))
+
+	// Get users follows // TODO extend to support optionally passing user id as route param, default to current user
+	f.GET("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		response, err := getFollows(b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Follow a user
+	f.POST("/:toFollowId", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		toFollowId, err := strconv.ParseUint(c.Param("toFollowId"), 10, 64)
+		if err != nil {
+			slog.Error("failed to convert toFollowId param to uint", "toFollowId", toFollowId)
+			c.Status(400)
+			return
+		}
+		response, err := followUser(b.db, userId, uint(toFollowId))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+}
+
 func (b *BaseRouter) addImportRoutes() {
 	imprt := b.rg.Group("/import").Use(AuthRequired(nil))
 
