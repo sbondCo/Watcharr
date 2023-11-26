@@ -5,7 +5,9 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import tooltip from "@/lib/actions/tooltip";
+  import FilterMenu from "@/lib/nav/FilterMenu.svelte";
   import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
+  import SortMenu from "@/lib/nav/SortMenu.svelte";
   import { isTouch, parseTokenPayload, userHasPermission } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import {
@@ -25,14 +27,12 @@
   import { get } from "svelte/store";
 
   let navEl: HTMLElement;
-  let searchTimeout: number;
+  let searchTimeout: NodeJS.Timeout;
   let subMenuShown = false;
   let filterMenuShown = false;
   let sortMenuShown = false;
   let followingMenuShown = false;
 
-  $: sort = $activeSort;
-  $: filter = $activeFilters;
   $: settings = $userSettings;
   $: user = $userInfo;
 
@@ -148,42 +148,6 @@
     }
   }
 
-  function sortClicked(type: string, modeType: string = "UPDOWN") {
-    const af = get(activeSort);
-    let mode: string;
-    if (modeType === "UPDOWN") {
-      mode = "UP";
-      if (af[0] == type) {
-        if (af[1] === "UP") {
-          mode = "DOWN";
-        } else if (af[1] === "DOWN") {
-          mode = "";
-        }
-      }
-    } else if (modeType === "TOGGLE") {
-      mode = "ON";
-      if (af[0] == type) {
-        if (af[1] === "ON") {
-          mode = "OFF";
-        }
-      }
-    } else {
-      console.error("filterClicked() ran without a valid modeType:", modeType);
-      return;
-    }
-    activeSort.update((af) => (af = [type, mode]));
-  }
-
-  function filterClicked(type: keyof Filters, f: string) {
-    const af = get(activeFilters);
-    if (af[type]?.includes(f)) {
-      af[type] = af[type]?.filter((a) => a !== f);
-    } else {
-      af[type]?.push(f);
-    }
-    activeFilters.update((a) => (a = af));
-  }
-
   function closeAllSubMenus(except?: string) {
     if (except !== "sub") subMenuShown = false;
     if (except !== "filter") filterMenuShown = false;
@@ -241,82 +205,10 @@
         <Icon i="sort" />
       </button>
       {#if sortMenuShown}
-        <div class="menu sort-menu">
-          <button
-            class={`plain ${sort[0] == "DATEADDED" ? sort[1].toLowerCase() : ""}`}
-            on:click={() => sortClicked("DATEADDED")}
-          >
-            Date Added
-          </button>
-          <button
-            class={`plain ${sort[0] == "LASTCHANGED" ? sort[1].toLowerCase() : ""}`}
-            on:click={() => sortClicked("LASTCHANGED")}
-          >
-            Last Changed
-          </button>
-          <button
-            class={`plain ${sort[0] == "RATING" ? sort[1].toLowerCase() : ""}`}
-            on:click={() => sortClicked("RATING")}
-          >
-            Rating
-          </button>
-          <button
-            class={`plain ${sort[0] == "ALPHA" ? sort[1].toLowerCase() : ""}`}
-            on:click={() => sortClicked("ALPHA")}
-          >
-            Alphabetical
-          </button>
-        </div>
+        <SortMenu />
       {/if}
       {#if filterMenuShown}
-        <div class="menu filter-menu">
-          <h4 class="norm sm-caps">type</h4>
-          <div class="type-filter">
-            <button
-              class={`${filter.type.includes("tv") ? "active" : ""}`}
-              on:click={() => filterClicked("type", "tv")}
-            >
-              SHOW
-            </button>
-            <button
-              class={`${filter.type.includes("movie") ? "active" : ""}`}
-              on:click={() => filterClicked("type", "movie")}
-            >
-              MOVIE
-            </button>
-          </div>
-          <h4 class="norm sm-caps">status</h4>
-          <button
-            class={`plain ${filter.status.includes("planned") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "planned")}
-          >
-            planned
-          </button>
-          <button
-            class={`plain ${filter.status.includes("watching") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "watching")}
-          >
-            watching
-          </button>
-          <button
-            class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "finished")}
-          >
-            finished
-          </button>
-          <button
-            class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "hold")}
-          >
-            held
-          </button>
-          <button
-            class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "dropped")}
-          >
-            dropped
-          </button>
-        </div>
+        <FilterMenu />
       {/if}
     {/if}
     <button
@@ -337,7 +229,7 @@
       <Icon i="people" wh={26} />
     </button>
     {#if followingMenuShown}
-      <FollowingMenu />
+      <FollowingMenu close={() => (followingMenuShown = false)} />
     {/if}
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
@@ -523,99 +415,6 @@
       div.face-menu {
         &:before {
           right: 10px;
-        }
-      }
-
-      div.sort-menu {
-        width: 180px;
-
-        &:before {
-          left: 21px;
-        }
-
-        & > button {
-          position: relative;
-
-          &.down::before {
-            content: "\2193";
-          }
-
-          &.up::before {
-            content: "\2191";
-          }
-
-          &.on::before {
-            content: "\2713";
-          }
-
-          &::before {
-            position: absolute;
-            top: 4px;
-            left: 12px;
-            font-family:
-              system-ui,
-              -apple-system,
-              BlinkMacSystemFont;
-            font-size: 18px;
-          }
-        }
-      }
-
-      div.filter-menu {
-        width: 180px;
-        right: 35px;
-
-        &:before {
-          left: 3px;
-        }
-
-        h4 {
-          margin-bottom: 8px;
-
-          &:not(:first-of-type) {
-            margin-top: 8px;
-          }
-        }
-
-        & > button {
-          text-transform: capitalize;
-          position: relative;
-
-          &.on::before {
-            content: "\2713";
-          }
-
-          &::before {
-            position: absolute;
-            top: 4px;
-            left: 12px;
-            font-family:
-              system-ui,
-              -apple-system,
-              BlinkMacSystemFont;
-            font-size: 18px;
-          }
-        }
-
-        .type-filter {
-          display: flex;
-          flex-flow: row;
-          width: 100%;
-
-          button {
-            border-radius: 0;
-            padding: 8px 0;
-            width: 100%;
-
-            &:first-of-type {
-              border-right: 0;
-              border-radius: 5px 0 0 5px;
-            }
-
-            &:last-of-type {
-              border-radius: 0 5px 5px 0;
-            }
-          }
         }
       }
     }

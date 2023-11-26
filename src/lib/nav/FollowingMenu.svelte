@@ -1,6 +1,8 @@
 <script lang="ts">
   import { follows } from "@/store";
 
+  export let close: () => {};
+
   $: following = $follows;
 </script>
 
@@ -8,7 +10,7 @@
   {#if following?.length > 0}
     <h4 class="norm sm-caps">followed</h4>
     {#each following as f}
-      <a href="/lists/{f.followedUser.id}/{f.followedUser.username}">
+      <a href="/lists/{f.followedUser.id}/{f.followedUser.username}" on:click={() => close()}>
         {f.followedUser.username}
       </a>
     {/each}
