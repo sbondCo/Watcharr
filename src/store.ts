@@ -37,6 +37,7 @@ export const clearAllStores = () => {
   searchQuery.set("");
   userInfo.set(undefined);
   userSettings.set(undefined);
+  follows.set([]);
 };
 
 if (browser) {

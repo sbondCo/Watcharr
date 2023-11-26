@@ -5,6 +5,7 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import tooltip from "@/lib/actions/tooltip";
+  import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
   import { isTouch, parseTokenPayload, userHasPermission } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import {
@@ -28,6 +29,7 @@
   let subMenuShown = false;
   let filterMenuShown = false;
   let sortMenuShown = false;
+  let followingMenuShown = false;
 
   $: sort = $activeSort;
   $: filter = $activeFilters;
@@ -38,9 +40,8 @@
     if (!localStorage.getItem("token")) {
       goto("/login");
     } else {
+      closeAllSubMenus("sub");
       subMenuShown = !subMenuShown;
-      filterMenuShown = false;
-      sortMenuShown = false;
     }
   }
 
@@ -183,6 +184,13 @@
     activeFilters.update((a) => (a = af));
   }
 
+  function closeAllSubMenus(except?: string) {
+    if (except !== "sub") subMenuShown = false;
+    if (except !== "filter") filterMenuShown = false;
+    if (except !== "sort") sortMenuShown = false;
+    if (except !== "following") followingMenuShown = false;
+  }
+
   onMount(() => {
     if (navEl) {
       let scroll = window.scrollY;
@@ -193,9 +201,7 @@
         } else {
           navEl?.classList.add("scrolled-down");
           document.body.classList.remove("nav-shown");
-          subMenuShown = false;
-          filterMenuShown = false;
-          sortMenuShown = false;
+          closeAllSubMenus();
         }
         scroll = window.scrollY;
       });
@@ -217,9 +223,8 @@
       <button
         class="plain other filter"
         on:click={() => {
+          closeAllSubMenus("filter");
           filterMenuShown = !filterMenuShown;
-          sortMenuShown = false;
-          subMenuShown = false;
         }}
         use:tooltip={{ text: "Filter", pos: "bot", condition: !filterMenuShown }}
       >
@@ -228,9 +233,8 @@
       <button
         class="plain other sort"
         on:click={() => {
+          closeAllSubMenus("sort");
           sortMenuShown = !sortMenuShown;
-          filterMenuShown = false;
-          subMenuShown = false;
         }}
         use:tooltip={{ text: "Sort", pos: "bot", condition: !sortMenuShown }}
       >
@@ -324,11 +328,17 @@
     </button>
     <button
       class="plain other following"
-      on:click={() => goto("/discover")}
+      on:click={() => {
+        closeAllSubMenus("following");
+        followingMenuShown = !followingMenuShown;
+      }}
       use:tooltip={{ text: "Following", pos: "bot" }}
     >
       <Icon i="people" wh={26} />
     </button>
+    {#if followingMenuShown}
+      <FollowingMenu />
+    {/if}
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
       <div class="menu face-menu">
@@ -507,49 +517,6 @@
         &:focus-visible {
           color: $bg-color;
           -webkit-text-stroke: 1.5px $text-color;
-        }
-      }
-
-      div.menu {
-        display: flex;
-        flex-flow: column;
-        position: absolute;
-        right: 3px;
-        top: 55px;
-        width: 125px;
-        padding: 10px;
-        border: 3px solid $text-color;
-        border-radius: 10px;
-        background-color: $bg-color;
-        list-style: none;
-        z-index: 50;
-
-        h5 {
-          margin-bottom: 2px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          cursor: default;
-        }
-
-        button {
-          font-size: 14px;
-          padding: 8px 16px;
-          cursor: pointer;
-          transition: background-color 200ms ease;
-
-          &:hover,
-          &:focus-visible {
-            background-color: $text-color;
-            color: $bg-color;
-          }
-        }
-
-        span {
-          margin-top: 8px;
-          font-size: 11px;
-          color: gray;
-          text-align: center;
         }
       }
 
