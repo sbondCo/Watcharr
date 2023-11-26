@@ -271,7 +271,6 @@
   right: 10px;
   top: 55px;
   width: 125px;
-  padding: 10px;
   border: 3px solid $text-color;
   border-radius: 10px;
   background-color: $bg-color;
@@ -290,33 +289,42 @@
     border-bottom: 10px solid black;
   }
 
-  h5 {
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: default;
-  }
+  & > div {
+    display: flex;
+    flex-flow: column;
+    padding: 10px;
+    width: 100%;
+    max-height: calc(100dvh - 65px);
+    overflow: auto;
 
-  button,
-  a {
-    font-size: 14px;
-    padding: 8px 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: background-color 200ms ease;
-
-    &:hover,
-    &:focus-visible {
-      background-color: $text-color;
-      color: $bg-color;
+    h5 {
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: default;
     }
-  }
 
-  span {
-    margin-top: 8px;
-    font-size: 11px;
-    color: gray;
-    text-align: center;
+    button,
+    a {
+      font-size: 14px;
+      padding: 8px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 200ms ease;
+
+      &:hover,
+      &:focus-visible {
+        background-color: $text-color;
+        color: $bg-color;
+      }
+    }
+
+    span {
+      margin-top: 8px;
+      font-size: 11px;
+      color: gray;
+      text-align: center;
+    }
   }
 }

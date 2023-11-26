@@ -17,63 +17,67 @@
 </script>
 
 <div class="menu">
-  <h4 class="norm sm-caps">type</h4>
-  <div class="type-filter">
+  <div class="inner">
+    <h4 class="norm sm-caps">type</h4>
+    <div class="type-filter">
+      <button
+        class={`${filter.type.includes("tv") ? "active" : ""}`}
+        on:click={() => filterClicked("type", "tv")}
+      >
+        SHOW
+      </button>
+      <button
+        class={`${filter.type.includes("movie") ? "active" : ""}`}
+        on:click={() => filterClicked("type", "movie")}
+      >
+        MOVIE
+      </button>
+    </div>
+    <h4 class="norm sm-caps">status</h4>
     <button
-      class={`${filter.type.includes("tv") ? "active" : ""}`}
-      on:click={() => filterClicked("type", "tv")}
+      class={`plain ${filter.status.includes("planned") ? "on" : ""}`}
+      on:click={() => filterClicked("status", "planned")}
     >
-      SHOW
+      planned
     </button>
     <button
-      class={`${filter.type.includes("movie") ? "active" : ""}`}
-      on:click={() => filterClicked("type", "movie")}
+      class={`plain ${filter.status.includes("watching") ? "on" : ""}`}
+      on:click={() => filterClicked("status", "watching")}
     >
-      MOVIE
+      watching
+    </button>
+    <button
+      class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
+      on:click={() => filterClicked("status", "finished")}
+    >
+      finished
+    </button>
+    <button
+      class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
+      on:click={() => filterClicked("status", "hold")}
+    >
+      held
+    </button>
+    <button
+      class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
+      on:click={() => filterClicked("status", "dropped")}
+    >
+      dropped
     </button>
   </div>
-  <h4 class="norm sm-caps">status</h4>
-  <button
-    class={`plain ${filter.status.includes("planned") ? "on" : ""}`}
-    on:click={() => filterClicked("status", "planned")}
-  >
-    planned
-  </button>
-  <button
-    class={`plain ${filter.status.includes("watching") ? "on" : ""}`}
-    on:click={() => filterClicked("status", "watching")}
-  >
-    watching
-  </button>
-  <button
-    class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
-    on:click={() => filterClicked("status", "finished")}
-  >
-    finished
-  </button>
-  <button
-    class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
-    on:click={() => filterClicked("status", "hold")}
-  >
-    held
-  </button>
-  <button
-    class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
-    on:click={() => filterClicked("status", "dropped")}
-  >
-    dropped
-  </button>
 </div>
 
 <style lang="scss">
-  div {
+  div.menu {
     width: 180px;
     right: 35px;
 
     &:before {
       left: 3px;
     }
+  }
 
+  div.inner {
     h4 {
       margin-bottom: 8px;
 

@@ -234,19 +234,21 @@
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
       <div class="menu face-menu">
-        {#if user?.username}
-          <h5 title={user.username}>Hi {user.username}!</h5>
-        {/if}
-        <button class="plain" on:click={() => profile()}>Profile</button>
-        {#if !settings?.private}
-          <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
-        {/if}
-        {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
-          <button class="plain" on:click={() => serverSettings()}>Settings</button>
-        {/if}
-        <button class="plain" on:click={() => logout()}>Logout</button>
-        <!-- svelte-ignore missing-declaration -->
-        <span>v{__WATCHARR_VERSION__}</span>
+        <div>
+          {#if user?.username}
+            <h5 title={user.username}>Hi {user.username}!</h5>
+          {/if}
+          <button class="plain" on:click={() => profile()}>Profile</button>
+          {#if !settings?.private}
+            <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+          {/if}
+          {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
+            <button class="plain" on:click={() => serverSettings()}>Settings</button>
+          {/if}
+          <button class="plain" on:click={() => logout()}>Logout</button>
+          <!-- svelte-ignore missing-declaration -->
+          <span>v{__WATCHARR_VERSION__}</span>
+        </div>
       </div>
     {/if}
   </div>

@@ -32,30 +32,32 @@
 </script>
 
 <div class="menu sort-menu">
-  <button
-    class={`plain ${sort[0] == "DATEADDED" ? sort[1].toLowerCase() : ""}`}
-    on:click={() => sortClicked("DATEADDED")}
-  >
-    Date Added
-  </button>
-  <button
-    class={`plain ${sort[0] == "LASTCHANGED" ? sort[1].toLowerCase() : ""}`}
-    on:click={() => sortClicked("LASTCHANGED")}
-  >
-    Last Changed
-  </button>
-  <button
-    class={`plain ${sort[0] == "RATING" ? sort[1].toLowerCase() : ""}`}
-    on:click={() => sortClicked("RATING")}
-  >
-    Rating
-  </button>
-  <button
-    class={`plain ${sort[0] == "ALPHA" ? sort[1].toLowerCase() : ""}`}
-    on:click={() => sortClicked("ALPHA")}
-  >
-    Alphabetical
-  </button>
+  <div>
+    <button
+      class={`plain ${sort[0] == "DATEADDED" ? sort[1].toLowerCase() : ""}`}
+      on:click={() => sortClicked("DATEADDED")}
+    >
+      Date Added
+    </button>
+    <button
+      class={`plain ${sort[0] == "LASTCHANGED" ? sort[1].toLowerCase() : ""}`}
+      on:click={() => sortClicked("LASTCHANGED")}
+    >
+      Last Changed
+    </button>
+    <button
+      class={`plain ${sort[0] == "RATING" ? sort[1].toLowerCase() : ""}`}
+      on:click={() => sortClicked("RATING")}
+    >
+      Rating
+    </button>
+    <button
+      class={`plain ${sort[0] == "ALPHA" ? sort[1].toLowerCase() : ""}`}
+      on:click={() => sortClicked("ALPHA")}
+    >
+      Alphabetical
+    </button>
+  </div>
 </div>
 
 <style lang="scss">
@@ -66,30 +68,32 @@
       left: 21px;
     }
 
-    & > button {
-      position: relative;
+    & > div {
+      & > button {
+        position: relative;
 
-      &.down::before {
-        content: "\2193";
-      }
+        &.down::before {
+          content: "\2193";
+        }
 
-      &.up::before {
-        content: "\2191";
-      }
+        &.up::before {
+          content: "\2191";
+        }
 
-      &.on::before {
-        content: "\2713";
-      }
+        &.on::before {
+          content: "\2713";
+        }
 
-      &::before {
-        position: absolute;
-        top: 4px;
-        left: 12px;
-        font-family:
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont;
-        font-size: 18px;
+        &::before {
+          position: absolute;
+          top: 4px;
+          left: 12px;
+          font-family:
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont;
+          font-size: 18px;
+        }
       }
     }
   }

@@ -591,6 +591,23 @@ func (b *BaseRouter) addFollowRoutes() {
 		}
 		c.JSON(http.StatusOK, response)
 	})
+
+	// Unfollow a user
+	f.DELETE("/:toUnfollowId", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		toUnfollowId, err := strconv.ParseUint(c.Param("toUnfollowId"), 10, 64)
+		if err != nil {
+			slog.Error("failed to convert toUnfollowId param to uint", "toUnfollowId", toUnfollowId)
+			c.Status(400)
+			return
+		}
+		response, err := unfollowUser(b.db, userId, uint(toUnfollowId))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
 }
 
 func (b *BaseRouter) addImportRoutes() {
