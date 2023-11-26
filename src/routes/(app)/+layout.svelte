@@ -224,7 +224,7 @@
         closeAllSubMenus("following");
         followingMenuShown = !followingMenuShown;
       }}
-      use:tooltip={{ text: "Following", pos: "bot" }}
+      use:tooltip={{ text: "Following", pos: "bot", condition: !followingMenuShown }}
     >
       <Icon i="people" wh={26} />
     </button>
