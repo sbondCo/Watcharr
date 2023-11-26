@@ -268,7 +268,7 @@
   display: flex;
   flex-flow: column;
   position: absolute;
-  right: 3px;
+  right: 10px;
   top: 55px;
   width: 125px;
   padding: 10px;
@@ -277,6 +277,18 @@
   background-color: $bg-color;
   list-style: none;
   z-index: 50;
+
+  // The lil arrow, adjust its pos under each specific menu.
+  &:before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    width: 0;
+    border-top: 10px solid transparent;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid black;
+  }
 
   h5 {
     margin-bottom: 2px;

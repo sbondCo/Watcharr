@@ -21,6 +21,10 @@
   div {
     width: 180px;
 
+    &:before {
+      right: 53px;
+    }
+
     a {
       overflow: hidden;
       white-space: nowrap;

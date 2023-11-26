@@ -520,8 +520,18 @@
         }
       }
 
+      div.face-menu {
+        &:before {
+          right: 10px;
+        }
+      }
+
       div.sort-menu {
         width: 180px;
+
+        &:before {
+          left: 21px;
+        }
 
         & > button {
           position: relative;
@@ -554,6 +564,10 @@
       div.filter-menu {
         width: 180px;
         right: 35px;
+
+        &:before {
+          left: 3px;
+        }
 
         h4 {
           margin-bottom: 8px;
