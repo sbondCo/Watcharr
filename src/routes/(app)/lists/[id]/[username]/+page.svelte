@@ -37,11 +37,15 @@
   <title>{data.username}'s Watched List</title>
 </svelte:head>
 
-<h2 class="norm">{data.username}'s Watched List</h2>
+<div class="content">
+  <div class="inner">
+    <h2 class="norm">{data.username}</h2>
 
-<button disabled={followBtnDisabled} on:click={follow}>
-  {isFollowing ? "Unfollow" : "Follow"}
-</button>
+    <button disabled={followBtnDisabled} on:click={follow}>
+      {isFollowing ? "Unfollow" : "Follow"}
+    </button>
+  </div>
+</div>
 
 {#await getPublicWatchedList(Number(data.id), data.username)}
   <Spinner />
@@ -52,10 +56,19 @@
 {/await}
 
 <style lang="scss">
-  h2 {
+  .content {
     display: flex;
+    width: 100%;
     justify-content: center;
     margin: 20px 30px;
+
+    .inner {
+      display: flex;
+      flex-flow: column;
+      gap: 5px;
+      width: 100%;
+      max-width: 1200px;
+    }
   }
 
   button {
