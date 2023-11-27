@@ -17,7 +17,7 @@
     "@sveltejs/kit": "^1.27.6",
     "@types/papaparse": "^5.3.11",
     "@typescript-eslint/eslint-plugin": "^6.11.0",
-    "@typescript-eslint/parser": "^6.11.0",
+    "@typescript-eslint/parser": "^6.13.0",
     "eslint": "^8.54.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-svelte": "^2.35.0",
