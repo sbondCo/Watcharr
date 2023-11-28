@@ -223,7 +223,13 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 	}
 	// Create watched entry in db
 	if ar.Status == "" {
-		ar.Status = WATCHING
+		// Set default status for when a show is added by rating
+		// it instead of giving status first.
+		if ar.ContentType == "movie" {
+			ar.Status = FINISHED
+		} else {
+			ar.Status = WATCHING
+		}
 	}
 	watched := Watched{Status: ar.Status, Rating: ar.Rating, UserID: userId, ContentID: content.ID}
 	res := db.Create(&watched)
