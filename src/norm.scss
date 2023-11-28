@@ -137,7 +137,8 @@
   }
 }
 
-:global(button.plain) {
+:global(button.plain),
+:global(a.plain-btn) {
   background-color: transparent;
   color: $text-color;
   border: 0;
@@ -259,6 +260,71 @@
       background-color: rgba(155, 155, 155, 0.5);
       border-radius: 20px;
       border: transparent;
+    }
+  }
+}
+
+:global(div.menu) {
+  display: flex;
+  flex-flow: column;
+  position: absolute;
+  right: 10px;
+  top: 55px;
+  width: 125px;
+  border: 3px solid $text-color;
+  border-radius: 10px;
+  background-color: $bg-color;
+  list-style: none;
+  z-index: 50;
+
+  // The lil arrow, adjust its pos under each specific menu.
+  &:before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    width: 0;
+    border-top: 10px solid transparent;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid black;
+  }
+
+  & > div {
+    display: flex;
+    flex-flow: column;
+    padding: 10px;
+    width: 100%;
+    max-height: calc(100dvh - 65px);
+    overflow: auto;
+
+    h5 {
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: default;
+    }
+
+    button,
+    a {
+      font-size: 14px;
+      padding: 8px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 200ms ease;
+
+      &:hover,
+      &:focus-visible {
+        background-color: $text-color;
+        color: $bg-color;
+      }
+    }
+
+    span {
+      margin-top: 8px;
+      font-size: 11px;
+      color: gray;
+      text-align: center;
     }
   }
 }

@@ -59,6 +59,13 @@ type User struct {
 	UserSettings
 }
 
+func (u *User) GetSafe() PublicUser {
+	return PublicUser{
+		ID:       u.ID,
+		Username: u.Username,
+	}
+}
+
 // This struct uses pointer to the values, so in update user settings,
 // we can tell which setting is being updated (if not nil..).
 type UserSettings struct {
@@ -223,7 +230,7 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 	res := db.Create(&user)
 	if res.Error != nil {
 		// If error is because unique contraint failed.. user already exists
-		if strings.Contains(res.Error.Error(), "UNIQUE") {
+		if res.Error == gorm.ErrDuplicatedKey {
 			slog.Error("Registration failed", "error", res.Error.Error(), "error_pretty", "User already exists")
 			return AuthResponse{}, errors.New("User already exists")
 		}

@@ -5,12 +5,16 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import tooltip from "@/lib/actions/tooltip";
+  import FilterMenu from "@/lib/nav/FilterMenu.svelte";
+  import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
+  import SortMenu from "@/lib/nav/SortMenu.svelte";
   import { isTouch, parseTokenPayload, userHasPermission } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import {
     activeFilters,
     activeSort,
     clearAllStores,
+    follows,
     searchQuery,
     serverFeatures,
     userInfo,
@@ -23,13 +27,12 @@
   import { get } from "svelte/store";
 
   let navEl: HTMLElement;
-  let searchTimeout: number;
+  let searchTimeout: NodeJS.Timeout;
   let subMenuShown = false;
   let filterMenuShown = false;
   let sortMenuShown = false;
+  let followingMenuShown = false;
 
-  $: sort = $activeSort;
-  $: filter = $activeFilters;
   $: settings = $userSettings;
   $: user = $userInfo;
 
@@ -37,9 +40,8 @@
     if (!localStorage.getItem("token")) {
       goto("/login");
     } else {
+      closeAllSubMenus("sub");
       subMenuShown = !subMenuShown;
-      filterMenuShown = false;
-      sortMenuShown = false;
     }
   }
 
@@ -119,11 +121,12 @@
 
   async function getInitialData() {
     if (localStorage.getItem("token")) {
-      const [w, u, s, f] = await Promise.all([
+      const [w, u, s, f, fo] = await Promise.all([
         axios.get("/watched"),
         axios.get("/user"),
         axios.get("/user/settings"),
-        axios.get("/features")
+        axios.get("/features"),
+        axios.get("/follow")
       ]);
       if (w?.data?.length > 0) {
         watchedList.update((wl) => (wl = w.data));
@@ -137,45 +140,19 @@
       if (f?.data) {
         serverFeatures.update((sf) => (sf = f.data));
       }
+      if (fo?.data) {
+        follows.update((f) => (f = fo.data));
+      }
     } else {
       goto("/login?again=1");
     }
   }
 
-  function sortClicked(type: string, modeType: string = "UPDOWN") {
-    const af = get(activeSort);
-    let mode: string;
-    if (modeType === "UPDOWN") {
-      mode = "UP";
-      if (af[0] == type) {
-        if (af[1] === "UP") {
-          mode = "DOWN";
-        } else if (af[1] === "DOWN") {
-          mode = "";
-        }
-      }
-    } else if (modeType === "TOGGLE") {
-      mode = "ON";
-      if (af[0] == type) {
-        if (af[1] === "ON") {
-          mode = "OFF";
-        }
-      }
-    } else {
-      console.error("filterClicked() ran without a valid modeType:", modeType);
-      return;
-    }
-    activeSort.update((af) => (af = [type, mode]));
-  }
-
-  function filterClicked(type: keyof Filters, f: string) {
-    const af = get(activeFilters);
-    if (af[type]?.includes(f)) {
-      af[type] = af[type]?.filter((a) => a !== f);
-    } else {
-      af[type]?.push(f);
-    }
-    activeFilters.update((a) => (a = af));
+  function closeAllSubMenus(except?: string) {
+    if (except !== "sub") subMenuShown = false;
+    if (except !== "filter") filterMenuShown = false;
+    if (except !== "sort") sortMenuShown = false;
+    if (except !== "following") followingMenuShown = false;
   }
 
   onMount(() => {
@@ -188,9 +165,7 @@
         } else {
           navEl?.classList.add("scrolled-down");
           document.body.classList.remove("nav-shown");
-          subMenuShown = false;
-          filterMenuShown = false;
-          sortMenuShown = false;
+          closeAllSubMenus();
         }
         scroll = window.scrollY;
       });
@@ -212,102 +187,28 @@
       <button
         class="plain other filter"
         on:click={() => {
+          closeAllSubMenus("filter");
           filterMenuShown = !filterMenuShown;
-          sortMenuShown = false;
-          subMenuShown = false;
         }}
-        use:tooltip={{ text: "Filter", pos: "bot" }}
+        use:tooltip={{ text: "Filter", pos: "bot", condition: !filterMenuShown }}
       >
         <Icon i="filter" />
       </button>
       <button
         class="plain other sort"
         on:click={() => {
+          closeAllSubMenus("sort");
           sortMenuShown = !sortMenuShown;
-          filterMenuShown = false;
-          subMenuShown = false;
         }}
-        use:tooltip={{ text: "Sort", pos: "bot" }}
+        use:tooltip={{ text: "Sort", pos: "bot", condition: !sortMenuShown }}
       >
         <Icon i="sort" />
       </button>
       {#if sortMenuShown}
-        <div class="menu sort-menu">
-          <button
-            class={`plain ${sort[0] == "DATEADDED" ? sort[1].toLowerCase() : ""}`}
-            on:click={() => sortClicked("DATEADDED")}
-          >
-            Date Added
-          </button>
-          <button
-            class={`plain ${sort[0] == "LASTCHANGED" ? sort[1].toLowerCase() : ""}`}
-            on:click={() => sortClicked("LASTCHANGED")}
-          >
-            Last Changed
-          </button>
-          <button
-            class={`plain ${sort[0] == "RATING" ? sort[1].toLowerCase() : ""}`}
-            on:click={() => sortClicked("RATING")}
-          >
-            Rating
-          </button>
-          <button
-            class={`plain ${sort[0] == "ALPHA" ? sort[1].toLowerCase() : ""}`}
-            on:click={() => sortClicked("ALPHA")}
-          >
-            Alphabetical
-          </button>
-        </div>
+        <SortMenu />
       {/if}
       {#if filterMenuShown}
-        <div class="menu filter-menu">
-          <h4 class="norm sm-caps">type</h4>
-          <div class="type-filter">
-            <button
-              class={`${filter.type.includes("tv") ? "active" : ""}`}
-              on:click={() => filterClicked("type", "tv")}
-            >
-              SHOW
-            </button>
-            <button
-              class={`${filter.type.includes("movie") ? "active" : ""}`}
-              on:click={() => filterClicked("type", "movie")}
-            >
-              MOVIE
-            </button>
-          </div>
-          <h4 class="norm sm-caps">status</h4>
-          <button
-            class={`plain ${filter.status.includes("planned") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "planned")}
-          >
-            planned
-          </button>
-          <button
-            class={`plain ${filter.status.includes("watching") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "watching")}
-          >
-            watching
-          </button>
-          <button
-            class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "finished")}
-          >
-            finished
-          </button>
-          <button
-            class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "hold")}
-          >
-            held
-          </button>
-          <button
-            class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
-            on:click={() => filterClicked("status", "dropped")}
-          >
-            dropped
-          </button>
-        </div>
+        <FilterMenu />
       {/if}
     {/if}
     <button
@@ -315,24 +216,39 @@
       on:click={() => goto("/discover")}
       use:tooltip={{ text: "Discover", pos: "bot" }}
     >
-      <Icon i="compass" />
+      <Icon i="compass" wh={26} />
     </button>
+    <button
+      class="plain other following"
+      on:click={() => {
+        closeAllSubMenus("following");
+        followingMenuShown = !followingMenuShown;
+      }}
+      use:tooltip={{ text: "Following", pos: "bot", condition: !followingMenuShown }}
+    >
+      <Icon i="people" wh={26} />
+    </button>
+    {#if followingMenuShown}
+      <FollowingMenu close={() => (followingMenuShown = false)} />
+    {/if}
     <button class="plain face" on:click={handleProfileClick}>:)</button>
     {#if subMenuShown}
       <div class="menu face-menu">
-        {#if user?.username}
-          <h5 title={user.username}>Hi {user.username}!</h5>
-        {/if}
-        <button class="plain" on:click={() => profile()}>Profile</button>
-        {#if !settings?.private}
-          <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
-        {/if}
-        {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
-          <button class="plain" on:click={() => serverSettings()}>Settings</button>
-        {/if}
-        <button class="plain" on:click={() => logout()}>Logout</button>
-        <!-- svelte-ignore missing-declaration -->
-        <span>v{__WATCHARR_VERSION__}</span>
+        <div>
+          {#if user?.username}
+            <h5 title={user.username}>Hi {user.username}!</h5>
+          {/if}
+          <button class="plain" on:click={() => profile()}>Profile</button>
+          {#if !settings?.private}
+            <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+          {/if}
+          {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
+            <button class="plain" on:click={() => serverSettings()}>Settings</button>
+          {/if}
+          <button class="plain" on:click={() => logout()}>Logout</button>
+          <!-- svelte-ignore missing-declaration -->
+          <span>v{__WATCHARR_VERSION__}</span>
+        </div>
       </div>
     {/if}
   </div>
@@ -460,7 +376,7 @@
       }
 
       button.discover {
-        margin-right: 17px;
+        margin-right: 12px;
         transition:
           fill 150ms ease,
           stroke 150ms ease,
@@ -471,6 +387,10 @@
         &:focus-visible {
           transform: rotate(60deg);
         }
+      }
+
+      button.following {
+        margin-right: 17px;
       }
 
       button.face {
@@ -494,131 +414,9 @@
         }
       }
 
-      div.menu {
-        display: flex;
-        flex-flow: column;
-        position: absolute;
-        right: 3px;
-        top: 55px;
-        width: 125px;
-        padding: 10px;
-        border: 3px solid $text-color;
-        border-radius: 10px;
-        background-color: $bg-color;
-        list-style: none;
-        z-index: 50;
-
-        h5 {
-          margin-bottom: 2px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          cursor: default;
-        }
-
-        button {
-          font-size: 14px;
-          padding: 8px 16px;
-          cursor: pointer;
-          transition: background-color 200ms ease;
-
-          &:hover,
-          &:focus-visible {
-            background-color: $text-color;
-            color: $bg-color;
-          }
-        }
-
-        span {
-          margin-top: 8px;
-          font-size: 11px;
-          color: gray;
-          text-align: center;
-        }
-      }
-
-      div.sort-menu {
-        width: 180px;
-
-        & > button {
-          position: relative;
-
-          &.down::before {
-            content: "\2193";
-          }
-
-          &.up::before {
-            content: "\2191";
-          }
-
-          &.on::before {
-            content: "\2713";
-          }
-
-          &::before {
-            position: absolute;
-            top: 4px;
-            left: 12px;
-            font-family:
-              system-ui,
-              -apple-system,
-              BlinkMacSystemFont;
-            font-size: 18px;
-          }
-        }
-      }
-
-      div.filter-menu {
-        width: 180px;
-        right: 35px;
-
-        h4 {
-          margin-bottom: 8px;
-
-          &:not(:first-of-type) {
-            margin-top: 8px;
-          }
-        }
-
-        & > button {
-          text-transform: capitalize;
-          position: relative;
-
-          &.on::before {
-            content: "\2713";
-          }
-
-          &::before {
-            position: absolute;
-            top: 4px;
-            left: 12px;
-            font-family:
-              system-ui,
-              -apple-system,
-              BlinkMacSystemFont;
-            font-size: 18px;
-          }
-        }
-
-        .type-filter {
-          display: flex;
-          flex-flow: row;
-          width: 100%;
-
-          button {
-            border-radius: 0;
-            padding: 8px 0;
-            width: 100%;
-
-            &:first-of-type {
-              border-right: 0;
-              border-radius: 5px 0 0 5px;
-            }
-
-            &:last-of-type {
-              border-radius: 0 5px 5px 0;
-            }
-          }
+      div.face-menu {
+        &:before {
+          right: 10px;
         }
       }
     }

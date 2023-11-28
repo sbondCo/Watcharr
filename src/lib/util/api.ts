@@ -1,4 +1,4 @@
-import { serverFeatures, userInfo, userSettings, watchedList } from "@/store";
+import { follows, serverFeatures, userInfo, userSettings, watchedList } from "@/store";
 import {
   UserType,
   type JellyfinFoundContent,
@@ -8,7 +8,8 @@ import {
   type WatchedStatus,
   type WatchedUpdateRequest,
   type WatchedUpdateResponse,
-  type UserSettings
+  type UserSettings,
+  type Follow
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
@@ -181,6 +182,39 @@ export async function getServerFeatures() {
   } catch (err) {
     console.error("getServerFeatures failed!", err);
   }
+}
+
+export async function followUser(id: number) {
+  const nid = notify({ text: `Following`, type: "loading" });
+  axios
+    .post(`/follow/${id}`)
+    .then((resp) => {
+      console.log("Followed:", resp.data);
+      const f = get(follows);
+      f.push(resp.data as Follow);
+      follows.update(() => f);
+      notify({ id: nid, text: `Followed!`, type: "success" });
+    })
+    .catch((err) => {
+      console.error(err);
+      notify({ id: nid, text: "Failed To Follow!", type: "error" });
+    });
+}
+
+export async function unfollowUser(id: number) {
+  const nid = notify({ text: `Following`, type: "loading" });
+  axios
+    .delete(`/follow/${id}`)
+    .then((resp) => {
+      console.log("Followed:", resp.data);
+      const f = get(follows);
+      follows.update(() => f.filter((fo) => fo.followedUser.id != id));
+      notify({ id: nid, text: `Followed!`, type: "success" });
+    })
+    .catch((err) => {
+      console.error(err);
+      notify({ id: nid, text: "Failed To Follow!", type: "error" });
+    });
 }
 
 /**

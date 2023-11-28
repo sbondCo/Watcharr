@@ -9,7 +9,22 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true
-  }
+  },
+  // Includes merged from ./svelte-kit/tsconfig.json, since we want to add .env.d.ts,
+  // and typescript wont merge both the include arrays.. only override.
+	"include": [
+		"./.svelte-kit/ambient.d.ts",
+		"./.svelte-kit/types/**/$types.d.ts",
+		"./vite.config.js",
+		"./vite.config.ts",
+		"./src/**/*.js",
+		"./src/**/*.ts",
+		"./src/**/*.svelte",
+		"./tests/**/*.js",
+		"./tests/**/*.ts",
+		"./tests/**/*.svelte",
+    "./env.d.ts"
+	],
   // Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
   //
   // If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes

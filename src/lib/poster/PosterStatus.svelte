@@ -10,12 +10,13 @@
   export let width = "40%";
   export let small = false;
   export let btnTooltip: string = "";
+  export let disableInteraction: boolean = false;
 
   let statusesShown = false;
 </script>
 
 <button
-  class="status"
+  class={["status", disableInteraction ? "interaction-disabled" : ""].join(" ")}
   style={`width: ${width};`}
   on:click={(ev) => {
     ev.stopPropagation();
@@ -62,6 +63,19 @@
     position: relative;
     font-family: "Rampart One";
     height: 100%;
+
+    &.interaction-disabled {
+      pointer-events: none;
+      cursor: default;
+      background-color: transparent;
+      border: unset;
+      fill: white;
+      color: white;
+
+      span {
+        color: white !important;
+      }
+    }
 
     .no-icon {
       color: $text-color;

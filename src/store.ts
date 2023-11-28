@@ -2,6 +2,7 @@ import { writable } from "svelte/store";
 import type {
   FileWithData,
   Filters,
+  Follow,
   ImportedList,
   PrivateUser,
   ServerFeatures,
@@ -24,6 +25,7 @@ export const importedList = writable<FileWithData | undefined>();
 export const parsedImportedList = writable<ImportedList[] | undefined>();
 export const searchQuery = writable<string>("");
 export const serverFeatures = writable<ServerFeatures>();
+export const follows = writable<Follow[]>();
 
 export const clearAllStores = () => {
   watchedList.set([]);
@@ -35,6 +37,7 @@ export const clearAllStores = () => {
   searchQuery.set("");
   userInfo.set(undefined);
   userSettings.set(undefined);
+  follows.set([]);
 };
 
 if (browser) {

@@ -22,7 +22,8 @@ export type Icon =
   | "chevron"
   | "search"
   | "sort"
-  | "eye-closed";
+  | "eye-closed"
+  | "people";
 
 export type Theme = "light" | "dark";
 
@@ -781,4 +782,9 @@ export interface RadarrTestResponse {
 export interface ServerFeatures {
   sonarr: boolean;
   radarr: boolean;
+}
+
+export interface Follow {
+  createdAt: Date;
+  followedUser: PublicUser;
 }

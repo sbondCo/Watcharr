@@ -4,33 +4,51 @@
   export let users: PublicUser[];
 </script>
 
-<ul>
-  {#each users as user}
-    <li title={user.username}><a href="/lists/{user.id}/{user.username}">{user.username}</a></li>
-  {/each}
-</ul>
+<div>
+  <h2>Users</h2>
+  <ul>
+    {#each users as user}
+      <li title={user.username}>
+        <a href="/lists/{user.id}/{user.username}">
+          <span>{user.username}</span>
+        </a>
+      </li>
+    {/each}
+  </ul>
+</div>
 
 <style lang="scss">
+  div {
+    display: flex;
+    flex-flow: column;
+    /* gap: 10px; */
+    margin: 5px 30px;
+  }
+
   ul {
     display: flex;
     flex-flow: row;
-    flex-wrap: wrap;
+    /* flex-wrap: wrap; */
     gap: 10px;
-    margin: 5px 20px;
     list-style: none;
-    justify-content: center;
+    /* justify-content: center; */
+    overflow: auto;
+    padding: 15px;
 
     li {
       display: flex;
-      min-width: 50px;
+      /* min-width: 50px; */
       max-width: 200px;
 
       a {
-        flex-shrink: 1;
+        display: flex;
+        flex-flow: column;
+        gap: 8px;
         width: 100%;
         height: 100%;
         padding: 3px 8px;
-        border-radius: 4px;
+        padding: 10px 20px;
+        border-radius: 8px;
         background-color: $accent-color;
         overflow: hidden;
         white-space: nowrap;
@@ -42,6 +60,10 @@
         &:hover {
           color: $bg-color;
           background-color: $accent-color-hover;
+        }
+
+        button {
+          /* font-size: 12px; */
         }
       }
     }
