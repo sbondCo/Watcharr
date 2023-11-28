@@ -21,23 +21,19 @@
   div {
     display: flex;
     flex-flow: column;
-    /* gap: 10px; */
-    margin: 5px 30px;
+    margin: 5px 15px;
   }
 
   ul {
     display: flex;
     flex-flow: row;
-    /* flex-wrap: wrap; */
     gap: 10px;
     list-style: none;
-    /* justify-content: center; */
     overflow: auto;
     padding: 15px;
 
     li {
       display: flex;
-      /* min-width: 50px; */
       max-width: 200px;
 
       a {
@@ -60,10 +56,6 @@
         &:hover {
           color: $bg-color;
           background-color: $accent-color-hover;
-        }
-
-        button {
-          /* font-size: 12px; */
         }
       }
     }

@@ -53,7 +53,7 @@
       {#await search(data.slug)}
         <Spinner />
       {:then results}
-        <h2 style="margin-left: 30px;">Results</h2>
+        <h2>Results</h2>
         <PosterList>
           {#if results?.results?.length > 0}
             {#each results.results as w (w.id)}
@@ -81,11 +81,14 @@
     display: flex;
     width: 100%;
     justify-content: center;
-    padding: 0 30px 0 30px;
 
     .inner {
       width: 100%;
       max-width: 1200px;
+
+      h2 {
+        margin-left: 15px;
+      }
     }
   }
 </style>
