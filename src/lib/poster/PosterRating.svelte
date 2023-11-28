@@ -12,7 +12,11 @@
 </script>
 
 <button
-  class={["rating", minimal ? (!rating ? "minimal" : "minimal-space") : ""].join(" ")}
+  class={[
+    "rating",
+    minimal ? (!rating ? "minimal" : "minimal-space") : "",
+    disableInteraction ? "interaction-disabled" : ""
+  ].join(" ")}
   on:click={(ev) => {
     ev.stopPropagation();
     ratingsShown = !ratingsShown;
@@ -58,6 +62,25 @@
     font-family: "Rampart One";
     width: 100%;
     height: 100%;
+
+    &.interaction-disabled {
+      pointer-events: none;
+      cursor: default;
+      background-color: transparent;
+      border: unset;
+      fill: white;
+      color: white;
+
+      span {
+        color: white !important;
+      }
+
+      .unrated-text {
+        display: flex;
+        align-items: center;
+        font-size: 15px !important;
+      }
+    }
 
     &.minimal span:first-child {
       letter-spacing: unset;

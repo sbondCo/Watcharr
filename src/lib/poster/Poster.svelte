@@ -97,7 +97,7 @@
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
   on:keypress={() => console.log("on kpress")}
-  class={`${posterActive ? "active " : ""}${disableInteraction ? "interaction-disabled" : ""}`}
+  class={`${posterActive ? "active " : ""}`}
 >
   <div class={`container${!poster ? " details-shown" : ""}`} bind:this={containerEl}>
     {#if poster}
@@ -145,7 +145,7 @@
       {#if !hideButtons}
         <div class="buttons">
           <PosterRating {rating} {handleStarClick} {disableInteraction} />
-          <PosterStatus {status} {handleStatusClick} />
+          <PosterStatus {status} {handleStatusClick} {disableInteraction} />
         </div>
       {/if}
     </div>
@@ -155,27 +155,6 @@
 <style lang="scss">
   li.active {
     cursor: pointer;
-  }
-
-  li.interaction-disabled {
-    button {
-      pointer-events: none;
-      cursor: default;
-      background-color: transparent;
-      border: unset;
-      fill: white;
-      color: white;
-
-      span {
-        color: white !important;
-      }
-
-      .unrated-text {
-        display: flex;
-        align-items: center;
-        font-size: 15px !important;
-      }
-    }
   }
 
   .container {

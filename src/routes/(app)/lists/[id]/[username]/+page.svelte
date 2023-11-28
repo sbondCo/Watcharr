@@ -60,7 +60,6 @@
     display: flex;
     width: 100%;
     justify-content: center;
-    margin: 20px 30px;
 
     .inner {
       display: flex;
@@ -68,6 +67,8 @@
       gap: 5px;
       width: 100%;
       max-width: 1200px;
+      margin: 20px 30px;
+      margin-top: 0;
     }
   }
 
