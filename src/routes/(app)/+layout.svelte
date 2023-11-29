@@ -424,6 +424,10 @@
     @media screen and (max-width: 580px) {
       input {
         width: 100%;
+
+        &:focus + .btns button:not(.face) {
+          display: none;
+        }
       }
     }
   }
