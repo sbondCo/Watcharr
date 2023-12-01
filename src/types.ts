@@ -23,7 +23,8 @@ export type Icon =
   | "search"
   | "sort"
   | "eye-closed"
-  | "people";
+  | "people"
+  | "person";
 
 export type Theme = "light" | "dark";
 

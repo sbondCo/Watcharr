@@ -559,6 +559,17 @@ func (b *BaseRouter) addUserRoutes() {
 		}
 		c.JSON(http.StatusOK, response)
 	})
+
+	// Upload avatar
+	u.POST("/avatar", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		response, err := uploadUserAvatar(c, b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
 }
 
 func (b *BaseRouter) addFollowRoutes() {
