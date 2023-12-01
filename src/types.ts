@@ -114,6 +114,7 @@ export interface UserSettings {
 export interface PublicUser {
   id: number;
   username: string;
+  avatar: Image;
 }
 
 // PrivateUser - Current users info
@@ -121,12 +122,19 @@ export interface PrivateUser {
   username: string;
   type: UserType;
   permissions: UserPermission;
+  avatar: Image;
 }
 
 export enum UserPermission {
   PERM_NONE = 1,
   PERM_ADMIN = 2,
   PERM_REQUEST_CONTENT = 4
+}
+
+export interface Image {
+  createdAt: Date;
+  blurHash: string;
+  path: string;
 }
 
 export interface JellyfinFoundContent {
