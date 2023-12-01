@@ -13,6 +13,7 @@
   import type { Profile } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
+  import { decode } from "blurhash";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -21,6 +22,7 @@
   let privateDisabled = false;
   let hideSpoilersDisabled = false;
   let avatarInput: HTMLInputElement;
+  let bhCanvas: HTMLCanvasElement;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -52,6 +54,16 @@
   onMount(() => {
     avatarInput?.addEventListener("input", avatarDropped);
 
+    if (user?.avatar?.blurHash) {
+      const pixels = decode(user?.avatar?.blurHash, 80, 80);
+      const ctx = bhCanvas.getContext("2d");
+      if (ctx) {
+        const imageData = ctx.createImageData(80, 80);
+        imageData.data.set(pixels);
+        ctx.putImageData(imageData, 0, 0);
+      }
+    }
+
     return () => {
       avatarInput?.removeEventListener("input", avatarDropped);
     };
@@ -64,6 +76,7 @@
       <div class="img-ctr">
         {#if user?.avatar?.path}
           <img src={`${baseURL}/${user?.avatar?.path}`} alt="" />
+          <canvas bind:this={bhCanvas} />
         {:else}
           <Icon i="person" wh="100%" />
         {/if}
@@ -196,6 +209,13 @@
         height: 80px;
         min-height: 80px;
         object-fit: cover;
+        z-index: 2;
+      }
+
+      canvas {
+        position: absolute;
+        cursor: pointer;
+        z-index: 1;
       }
 
       &:hover {
