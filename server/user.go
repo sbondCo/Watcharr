@@ -1,9 +1,16 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"io"
+	"log"
 	"log/slog"
+	"path"
+	"path/filepath"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -18,6 +25,8 @@ type PrivateUser struct {
 	Username    string   `json:"username"`
 	Type        UserType `json:"type"`
 	Permissions int      `json:"permissions"`
+	AvatarID    uint     `json:"-"`
+	Avatar      Image    `json:"avatar"`
 }
 
 // Update user settings
@@ -64,10 +73,61 @@ func userSearch(db *gorm.DB, currentUsersId uint, q string) ([]PublicUser, error
 func getUserInfo(db *gorm.DB, currentUsersId uint) (PrivateUser, error) {
 	slog.Debug("user get info request running")
 	user := new(PrivateUser)
-	res := db.Where("id = ?", currentUsersId).Table("users").Take(&user)
+	res := db.Where("id = ?", currentUsersId).Table("users").Preload("Avatar").Take(&user)
 	if res.Error != nil {
 		slog.Error("user get info failed", "error", res.Error)
 		return PrivateUser{}, errors.New("failed to find current user")
 	}
 	return *user, nil
+}
+
+func uploadUserAvatar(c *gin.Context, db *gorm.DB, userId uint) (Image, error) {
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		slog.Error("failed to get file", "error", err)
+		return Image{}, errors.New("no file found")
+	}
+
+	slog.Debug("an avatar is being uploaded", "name", file.Filename)
+
+	f, _ := file.Open()
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		log.Fatal(err) // TODO nu le fatal
+	}
+	hs := hex.EncodeToString(h.Sum(nil))
+
+	slog.Debug("image hash calculated", "hash", hs, "first_letter", hs[0:1])
+
+	// Upload the file to specific dst.
+	outp := path.Join("img/up/", hs[0:1], hs+filepath.Ext(file.Filename))
+	c.SaveUploadedFile(file, path.Join(DataPath, outp))
+
+	_, err = f.Seek(0, 0)
+	if err != nil {
+		slog.Error("uploadUserAvatar seeking back to start of image failed", "error", err)
+	}
+
+	var img Image
+	err = db.Transaction(func(tx *gorm.DB) error {
+		// Insert avatar into db
+		img, err = insertImage(db, hs, outp, f)
+		if err != nil {
+			return err
+		}
+		if img.ID == 0 {
+			return errors.New("image has no id")
+		}
+		// Update users avatar to newly inserted
+		if err := tx.Where("id = ?", userId).Updates(&User{AvatarID: img.ID}).Error; err != nil {
+			return err
+		}
+		// commit transaction if no errors
+		return nil
+	})
+	if err != nil {
+		slog.Error("uploadUserAvatar failed!", "error", err)
+		return Image{}, errors.New("uploadUserAvatar transaction failed")
+	}
+	return img, nil
 }

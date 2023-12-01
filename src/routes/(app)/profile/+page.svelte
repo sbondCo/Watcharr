@@ -2,6 +2,7 @@
   import { goto } from "$app/navigation";
   import Checkbox from "@/lib/Checkbox.svelte";
   import Error from "@/lib/Error.svelte";
+  import Icon from "@/lib/Icon.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
   import Stat from "@/lib/stats/Stat.svelte";
@@ -11,6 +12,7 @@
   import { appTheme, userInfo, userSettings } from "@/store";
   import type { Profile } from "@/types";
   import axios from "axios";
+  import { onMount } from "svelte";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -18,6 +20,7 @@
 
   let privateDisabled = false;
   let hideSpoilersDisabled = false;
+  let avatarInput: HTMLInputElement;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -28,11 +31,48 @@
       monthsShort[d.getMonth()]
     } ${d.getFullYear()}`;
   }
+
+  function avatarDropped(ev: Event) {
+    console.log(avatarInput.files);
+    if (!avatarInput?.files || avatarInput?.files?.length <= 0) {
+      console.error("avatarDropped: no file found");
+      return;
+    }
+    axios.postForm(
+      "/user/avatar",
+      { avatar: avatarInput.files[0] },
+      {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      }
+    );
+  }
+
+  onMount(() => {
+    avatarInput?.addEventListener("input", avatarDropped);
+
+    return () => {
+      avatarInput?.removeEventListener("input", avatarDropped);
+    };
+  });
 </script>
 
 <div class="content">
   <div class="inner">
-    <h2 title={user?.username}>Hey {user?.username}</h2>
+    <div class="user-basic-info">
+      <div class="img-ctr">
+        <Icon i="person" wh="100%" />
+        <input bind:this={avatarInput} type="file" title="" accept=".jpg,.png,.gif,.webp" />
+      </div>
+      <div>
+        <h2 title={user?.username}>
+          <span style="font-weight: normal; font-variant: all-small-caps;">Hey</span>
+          {user?.username}
+        </h2>
+        <textarea name="" id="" cols="30" rows="1" placeholder="my bio"></textarea>
+      </div>
+    </div>
 
     <Stats>
       {#await getProfile()}
@@ -129,6 +169,44 @@
       @media screen and (max-width: 440px) {
         width: 100%;
         min-width: unset;
+      }
+    }
+  }
+
+  .user-basic-info {
+    display: flex;
+    gap: 20px;
+
+    .img-ctr {
+      width: 80px;
+      min-width: 80px;
+      height: 80px;
+      min-height: 80px;
+      object-fit: cover;
+      border-radius: 50%;
+      position: relative;
+
+      &:hover {
+        opacity: 0.8;
+      }
+
+      input[type="file"] {
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        cursor: pointer;
+      }
+    }
+
+    & > div {
+      display: flex;
+      flex-flow: column;
+      gap: 5px;
+      width: 100%;
+
+      textarea {
+        resize: none;
       }
     }
   }

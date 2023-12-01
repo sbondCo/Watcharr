@@ -10,6 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var DataPath = "./data"
+
 type ServerConfig struct {
 	// Used to sign JWT tokens. Make sure to make
 	// it strong, just like a very long, complicated password.

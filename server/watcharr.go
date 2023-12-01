@@ -10,6 +10,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"os/exec"
+	"path"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -68,7 +69,7 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &WatchedSeason{}, &Activity{}, &Token{}, &Follow{})
+	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &WatchedSeason{}, &Activity{}, &Token{}, &Follow{}, &Image{})
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
@@ -125,7 +126,7 @@ func main() {
 	br.addFeatureRoutes()
 	br.addSonarrRoutes()
 	br.addRadarrRoutes()
-	br.rg.Static("/img", "./data/img")
+	br.rg.Static("/img", path.Join(DataPath, "img"))
 
 	go setupTasks(db)
 
