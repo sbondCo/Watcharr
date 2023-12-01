@@ -34,7 +34,7 @@
     } ${d.getFullYear()}`;
   }
 
-  function avatarDropped(ev: Event) {
+  function avatarDropped() {
     console.log(avatarInput.files);
     if (!avatarInput?.files || avatarInput?.files?.length <= 0) {
       console.error("avatarDropped: no file found");
@@ -49,6 +49,11 @@
         }
       }
     );
+  }
+
+  function avatarLoaded() {
+    console.log("avatar loaded.. removing canvas");
+    bhCanvas.remove();
   }
 
   onMount(() => {
@@ -75,7 +80,7 @@
     <div class="user-basic-info">
       <div class="img-ctr">
         {#if user?.avatar?.path}
-          <img src={`${baseURL}/${user?.avatar?.path}`} alt="" />
+          <img src={`${baseURL}/${user?.avatar?.path}`} alt="" on:load={avatarLoaded} />
           <canvas bind:this={bhCanvas} />
         {:else}
           <Icon i="person" wh="100%" />
@@ -209,13 +214,11 @@
         height: 80px;
         min-height: 80px;
         object-fit: cover;
-        z-index: 2;
       }
 
       canvas {
         position: absolute;
         cursor: pointer;
-        z-index: 1;
       }
 
       &:hover {
