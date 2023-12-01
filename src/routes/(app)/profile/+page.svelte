@@ -7,7 +7,7 @@
   import Setting from "@/lib/settings/Setting.svelte";
   import Stat from "@/lib/stats/Stat.svelte";
   import Stats from "@/lib/stats/Stats.svelte";
-  import { updateUserSetting } from "@/lib/util/api";
+  import { baseURL, updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
   import { appTheme, userInfo, userSettings } from "@/store";
   import type { Profile } from "@/types";
@@ -62,7 +62,11 @@
   <div class="inner">
     <div class="user-basic-info">
       <div class="img-ctr">
-        <Icon i="person" wh="100%" />
+        {#if user?.avatar?.path}
+          <img src={`${baseURL}/${user?.avatar?.path}`} alt="" />
+        {:else}
+          <Icon i="person" wh="100%" />
+        {/if}
         <input bind:this={avatarInput} type="file" title="" accept=".jpg,.png,.gif,.webp" />
       </div>
       <div>
@@ -182,9 +186,17 @@
       min-width: 80px;
       height: 80px;
       min-height: 80px;
-      object-fit: cover;
       border-radius: 50%;
       position: relative;
+      overflow: hidden;
+
+      img {
+        width: 80px;
+        min-width: 80px;
+        height: 80px;
+        min-height: 80px;
+        object-fit: cover;
+      }
 
       &:hover {
         opacity: 0.8;
