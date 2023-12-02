@@ -16,11 +16,11 @@
 
   function avatarLoaded() {
     console.log("avatar loaded.. removing canvas");
-    bhCanvas.remove();
+    bhCanvas?.remove();
   }
 
-  onMount(() => {
-    if (img?.path) {
+  $: {
+    if (img?.path && img?.blurHash && bhCanvas) {
       const pixels = decode(img.blurHash, 80, 80);
       const ctx = bhCanvas.getContext("2d");
       if (ctx) {
@@ -29,7 +29,9 @@
         ctx.putImageData(imageData, 0, 0);
       }
     }
+  }
 
+  onMount(() => {
     // Ignore rest if avatarDropped not defined
     if (typeof avatarDropped !== "function") return;
 
@@ -73,6 +75,7 @@
 
     canvas {
       position: absolute;
+      left: 0;
     }
 
     &:not(.no-click):hover {

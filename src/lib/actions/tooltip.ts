@@ -47,6 +47,7 @@ export default function tooltip(node: HTMLElement, opts: ToolTipOptions) {
 
   return {
     update(opts: ToolTipOptions) {
+      text = opts.text;
       condition = opts.condition ?? true;
     },
     destroy() {

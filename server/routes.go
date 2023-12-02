@@ -560,6 +560,21 @@ func (b *BaseRouter) addUserRoutes() {
 		c.JSON(http.StatusOK, response)
 	})
 
+	// Search users
+	u.GET("/public/:pubUserId/:pubUsername", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("pubUserId"))
+		if err != nil {
+			c.Status(400)
+			return
+		}
+		response, err := getUserPublicInfo(b.db, uint(id), c.Param("pubUsername"))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
 	// Update bio
 	u.POST("/bio", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)

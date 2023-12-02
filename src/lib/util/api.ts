@@ -202,18 +202,18 @@ export async function followUser(id: number) {
 }
 
 export async function unfollowUser(id: number) {
-  const nid = notify({ text: `Following`, type: "loading" });
+  const nid = notify({ text: `Unfollowing`, type: "loading" });
   axios
     .delete(`/follow/${id}`)
     .then((resp) => {
-      console.log("Followed:", resp.data);
+      console.log("Unfollowed:", resp.data);
       const f = get(follows);
       follows.update(() => f.filter((fo) => fo.followedUser.id != id));
-      notify({ id: nid, text: `Followed!`, type: "success" });
+      notify({ id: nid, text: `Unfollowed!`, type: "success" });
     })
     .catch((err) => {
       console.error(err);
-      notify({ id: nid, text: "Failed To Follow!", type: "error" });
+      notify({ id: nid, text: "Failed To Unfollow!", type: "error" });
     });
 }
 

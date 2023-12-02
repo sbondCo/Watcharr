@@ -1,16 +1,21 @@
 <script lang="ts">
+  import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import WatchedList from "@/lib/WatchedList.svelte";
+  import tooltip from "@/lib/actions/tooltip.js";
+  import UserAvatar from "@/lib/img/UserAvatar.svelte";
   import { followUser, unfollowUser } from "@/lib/util/api.js";
   import { notify } from "@/lib/util/notify.js";
   import { follows } from "@/store.js";
-  import type { Watched } from "@/types.js";
+  import type { PublicUser, Watched } from "@/types.js";
   import axios from "axios";
+  import { onMount } from "svelte";
 
   export let data;
 
   let followBtnDisabled = false;
+  let user: PublicUser;
 
   $: isFollowing = !!$follows?.find((f) => f.followedUser.id === Number(data.id));
 
@@ -22,8 +27,13 @@
     return (await axios.get(`/watched/${id}/${username}`)).data as Watched[];
   }
 
+  async function getPublicUser() {
+    return (await axios.get(`/user/public/${data.id}/${data.username}`)).data as PublicUser;
+  }
+
   async function follow() {
     followBtnDisabled = true;
+    console.log(isFollowing);
     if (isFollowing) {
       await unfollowUser(Number(data.id));
     } else {
@@ -31,6 +41,10 @@
     }
     followBtnDisabled = false;
   }
+
+  onMount(async () => {
+    user = await getPublicUser();
+  });
 </script>
 
 <svelte:head>
@@ -39,11 +53,23 @@
 
 <div class="content">
   <div class="inner">
-    <h2 class="norm">{data.username}</h2>
-
-    <button disabled={followBtnDisabled} on:click={follow}>
-      {isFollowing ? "Unfollow" : "Follow"}
-    </button>
+    <UserAvatar img={user?.avatar} />
+    <div>
+      <div class="name-row">
+        <h2 class="norm">
+          {data.username}
+        </h2>
+        <button
+          class="plain"
+          disabled={followBtnDisabled}
+          on:click={follow}
+          use:tooltip={{ text: isFollowing ? "Unfollow" : "Follow" }}
+        >
+          <Icon i={isFollowing ? "person-minus" : "person-add"} />
+        </button>
+      </div>
+      <textarea value={user?.bio}></textarea>
+    </div>
   </div>
 </div>
 
@@ -63,8 +89,9 @@
 
     .inner {
       display: flex;
-      flex-flow: column;
-      gap: 5px;
+      flex-flow: row;
+      gap: 15px;
+      align-items: center;
       width: 100%;
       max-width: 1200px;
       margin: 20px 30px;
@@ -72,7 +99,23 @@
     }
   }
 
+  .name-row {
+    display: flex;
+    flex-flow: row;
+
+    button {
+      margin-left: auto;
+    }
+  }
+
   button {
     width: max-content;
+  }
+
+  textarea {
+    border: 0;
+    padding: 0;
+    resize: none;
+    pointer-events: none;
   }
 </style>
