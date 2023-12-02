@@ -115,6 +115,7 @@ export interface PublicUser {
   id: number;
   username: string;
   avatar: Image;
+  bio: string;
 }
 
 // PrivateUser - Current users info
@@ -123,6 +124,7 @@ export interface PrivateUser {
   type: UserType;
   permissions: UserPermission;
   avatar: Image;
+  bio: string;
 }
 
 export enum UserPermission {

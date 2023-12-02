@@ -560,6 +560,23 @@ func (b *BaseRouter) addUserRoutes() {
 		c.JSON(http.StatusOK, response)
 	})
 
+	// Update bio
+	u.POST("/bio", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var br UserBioUpdateRequest
+		err := c.ShouldBindJSON(&br)
+		if err == nil {
+			err := userUpdateBio(b.db, userId, br.NewBio)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
 	// Upload avatar
 	u.POST("/avatar", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
