@@ -18,8 +18,9 @@ import (
 type PublicUser struct {
 	ID       uint   `json:"id"`
 	Username string `json:"username"`
+	AvatarID uint   `json:"-"`
 	Avatar   Image  `json:"avatar"`
-	Bio      string `json:"bio"`
+	Bio      string `json:"bio,omitempty"`
 }
 
 // Private user details, for returning users details to themselves
@@ -42,7 +43,7 @@ func userUpdate(db *gorm.DB, userId uint, ur UserSettings) (UserSettings, error)
 	user := new(User)
 	res := db.Where("id = ?", userId).Take(&user)
 	if res.Error != nil {
-		slog.Error("user update failed", "user_id", userId, "error", "failed to retrieve user from database")
+		slog.Error("user update failed", "user_id", userId, "error", res.Error)
 		return UserSettings{}, errors.New("failed to retrieve user")
 	}
 	if ur.HideSpoilers != nil {
@@ -60,7 +61,7 @@ func userGetSettings(db *gorm.DB, userId uint) (UserSettings, error) {
 	user := new(User)
 	res := db.Where("id = ?", userId).Take(&user)
 	if res.Error != nil {
-		slog.Error("user get failed", "user_id", userId, "error", "failed to retrieve user from database")
+		slog.Error("user get failed", "user_id", userId, "error", res.Error)
 		return UserSettings{}, errors.New("failed to retrieve user")
 	}
 	return UserSettings{Private: user.Private, HideSpoilers: user.HideSpoilers}, nil
@@ -71,7 +72,7 @@ func userSearch(db *gorm.DB, currentUsersId uint, q string) ([]PublicUser, error
 	users := new([]PublicUser)
 	res := db.Where("private = 0 AND username LIKE ? AND id != ?", "%"+q+"%", currentUsersId).Table("users").Find(&users)
 	if res.Error != nil {
-		slog.Error("user search failed", "error", "failed to query database")
+		slog.Error("user search failed", "error", res.Error)
 		return []PublicUser{}, errors.New("failed to find users")
 	}
 	return *users, nil
