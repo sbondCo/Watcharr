@@ -91,6 +91,9 @@ func uploadUserAvatar(c *gin.Context, db *gorm.DB, userId uint) (Image, error) {
 	slog.Debug("an avatar is being uploaded", "name", file.Filename)
 
 	f, _ := file.Open()
+	if err := isValidImageType(f); err != nil {
+		return Image{}, errors.New("invalid image type")
+	}
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
 		log.Fatal(err) // TODO nu le fatal

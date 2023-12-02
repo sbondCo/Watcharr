@@ -14,6 +14,7 @@
   import axios from "axios";
   import { onMount } from "svelte";
   import { decode } from "blurhash";
+  import { notify } from "@/lib/util/notify";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -54,6 +55,10 @@
         if (user) {
           user.avatar = r.data as Image;
         }
+      })
+      .catch((err) => {
+        console.error("uploading avatar failed", err);
+        notify({ text: err?.response?.data?.error ?? "Failed to upload avatar", type: "error" });
       });
   }
 
