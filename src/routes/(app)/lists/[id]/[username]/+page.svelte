@@ -68,7 +68,9 @@
           <Icon i={isFollowing ? "person-minus" : "person-add"} />
         </button>
       </div>
-      <span title={user?.bio}>{user?.bio}</span>
+      {#if user?.bio}
+        <span title={user?.bio}>{user?.bio}</span>
+      {/if}
     </div>
   </div>
 </div>
@@ -99,15 +101,6 @@
     }
   }
 
-  .name-row {
-    display: flex;
-    flex-flow: row;
-
-    button {
-      margin-left: auto;
-    }
-  }
-
   button {
     width: max-content;
   }
@@ -120,9 +113,18 @@
   }
 
   .basic-ctr {
-    width: 100%;
     max-width: 300px;
     overflow: hidden;
+
+    .name-row {
+      display: flex;
+      flex-flow: row;
+      gap: 8px;
+
+      button {
+        margin-left: auto;
+      }
+    }
 
     span {
       font-family: monospace;
