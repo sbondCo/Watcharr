@@ -10,7 +10,7 @@
   import { baseURL, updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
   import { appTheme, userInfo, userSettings } from "@/store";
-  import type { Profile } from "@/types";
+  import type { Image, Profile } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
   import { decode } from "blurhash";
@@ -40,15 +40,21 @@
       console.error("avatarDropped: no file found");
       return;
     }
-    axios.postForm(
-      "/user/avatar",
-      { avatar: avatarInput.files[0] },
-      {
-        headers: {
-          "Content-Type": "multipart/form-data"
+    axios
+      .postForm(
+        "/user/avatar",
+        { avatar: avatarInput.files[0] },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
         }
-      }
-    );
+      )
+      .then((r) => {
+        if (user) {
+          user.avatar = r.data as Image;
+        }
+      });
   }
 
   function avatarLoaded() {
