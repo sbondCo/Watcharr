@@ -68,7 +68,7 @@
           <Icon i={isFollowing ? "person-minus" : "person-add"} />
         </button>
       </div>
-      <span>{user?.bio}</span>
+      <span title={user?.bio}>{user?.bio}</span>
     </div>
   </div>
 </div>
