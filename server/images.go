@@ -7,6 +7,7 @@ import (
 	_ "image/png"
 	"log/slog"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path"
 	"time"
@@ -95,4 +96,19 @@ WHERE NOT EXISTS (
 			}
 		}
 	}
+}
+
+func isValidImageType(f multipart.File) error {
+	buff := make([]byte, 512) // docs tell that it take only first 512 bytes into consideration
+	if _, err := f.Read(buff); err != nil {
+		slog.Error("isValidImageType: failed to read file into buffer", "error", err)
+		return errors.New("failed to verify if image is valid")
+	}
+	t := http.DetectContentType(buff)
+	slog.Debug("isValidImageType", "type", t)
+	if t != "image/png" && t != "image/jpeg" && t != "image/webp" && t != "image/gif" {
+		slog.Debug("isValidImageType: rejecting file as not valid (supported) image type")
+		return errors.New("invalid file type")
+	}
+	return nil
 }
