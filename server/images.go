@@ -99,7 +99,9 @@ WHERE NOT EXISTS (
 }
 
 func isValidImageType(f multipart.File) error {
-	buff := make([]byte, 512) // docs tell that it take only first 512 bytes into consideration
+	// Read first 512 bytes, since that is all `DetectContentType` will evaluate on.
+	// Reading whole file is a waste.
+	buff := make([]byte, 512)
 	if _, err := f.Read(buff); err != nil {
 		slog.Error("isValidImageType: failed to read file into buffer", "error", err)
 		return errors.New("failed to verify if image is valid")
