@@ -35,6 +35,26 @@
     } ${d.getFullYear()}`;
   }
 
+  function updateBio(ev: FocusEvent & { currentTarget: EventTarget & HTMLTextAreaElement }) {
+    if (typeof ev?.currentTarget?.value !== "string") {
+      console.warn("updateBio called without any value", ev?.currentTarget?.value);
+      return;
+    }
+    const nid = notify({ text: "Update Bio", type: "success" });
+    axios
+      .post("/user/bio", { newBio: ev?.currentTarget?.value })
+      .then(() => {
+        notify({ id: nid, text: "Update Bio", type: "success" });
+      })
+      .catch((err) => {
+        notify({
+          id: nid,
+          text: err?.response?.data?.error ?? "Failed to update bio",
+          type: "error"
+        });
+      });
+  }
+
   function avatarDropped() {
     console.log(avatarInput.files);
     if (!avatarInput?.files || avatarInput?.files?.length <= 0) {
@@ -103,7 +123,15 @@
           <span style="font-weight: normal; font-variant: all-small-caps;">Hey</span>
           {user?.username}
         </h2>
-        <textarea name="" id="" cols="30" rows="1" placeholder="my bio"></textarea>
+        <textarea
+          name=""
+          id=""
+          cols="30"
+          rows="1"
+          placeholder="my bio"
+          on:blur={updateBio}
+          value={user?.bio}
+        />
       </div>
     </div>
 

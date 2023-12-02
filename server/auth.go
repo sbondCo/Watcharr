@@ -48,6 +48,7 @@ type User struct {
 	Password string `gorm:"not null" json:"password" binding:"required"`
 	AvatarID uint   `json:"-"`
 	Avatar   Image  `json:"avatar"`
+	Bio      string `json:"bio"`
 	// The type of user/which auth service they originate from.
 	// Empty if from Watcharr, or the name of the service (eg. jellyfin)
 	Type UserType `gorm:"uniqueIndex:usr_name_to_type;not null;default:0" json:"type"`
@@ -65,6 +66,8 @@ func (u *User) GetSafe() PublicUser {
 	return PublicUser{
 		ID:       u.ID,
 		Username: u.Username,
+		Avatar:   u.Avatar,
+		Bio:      u.Bio,
 	}
 }
 

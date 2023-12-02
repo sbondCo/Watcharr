@@ -18,6 +18,8 @@ import (
 type PublicUser struct {
 	ID       uint   `json:"id"`
 	Username string `json:"username"`
+	Avatar   Image  `json:"avatar"`
+	Bio      string `json:"bio"`
 }
 
 // Private user details, for returning users details to themselves
@@ -27,6 +29,11 @@ type PrivateUser struct {
 	Permissions int      `json:"permissions"`
 	AvatarID    uint     `json:"-"`
 	Avatar      Image    `json:"avatar"`
+	Bio         string   `json:"bio"`
+}
+
+type UserBioUpdateRequest struct {
+	NewBio string `json:"newBio" binding:"max=128"`
 }
 
 // Update user settings
@@ -79,6 +86,15 @@ func getUserInfo(db *gorm.DB, currentUsersId uint) (PrivateUser, error) {
 		return PrivateUser{}, errors.New("failed to find current user")
 	}
 	return *user, nil
+}
+
+func userUpdateBio(db *gorm.DB, userId uint, newBio string) error {
+	slog.Debug("userUpdateBio request running", "user_id", userId, "newBio", newBio)
+	if res := db.Model(&User{}).Where("id = ?", userId).Update("bio", newBio); res.Error != nil {
+		slog.Error("userUpdateBio failed", "user_id", userId, "error", res.Error)
+		return errors.New("failed to update bio")
+	}
+	return nil
 }
 
 func uploadUserAvatar(c *gin.Context, db *gorm.DB, userId uint) (Image, error) {
