@@ -2,19 +2,18 @@
   import { goto } from "$app/navigation";
   import Checkbox from "@/lib/Checkbox.svelte";
   import Error from "@/lib/Error.svelte";
-  import Icon from "@/lib/Icon.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
   import Stat from "@/lib/stats/Stat.svelte";
   import Stats from "@/lib/stats/Stats.svelte";
-  import { baseURL, updateUserSetting } from "@/lib/util/api";
+  import { updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
   import { appTheme, userInfo, userSettings } from "@/store";
   import type { Image, Profile } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
-  import { decode } from "blurhash";
   import { notify } from "@/lib/util/notify";
+  import UserAvatar from "@/lib/img/UserAvatar.svelte";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -22,8 +21,6 @@
 
   let privateDisabled = false;
   let hideSpoilersDisabled = false;
-  let avatarInput: HTMLInputElement;
-  let bhCanvas: HTMLCanvasElement;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -55,16 +52,16 @@
       });
   }
 
-  function avatarDropped() {
-    console.log(avatarInput.files);
-    if (!avatarInput?.files || avatarInput?.files?.length <= 0) {
+  function avatarDropped(ev: Event) {
+    const files = (ev.currentTarget as HTMLInputElement)?.files;
+    if (!files || files?.length <= 0) {
       console.error("avatarDropped: no file found");
       return;
     }
     axios
       .postForm(
         "/user/avatar",
-        { avatar: avatarInput.files[0] },
+        { avatar: files[0] },
         {
           headers: {
             "Content-Type": "multipart/form-data"
@@ -81,43 +78,12 @@
         notify({ text: err?.response?.data?.error ?? "Failed to upload avatar", type: "error" });
       });
   }
-
-  function avatarLoaded() {
-    console.log("avatar loaded.. removing canvas");
-    bhCanvas.remove();
-  }
-
-  onMount(() => {
-    avatarInput?.addEventListener("input", avatarDropped);
-
-    if (user?.avatar?.blurHash) {
-      const pixels = decode(user?.avatar?.blurHash, 80, 80);
-      const ctx = bhCanvas.getContext("2d");
-      if (ctx) {
-        const imageData = ctx.createImageData(80, 80);
-        imageData.data.set(pixels);
-        ctx.putImageData(imageData, 0, 0);
-      }
-    }
-
-    return () => {
-      avatarInput?.removeEventListener("input", avatarDropped);
-    };
-  });
 </script>
 
 <div class="content">
   <div class="inner">
     <div class="user-basic-info">
-      <div class="img-ctr">
-        {#if user?.avatar?.path}
-          <img src={`${baseURL}/${user?.avatar?.path}`} alt="" on:load={avatarLoaded} />
-          <canvas bind:this={bhCanvas} />
-        {:else}
-          <Icon i="person" wh="100%" />
-        {/if}
-        <input bind:this={avatarInput} type="file" title="" accept=".jpg,.png,.gif,.webp" />
-      </div>
+      <UserAvatar img={user?.avatar} {avatarDropped} />
       <div>
         <h2 title={user?.username}>
           <span style="font-weight: normal; font-variant: all-small-caps;">Hey</span>
@@ -237,41 +203,6 @@
   .user-basic-info {
     display: flex;
     gap: 20px;
-
-    .img-ctr {
-      width: 80px;
-      min-width: 80px;
-      height: 80px;
-      min-height: 80px;
-      border-radius: 50%;
-      position: relative;
-      overflow: hidden;
-
-      img {
-        width: 80px;
-        min-width: 80px;
-        height: 80px;
-        min-height: 80px;
-        object-fit: cover;
-      }
-
-      canvas {
-        position: absolute;
-        cursor: pointer;
-      }
-
-      &:hover {
-        opacity: 0.8;
-      }
-
-      input[type="file"] {
-        opacity: 0;
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        cursor: pointer;
-      }
-    }
 
     & > div {
       display: flex;
