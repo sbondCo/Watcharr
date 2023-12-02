@@ -62,7 +62,7 @@ func getBlurHash(img multipart.File) (string, error) {
 }
 
 func cleanupImages(db *gorm.DB) {
-	slog.Debug("cleanupImages running")
+	slog.Info("cleanupImages running")
 	var unusedImgs []Image
 	// Select images that are not referenced by at least one other row.
 	// Currently only used for user avatars, add new tables when used.
@@ -73,7 +73,7 @@ WHERE NOT EXISTS (
 	FROM users
 	WHERE users.avatar_id = images.id
 );`).Scan(&unusedImgs)
-	slog.Debug("cleanupImages: scanned for unused images", "amount", len(unusedImgs))
+	slog.Info("cleanupImages: scanned for unused images", "amount", len(unusedImgs))
 	if len(unusedImgs) > 0 {
 		for _, v := range unusedImgs {
 			slog.Debug("cleanupImages: removing an image", "id", v.ID, "path", v.Path)
