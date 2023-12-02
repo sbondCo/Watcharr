@@ -37,11 +37,11 @@
       console.warn("updateBio called without any value", ev?.currentTarget?.value);
       return;
     }
-    const nid = notify({ text: "Update Bio", type: "success" });
+    const nid = notify({ text: "Updating Bio", type: "loading" });
     axios
       .post("/user/bio", { newBio: ev?.currentTarget?.value })
       .then(() => {
-        notify({ id: nid, text: "Update Bio", type: "success" });
+        notify({ id: nid, text: "Updated Bio", type: "success" });
       })
       .catch((err) => {
         notify({
@@ -58,6 +58,7 @@
       console.error("avatarDropped: no file found");
       return;
     }
+    const nid = notify({ text: "Uploading avatar", type: "loading" });
     axios
       .postForm(
         "/user/avatar",
@@ -71,11 +72,16 @@
       .then((r) => {
         if (user) {
           user.avatar = r.data as Image;
+          notify({ id: nid, text: "Avatar Uploaded", type: "success" });
         }
       })
       .catch((err) => {
         console.error("uploading avatar failed", err);
-        notify({ text: err?.response?.data?.error ?? "Failed to upload avatar", type: "error" });
+        notify({
+          id: nid,
+          text: err?.response?.data?.error ?? "Failed to upload avatar",
+          type: "error"
+        });
       });
   }
 </script>
