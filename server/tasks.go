@@ -25,7 +25,7 @@ func setupMinutelyTasks(db *gorm.DB) {
 }
 
 func setupDailyTasks(db *gorm.DB) {
-	taskRunInterval := 10 * time.Second // HACK
+	taskRunInterval := 24 * time.Hour
 	ticker := time.NewTicker(taskRunInterval)
 	defer ticker.Stop()
 
