@@ -93,6 +93,7 @@
       display: flex;
       flex-flow: row;
       gap: 15px;
+      justify-content: center;
       align-items: center;
       width: 100%;
       max-width: 1200px;
