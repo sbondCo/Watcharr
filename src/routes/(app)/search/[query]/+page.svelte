@@ -10,6 +10,7 @@
   import type { ContentSearch, PublicUser } from "@/types";
   import UsersList from "@/lib/UsersList.svelte";
   import { onDestroy, onMount } from "svelte";
+  import Error from "@/lib/Error.svelte";
 
   export let data;
 
@@ -47,7 +48,7 @@
           <UsersList users={results} />
         {/if}
       {:catch err}
-        <PageError pretty="Failed to load watched list!" error={err} />
+        <PageError pretty="Failed to load users!" error={err} />
       {/await}
 
       {#await search(data.slug)}
@@ -68,7 +69,7 @@
           {/if}
         </PosterList>
       {:catch err}
-        <PageError pretty="Failed to load watched list!" error={err} />
+        <Error pretty="Failed to load results!" error={err} />
       {/await}
     {:else}
       <h2>No Search Query!</h2>
