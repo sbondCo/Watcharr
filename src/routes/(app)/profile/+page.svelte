@@ -89,15 +89,7 @@
           <span style="font-weight: normal; font-variant: all-small-caps;">Hey</span>
           {user?.username}
         </h2>
-        <textarea
-          name=""
-          id=""
-          cols="30"
-          rows="1"
-          placeholder="my bio"
-          on:blur={updateBio}
-          value={user?.bio}
-        />
+        <textarea rows="1" placeholder="my bio" on:blur={updateBio} value={user?.bio} />
       </div>
     </div>
 
@@ -212,6 +204,12 @@
 
       textarea {
         resize: none;
+
+        &:not(:focus) {
+          border: 0;
+          padding: 0;
+          height: 32px;
+        }
       }
     }
   }

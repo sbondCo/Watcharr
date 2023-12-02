@@ -24,7 +24,9 @@ export type Icon =
   | "sort"
   | "eye-closed"
   | "people"
-  | "person";
+  | "person"
+  | "person-add"
+  | "person-minus";
 
 export type Theme = "light" | "dark";
 

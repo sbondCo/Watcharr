@@ -89,6 +89,18 @@ func getUserInfo(db *gorm.DB, currentUsersId uint) (PrivateUser, error) {
 	return *user, nil
 }
 
+// For getting a public user's info, when viewing their list for example
+func getUserPublicInfo(db *gorm.DB, userId uint, username string) (PublicUser, error) {
+	slog.Debug("user get info request running")
+	user := new(PublicUser)
+	res := db.Where("private = 0 AND id = ? AND username = ?", userId, username).Table("users").Preload("Avatar").Take(&user)
+	if res.Error != nil {
+		slog.Error("public user get info failed", "error", res.Error)
+		return PublicUser{}, errors.New("failed to find user")
+	}
+	return *user, nil
+}
+
 func userUpdateBio(db *gorm.DB, userId uint, newBio string) error {
 	slog.Debug("userUpdateBio request running", "user_id", userId, "newBio", newBio)
 	if res := db.Model(&User{}).Where("id = ?", userId).Update("bio", newBio); res.Error != nil {
