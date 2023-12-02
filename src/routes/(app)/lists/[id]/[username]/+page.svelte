@@ -54,9 +54,9 @@
 <div class="content">
   <div class="inner">
     <UserAvatar img={user?.avatar} />
-    <div>
+    <div class="basic-ctr">
       <div class="name-row">
-        <h2 class="norm">
+        <h2>
           {data.username}
         </h2>
         <button
@@ -68,7 +68,7 @@
           <Icon i={isFollowing ? "person-minus" : "person-add"} />
         </button>
       </div>
-      <textarea value={user?.bio}></textarea>
+      <span>{user?.bio}</span>
     </div>
   </div>
 </div>
@@ -116,6 +116,21 @@
     border: 0;
     padding: 0;
     resize: none;
-    pointer-events: none;
+    text-overflow: ellipsis;
+  }
+
+  .basic-ctr {
+    width: 100%;
+    max-width: 300px;
+    overflow: hidden;
+
+    span {
+      font-family: monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
   }
 </style>
