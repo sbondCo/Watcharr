@@ -64,6 +64,7 @@
     border-radius: 50%;
     position: relative;
     overflow: hidden;
+    fill: $text-color;
 
     img {
       width: 80px;

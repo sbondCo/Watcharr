@@ -138,6 +138,7 @@
 
       button {
         margin-left: auto;
+        fill: $text-color;
       }
     }
 
