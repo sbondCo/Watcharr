@@ -46,12 +46,15 @@
         padding: 10px 20px;
         border-radius: 8px;
         background-color: $accent-color;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
         transition:
           background-color 150ms ease,
           color 150ms ease;
+
+        span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
 
         &:hover {
           color: $bg-color;

@@ -122,6 +122,11 @@
       flex-flow: row;
       gap: 8px;
 
+      h2 {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       button {
         margin-left: auto;
       }

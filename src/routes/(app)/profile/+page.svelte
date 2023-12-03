@@ -207,6 +207,7 @@
       flex-flow: column;
       gap: 5px;
       width: 100%;
+      overflow: hidden;
 
       textarea {
         resize: none;
