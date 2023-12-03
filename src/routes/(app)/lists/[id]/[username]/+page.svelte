@@ -65,7 +65,7 @@
     <UserAvatar img={user?.avatar} />
     <div class="basic-ctr">
       <div class="name-row">
-        <h2>
+        <h2 title={user?.username}>
           {data.username}
         </h2>
         <button

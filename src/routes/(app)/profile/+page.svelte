@@ -33,15 +33,19 @@
   }
 
   function updateBio(ev: FocusEvent & { currentTarget: EventTarget & HTMLTextAreaElement }) {
-    if (typeof ev?.currentTarget?.value !== "string") {
-      console.warn("updateBio called without any value", ev?.currentTarget?.value);
+    const newBio = ev?.currentTarget?.value;
+    if (typeof newBio !== "string") {
+      console.warn("updateBio called without any value", newBio);
       return;
     }
     const nid = notify({ text: "Updating Bio", type: "loading" });
     axios
-      .post("/user/bio", { newBio: ev?.currentTarget?.value })
+      .post("/user/bio", { newBio: newBio })
       .then(() => {
-        notify({ id: nid, text: "Updated Bio", type: "success" });
+        if (user) {
+          user.bio = newBio;
+          notify({ id: nid, text: "Updated Bio", type: "success" });
+        }
       })
       .catch((err) => {
         notify({
