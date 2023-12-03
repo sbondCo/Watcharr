@@ -140,6 +140,7 @@ func uploadUserAvatar(c *gin.Context, db *gorm.DB, userId uint) (Image, error) {
 		slog.Error("uploadUserAvatar seeking back to start of image failed", "error", err)
 	}
 
+	// No need to remove old image, the daily cleanup task will handle removing unused ones.
 	var img Image
 	err = db.Transaction(func(tx *gorm.DB) error {
 		// Insert avatar into db

@@ -9,7 +9,7 @@
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
   import tooltip from "../actions/tooltip";
-  import { removeWatched, updateWatched } from "../util/api";
+  import { baseURL, removeWatched, updateWatched } from "../util/api";
   import { notify } from "../util/notify";
   import { onMount } from "svelte";
   import PosterStatus from "./PosterStatus.svelte";
@@ -40,7 +40,12 @@
   let containerEl: HTMLDivElement;
 
   const title = media.title || media.name;
-  const poster = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
+  // For now, if the content is on watched list, we can assume we have a local
+  // cached image. Could be improved, since we could have a cached image for
+  // show not on someone elses watched list.
+  const poster = id
+    ? `${baseURL}/img${media.poster_path}`
+    : `https://image.tmdb.org/t/p/w500${media.poster_path}`;
   const link = media.id ? `/${media.media_type}/${media.id}` : undefined;
   const dateStr = media.release_date || media.first_air_date;
   const year = dateStr ? new Date(dateStr).getFullYear() : undefined;
