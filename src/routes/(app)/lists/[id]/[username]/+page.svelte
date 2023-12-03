@@ -10,12 +10,12 @@
   import { follows } from "@/store.js";
   import type { PublicUser, Watched } from "@/types.js";
   import axios from "axios";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
 
   export let data;
 
   let followBtnDisabled = false;
-  let user: PublicUser;
+  let user: PublicUser | undefined;
 
   $: isFollowing = !!$follows?.find((f) => f.followedUser.id === Number(data.id));
 
@@ -42,9 +42,18 @@
     followBtnDisabled = false;
   }
 
-  onMount(async () => {
-    user = await getPublicUser();
-  });
+  $: {
+    user = undefined;
+    if (data?.id && data?.username) {
+      getPublicUser()
+        .then((u) => {
+          user = u;
+        })
+        .catch((err) => {
+          console.error("getPublicUser failed!", err);
+        });
+    }
+  }
 </script>
 
 <svelte:head>
@@ -120,7 +129,7 @@
     .name-row {
       display: flex;
       flex-flow: row;
-      gap: 8px;
+      gap: 15px;
 
       h2 {
         overflow: hidden;
