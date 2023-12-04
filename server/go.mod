@@ -3,10 +3,11 @@ module github.com/sbondCo/Watcharr
 go 1.21
 
 require (
+	github.com/buckket/go-blurhash v1.1.0
 	github.com/gin-contrib/cache v1.2.0
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
-	github.com/golang-jwt/jwt/v5 v5.1.0
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/joho/godotenv v1.5.1
 	golang.org/x/crypto v0.16.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
@@ -16,7 +17,6 @@ require (
 
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874 // indirect
-	github.com/buckket/go-blurhash v1.1.0 // indirect
 	github.com/bytedance/sonic v1.10.2 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
