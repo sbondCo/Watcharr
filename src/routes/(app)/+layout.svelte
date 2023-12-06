@@ -14,6 +14,7 @@
     activeFilters,
     activeSort,
     clearAllStores,
+    defaultSort,
     follows,
     searchQuery,
     serverFeatures,
@@ -193,6 +194,9 @@
         use:tooltip={{ text: "Filter", pos: "bot", condition: !filterMenuShown }}
       >
         <Icon i="filter" />
+        {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
+          <div class="indicator"></div>
+        {/if}
       </button>
       <button
         class="plain other sort"
@@ -203,6 +207,10 @@
         use:tooltip={{ text: "Sort", pos: "bot", condition: !sortMenuShown }}
       >
         <Icon i="sort" />
+        <!-- Show indicator if not equal to default and second item in array is not falsy -->
+        {#if $activeSort?.length === 2 && $activeSort[1] && JSON.stringify($activeSort) !== JSON.stringify(defaultSort)}
+          <div class="indicator"></div>
+        {/if}
       </button>
       {#if sortMenuShown}
         <SortMenu />
@@ -373,6 +381,21 @@
 
       button.sort {
         margin-right: 12px;
+      }
+
+      button.filter,
+      button.sort {
+        position: relative;
+
+        .indicator {
+          position: absolute;
+          top: 1px;
+          right: -6px;
+          width: 6px;
+          height: 6px;
+          background-color: $text-color;
+          border-radius: 50%;
+        }
       }
 
       button.discover {
