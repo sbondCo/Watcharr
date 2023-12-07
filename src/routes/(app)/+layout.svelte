@@ -319,7 +319,7 @@
         width: 40px;
       }
 
-      @media screen and (max-width: 580px) {
+      @media screen and (max-width: 620px) {
         span.large {
           display: none;
         }
@@ -444,7 +444,7 @@
       }
     }
 
-    @media screen and (max-width: 580px) {
+    @media screen and (max-width: 666px) {
       input {
         width: 100%;
 
