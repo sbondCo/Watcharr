@@ -9,4 +9,3 @@ For big PRs (lots of changes/big change in the way something works), if you'd li
 ## Project Board
 
 We have a [board to organize new features and bug fixes](https://github.com/orgs/sbondCo/projects/9/views/2) to be worked on. If you see something you'd like to work on, just ask in the issue and it can be assigned to you. Even if it isn't set for the next milestone already, it can be.
-

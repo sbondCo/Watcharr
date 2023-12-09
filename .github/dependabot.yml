@@ -9,7 +9,7 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "ui"
-      
+
   # Server
   - package-ecosystem: "gomod"
     directory: "/server"
