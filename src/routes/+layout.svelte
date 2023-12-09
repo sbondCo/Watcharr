@@ -3,7 +3,9 @@
   import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
   import { unNotify } from "@/lib/util/notify";
   import { notifications } from "@/store";
+  import { pwaInfo } from 'virtual:pwa-info'; 
 
+  $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : '' 
   $: notifs = $notifications;
 
   console.log(
@@ -12,6 +14,9 @@
   );
 </script>
 
+<svelte:head> 
+ 	{@html webManifestLink} 
+</svelte:head>
 <div id="tooltip" />
 <div id="notifications">
   {#each notifs as n}
