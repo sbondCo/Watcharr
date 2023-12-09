@@ -8,7 +8,11 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true
+    "strict": true,
+    "types": [
+      "vite-plugin-pwa/client",
+      "vite-plugin-pwa/info"
+    ]
   },
   // Includes merged from ./svelte-kit/tsconfig.json, since we want to add .env.d.ts,
   // and typescript wont merge both the include arrays.. only override.
