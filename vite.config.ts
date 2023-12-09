@@ -14,23 +14,23 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         icons: [
-						{
-							src: '/logo-col.png',
-							sizes: '192x192',
-							type: 'image/png',
-						},
-						{
-							src: '/logo-col.png',
-							sizes: '512x512',
-							type: 'image/png',
-						},
-						{
-							src: '/logo-col.png',
-							sizes: '512x512',
-							type: 'image/png',
-							purpose: 'any maskable',
-						},
-					],
+          {
+            src: '/logo-col.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/logo-col.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: '/logo-col.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
       }
     })
   ],
