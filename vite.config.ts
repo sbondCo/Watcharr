@@ -2,7 +2,6 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
 import { readFileSync } from "fs";
 import {SvelteKitPWA} from '@vite-pwa/sveltekit'
-/** @type {import('vite').UserConfig} */
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
 
 export default defineConfig({
