@@ -108,6 +108,7 @@
           overflow: hidden;
 
           span {
+            margin-top: 2px;
             font-family: "Rampart One";
             -webkit-text-stroke: 1px $rating-color;
             font-size: 25px;
