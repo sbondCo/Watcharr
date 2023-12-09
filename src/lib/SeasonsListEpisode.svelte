@@ -25,6 +25,11 @@
       <span>
         <b>{ep.episode_number}</b>
         <span class="episode-name">{ep.name}</span>
+        {#if ep.runtime}
+          <span class="episode-runtime" title="This episode has a runtime of {ep.runtime} minutes."
+            >{ep.runtime}m</span
+          >
+        {/if}
       </span>
       <span
         class="rating"
@@ -80,11 +85,17 @@
         flex-flow: row;
         align-items: center;
 
-        .episode-name {
+        .episode-name,
+        .episode-runtime {
           text-transform: lowercase;
           font-variant: small-caps;
           font-weight: bold;
           font-size: 16px;
+        }
+
+        .episode-runtime {
+          font-size: 14px;
+          padding: 0 2px;
         }
 
         .rating {
