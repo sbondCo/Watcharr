@@ -159,23 +159,22 @@
       }
     }
 
-    .episode-name,
     img,
-    .rating {
+    .episode-name,
+    .rating,
+    .overview {
       transition: filter 150ms ease-out;
     }
 
     &.dont-spoil {
-      .episode-name {
+      .episode-name,
+      .rating,
+      .overview {
         filter: blur(4px);
       }
 
       img {
         filter: blur(6px);
-      }
-
-      .rating {
-        filter: blur(4px);
       }
     }
   }
