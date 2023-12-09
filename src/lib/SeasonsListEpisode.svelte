@@ -20,17 +20,27 @@
   {:else}
     <div class="no-still" />
   {/if}
-  <span>
-    <b>{ep.episode_number}</b>
-    <span class="episode-name">{ep.name}</span>
-  </span>
-  <span
-    class="rating"
-    title={`TMDB Rating: ${ep.vote_average} out of 10 (based on ${ep.vote_count} votes)`}
-  >
-    <span>*</span>
-    {Math.round(ep.vote_average * 10) / 10}
-  </span>
+  <div class="info">
+    <div>
+      <span>
+        <b>{ep.episode_number}</b>
+        <span class="episode-name">{ep.name}</span>
+        {#if ep.runtime}
+          <span class="episode-runtime" title="This episode has a runtime of {ep.runtime} minutes."
+            >{ep.runtime}m</span
+          >
+        {/if}
+      </span>
+      <span
+        class="rating"
+        title={`TMDB Rating: ${ep.vote_average} out of 10 (based on ${ep.vote_count} votes)`}
+      >
+        <span>*</span>
+        {Math.round(ep.vote_average * 10) / 10}
+      </span>
+    </div>
+    <span class="overview">{ep.overview}</span>
+  </div>
   {#if isHidden}
     <button class="plain spoiler-text" on:click={() => (isHidden = false)}>
       <Icon i="eye-closed" wh={34} />
@@ -66,29 +76,53 @@
       }
     }
 
+    .info {
+      display: flex;
+      flex-flow: column;
+
+      & > div {
+        display: flex;
+        flex-flow: row;
+        align-items: center;
+
+        .episode-name,
+        .episode-runtime {
+          text-transform: lowercase;
+          font-variant: small-caps;
+          font-weight: bold;
+          font-size: 16px;
+        }
+
+        .episode-runtime {
+          font-size: 14px;
+          padding: 0 2px;
+        }
+
+        .rating {
+          display: flex;
+          align-items: start;
+          justify-content: center;
+          font-size: 15px;
+          color: $rating-color;
+          font-weight: bolder;
+          overflow: hidden;
+
+          span {
+            margin-top: 2px;
+            font-family: "Rampart One";
+            -webkit-text-stroke: 1px $rating-color;
+            font-size: 25px;
+            line-height: 0.7;
+          }
+        }
+      }
+    }
+
     span {
       padding: 3px 5px;
 
       @media screen and (max-width: 590px) {
         text-align: center;
-      }
-    }
-
-    .rating {
-      display: flex;
-      align-items: start;
-      justify-content: center;
-      font-size: 15px;
-      color: $rating-color;
-      font-weight: bolder;
-      overflow: hidden;
-
-      span {
-        font-family: "Rampart One";
-        -webkit-text-stroke: 1px $rating-color;
-        font-size: 25px;
-        line-height: 0.7;
-        margin-top: 1.5px;
       }
     }
 
@@ -126,7 +160,8 @@
     }
 
     .episode-name,
-    img {
+    img,
+    .rating {
       transition: filter 150ms ease-out;
     }
 
@@ -138,8 +173,9 @@
       img {
         filter: blur(6px);
       }
+
       .rating {
-        filter:blur(4px)
+        filter: blur(4px);
       }
     }
   }
@@ -150,6 +186,10 @@
       flex-flow: column;
       width: 100%;
       height: 100%;
+    }
+
+    .rating {
+      margin-left: auto;
     }
   }
 </style>
