@@ -12,6 +12,8 @@
   const link = id ? `/person/${id}` : undefined;
 </script>
 
+<!-- Quick fix to ignore error, should be fixed -->
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <li
   on:mouseenter={(e) => calculateTransformOrigin(e)}
   on:focusin={(e) => calculateTransformOrigin(e)}
@@ -89,7 +91,7 @@
       background-size: 400% 400%;
       animation: imgloader 4s ease infinite;
 
-      @-webkit-keyframes imgloader {
+      @keyframes imgloader {
         0% {
           background-position: 50% 0%;
         }

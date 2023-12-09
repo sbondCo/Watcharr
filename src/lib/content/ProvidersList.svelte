@@ -21,9 +21,5 @@
     gap: 15px;
     margin-top: auto;
     padding-top: 10px;
-
-    & span {
-      margin-bottom: 2px;
-    }
   }
 </style>
