@@ -28,20 +28,20 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 
 <p align="center">
 
-| Homepage | Watched Show Hover |
-| -------- | ------------------ |
+| Homepage                                                   | Watched Show Hover                                                      |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------- |
 | <img src="./screenshot/homepage.png" alt="Watched List" /> | <img src="./screenshot/homepage-poster-hover.png" alt="Watched List" /> |
 
-| Watched Show Status Change | Movie Details |
-| -------------------------- | ------------- |
+| Watched Show Status Change                                                              | Movie Details                                                                  |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | <img src="./screenshot/homepage-poster-change-status.png" alt="Changing Show Status" /> | <img src="./screenshot/content-details-page.png" alt="Content Details Page" /> |
 
-| User Profile | Discover |
-| ------------ | -------- |
+| User Profile                                                        | Discover                                                         |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | <img src="./screenshot/user-profile.png" alt="User Profile Page" /> | <img src="./screenshot/discover-page.png" alt="Discover Page" /> |
 
-| Dark Homepage | Dark Content Details |
-| ------------- | -------------------- |
+| Dark Homepage                                                          | Dark Content Details                                                                   |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | <img src="./screenshot/homepage-dark.png" alt="Dark Theme Homepage" /> | <img src="./screenshot/content-details-page-dark.png" alt="Dark Theme Content Page" /> |
 
 </p>
