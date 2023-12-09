@@ -176,9 +176,6 @@
       img {
         filter: blur(6px);
       }
-      .rating {
-        filter:blur(4px)
-      }
     }
   }
 
