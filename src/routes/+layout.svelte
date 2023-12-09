@@ -15,6 +15,7 @@
 
 <svelte:head>
   {#if pwaInfo?.webManifest?.linkTag}
+    <!-- eslint-disable-next-line -->
     {@html pwaInfo.webManifest.linkTag}
   {/if}
 </svelte:head>
@@ -26,6 +27,8 @@
       {#if n.type === "loading"}
         <SpinnerTiny />
       {/if}
+      <!-- only comes from our strings (which may have html) -->
+      <!-- eslint-disable-next-line -->
       <span>{@html n.text}</span>
       <button
         class="plain"

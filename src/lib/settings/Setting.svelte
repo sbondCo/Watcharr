@@ -19,10 +19,6 @@
 </div>
 
 <style lang="scss">
-  h3 {
-    font-variant: small-caps;
-  }
-
   h4 {
     font-size: 16px;
   }
@@ -37,11 +33,6 @@
   }
 
   div {
-    input[type="text"],
-    input[type="password"] {
-      margin-top: 1px;
-    }
-
     &.row {
       display: flex;
       flex-flow: row;
@@ -50,10 +41,6 @@
 
       & > div:first-of-type {
         margin-right: auto;
-      }
-
-      &.btns button {
-        width: min-content;
       }
     }
   }
