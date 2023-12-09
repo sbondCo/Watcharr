@@ -8,7 +8,8 @@ COPY server/arr/*.go ./arr/
 # Required so we can build with cgo
 RUN apk update && apk add --no-cache musl-dev gcc build-base
 
-RUN go mod download && GOOS=linux CGO_ENABLED=1 go build -o ./watcharr
+# CGO_CFLAGS: https://github.com/mattn/go-sqlite3/issues/1164#issuecomment-1635253695
+RUN go mod download && GOOS=linux CGO_ENABLED=1 CGO_CFLAGS="-D_LARGEFILE64_SOURCE" go build -o ./watcharr
 
 # Frontend
 FROM node:20-alpine AS ui
