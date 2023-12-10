@@ -9,6 +9,10 @@ export default defineConfig({
     sveltekit(),
     SvelteKitPWA({
       manifest: {
+        name: "Watcharr",
+        description: "Your movie and show watched list.",
+        background_color: "#f1da83",
+        categories: ["entertainment"],
         start_url: "/",
         scope: "/",
         display: "standalone",
