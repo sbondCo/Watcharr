@@ -150,7 +150,7 @@
 
 :global(#tooltip) {
   visibility: hidden;
-  position: fixed;
+  position: absolute;
   padding: 8px 5px;
   background-color: black;
   color: white;
