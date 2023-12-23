@@ -98,7 +98,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 	slog.Debug("Adding watched item", "userId", userId, "contentType", ar.ContentType, "contentId", ar.ContentID)
 
 	var content Content
-	db.Where("tmdb_id = ?", ar.ContentID).Find(&content)
+	db.Where("type = ? AND tmdb_id = ?", ar.ContentType, ar.ContentID).Find(&content)
 
 	// Create content if not found from our db
 	if content == (Content{}) {
