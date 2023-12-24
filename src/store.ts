@@ -19,7 +19,6 @@ export const defaultSort = ["DATEADDED", "DOWN"];
 export const userInfo = writable<PrivateUser | undefined>();
 export const userSettings = writable<UserSettings | undefined>();
 export const watchedList = writable<Watched[]>([]);
-export const watchedListErrorOccurred = writable(false);
 export const notifications = writable<Notification[]>([]);
 export const activeSort = writable<string[]>(defaultSort);
 export const activeFilters = writable<Filters>({ type: [], status: [] });
