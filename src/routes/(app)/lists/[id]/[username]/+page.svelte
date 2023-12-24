@@ -7,7 +7,7 @@
   import UserAvatar from "@/lib/img/UserAvatar.svelte";
   import { followUser, unfollowUser } from "@/lib/util/api.js";
   import { notify } from "@/lib/util/notify.js";
-  import { follows } from "@/store.js";
+  import { follows, watchedListErrorOccurred } from "@/store.js";
   import type { PublicUser, Watched } from "@/types.js";
   import axios from "axios";
   import { onDestroy, onMount } from "svelte";
@@ -16,6 +16,12 @@
 
   let followBtnDisabled = false;
   let user: PublicUser | undefined;
+
+  let promise = getPublicWatchedList(Number(data.id), data.username);
+
+  promise.catch((error) => {
+    watchedListErrorOccurred.set(true);
+  });
 
   $: isFollowing = !!$follows?.find((f) => f.followedUser.id === Number(data.id));
 
@@ -84,7 +90,7 @@
   </div>
 </div>
 
-{#await getPublicWatchedList(Number(data.id), data.username)}
+{#await promise}
   <Spinner />
 {:then watched}
   <WatchedList list={watched} isPublicList={true} />

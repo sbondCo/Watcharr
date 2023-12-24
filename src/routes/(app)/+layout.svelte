@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
+  import { watchedListErrorOccurred } from "@/store";
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
@@ -183,8 +184,8 @@
   </a>
   <input type="text" placeholder="Search" bind:value={$searchQuery} on:keydown={handleSearch} />
   <div class="btns">
-    <!-- Only show on watched list -->
-    {#if $page.url?.pathname === "/"}
+    <!-- Show on watched list and shared watched lists -->
+    {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/") && !$watchedListErrorOccurred}
       <button
         class="plain other filter"
         on:click={() => {
