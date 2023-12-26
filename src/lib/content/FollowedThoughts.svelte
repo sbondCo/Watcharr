@@ -118,6 +118,8 @@
         margin-right: 2px;
         width: 20px;
         height: 20px;
+        min-width: 20px;
+        min-height: 20px;
       }
     }
 
