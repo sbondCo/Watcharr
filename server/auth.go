@@ -76,6 +76,8 @@ func (u *User) GetSafe() PublicUser {
 type UserSettings struct {
 	// Is profile private
 	Private *bool `gorm:"default:false" json:"private"`
+	// Are watched list content thoughts public (profile must also be public is false)
+	PrivateThoughts *bool `gorm:"default:false" json:"privateThoughts"`
 	// If ui 'spoilers' should be shown
 	HideSpoilers *bool `gorm:"default:false" json:"hideSpoilers"`
 }
