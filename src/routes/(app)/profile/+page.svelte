@@ -14,13 +14,15 @@
   import { onMount } from "svelte";
   import { notify } from "@/lib/util/notify";
   import UserAvatar from "@/lib/img/UserAvatar.svelte";
+  import PwChangeModal from "@/routes/(app)/profile/modals/PwChangeModal.svelte";
 
   $: user = $userInfo;
   $: settings = $userSettings;
   $: selectedTheme = $appTheme;
 
-  let privateDisabled = false;
   let hideSpoilersDisabled = false;
+  let pwChangeModalOpen = false;
+  let privateDisabled = false;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -165,10 +167,23 @@
           }}
         />
       </Setting>
-
       <div class="row btns">
         <button on:click={() => goto("/import")}>Import</button>
+        <button
+          on:click={() => {
+            console.log("Change Password Button Clicked");
+            pwChangeModalOpen = true;
+          }}>Change Password</button
+        >
       </div>
+      {#if pwChangeModalOpen}
+        <PwChangeModal
+          userName={user?.username}
+          onClose={() => {
+            pwChangeModalOpen = false;
+          }}
+        ></PwChangeModal>
+      {/if}
     </div>
   </div>
 </div>
@@ -247,7 +262,7 @@
         align-items: center;
 
         &.btns button {
-          width: min-content;
+          width: max-content;
         }
       }
     }

@@ -112,6 +112,13 @@ export interface UserSettings {
   hideSpoilers: boolean;
 }
 
+export interface ChangePasswordForm {
+  username: string;
+  currentPassword: string;
+  newPassword: string;
+  reEnteredNewPassword: string;
+}
+
 // What the user search returns
 export interface PublicUser {
   id: number;
