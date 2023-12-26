@@ -5,6 +5,8 @@
   import axios from "axios";
   import Spinner from "../Spinner.svelte";
   import Error from "../Error.svelte";
+  import Icon from "../Icon.svelte";
+  import { watchedStatuses } from "../util/helpers";
 
   interface FollowThoughts {
     followedUser: PublicUser;
@@ -35,10 +37,17 @@
         >
           <div>
             <h4 title={ft.followedUser.username}>{ft.followedUser.username}</h4>
-            <span class="rating">
-              <span>*</span>
-              {ft.rating}
-            </span>
+            {#if ft.status}
+              <div class="status-icon">
+                <Icon i={watchedStatuses[ft.status]} wh={22} />
+              </div>
+            {/if}
+            {#if ft.rating}
+              <span class="rating">
+                <span>*</span>
+                {ft.rating}
+              </span>
+            {/if}
           </div>
           <div class="thought">
             {ft.thoughts || "No thoughts yet."}
@@ -78,6 +87,7 @@
     & > div {
       display: flex;
       flex-flow: row;
+      align-items: center;
       gap: 8px;
       margin-bottom: 3px;
 
@@ -91,7 +101,6 @@
         align-items: start;
         justify-content: center;
         gap: 5px;
-        margin-left: auto;
         font-size: 18px;
         font-weight: bolder;
 
@@ -102,6 +111,12 @@
           line-height: 0.55;
           margin-top: 7px;
         }
+      }
+
+      .status-icon {
+        margin-left: auto;
+        width: 20px;
+        height: 20px;
       }
     }
 
@@ -123,6 +138,7 @@
 
     &:hover {
       color: $bg-color;
+      fill: $bg-color;
       background-color: $accent-color-hover;
 
       .rating span {
