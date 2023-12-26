@@ -101,9 +101,7 @@
           bind:value={changepswd.reEnteredNewPassword}
         />
       </div>
-      <div class="login-btns">
-        <button type="submit">Change Password</button>
-      </div>
+      <button type="submit">Change Password</button>
     </div>
   </form>
 </Modal>
@@ -132,5 +130,10 @@
     flex-flow: column;
     gap: 20px;
     margin: 0 15px;
+  }
+
+  .form-input-container > button {
+    margin-left: auto;
+    width: max-content;
   }
 </style>
