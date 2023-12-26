@@ -115,6 +115,7 @@
 
       .status-icon {
         margin-left: auto;
+        margin-right: 2px;
         width: 20px;
         height: 20px;
       }
