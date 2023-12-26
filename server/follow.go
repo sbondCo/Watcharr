@@ -118,7 +118,6 @@ func getFollowsThoughts(db *gorm.DB, userId uint, mediaType ContentType, tmdbId 
 		slog.Error("getFollows: Error finding followed watcheds from db.", "error", res.Error)
 		return []FollowThoughts{}, errors.New("failed to find followed watcheds")
 	}
-	slog.Debug("someting", "lol", fw)
 	// Create followThoughts array by combining follows and fw(atcheds)
 	ft := []FollowThoughts{}
 	for _, v := range fw {
