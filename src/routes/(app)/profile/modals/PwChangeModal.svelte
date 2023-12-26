@@ -14,29 +14,42 @@
 
   let error: string;
   let errs: string[] = [];
-  let formDisabled = false;
 
   function checkForm() {
-    console.log("Checking form inputs");
+    errs = [];
+    console.log("Status: Checking if any form inputs are missing");
     if (!changepswd.currentPassword) {
-      errs.push("currentpassword");
+      errs.push("Current Password");
     }
     if (!changepswd.newPassword) {
-      errs.push("newpassword");
+      errs.push("New Password");
     }
     if (!changepswd.reEnteredNewPassword) {
-      errs.push("reenterednewpassword");
+      errs.push("Re-Entered New Password");
     }
     if (errs.length > 0) {
       error = `Missing required params: ${errs.join(", ")}`;
-      console.log("Form inputs are invalid" + error);
+      console.log(`Error: following form inputs are missing:\n${errs.join("\n")}`);
     } else {
+      console.log("Status: All form inputs are present")
+      checkFormPasswordsMatch()
+    }
+  }
+
+  function checkFormPasswordsMatch() {
+    console.log("Status: Checking if new password and re-entered new password match");
+    if (changepswd.newPassword !== changepswd.reEnteredNewPassword) {
+      error = "New password and re-entered new password do not match";
+      console.log("Error: New password and re-entered new password do not match");
+    } else {
+      console.log("Status: New password and re-entered new password match");
       error = "";
     }
   }
 
   function handleSubmit(ev: SubmitEvent) {
     checkForm();
+    // checkFormPasswordsMatch();
     if (!error) {
       console.log("Form inputs are valid");
       const fd = new FormData(ev.target! as HTMLFormElement);
