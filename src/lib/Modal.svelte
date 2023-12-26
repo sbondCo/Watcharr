@@ -2,7 +2,7 @@
   import Icon from "./Icon.svelte";
 
   export let title: string;
-  export let desc: string;
+  export let desc: string | undefined = undefined;
   export let onClose: (() => void) | undefined = undefined;
 </script>
 
@@ -13,7 +13,9 @@
       <button class="close" on:click={onClose}><Icon i="close" wh="20" /></button>
     {/if}
     <h3 class="norm">{title}</h3>
-    <h5 class="norm">{desc}</h5>
+    {#if desc}
+      <h5 class="norm">{desc}</h5>
+    {/if}
     <slot />
   </div>
 </div>

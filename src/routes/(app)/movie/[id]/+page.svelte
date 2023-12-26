@@ -25,6 +25,7 @@
   import { page } from "$app/stores";
   import RequestMovie from "@/lib/request/RequestMovie.svelte";
   import Error from "@/lib/Error.svelte";
+  import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
 
   export let data;
 
@@ -186,6 +187,10 @@
           />
         {/if}
       </div>
+
+      {#if movieId}
+        <FollowedThoughts mediaType="movie" tmdbId={movieId} />
+      {/if}
 
       {#await getMovieCredits()}
         <Spinner />
