@@ -171,7 +171,6 @@
         <button on:click={() => goto("/import")}>Import</button>
         <button
           on:click={() => {
-            console.log("Change Password Button Clicked");
             pwChangeModalOpen = true;
           }}>Change Password</button
         >

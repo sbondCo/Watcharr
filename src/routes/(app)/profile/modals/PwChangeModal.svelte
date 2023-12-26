@@ -13,10 +13,11 @@
   };
 
   let error: string;
+  let errs: string[] = [];
   let formDisabled = false;
 
   function checkForm() {
-    let errs: string[] = [];
+    console.log("Checking form inputs");
     if (!changepswd.currentPassword) {
       errs.push("currentpassword");
     }
@@ -28,6 +29,7 @@
     }
     if (errs.length > 0) {
       error = `Missing required params: ${errs.join(", ")}`;
+      console.log("Form inputs are invalid" + error);
     } else {
       error = "";
     }
@@ -36,10 +38,13 @@
   function handleSubmit(ev: SubmitEvent) {
     checkForm();
     if (!error) {
+      console.log("Form inputs are valid");
       const fd = new FormData(ev.target! as HTMLFormElement);
-      const currentPassword = fd.get("current-password");
-      const newPassword = fd.get("new-password");
-      const reEnteredNewPassword = fd.get("re-entered-new-password");
+      changepswd.username = fd.get("username") as string;
+      changepswd.currentPassword = fd.get("current-password") as string;
+      changepswd.newPassword = fd.get("new-password") as string;
+      changepswd.reEnteredNewPassword = fd.get("re-entered-new-password") as string;
+      console.log(changepswd);
     }
   }
 </script>
@@ -52,47 +57,53 @@
   {#if error}
     <span class="error">{error}!</span>
   {/if}
-  <form on:submit|preventDefault={checkForm}>
-    <!--Hiding username info as it is still useful to password managers-->
-    <!--https://www.chromium.org/developers/design-documents/create-amazing-password-forms/#use-hidden-fields-for-implicit-information-->
-    <label for="username" id="username-label">Username</label>
-    <input
-      type="text"
-      name="username"
-      autocomplete="username"
-      id="username-input"
-      value={userName}
-    />
-
-    <label for="current-password">Current Password</label>
-    <input
-      type="password"
-      name="current-password"
-      placeholder="Current password"
-      autocomplete="current-password"
-      bind:value={changepswd.currentPassword}
-    />
-
-    <label for="new-password">New Password</label>
-    <input
-      type="password"
-      name="new-password"
-      placeholder="New password"
-      autocomplete="new-password"
-      bind:value={changepswd.newPassword}
-    />
-
-    <label for="re-entered-new-password">Re-enter New Password</label>
-    <input
-      type="password"
-      name="re-entered-new-password"
-      placeholder="Re-enter new password"
-      autocomplete="new-password"
-      bind:value={changepswd.reEnteredNewPassword}
-    />
-
-    <div class="login-btns">
-      <button type="submit">Change Password</button>
+  <form on:submit|preventDefault={handleSubmit}>
+    <div class="form-input-container">
+      <div class="form-input">
+        <!--Hiding username info as it is still useful to password managers-->
+        <!--https://www.chromium.org/developers/design-documents/create-amazing-password-forms/#use-hidden-fields-for-implicit-information-->
+        <label for="username" id="username-label">Username</label>
+        <input
+          type="text"
+          name="username"
+          autocomplete="username"
+          id="username-input"
+          value={userName}
+        />
+      </div>
+      <div class="form-input">
+        <label for="current-password">Current Password</label>
+        <input
+          type="password"
+          name="current-password"
+          placeholder="Current password"
+          autocomplete="current-password"
+          bind:value={changepswd.currentPassword}
+        />
+      </div>
+      <div class="form-input">
+        <label for="new-password">New Password</label>
+        <input
+          type="password"
+          name="new-password"
+          placeholder="New password"
+          autocomplete="new-password"
+          bind:value={changepswd.newPassword}
+        />
+      </div>
+      <div class="form-input">
+        <label for="re-entered-new-password">Re-enter New Password</label>
+        <input
+          type="password"
+          name="re-entered-new-password"
+          placeholder="Re-enter new password"
+          autocomplete="new-password"
+          bind:value={changepswd.reEnteredNewPassword}
+        />
+      </div>
+      <div class="login-btns">
+        <button type="submit">Change Password</button>
+      </div>
     </div>
   </form>
 </Modal>
@@ -114,5 +125,12 @@
     text-transform: capitalize;
     color: white;
     margin-bottom: 15px;
+  }
+
+  .form-input-container {
+    display: flex;
+    flex-flow: column;
+    gap: 20px;
+    margin: 0 15px;
   }
 </style>
