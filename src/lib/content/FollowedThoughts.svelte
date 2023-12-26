@@ -75,6 +75,7 @@
     flex-flow: column;
     padding: 15px 20px;
     background-color: $accent-color;
+    fill: $text-color;
     border-radius: 10px;
     min-width: 250px;
     max-width: 250px;
