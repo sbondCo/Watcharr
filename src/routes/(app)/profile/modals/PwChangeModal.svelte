@@ -17,7 +17,7 @@
 
   function checkForm() {
     errs = [];
-    console.log("Status: Checking if any form inputs are missing");
+    console.log("Change Password Form - Status: Checking if any form inputs are missing");
     if (!changepswd.currentPassword) {
       errs.push("Current Password");
     }
@@ -29,20 +29,26 @@
     }
     if (errs.length > 0) {
       error = `Missing required params: ${errs.join(", ")}`;
-      console.log(`Error: following form inputs are missing:\n${errs.join("\n")}`);
+      console.log(
+        `Change Password Form - Error: following form inputs are missing:\n${errs.join("\n")}`
+      );
     } else {
-      console.log("Status: All form inputs are present")
-      checkFormPasswordsMatch()
+      console.log("Change Password Form - Status: All form inputs are present");
+      checkFormPasswordsMatch();
     }
   }
 
   function checkFormPasswordsMatch() {
-    console.log("Status: Checking if new password and re-entered new password match");
+    console.log(
+      "Change Password Form - Status: Checking if new password and re-entered new password match"
+    );
     if (changepswd.newPassword !== changepswd.reEnteredNewPassword) {
       error = "New password and re-entered new password do not match";
-      console.log("Error: New password and re-entered new password do not match");
+      console.log(
+        "Change Password Form - Error: New password and re-entered new password do not match"
+      );
     } else {
-      console.log("Status: New password and re-entered new password match");
+      console.log("Change Password Form - Status: New password and re-entered new password match");
       error = "";
     }
   }
@@ -50,13 +56,14 @@
   function handleSubmit(ev: SubmitEvent) {
     checkForm();
     if (!error) {
-      console.log("Status: Form inputs on the frontend are valid - sending request to change password to the server");
+      console.log(
+        "Change Password Form - Status: Form inputs on the frontend are valid - sending request to change password to the server"
+      );
       const fd = new FormData(ev.target! as HTMLFormElement);
       changepswd.currentPassword = fd.get("current-password") as string;
       changepswd.newPassword = fd.get("new-password") as string;
-      console.log(changepswd);
       changeUserPassword(changepswd.currentPassword, changepswd.newPassword, () => {
-        console.log("Status: Password changed successfully");
+        console.log("Change Password Form - Status: Password changed successfully");
         onClose();
       });
     }

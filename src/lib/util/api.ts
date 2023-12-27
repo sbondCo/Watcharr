@@ -170,11 +170,7 @@ export function updateUserSetting<K extends keyof UserSettings>(
     });
 }
 
-export function changeUserPassword(
-  oldPassword: string,
-  newPassword: string,
-  done?: () => void
-) {
+export function changeUserPassword(oldPassword: string, newPassword: string, done?: () => void) {
   const nid = notify({ type: "loading", text: "Changing Password" });
   axios
     .post("/user/change_password", { oldPassword, newPassword })
@@ -186,8 +182,8 @@ export function changeUserPassword(
     })
     .catch((err) => {
       const errMsg = err.response.data.error ? err.response.data.error : "Couldn't Change Password";
-      console.error("Failed to change password", err);
-      notify({ id: nid, type: "error", text: errMsg});
+      console.error("Change Password Form - Failed to change password on the server", err);
+      notify({ id: nid, type: "error", text: errMsg });
     });
 }
 
