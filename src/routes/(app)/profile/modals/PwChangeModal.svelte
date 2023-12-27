@@ -55,7 +55,10 @@
       changepswd.currentPassword = fd.get("current-password") as string;
       changepswd.newPassword = fd.get("new-password") as string;
       console.log(changepswd);
-      changeUserPassword(changepswd.currentPassword, changepswd.newPassword);
+      changeUserPassword(changepswd.currentPassword, changepswd.newPassword, () => {
+        console.log("Status: Password changed successfully");
+        onClose();
+      });
     }
   }
 </script>

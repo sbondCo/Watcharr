@@ -185,9 +185,9 @@ export function changeUserPassword(
       }
     })
     .catch((err) => {
+      const errMsg = err.response.data.error ? err.response.data.error : "Couldn't Change Password";
       console.error("Failed to change password", err);
-      notify({ id: nid, type: "error", text: "Couldn't Change Password" });
-      if (typeof done !== "undefined") done();
+      notify({ id: nid, type: "error", text: errMsg});
     });
 }
 
