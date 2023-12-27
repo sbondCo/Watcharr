@@ -49,7 +49,6 @@
 
   function handleSubmit(ev: SubmitEvent) {
     checkForm();
-    // checkFormPasswordsMatch();
     if (!error) {
       console.log("Status: Form inputs on the frontend are valid - sending request to change password to the server");
       const fd = new FormData(ev.target! as HTMLFormElement);

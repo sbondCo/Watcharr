@@ -165,17 +165,98 @@ func uploadUserAvatar(c *gin.Context, db *gorm.DB, userId uint) (Image, error) {
 	return img, nil
 }
 
-func userChangePassword(pwds UserPasswordUpdateRequest, userId uint) error {
+func userChangePassword(db *gorm.DB, pwds UserPasswordUpdateRequest, userId uint) error {
 	slog.Debug("userChangePassword request running", "user_id", userId)
-	slog.Debug("userChangePassword request running", "pwds", pwds)
-	/*pseudo code*/
-	// hash old password and compare with hashed password in db
-	// if match, hash new password and update db
-	// else return error
+	user := new(User)
+	res := db.Where("id = ?", userId).Take(&user)
+	if res.Error != nil {
+		slog.Error("userChangePassword failed", "user_id", userId, "error", res.Error)
+		return errors.New("failed to retrieve user")
+	} else {
+		slog.Debug("userChangePassword user found", "user_id", userId)
+		match, err := compareHash(pwds.OldPassword, user.Password)
+		if err != nil {
+			slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+			return errors.New("failed to compare passwords")
+		}
+		if !match {
+			slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+			return errors.New("old password does not match")
+		}
+		slog.Debug("userChangePassword passwords match", "user_id", userId)
+	}
+	//slog.Debug("userChangePassword user found", "user_id", userId)
+	//hash, err := hashPassword(pwds.OldPassword, &ArgonParams{
+	//	memory:      64 * 1024,
+	//	iterations:  3,
+	//	parallelism: 2,
+	//	saltLength:  16,
+	//	keyLength:   32,
+	//})
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//slog.Debug("userChangePassword old password hashed", "user_id", userId)
+	//slog.Debug("old password hash in database", "hash", user.Password)
+	//slog.Debug("current password in form but hashed", "hash", hash)
+	//match, err := compareHash(hash, pwds.OldPassword)
+	//if err != nil {
+	//	slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//	return errors.New("new password hash failed to compare")
+	//} else if !match {
+	//	slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//	return errors.New("new password hash does not match old password hash in database")
+	//} else {
+	//	slog.Debug("userChangePassword new password hash matches older password hash", "user_id", userId)
+	//}
+	//match, err := compareHash(user.Password, pwds.OldPassword)
+	//}
+	//	if err != nil {
+	//		slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//		return errors.New("failed to compare passwords")
+	//	} else if !match {
+	//		slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//		return errors.New("old password does not match")
+	//	} else {
+	//		slog.Debug("userChangePassword passwords match", "user_id", userId)
+	//	}
+	//}
+	//		hash, err := hashPassword(pwds.NewPassword)
+	//		if err != nil {
+	//			slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//			return errors.New("failed to hash new password")
+	//		}
+	//		slog.Debug("userChangePassword password hashed", "user_id", userId)
+	//		if err := db.Model(&user).Where("id = ?", userId).Update("password", hash).Error; err != nil {
+	//			slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//			return errors.New("failed to update password")
+	//		}
+	//		slog.Debug("userChangePassword password updated", "user_id", userId)
+	//	}
+	//}
+	//} else {
+	//	slog.Debug("userChangePassword user found", "user_id", userId)
+	//	match, err := compareHash(user.Password, pwds.OldPassword)
+	//	if err != nil {
+	//		slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//		return errors.New("failed to compare passwords")
+	//	} else if !match {
+	//		slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//		return errors.New("old password does not match")
+	//	} else {
+	//		slog.Debug("userChangePassword passwords match", "user_id", userId)
+	//		hash, err := hashPassword(pwds.NewPassword)
+	//		if err != nil {
+	//			slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//			return errors.New("failed to hash new password")
+	//		}
+	//		slog.Debug("userChangePassword password hashed", "user_id", userId)
+	//		if err := db.Model(&user).Where("id = ?", userId).Update("password", hash).Error; err != nil {
+	//			slog.Error("userChangePassword failed", "user_id", userId, "error", err)
+	//			return errors.New("failed to update password")
+	//		}
+	//		slog.Debug("userChangePassword password updated", "user_id", userId)
+	//	}
+	//}
 	return nil
 }
-
-//func userChangePassword(db *gorm.DB, userId uint, oldPass string, newPass string) error {
-//	slog.Debug("userChangePassword request running", "user_id", userId)
-//	return nil
-//}

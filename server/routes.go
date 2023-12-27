@@ -609,8 +609,7 @@ func (b *BaseRouter) addUserRoutes() {
 		var pwds UserPasswordUpdateRequest
 		err := c.ShouldBindJSON(&pwds)
 		if err == nil {
-			err := userChangePassword(pwds, userId)
-			//err := userChangePassword(b.db, userId, ur)
+			err := userChangePassword(b.db, pwds, userId)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
