@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Form from "@/lib/forms/Form.svelte";
   import Modal from "@/lib/Modal.svelte";
   import type { ChangePasswordForm } from "@/types";
   import { changeUserPassword } from "$lib/util/api";
