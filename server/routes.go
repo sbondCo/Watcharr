@@ -602,6 +602,24 @@ func (b *BaseRouter) addUserRoutes() {
 		}
 		c.JSON(http.StatusOK, response)
 	})
+
+	//// Change password
+	u.POST("/change_password", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var pwds UserPasswordUpdateRequest
+		err := c.ShouldBindJSON(&pwds)
+		if err == nil {
+			err := userChangePassword(pwds, userId)
+			//err := userChangePassword(b.db, userId, ur)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
 }
 
 func (b *BaseRouter) addFollowRoutes() {

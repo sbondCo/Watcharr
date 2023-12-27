@@ -164,3 +164,18 @@ func uploadUserAvatar(c *gin.Context, db *gorm.DB, userId uint) (Image, error) {
 	}
 	return img, nil
 }
+
+func userChangePassword(pwds UserPasswordUpdateRequest, userId uint) error {
+	slog.Debug("userChangePassword request running", "user_id", userId)
+	slog.Debug("userChangePassword request running", "pwds", pwds)
+	/*pseudo code*/
+	// hash old password and compare with hashed password in db
+	// if match, hash new password and update db
+	// else return error
+	return nil
+}
+
+//func userChangePassword(db *gorm.DB, userId uint, oldPass string, newPass string) error {
+//	slog.Debug("userChangePassword request running", "user_id", userId)
+//	return nil
+//}

@@ -130,6 +130,11 @@ type TokenClaims struct {
 	jwt.RegisteredClaims
 }
 
+type UserPasswordUpdateRequest struct {
+	OldPassword string `json:"oldPassword" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required"`
+}
+
 // Auth middleware
 // If db is passed, extra user info from the database will be fetched.
 func AuthRequired(db *gorm.DB) gin.HandlerFunc {

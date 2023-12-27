@@ -113,7 +113,6 @@ export interface UserSettings {
 }
 
 export interface ChangePasswordForm {
-  username: string;
   currentPassword: string;
   newPassword: string;
   reEnteredNewPassword: string;

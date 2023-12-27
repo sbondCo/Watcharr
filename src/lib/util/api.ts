@@ -170,6 +170,27 @@ export function updateUserSetting<K extends keyof UserSettings>(
     });
 }
 
+export function changeUserPassword(
+  oldPassword: string,
+  newPassword: string,
+  done?: () => void
+) {
+  const nid = notify({ type: "loading", text: "Changing Password" });
+  axios
+    .post("/user/change_password", { oldPassword, newPassword })
+    .then((r) => {
+      if (r.status === 200) {
+        notify({ id: nid, type: "success", text: "Password Changed" });
+        if (typeof done !== "undefined") done();
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to change password", err);
+      notify({ id: nid, type: "error", text: "Couldn't Change Password" });
+      if (typeof done !== "undefined") done();
+    });
+}
+
 /**
  * Update serverFeatues store with fresh data.
  */

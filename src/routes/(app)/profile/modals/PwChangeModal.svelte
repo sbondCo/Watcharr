@@ -2,11 +2,11 @@
   import Form from "@/lib/forms/Form.svelte";
   import Modal from "@/lib/Modal.svelte";
   import type { ChangePasswordForm } from "@/types";
+  import { changeUserPassword } from "$lib/util/api";
 
   export let userName: string | undefined;
   export let onClose: () => void;
   export let changepswd: ChangePasswordForm = {
-    username: "",
     currentPassword: "",
     newPassword: "",
     reEnteredNewPassword: ""
@@ -51,13 +51,12 @@
     checkForm();
     // checkFormPasswordsMatch();
     if (!error) {
-      console.log("Form inputs are valid");
+      console.log("Status: Form inputs on the frontend are valid - sending request to change password to the server");
       const fd = new FormData(ev.target! as HTMLFormElement);
-      changepswd.username = fd.get("username") as string;
       changepswd.currentPassword = fd.get("current-password") as string;
       changepswd.newPassword = fd.get("new-password") as string;
-      changepswd.reEnteredNewPassword = fd.get("re-entered-new-password") as string;
       console.log(changepswd);
+      changeUserPassword(changepswd.currentPassword, changepswd.newPassword);
     }
   }
 </script>

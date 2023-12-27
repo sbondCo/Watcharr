@@ -61,6 +61,7 @@ var (
 	// will overwrite if provided in watcharr.json cfg file.
 	Config = ServerConfig{
 		SIGNUP_ENABLED: true,
+		DEBUG:          true,
 	}
 )
 
