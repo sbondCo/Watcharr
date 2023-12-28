@@ -125,11 +125,26 @@ type ArgonParams struct {
 	keyLength   uint32
 }
 
+func GetPassArgonParams() *ArgonParams {
+	return &ArgonParams{
+		memory:      64 * 1024,
+		iterations:  3,
+		parallelism: 2,
+		saltLength:  16,
+		keyLength:   32,
+	}
+}
+
 type TokenClaims struct {
 	UserID   uint     `json:"userId"`
 	Username string   `json:"username"`
 	Type     UserType `json:"type"`
 	jwt.RegisteredClaims
+}
+
+type UserPasswordUpdateRequest struct {
+	OldPassword string `json:"oldPassword" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required"`
 }
 
 // Auth middleware
@@ -214,13 +229,7 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 	}
 	var user User = User{Username: ur.Username, Password: ur.Password}
 	slog.Info("A user is registering", "username", user.Username)
-	hash, err := hashPassword(user.Password, &ArgonParams{
-		memory:      64 * 1024,
-		iterations:  3,
-		parallelism: 2,
-		saltLength:  16,
-		keyLength:   32,
-	})
+	hash, err := hashPassword(user.Password, GetPassArgonParams())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -538,4 +547,39 @@ func hasPermission(perms int, reqPerm int) bool {
 		return true
 	}
 	return (perms & reqPerm) == reqPerm
+}
+
+func userChangePassword(db *gorm.DB, pwds UserPasswordUpdateRequest, userId uint) error {
+	slog.Debug("userChangePassword request running", "user_id", userId)
+	user := new(User)
+	res := db.Where("id = ?", userId).Select("password").Take(&user)
+	if res.Error != nil {
+		slog.Error("userChangePassword failed - failed to retrieve user from database", "user_id", userId, "error", res.Error)
+		return errors.New("failed to retrieve user")
+	}
+	slog.Debug("userChangePassword user found", "user_id", userId)
+	match, err := compareHash(pwds.OldPassword, user.Password)
+	if err != nil {
+		slog.Error("userChangePassword failed - failed to compare passwords", "user_id", userId, "error", err)
+		return errors.New("failed to compare passwords")
+	}
+	if !match {
+		slog.Error("userChangePassword failed - current password hash doesn't match password hash in database", "user_id", userId, "error", err)
+		return errors.New("current password provided doesn't match password in database")
+	}
+	slog.Debug("userChangePassword hash for current password matches hash in the database", "user_id", userId)
+	slog.Debug("userChangePassword hashing new password", "user_id", userId)
+	hash, err := hashPassword(pwds.NewPassword, GetPassArgonParams())
+	if err != nil {
+		slog.Error("userChangePassword failed - failed to hash new password", "user_id", userId, "error", err)
+		return errors.New("failed to hash new password")
+	}
+	slog.Debug("userChangePassword new password hashed", "user_id", userId)
+	if err := db.Model(&User{}).Where("id = ?", userId).Update("password", hash).Error; err != nil {
+		slog.Error("userChangePassword failed - failed to update password in database", "user_id", userId, "error", err)
+		return errors.New("failed to update password")
+	} else {
+		slog.Debug("userChangePassword password updated", "user_id", userId)
+	}
+	return nil
 }
