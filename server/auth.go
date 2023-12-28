@@ -550,7 +550,7 @@ func hasPermission(perms int, reqPerm int) bool {
 func userChangePassword(db *gorm.DB, pwds UserPasswordUpdateRequest, userId uint) error {
 	slog.Debug("userChangePassword request running", "user_id", userId)
 	user := new(User)
-	res := db.Where("id = ?", userId).Take(&user)
+	res := db.Where("id = ?", userId).Select("password").Take(&user)
 	if res.Error != nil {
 		slog.Error("userChangePassword failed - failed to retrieve user from database", "user_id", userId, "error", res.Error)
 		return errors.New("failed to retrieve user")
@@ -573,7 +573,7 @@ func userChangePassword(db *gorm.DB, pwds UserPasswordUpdateRequest, userId uint
 		return errors.New("failed to hash new password")
 	}
 	slog.Debug("userChangePassword new password hashed", "user_id", userId)
-	if err := db.Model(&user).Where("id = ?", userId).Update("password", hash).Error; err != nil {
+	if err := db.Model(&User{}).Where("id = ?", userId).Update("password", hash).Error; err != nil {
 		slog.Error("userChangePassword failed - failed to update password in database", "user_id", userId, "error", err)
 		return errors.New("failed to update password")
 	} else {
