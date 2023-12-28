@@ -472,7 +472,7 @@ func (b *BaseRouter) addAuthRoutes() {
 		c.Status(400)
 	})
 
-	//// Change password
+	// Change password
 	auth.POST("/change_password", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		var pwds UserPasswordUpdateRequest

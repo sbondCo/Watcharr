@@ -185,7 +185,9 @@ export function changeUserPassword(
       }
     })
     .catch((err) => {
-      const errMsg = err.response.data.error ? err.response.data.error : "Couldn't Change Password";
+      const errMsg = err?.response?.data?.error
+        ? err.response.data.error
+        : "Couldn't Change Password";
       console.error("Change Password Form - Failed to change password on the server", err);
       unNotify(nid);
       if (typeof done !== "undefined") done(errMsg);

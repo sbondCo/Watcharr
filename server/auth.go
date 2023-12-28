@@ -71,16 +71,6 @@ func (u *User) GetSafe() PublicUser {
 	}
 }
 
-func GetPassArgonParams() *ArgonParams {
-	return &ArgonParams{
-		memory:      64 * 1024,
-		iterations:  3,
-		parallelism: 2,
-		saltLength:  16,
-		keyLength:   32,
-	}
-}
-
 // This struct uses pointer to the values, so in update user settings,
 // we can tell which setting is being updated (if not nil..).
 type UserSettings struct {
@@ -131,6 +121,16 @@ type ArgonParams struct {
 	parallelism uint8
 	saltLength  uint32
 	keyLength   uint32
+}
+
+func GetPassArgonParams() *ArgonParams {
+	return &ArgonParams{
+		memory:      64 * 1024,
+		iterations:  3,
+		parallelism: 2,
+		saltLength:  16,
+		keyLength:   32,
+	}
 }
 
 type TokenClaims struct {
