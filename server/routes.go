@@ -668,6 +668,22 @@ func (b *BaseRouter) addFollowRoutes() {
 		}
 		c.JSON(http.StatusOK, response)
 	})
+
+	// Get follows thoughts on content
+	f.GET("/thoughts/:type/:tmdbId", func(c *gin.Context) {
+		t := ContentType(c.Param("type"))
+		if t != MOVIE && t != SHOW {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "only movie or show types are supported"})
+			return
+		}
+		userId := c.MustGet("userId").(uint)
+		response, err := getFollowsThoughts(b.db, userId, t, c.Param("tmdbId"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
 }
 
 func (b *BaseRouter) addImportRoutes() {

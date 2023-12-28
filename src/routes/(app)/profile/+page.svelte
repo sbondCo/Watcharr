@@ -11,7 +11,6 @@
   import { appTheme, userInfo, userSettings } from "@/store";
   import type { Image, Profile } from "@/types";
   import axios from "axios";
-  import { onMount } from "svelte";
   import { notify } from "@/lib/util/notify";
   import UserAvatar from "@/lib/img/UserAvatar.svelte";
   import PwChangeModal from "@/routes/(app)/profile/modals/PwChangeModal.svelte";
@@ -20,9 +19,10 @@
   $: settings = $userSettings;
   $: selectedTheme = $appTheme;
 
+  let privateDisabled = false;
+  let privateThoughtsDisabled = false;
   let hideSpoilersDisabled = false;
   let pwChangeModalOpen = false;
-  let privateDisabled = false;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -153,6 +153,26 @@
           }}
         />
       </Setting>
+
+      {#if !settings?.private}
+        <Setting
+          title="Private Thoughts"
+          desc="Hide your watched list thoughts from followers?"
+          row
+        >
+          <Checkbox
+            name="privateThoughts"
+            disabled={privateDisabled}
+            value={settings?.privateThoughts}
+            toggled={(on) => {
+              privateThoughtsDisabled = true;
+              updateUserSetting("privateThoughts", on, () => {
+                privateThoughtsDisabled = false;
+              });
+            }}
+          />
+        </Setting>
+      {/if}
 
       <Setting title="Hide Spoilers" desc="Do you want to hide episode info?" row>
         <Checkbox

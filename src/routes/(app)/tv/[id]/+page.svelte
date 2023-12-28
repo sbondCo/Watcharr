@@ -26,6 +26,7 @@
   import axios from "axios";
   import { onMount } from "svelte";
   import RequestShow from "@/lib/request/RequestShow.svelte";
+  import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
 
   export let data;
 
@@ -183,6 +184,10 @@
           />
         {/if}
       </div>
+
+      {#if showId}
+        <FollowedThoughts mediaType="tv" tmdbId={showId} />
+      {/if}
 
       {#await getTvCredits()}
         <Spinner />

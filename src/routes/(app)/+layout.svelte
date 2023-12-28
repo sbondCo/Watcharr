@@ -183,8 +183,8 @@
   </a>
   <input type="text" placeholder="Search" bind:value={$searchQuery} on:keydown={handleSearch} />
   <div class="btns">
-    <!-- Only show on watched list -->
-    {#if $page.url?.pathname === "/"}
+    <!-- Show on watched list and shared/followed watched lists -->
+    {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/")}
       <button
         class="plain other filter"
         on:click={() => {

@@ -109,6 +109,7 @@ export interface Profile {
 
 export interface UserSettings {
   private: boolean;
+  privateThoughts: boolean;
   hideSpoilers: boolean;
 }
 
