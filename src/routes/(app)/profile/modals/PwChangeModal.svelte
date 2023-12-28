@@ -61,7 +61,11 @@
       const fd = new FormData(ev.target! as HTMLFormElement);
       changepswd.currentPassword = fd.get("current-password") as string;
       changepswd.newPassword = fd.get("new-password") as string;
-      changeUserPassword(changepswd.currentPassword, changepswd.newPassword, () => {
+      changeUserPassword(changepswd.currentPassword, changepswd.newPassword, (errMsg) => {
+        if (errMsg) {
+          error = errMsg;
+          return;
+        }
         console.log("Change Password Form - Status: Password changed successfully");
         onClose();
       });

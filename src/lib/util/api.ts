@@ -13,7 +13,7 @@ import {
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
-import { notify } from "./notify";
+import { notify, unNotify } from "./notify";
 const { MODE } = import.meta.env;
 
 export const baseURL = MODE === "development" ? "http://127.0.0.1:3080/api" : "/api";
@@ -170,7 +170,11 @@ export function updateUserSetting<K extends keyof UserSettings>(
     });
 }
 
-export function changeUserPassword(oldPassword: string, newPassword: string, done?: () => void) {
+export function changeUserPassword(
+  oldPassword: string,
+  newPassword: string,
+  done?: (errMsg?: string) => void
+) {
   const nid = notify({ type: "loading", text: "Changing Password" });
   axios
     .post("/auth/change_password", { oldPassword, newPassword })
@@ -183,7 +187,8 @@ export function changeUserPassword(oldPassword: string, newPassword: string, don
     .catch((err) => {
       const errMsg = err.response.data.error ? err.response.data.error : "Couldn't Change Password";
       console.error("Change Password Form - Failed to change password on the server", err);
-      notify({ id: nid, type: "error", text: errMsg });
+      unNotify(nid);
+      if (typeof done !== "undefined") done(errMsg);
     });
 }
 
