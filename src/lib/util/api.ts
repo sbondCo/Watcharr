@@ -173,7 +173,7 @@ export function updateUserSetting<K extends keyof UserSettings>(
 export function changeUserPassword(oldPassword: string, newPassword: string, done?: () => void) {
   const nid = notify({ type: "loading", text: "Changing Password" });
   axios
-    .post("/user/change_password", { oldPassword, newPassword })
+    .post("/auth/change_password", { oldPassword, newPassword })
     .then((r) => {
       if (r.status === 200) {
         notify({ id: nid, type: "success", text: "Password Changed" });
