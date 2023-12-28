@@ -71,6 +71,16 @@ func (u *User) GetSafe() PublicUser {
 	}
 }
 
+func GetPassArgonParams() *ArgonParams {
+	return &ArgonParams{
+		memory:      64 * 1024,
+		iterations:  3,
+		parallelism: 2,
+		saltLength:  16,
+		keyLength:   32,
+	}
+}
+
 // This struct uses pointer to the values, so in update user settings,
 // we can tell which setting is being updated (if not nil..).
 type UserSettings struct {
@@ -217,13 +227,7 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 	}
 	var user User = User{Username: ur.Username, Password: ur.Password}
 	slog.Info("A user is registering", "username", user.Username)
-	hash, err := hashPassword(user.Password, &ArgonParams{
-		memory:      64 * 1024,
-		iterations:  3,
-		parallelism: 2,
-		saltLength:  16,
-		keyLength:   32,
-	})
+	hash, err := hashPassword(user.Password, GetPassArgonParams())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -563,13 +567,7 @@ func userChangePassword(db *gorm.DB, pwds UserPasswordUpdateRequest, userId uint
 	}
 	slog.Debug("userChangePassword hash for current password matches hash in the database", "user_id", userId)
 	slog.Debug("userChangePassword hashing new password", "user_id", userId)
-	hash, err := hashPassword(pwds.NewPassword, &ArgonParams{
-		memory:      64 * 1024,
-		iterations:  3,
-		parallelism: 2,
-		saltLength:  16,
-		keyLength:   32,
-	})
+	hash, err := hashPassword(pwds.NewPassword, GetPassArgonParams())
 	if err != nil {
 		slog.Error("userChangePassword failed - failed to hash new password", "user_id", userId, "error", err)
 		return errors.New("failed to hash new password")
