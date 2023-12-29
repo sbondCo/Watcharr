@@ -102,7 +102,7 @@
       if (!r.data || r.data?.length <= 0) {
         notify({
           id: nid,
-          text: "Can't export an empty watched list!",
+          text: "Can't export an empty watch list!",
           type: "error",
           time: 10000
         });
