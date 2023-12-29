@@ -4,6 +4,8 @@
 
   let hoveredRating: number | undefined;
   let shownRating: number | undefined;
+  let ratingContainer: HTMLDivElement;
+  let ratingText: HTMLSpanElement;
 
   const ratingDesc = [
     "Apalling",
@@ -28,17 +30,27 @@
     else shownRating = undefined;
   }
 
-  function handleStarHover(r: number) {
+  function handleStarHover(
+    ev: MouseEvent & {
+      currentTarget: EventTarget & HTMLButtonElement;
+    },
+    r: number
+  ) {
     hoveredRating = r;
+    const start = ratingContainer?.getBoundingClientRect()?.x;
+    const starl = ev?.currentTarget?.getBoundingClientRect()?.left;
+    const rb = ratingText?.getBoundingClientRect();
+    ratingText.style.left = `${starl - start - rb.width / 2 + 10}px`;
   }
 
   function handleStarHoverEnd() {
     hoveredRating = undefined;
+    ratingText.style.left = `${0}px`;
   }
 </script>
 
-<div class="rating-container">
-  <span>
+<div class="rating-container" bind:this={ratingContainer}>
+  <span bind:this={ratingText}>
     {#if typeof hoveredRating === "number"}
       {ratingDesc[hoveredRating - 1]}
     {:else if typeof rating === "number" && rating > 0}
@@ -52,7 +64,7 @@
       <button
         class="plain{shownRating === v ? ' lit' : ''}"
         on:click={() => handleStarClick(v)}
-        on:mouseenter={() => handleStarHover(v)}
+        on:mouseenter={(ev) => handleStarHover(ev, v)}
         on:mouseleave={() => handleStarHoverEnd()}
       >
         *
@@ -65,6 +77,13 @@
   .rating-container {
     display: flex;
     flex-flow: column;
+    overflow: visible;
+
+    & > span {
+      position: relative;
+      transition: left 100ms ease-in;
+      text-align: center;
+    }
   }
 
   .rating {
