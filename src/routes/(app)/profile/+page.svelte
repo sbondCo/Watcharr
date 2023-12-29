@@ -103,7 +103,7 @@
       });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(file);
-      a.download = "export.json";
+      a.download = "watcharr-export.json";
       a.click();
       exportDisabled = false;
       notify({ id: nid, text: "Successfully Exported", type: "success" });
