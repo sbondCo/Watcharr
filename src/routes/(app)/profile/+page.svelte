@@ -98,6 +98,17 @@
       exportDisabled = true;
       // We re-fetch, to ensure data we export is up to date.
       const r = await axios.get("/watched");
+      console.log(r.data);
+      if (!r.data || r.data?.length <= 0) {
+        notify({
+          id: nid,
+          text: "Can't export an empty watched list!",
+          type: "error",
+          time: 10000
+        });
+        exportDisabled = false;
+        return;
+      }
       const file = new Blob([JSON.stringify(r.data, undefined, 2)], {
         type: "application/json"
       });
