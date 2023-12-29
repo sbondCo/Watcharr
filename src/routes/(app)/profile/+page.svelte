@@ -21,6 +21,7 @@
 
   let privateDisabled = false;
   let privateThoughtsDisabled = false;
+  let exportDisabled = false;
   let hideSpoilersDisabled = false;
   let pwChangeModalOpen = false;
 
@@ -89,6 +90,38 @@
           type: "error"
         });
       });
+  }
+
+  async function downloadWatchedList() {
+    const nid = notify({ text: "Exporting", type: "loading" });
+    try {
+      exportDisabled = true;
+      // We re-fetch, to ensure data we export is up to date.
+      const r = await axios.get("/watched");
+      console.log(r.data);
+      if (!r.data || r.data?.length <= 0) {
+        notify({
+          id: nid,
+          text: "Can't export an empty watch list!",
+          type: "error",
+          time: 10000
+        });
+        exportDisabled = false;
+        return;
+      }
+      const file = new Blob([JSON.stringify(r.data, undefined, 2)], {
+        type: "application/json"
+      });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(file);
+      a.download = "watcharr-export.json";
+      a.click();
+      exportDisabled = false;
+      notify({ id: nid, text: "Successfully Exported", type: "success" });
+    } catch (err) {
+      console.error("downloadWatchedList failed!", err);
+      notify({ id: nid, text: "Export Failed!", type: "error" });
+    }
   }
 </script>
 
@@ -189,6 +222,7 @@
       </Setting>
       <div class="row btns">
         <button on:click={() => goto("/import")}>Import</button>
+        <button on:click={() => downloadWatchedList()} disabled={exportDisabled}>Export</button>
         <button
           on:click={() => {
             pwChangeModalOpen = true;
@@ -212,7 +246,7 @@
     display: flex;
     width: 100%;
     justify-content: center;
-    padding: 0 30px 0 30px;
+    padding: 0 30px 30px 30px;
 
     .inner {
       min-width: 400px;
