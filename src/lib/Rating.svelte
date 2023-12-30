@@ -93,7 +93,9 @@
 
     & > span {
       position: relative;
-      transition: left 100ms ease-in;
+      transition:
+        left 100ms ease-in,
+        transform 100ms ease-in;
       max-width: max-content;
       left: 50%;
       transform: translateX(-50%);
