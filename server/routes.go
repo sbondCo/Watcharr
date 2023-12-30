@@ -444,50 +444,55 @@ func (b *BaseRouter) addAuthRoutes() {
 		})
 	})
 
-	// Request admin token
-	auth.Use(AuthRequired(nil)).GET("/admin_token", func(c *gin.Context) {
-		userId := c.MustGet("userId").(uint)
-		token, err := createOneUseToken(b.db, TOKENTYPE_ADMIN, userId)
-		if err != nil {
-			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
-			return
-		}
-		slog.Info("Admin token generated. Type this token into the web ui to gain admin access on your account.", "token", token, "generated_for", userId)
-		c.Status(http.StatusNoContent)
-	})
-
-	// Use admin token
-	auth.Use(AuthRequired(nil)).POST("/admin_token", func(c *gin.Context) {
-		userId := c.MustGet("userId").(uint)
-		var atr UseAdminTokenRequest
-		if c.ShouldBindJSON(&atr) == nil {
-			err := useAdminToken(&atr, b.db, userId)
+	// IMPORTANT: Routes below here must be authenticated.
+	auth.Use(AuthRequired(nil))
+	{
+		// Request admin token
+		auth.GET("/admin_token", func(c *gin.Context) {
+			userId := c.MustGet("userId").(uint)
+			token, err := createOneUseToken(b.db, TOKENTYPE_ADMIN, userId)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
 			}
+			slog.Info("Admin token generated. Type this token into the web ui to gain admin access on your account.", "token", token, "generated_for", userId)
 			c.Status(http.StatusNoContent)
-			return
-		}
-		c.Status(400)
-	})
+		})
 
-	// Change password
-	auth.POST("/change_password", func(c *gin.Context) {
-		userId := c.MustGet("userId").(uint)
-		var pwds UserPasswordUpdateRequest
-		err := c.ShouldBindJSON(&pwds)
-		if err == nil {
-			err := userChangePassword(b.db, pwds, userId)
-			if err != nil {
-				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+		// Use admin token
+		auth.POST("/admin_token", func(c *gin.Context) {
+			userId := c.MustGet("userId").(uint)
+			var atr UseAdminTokenRequest
+			if c.ShouldBindJSON(&atr) == nil {
+				err := useAdminToken(&atr, b.db, userId)
+				if err != nil {
+					c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+					return
+				}
+				c.Status(http.StatusNoContent)
 				return
 			}
-			c.Status(http.StatusOK)
-			return
-		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
-	})
+			c.Status(400)
+		})
+
+		// Change password
+		auth.POST("/change_password", func(c *gin.Context) {
+			slog.Info("test cp")
+			userId := c.MustGet("userId").(uint)
+			var pwds UserPasswordUpdateRequest
+			err := c.ShouldBindJSON(&pwds)
+			if err == nil {
+				err := userChangePassword(b.db, pwds, userId)
+				if err != nil {
+					c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+					return
+				}
+				c.Status(http.StatusOK)
+				return
+			}
+			c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		})
+	}
 }
 
 func (b *BaseRouter) addProfileRoutes() {
