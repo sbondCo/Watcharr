@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+
   export let rating: number | undefined;
   export let onChange: (newRating: number) => void;
 
@@ -30,6 +32,14 @@
     else shownRating = undefined;
   }
 
+  function resetRatingText() {
+    if (typeof rating === "number" && rating > 0) {
+      ratingText.innerText = ratingDesc[rating - 1];
+    } else {
+      ratingText.innerText = "Select Your Rating";
+    }
+  }
+
   function handleStarHover(
     ev: MouseEvent & {
       currentTarget: EventTarget & HTMLButtonElement;
@@ -37,28 +47,30 @@
     r: number
   ) {
     hoveredRating = r;
+    // We set innerText instead of letting svelte update dom for us
+    // since we need the new width of span right now.
+    ratingText.innerText = ratingDesc[r - 1];
     const start = ratingContainer?.getBoundingClientRect()?.x;
     const starl = ev?.currentTarget?.getBoundingClientRect()?.left;
     const rb = ratingText?.getBoundingClientRect();
-    ratingText.style.left = `${starl - start - rb.width / 2 + 10}px`;
+    ratingText.style.left = `${starl - start - rb.width / 2 + 11.5}px`;
+    ratingText.style.transform = "unset";
   }
 
   function handleStarHoverEnd() {
     hoveredRating = undefined;
-    ratingText.style.left = `${0}px`;
+    ratingText.style.left = "50%";
+    ratingText.style.transform = "translateX(-50%)";
+    resetRatingText();
   }
+
+  onMount(() => {
+    resetRatingText();
+  });
 </script>
 
 <div class="rating-container" bind:this={ratingContainer}>
-  <span bind:this={ratingText}>
-    {#if typeof hoveredRating === "number"}
-      {ratingDesc[hoveredRating - 1]}
-    {:else if typeof rating === "number" && rating > 0}
-      {ratingDesc[rating - 1]}
-    {:else}
-      Select Your Rating
-    {/if}
-  </span>
+  <span bind:this={ratingText}></span>
   <div class="rating">
     {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
       <button
@@ -82,7 +94,9 @@
     & > span {
       position: relative;
       transition: left 100ms ease-in;
-      text-align: center;
+      max-width: max-content;
+      left: 50%;
+      transform: translateX(-50%);
     }
   }
 
