@@ -28,11 +28,17 @@
 
   $: {
     if (hoveredRating !== undefined) shownRating = hoveredRating;
-    else if (rating !== undefined) shownRating = rating;
-    else shownRating = undefined;
+    else if (rating !== undefined) {
+      shownRating = rating;
+      resetRatingText();
+    } else shownRating = undefined;
   }
 
   function resetRatingText() {
+    if (!ratingText) {
+      console.warn("resetRatingText: ratingText is not defined yet.");
+      return;
+    }
     if (typeof rating === "number" && rating > 0) {
       ratingText.innerText = ratingDesc[rating - 1];
     } else {

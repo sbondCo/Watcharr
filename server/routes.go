@@ -477,7 +477,6 @@ func (b *BaseRouter) addAuthRoutes() {
 
 		// Change password
 		auth.POST("/change_password", func(c *gin.Context) {
-			slog.Info("test cp")
 			userId := c.MustGet("userId").(uint)
 			var pwds UserPasswordUpdateRequest
 			err := c.ShouldBindJSON(&pwds)
