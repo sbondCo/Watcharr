@@ -26,7 +26,8 @@ export type Icon =
   | "people"
   | "person"
   | "person-add"
-  | "person-minus";
+  | "person-minus"
+  | "pencil";
 
 export type Theme = "light" | "dark";
 
