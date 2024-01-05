@@ -138,35 +138,15 @@
     {/if}
     {#if $page.url?.pathname === "/" && extraDetails && dve && dve.length > 0}
       <div class="extra-details">
-        <div>
-          {#if dve.includes("dateAdded")}
-            <span title="Date added to watch list">
-              <i><Icon i="calendar" /></i>
-              <span>{formatDate(Date.parse(extraDetails.dateAdded))}</span>
-            </span>
-          {/if}
-          {#if dve.includes("dateModified")}
-            <span title="Date last modified">
-              <i><Icon i="pencil" wh={15} /></i>
-              <span>{formatDate(Date.parse(extraDetails.dateModified))}</span>
-            </span>
-          {/if}
-          {#if extraDetails.lastWatched && dve.includes("lastWatched")}
-            <span title="Latest season watched">
-              <i><Icon i="play" wh={15} /></i>
-              <span>{extraDetails.lastWatched}</span>
-            </span>
-          {/if}
-          {#if dve.includes("statusRating")}
-            <span class="status-rating" title="Status and Rating">
-              <i><Icon i="star" /></i>
-              <span>{rating}</span>
-              {#if status}
-                <i><Icon i={watchedStatuses[status]} wh={15} /></i>
-              {/if}
-            </span>
-          {/if}
-        </div>
+        <!--
+          This is one line because svelte leaves whitespace,
+          which causes the :empty css tag to not work.
+          Can be reverted when its possible to trim whitespace in svelte
+          OR when :empty tag is updated in browsers to new spec and counts whitespace as empty.
+          So ye this is probably gonna be one line until the end of time.
+        -->
+        <!-- prettier-ignore -->
+        <div>{#if dve.includes("dateAdded")}<span title="Date added to watch list"><i><Icon i="calendar" /></i><span>{formatDate(Date.parse(extraDetails.dateAdded))}</span></span>{/if}{#if dve.includes("dateModified")}<span title="Date last modified"><i><Icon i="pencil" wh={15} /></i><span>{formatDate(Date.parse(extraDetails.dateModified))}</span></span>{/if}{#if extraDetails.lastWatched && dve.includes("lastWatched")}<span title="Latest season watched"><i><Icon i="play" wh={15} /></i><span>{extraDetails.lastWatched}</span></span>{/if}{#if dve.includes("statusRating")}<span class="status-rating" title="Status and Rating"><i><Icon i="star" /></i><span>{rating}</span>{#if status}<i><Icon i={watchedStatuses[status]} wh={15} /></i>{/if}</span>{/if}</div>
       </div>
     {/if}
     <div
@@ -269,13 +249,18 @@
       justify-content: center;
       align-items: center;
       font-size: 14px;
-      padding: 5px 3px;
       width: 160px;
       background-color: $poster-extra-detail-bg-color;
       border-radius: 10px;
       transition: opacity 100ms ease-out;
 
       & > div {
+        padding: 5px 3px;
+
+        &:empty {
+          padding: 0px;
+        }
+
         & > span {
           display: flex;
           flex-flow: row;
