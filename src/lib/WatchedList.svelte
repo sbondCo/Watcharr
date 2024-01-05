@@ -4,7 +4,7 @@
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
   import { activeFilters, activeSort } from "@/store";
-  import type { Watched } from "@/types";
+  import type { Watched, WatchedSeason } from "@/types";
 
   export let list: Watched[];
   export let isPublicList: boolean = false;
@@ -42,6 +42,25 @@
         return filters.status.includes(w.status?.toLowerCase());
       }
     });
+
+  function getLatestWatchedSeason(ws: WatchedSeason[] | undefined): string {
+    if (!ws || ws.length <= 0) {
+      return "";
+    }
+    let biggestSeasonWatched: number | undefined;
+    for (let i = 0; i < ws.length; i++) {
+      const s = ws[i];
+      if (!biggestSeasonWatched) {
+        biggestSeasonWatched = s.seasonNumber;
+        continue;
+      }
+      if (s.seasonNumber > biggestSeasonWatched) {
+        biggestSeasonWatched = s.seasonNumber;
+      }
+    }
+    if (!biggestSeasonWatched) return "";
+    return `Season ${biggestSeasonWatched}`;
+  }
 </script>
 
 <PosterList>
@@ -61,6 +80,11 @@
         rating={w.rating}
         status={w.status}
         disableInteraction={isPublicList}
+        extraDetails={{
+          dateAdded: w.createdAt,
+          dateModified: w.updatedAt,
+          lastWatched: getLatestWatchedSeason(w.watchedSeasons)
+        }}
       />
     {/each}
   {:else}

@@ -1,10 +1,12 @@
 <script lang="ts">
-  import type { MediaType, WatchedStatus } from "@/types";
+  import type { ExtraDetails, MediaType, WLDetailedViewOption, WatchedStatus } from "@/types";
   import Icon from "../Icon.svelte";
   import {
     addClassToParent,
     calculateTransformOrigin,
+    getOrdinalSuffix,
     isTouch,
+    monthsShort,
     watchedStatuses
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
@@ -33,6 +35,7 @@
   export let small = false;
   export let disableInteraction = false;
   export let hideButtons = false;
+  export let extraDetails: ExtraDetails | undefined = undefined;
   // When provided, default click handlers will instead run this callback.
   export let onClick: (() => void) | undefined = undefined;
 
@@ -84,6 +87,16 @@
     }
   }
 
+  function formatDate(e: number) {
+    if (!e) {
+      return "Unknown";
+    }
+    const d = new Date(e);
+    return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]} '${String(
+      d.getFullYear()
+    ).substring(2, 4)}`;
+  }
+
   onMount(() => {
     if (small && containerEl) {
       containerEl.classList.add("small");
@@ -123,25 +136,25 @@
         }}
       />
     {/if}
-    {#if $page.url?.pathname === "/" && dve && dve.length > 0}
+    {#if $page.url?.pathname === "/" && extraDetails && dve && dve.length > 0}
       <div class="extra-details">
         <div>
           {#if dve.includes("dateAdded")}
             <span title="Date added to watch list">
               <i><Icon i="calendar" /></i>
-              <span>20th Mar '21</span>
+              <span>{formatDate(Date.parse(extraDetails.dateAdded))}</span>
             </span>
           {/if}
           {#if dve.includes("dateModified")}
             <span title="Date last modified">
               <i><Icon i="pencil" wh={15} /></i>
-              <span>3rd Jan '23</span>
+              <span>{formatDate(Date.parse(extraDetails.dateModified))}</span>
             </span>
           {/if}
-          {#if dve.includes("lastWatched")}
+          {#if extraDetails.lastWatched && dve.includes("lastWatched")}
             <span title="Latest season watched">
               <i><Icon i="play" wh={15} /></i>
-              <span>Season 2</span>
+              <span>{extraDetails.lastWatched}</span>
             </span>
           {/if}
           {#if dve.includes("statusRating")}
