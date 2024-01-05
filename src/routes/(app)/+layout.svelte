@@ -5,6 +5,7 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import tooltip from "@/lib/actions/tooltip";
+  import DetailedMenu from "@/lib/nav/DetailedMenu.svelte";
   import FilterMenu from "@/lib/nav/FilterMenu.svelte";
   import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
   import SortMenu from "@/lib/nav/SortMenu.svelte";
@@ -33,6 +34,7 @@
   let filterMenuShown = false;
   let sortMenuShown = false;
   let followingMenuShown = false;
+  let detailedMenuShown = false;
 
   $: settings = $userSettings;
   $: user = $userInfo;
@@ -154,6 +156,7 @@
     if (except !== "filter") filterMenuShown = false;
     if (except !== "sort") sortMenuShown = false;
     if (except !== "following") followingMenuShown = false;
+    if (except !== "detailed") detailedMenuShown = false;
   }
 
   onMount(() => {
@@ -183,6 +186,25 @@
   </a>
   <input type="text" placeholder="Search" bind:value={$searchQuery} on:keydown={handleSearch} />
   <div class="btns">
+    <!-- Detailed posters only supported on own watched list currently -->
+    {#if $page.url?.pathname === "/"}
+      <button
+        class="plain other detailedView"
+        on:click={() => {
+          closeAllSubMenus("detailed");
+          detailedMenuShown = !detailedMenuShown;
+        }}
+        use:tooltip={{ text: "Detailed View", pos: "bot", condition: !detailedMenuShown }}
+      >
+        <Icon i="eye" />
+        {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
+          <div class="indicator"></div>
+        {/if}
+      </button>
+      {#if detailedMenuShown}
+        <DetailedMenu />
+      {/if}
+    {/if}
     <!-- Show on watched list and shared/followed watched lists -->
     {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/")}
       <button
@@ -367,6 +389,10 @@
             stroke-linejoin: round;
           }
         }
+      }
+
+      button.detailedView {
+        margin-right: 15px;
       }
 
       button.filter {

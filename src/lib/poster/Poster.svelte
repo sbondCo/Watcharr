@@ -14,6 +14,8 @@
   import { onMount } from "svelte";
   import PosterStatus from "./PosterStatus.svelte";
   import PosterRating from "./PosterRating.svelte";
+  import { wlDetailedView } from "@/store";
+  import { page } from "$app/stores";
 
   export let id: number | undefined = undefined; // Watched list id
   export let media: {
@@ -33,6 +35,8 @@
   export let hideButtons = false;
   // When provided, default click handlers will instead run this callback.
   export let onClick: (() => void) | undefined = undefined;
+
+  $: dve = $wlDetailedView;
 
   // If poster is active (scaled up)
   let posterActive = false;
@@ -118,6 +122,39 @@
           addClassToParent(e, "details-shown");
         }}
       />
+    {/if}
+    {#if $page.url?.pathname === "/" && dve && dve.length > 0}
+      <div class="extra-details">
+        <div>
+          {#if dve.includes("dateAdded")}
+            <span title="Date added to watch list">
+              <i><Icon i="calendar" /></i>
+              <span>20th Mar '21</span>
+            </span>
+          {/if}
+          {#if dve.includes("dateModified")}
+            <span title="Date last modified">
+              <i><Icon i="pencil" wh={15} /></i>
+              <span>3rd Jan '23</span>
+            </span>
+          {/if}
+          {#if dve.includes("lastWatched")}
+            <span title="Latest season watched">
+              <i><Icon i="play" wh={15} /></i>
+              <span>Season 2</span>
+            </span>
+          {/if}
+          {#if dve.includes("statusRating")}
+            <span class="status-rating" title="Status and Rating">
+              <i><Icon i="star" /></i>
+              <span>{rating}</span>
+              {#if status}
+                <i><Icon i={watchedStatuses[status]} wh={15} /></i>
+              {/if}
+            </span>
+          {/if}
+        </div>
+      </div>
     {/if}
     <div
       on:click={() => {
@@ -208,6 +245,43 @@
       }
     }
 
+    .extra-details {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-flow: column;
+      gap: 7px;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      padding: 5px 3px;
+      width: 160px;
+      background-color: $poster-extra-detail-bg-color;
+      border-radius: 10px;
+      transition: opacity 200ms ease-out;
+
+      & > div {
+        & > span {
+          display: flex;
+          flex-flow: row;
+          align-items: center;
+          gap: 8px;
+
+          i {
+            display: flex;
+            width: 15px;
+            fill: $text-color;
+          }
+        }
+      }
+
+      .status-rating i:last-of-type {
+        margin-left: auto;
+      }
+    }
+
     .inner {
       position: absolute;
       opacity: 0;
@@ -269,6 +343,10 @@
     &:focus-within {
       transform: scale(1.3);
       z-index: 99;
+
+      .extra-details {
+        opacity: 0;
+      }
     }
 
     &.small:hover,
