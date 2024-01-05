@@ -273,7 +273,7 @@
       width: 160px;
       background-color: $poster-extra-detail-bg-color;
       border-radius: 10px;
-      transition: opacity 200ms ease-out;
+      transition: opacity 100ms ease-out;
 
       & > div {
         & > span {

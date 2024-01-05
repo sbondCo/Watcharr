@@ -43,23 +43,38 @@
       }
     });
 
+  // Get biggest season watching or biggest season watched.
+  // This could probably be simpler but -_-
   function getLatestWatchedSeason(ws: WatchedSeason[] | undefined): string {
     if (!ws || ws.length <= 0) {
       return "";
     }
     let biggestSeasonWatched: number | undefined;
+    let biggestSeasonWatching: number | undefined;
     for (let i = 0; i < ws.length; i++) {
       const s = ws[i];
-      if (!biggestSeasonWatched) {
-        biggestSeasonWatched = s.seasonNumber;
-        continue;
-      }
-      if (s.seasonNumber > biggestSeasonWatched) {
-        biggestSeasonWatched = s.seasonNumber;
+      if (s.status === "WATCHING") {
+        if (!biggestSeasonWatching) {
+          biggestSeasonWatching = s.seasonNumber;
+          continue;
+        }
+        if (s.seasonNumber > biggestSeasonWatching) {
+          biggestSeasonWatching = s.seasonNumber;
+        }
+      } else if (s.status === "FINISHED") {
+        if (!biggestSeasonWatched) {
+          biggestSeasonWatched = s.seasonNumber;
+          continue;
+        }
+        if (s.seasonNumber > biggestSeasonWatched) {
+          biggestSeasonWatched = s.seasonNumber;
+        }
       }
     }
-    if (!biggestSeasonWatched) return "";
-    return `Season ${biggestSeasonWatched}`;
+    if (biggestSeasonWatched === undefined && biggestSeasonWatching === undefined) return "";
+    return `Season ${
+      biggestSeasonWatching !== undefined ? biggestSeasonWatching : biggestSeasonWatched
+    }`;
   }
 </script>
 
