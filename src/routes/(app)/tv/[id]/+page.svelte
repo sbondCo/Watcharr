@@ -179,6 +179,10 @@
             placeholder={`My thoughts on ${show.name}`}
             value={wListItem?.thoughts}
             on:blur={(e) => {
+              if (wListItem?.thoughts === e.currentTarget.value) {
+                // thoughts didn't change
+                return;
+              }
               contentChanged(undefined, undefined, e.currentTarget?.value);
             }}
           />
