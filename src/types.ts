@@ -26,9 +26,15 @@ export type Icon =
   | "people"
   | "person"
   | "person-add"
-  | "person-minus";
+  | "person-minus"
+  | "pencil"
+  | "eye"
+  | "star";
 
 export type Theme = "light" | "dark";
+
+export type WLDetailedViewOption = "statusRating" | "lastWatched" | "dateAdded" | "dateModified";
+export type ExtraDetails = { lastWatched: string; dateAdded: string; dateModified: string };
 
 export enum UserType {
   // Assume watcharr user if none of these...

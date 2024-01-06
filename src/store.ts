@@ -8,6 +8,7 @@ import type {
   ServerFeatures,
   Theme,
   UserSettings,
+  WLDetailedViewOption,
   Watched
 } from "./types";
 import type { Notification } from "./lib/util/notify";
@@ -28,6 +29,7 @@ export const parsedImportedList = writable<ImportedList[] | undefined>();
 export const searchQuery = writable<string>("");
 export const serverFeatures = writable<ServerFeatures>();
 export const follows = writable<Follow[]>();
+export const wlDetailedView = writable<WLDetailedViewOption[]>([]);
 
 export const clearAllStores = () => {
   watchedList.set([]);
@@ -40,6 +42,7 @@ export const clearAllStores = () => {
   userInfo.set(undefined);
   userSettings.set(undefined);
   follows.set([]);
+  wlDetailedView.set([]);
 };
 
 if (browser) {
@@ -68,6 +71,11 @@ if (browser) {
     toggleTheme(defTheme);
   }
 
+  const wlDetailedViewR = localStorage.getItem("wlDetailedView");
+  if (wlDetailedViewR) {
+    wlDetailedView.update((v) => (v = JSON.parse(wlDetailedViewR)));
+  }
+
   // Save changes
   activeSort.subscribe((v) => {
     localStorage.setItem("activeFilter", JSON.stringify(v));
@@ -79,5 +87,13 @@ if (browser) {
 
   appTheme.subscribe((v) => {
     localStorage.setItem("theme", v);
+  });
+
+  wlDetailedView.subscribe((v) => {
+    if (v) {
+      localStorage.setItem("wlDetailedView", JSON.stringify(v));
+    } else {
+      localStorage.removeItem("wlDetailedView");
+    }
   });
 }

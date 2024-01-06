@@ -4,7 +4,7 @@
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
   import { activeFilters, activeSort } from "@/store";
-  import type { Watched } from "@/types";
+  import type { Watched, WatchedSeason } from "@/types";
 
   export let list: Watched[];
   export let isPublicList: boolean = false;
@@ -42,6 +42,40 @@
         return filters.status.includes(w.status?.toLowerCase());
       }
     });
+
+  // Get biggest season watching or biggest season watched.
+  // This could probably be simpler but -_-
+  function getLatestWatchedSeason(ws: WatchedSeason[] | undefined): string {
+    if (!ws || ws.length <= 0) {
+      return "";
+    }
+    let biggestSeasonWatched: number | undefined;
+    let biggestSeasonWatching: number | undefined;
+    for (let i = 0; i < ws.length; i++) {
+      const s = ws[i];
+      if (s.status === "WATCHING") {
+        if (!biggestSeasonWatching) {
+          biggestSeasonWatching = s.seasonNumber;
+          continue;
+        }
+        if (s.seasonNumber > biggestSeasonWatching) {
+          biggestSeasonWatching = s.seasonNumber;
+        }
+      } else if (s.status === "FINISHED") {
+        if (!biggestSeasonWatched) {
+          biggestSeasonWatched = s.seasonNumber;
+          continue;
+        }
+        if (s.seasonNumber > biggestSeasonWatched) {
+          biggestSeasonWatched = s.seasonNumber;
+        }
+      }
+    }
+    if (biggestSeasonWatched === undefined && biggestSeasonWatching === undefined) return "";
+    return `Season ${
+      biggestSeasonWatching !== undefined ? biggestSeasonWatching : biggestSeasonWatched
+    }`;
+  }
 </script>
 
 <PosterList>
@@ -61,6 +95,11 @@
         rating={w.rating}
         status={w.status}
         disableInteraction={isPublicList}
+        extraDetails={{
+          dateAdded: w.createdAt,
+          dateModified: w.updatedAt,
+          lastWatched: getLatestWatchedSeason(w.watchedSeasons)
+        }}
       />
     {/each}
   {:else}
