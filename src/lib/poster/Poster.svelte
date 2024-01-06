@@ -245,17 +245,17 @@
       transform: translateX(-50%);
       display: flex;
       flex-flow: column;
-      gap: 7px;
       justify-content: center;
       align-items: center;
       font-size: 14px;
       width: 160px;
+      color: white;
       background-color: $poster-extra-detail-bg-color;
       border-radius: 10px;
       transition: opacity 100ms ease-out;
 
       & > div {
-        padding: 5px 3px;
+        padding: 8px 3px;
 
         &:empty {
           padding: 0px;
@@ -266,11 +266,17 @@
           flex-flow: row;
           align-items: center;
           gap: 8px;
+          height: 15px;
+          font-weight: bold;
+
+          &:not(:last-child) {
+            margin-bottom: 5px;
+          }
 
           i {
             display: flex;
             width: 15px;
-            fill: $text-color;
+            fill: white;
           }
         }
       }
