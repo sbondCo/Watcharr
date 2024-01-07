@@ -156,6 +156,11 @@
         <Stat name="Movies Watched" value={profile.moviesWatched} large />
         <Stat name="Shows Watched" value={profile.showsWatched} large />
         <Stat name="Watching Movies" value={toFormattedMinutes(profile.moviesWatchedRuntime)} />
+        <Stat
+          name="Watching Shows"
+          value={toFormattedMinutes(profile.showsWatchedRuntime)}
+          disc="This is very inaccurate 🚀"
+        />
       {:catch err}
         <Error error={err} pretty="Failed to get stats!" />
       {/await}

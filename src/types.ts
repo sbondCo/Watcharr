@@ -112,6 +112,7 @@ export interface Profile {
   showsWatched: number;
   moviesWatched: number;
   moviesWatchedRuntime: number;
+  showsWatchedRuntime: number;
 }
 
 export interface UserSettings {
