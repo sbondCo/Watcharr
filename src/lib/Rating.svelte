@@ -23,6 +23,7 @@
   ];
 
   function handleStarClick(r: number) {
+    if (r === rating) return;
     onChange(r);
   }
 
