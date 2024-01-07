@@ -123,6 +123,16 @@
       notify({ id: nid, text: "Export Failed!", type: "error" });
     }
   }
+
+  /**
+   * Takes in number of minutes and converts to readable.
+   * eg into hours and minutes.
+   */
+  function toFormattedMinutes(m: number) {
+    const hours = Math.floor(m / 60);
+    const minutes = m % 60;
+    return `${hours ? `${hours}h ` : ""}${minutes}m`;
+  }
 </script>
 
 <div class="content">
@@ -145,6 +155,7 @@
         <Stat name="Joined" value={formatDate(new Date(profile.joined))} />
         <Stat name="Movies Watched" value={profile.moviesWatched} large />
         <Stat name="Shows Watched" value={profile.showsWatched} large />
+        <Stat name="Watching Movies" value={toFormattedMinutes(profile.moviesWatchedRuntime)} />
       {:catch err}
         <Error error={err} pretty="Failed to get stats!" />
       {/await}

@@ -9,9 +9,10 @@ import (
 )
 
 type Profile struct {
-	Joined        time.Time `json:"joined"`
-	ShowsWatched  int32     `json:"showsWatched"`
-	MoviesWatched int32     `json:"moviesWatched"`
+	Joined               time.Time `json:"joined"`
+	ShowsWatched         int32     `json:"showsWatched"`
+	MoviesWatched        int32     `json:"moviesWatched"`
+	MoviesWatchedRuntime uint32    `json:"moviesWatchedRuntime"`
 }
 
 // Gets any data required for profile page
@@ -29,8 +30,9 @@ func getProfile(db *gorm.DB, userId uint) (Profile, error) {
 		return Profile{}, errors.New("failed to get watched for processing")
 	}
 	var (
-		showsWatched  int32
-		moviesWatched int32
+		showsWatched         int32
+		moviesWatched        int32
+		moviesWatchedRuntime uint32
 	)
 	for _, w := range *watched {
 		if w.Status == FINISHED {
@@ -38,9 +40,10 @@ func getProfile(db *gorm.DB, userId uint) (Profile, error) {
 				showsWatched++
 			} else if w.Content.Type == MOVIE {
 				moviesWatched++
+				moviesWatchedRuntime += w.Content.Runtime
 			}
 		}
 	}
-	profile := Profile{Joined: user.CreatedAt, ShowsWatched: showsWatched, MoviesWatched: moviesWatched}
+	profile := Profile{Joined: user.CreatedAt, ShowsWatched: showsWatched, MoviesWatched: moviesWatched, MoviesWatchedRuntime: moviesWatchedRuntime}
 	return profile, nil
 }

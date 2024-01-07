@@ -111,6 +111,7 @@ export interface Profile {
   joined: Date;
   showsWatched: number;
   moviesWatched: number;
+  moviesWatchedRuntime: number;
 }
 
 export interface UserSettings {
