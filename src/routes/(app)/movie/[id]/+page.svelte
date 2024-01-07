@@ -181,7 +181,10 @@
             placeholder={`My thoughts on ${movie.title}`}
             value={wListItem?.thoughts}
             on:blur={(e) => {
-              console.log(e.currentTarget?.value);
+              if (wListItem?.thoughts === e.currentTarget.value) {
+                // thoughts didn't change
+                return;
+              }
               contentChanged(undefined, undefined, e.currentTarget?.value);
             }}
           />

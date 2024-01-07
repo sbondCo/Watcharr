@@ -71,6 +71,7 @@
       removeWatched(id);
       return;
     }
+    if (type == status) return;
     updateWatched(media.id, media.media_type, type);
   }
 
