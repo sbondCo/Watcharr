@@ -41,5 +41,5 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          # tags: ${{ env.image }}:dev
+          tags: ${{ env.image }}:dev
           labels: ${{ env.image }}:${{ github.sha }}
