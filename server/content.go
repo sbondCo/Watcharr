@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ContentType string
@@ -43,7 +44,26 @@ func saveContent(db *gorm.DB, c *Content) error {
 		slog.Error("saveContent: content missing id or title!", "id", c.TmdbID, "title", c.Title)
 		return errors.New("content missing id or title")
 	}
-	res := db.Create(&c)
+	// On conflict, update existing row with details incase any were updated/missing.
+	res := db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "tmdb_id"}, {Name: "type"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"title",
+			"poster_path",
+			"overview",
+			"release_date",
+			"popularity",
+			"vote_average",
+			"vote_count",
+			"imdb_id",
+			"status",
+			"budget",
+			"revenue",
+			"runtime",
+			"number_of_episodes",
+			"number_of_seasons",
+		}),
+	}).Create(&c)
 	if res.Error != nil {
 		// Error if anything but unique contraint error
 		if res.Error != gorm.ErrDuplicatedKey {
@@ -172,7 +192,7 @@ func searchContent(query string) (TMDBSearchMultiResponse, error) {
 	return *resp, nil
 }
 
-func movieDetails(id string, country string, rParams map[string]string) (TMDBMovieDetails, error) {
+func movieDetails(db *gorm.DB, id string, country string, rParams map[string]string) (TMDBMovieDetails, error) {
 	resp := new(TMDBMovieDetails)
 	err := tmdbRequest("/movie/"+id, rParams, &resp)
 	if err != nil {
@@ -180,6 +200,7 @@ func movieDetails(id string, country string, rParams map[string]string) (TMDBMov
 		return TMDBMovieDetails{}, errors.New("failed to complete movie details request")
 	}
 	transformProviders(&resp.WatchProviders, country)
+	go cacheContentMovie(db, *resp)
 	return *resp, nil
 }
 
@@ -193,7 +214,7 @@ func movieCredits(id string) (TMDBContentCredits, error) {
 	return *resp, nil
 }
 
-func tvDetails(id string, country string, rParams map[string]string) (TMDBShowDetails, error) {
+func tvDetails(db *gorm.DB, id string, country string, rParams map[string]string) (TMDBShowDetails, error) {
 	resp := new(TMDBShowDetails)
 	err := tmdbRequest("/tv/"+id, rParams, &resp)
 	if err != nil {
@@ -201,6 +222,7 @@ func tvDetails(id string, country string, rParams map[string]string) (TMDBShowDe
 		return TMDBShowDetails{}, errors.New("failed to complete tv details request")
 	}
 	transformProviders(&resp.WatchProviders, country)
+	go cacheContentTv(db, *resp)
 	return *resp, nil
 }
 

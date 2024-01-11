@@ -49,14 +49,14 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 	if ar.TmdbID != 0 && (ar.Type == MOVIE || ar.Type == SHOW) {
 		tid := strconv.Itoa(ar.TmdbID)
 		if ar.Type == MOVIE {
-			cr, err := movieDetails(tid, "", map[string]string{})
+			cr, err := movieDetails(db, tid, "", map[string]string{})
 			if err != nil {
 				return ImportResponse{}, errors.New("movie details request failed")
 			}
 			slog.Debug("import: by tmdbid of movie", "cr", cr)
 			return successfulImport(db, userId, cr.ID, MOVIE, ar)
 		} else if ar.Type == SHOW {
-			cr, err := tvDetails(tid, "", map[string]string{})
+			cr, err := tvDetails(db, tid, "", map[string]string{})
 			if err != nil {
 				return ImportResponse{}, errors.New("tv details request failed")
 			}
