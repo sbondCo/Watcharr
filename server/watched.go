@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -110,110 +109,29 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 			return Watched{}, errors.New("failed to find requested media")
 		}
 
-		var (
-			id               int
-			title            string
-			overview         string
-			posterPath       string
-			releaseDate      time.Time
-			popularity       float32
-			voteAverage      float32
-			voteCount        uint32
-			imdbID           string
-			status           string
-			budget           uint32
-			revenue          uint32
-			runtime          uint32
-			numberOfEpisodes uint32
-			numberOfSeasons  uint32
-		)
-		var dateFormat = "2006-01-02"
-		// Get details from movie/show response and fill out needed vars
 		if ar.ContentType == "movie" {
-			content := new(TMDBMovieDetails)
-			err = json.Unmarshal([]byte(resp), &content)
+			c := new(TMDBMovieDetails)
+			err := json.Unmarshal([]byte(resp), &c)
 			if err != nil {
 				slog.Error("Failed to unmarshal movie details", "error", err)
 				return Watched{}, errors.New("failed to process movie details response")
 			}
-			id = content.ID
-			overview = content.Overview
-			posterPath = content.PosterPath
-			title = content.Title
-			releaseDate, err = time.Parse(dateFormat, content.ReleaseDate)
+			content, err = cacheContentMovie(db, *c, false)
 			if err != nil {
-				slog.Error("Failed to parse movie release date", "error", err)
+				slog.Error("addWatched failed to cache movie content", "content_id", ar.ContentID, "err", err)
+				return Watched{}, errors.New("failed to cache content")
 			}
-			popularity = content.Popularity
-			voteAverage = content.VoteAverage
-			voteCount = content.VoteCount
-			imdbID = content.ImdbID
-			status = content.Status
-			budget = content.Budget
-			revenue = content.Revenue
-			runtime = content.Runtime
 		} else {
-			content := new(TMDBShowDetails)
-			err = json.Unmarshal(resp, &content)
+			c := new(TMDBShowDetails)
+			err := json.Unmarshal(resp, &c)
 			if err != nil {
-				slog.Error("Failed to unmarshal show details", "error", err)
-				return Watched{}, errors.New("failed to process show details response")
+				slog.Error("Failed to unmarshal tv details", "error", err)
+				return Watched{}, errors.New("failed to process tv details response")
 			}
-			id = content.ID
-			overview = content.Overview
-			posterPath = content.PosterPath
-			title = content.Name
-			releaseDate, err = time.Parse(dateFormat, content.FirstAirDate)
+			content, err = cacheContentTv(db, *c, false)
 			if err != nil {
-				slog.Error("Failed to parse tv release date", "error", err)
-			}
-			popularity = content.Popularity
-			voteAverage = content.VoteAverage
-			voteCount = content.VoteCount
-			status = content.Status
-			if len(content.EpisodeRunTime) > 0 {
-				runtime = uint32(content.EpisodeRunTime[0])
-			}
-			numberOfEpisodes = content.NumberOfEpisodes
-			numberOfSeasons = content.NumberOfSeasons
-		}
-		// Save the content in our db
-		slog.Info("Saving content to db", "id", id, "title", title)
-		if id == 0 || title == "" {
-			slog.Error("addWatched, returned content missing id or title!", "id", id, "title", title)
-			return Watched{}, errors.New("content response missing id or title")
-		}
-		content = Content{
-			TmdbID:           id,
-			Title:            title,
-			Overview:         overview,
-			PosterPath:       posterPath,
-			Type:             ar.ContentType,
-			ReleaseDate:      &releaseDate,
-			Popularity:       popularity,
-			VoteAverage:      voteAverage,
-			VoteCount:        voteCount,
-			ImdbID:           imdbID,
-			Status:           status,
-			Budget:           budget,
-			Revenue:          revenue,
-			Runtime:          runtime,
-			NumberOfEpisodes: numberOfEpisodes,
-			NumberOfSeasons:  numberOfSeasons,
-		}
-		res := db.Create(&content)
-		if res.Error != nil {
-			// Error if anything but unique contraint error
-			if res.Error != gorm.ErrDuplicatedKey {
-				slog.Error("Error creating content in database", "error", res.Error.Error())
-				return Watched{}, errors.New("failed to cache content in database")
-			}
-		}
-		// If row created, download the image
-		if res.RowsAffected > 0 {
-			err := download("https://image.tmdb.org/t/p/w500"+posterPath, path.Join("./data/img", posterPath))
-			if err != nil {
-				slog.Error("Failed to download content image!", "error", err.Error())
+				slog.Error("addWatched failed to cache tv content", "content_id", ar.ContentID, "err", err)
+				return Watched{}, errors.New("failed to cache content")
 			}
 		}
 	}

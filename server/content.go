@@ -3,7 +3,11 @@ package main
 import (
 	"errors"
 	"log/slog"
+	"path"
 	"time"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ContentType string
@@ -32,6 +36,138 @@ type Content struct {
 	Runtime          uint32      `json:"runtime"`
 	NumberOfEpisodes uint32      `json:"numberOfEpisodes"`
 	NumberOfSeasons  uint32      `json:"numberOfSeasons"`
+}
+
+// onlyUpdate - If we should only update existing row if exists, or false to create/update if not exist.
+func saveContent(db *gorm.DB, c *Content, onlyUpdate bool) error {
+	slog.Info("Saving content to db", "id", c.TmdbID, "title", c.Title)
+	if c.TmdbID == 0 || c.Title == "" || c.Type == "" {
+		slog.Error("saveContent: content missing id, title or type!", "id", c.TmdbID, "title", c.Title, "type", c.Type)
+		return errors.New("content missing id or title")
+	}
+	var res *gorm.DB
+	if onlyUpdate {
+		// We only want to update an existing row, if it exists.
+		res = db.Model(&Content{}).Where("type = ? AND tmdb_id = ?", c.Type, c.TmdbID).Updates(c)
+		if res.Error != nil {
+			slog.Error("saveContent: Error updating content in database", "error", res.Error.Error())
+			return errors.New("failed to update cached content in database")
+		}
+	} else {
+		// On conflict, update existing row with details incase any were updated/missing.
+		res = db.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "tmdb_id"}, {Name: "type"}},
+			DoUpdates: clause.AssignmentColumns([]string{
+				"title",
+				"poster_path",
+				"overview",
+				"release_date",
+				"popularity",
+				"vote_average",
+				"vote_count",
+				"imdb_id",
+				"status",
+				"budget",
+				"revenue",
+				"runtime",
+				"number_of_episodes",
+				"number_of_seasons",
+			}),
+		}).Create(&c)
+		if res.Error != nil {
+			// Error if anything but unique contraint error
+			if res.Error != gorm.ErrDuplicatedKey {
+				slog.Error("saveContent: Error creating content in database", "error", res.Error.Error())
+				return errors.New("failed to cache content in database")
+			}
+		}
+	}
+	// If row created, download the image
+	if res.RowsAffected > 0 {
+		slog.Debug("saveContent: Downloading poster.")
+		err := download("https://image.tmdb.org/t/p/w500"+c.PosterPath, path.Join("./data/img", c.PosterPath))
+		if err != nil {
+			slog.Error("saveContent: Failed to download content image!", "error", err.Error())
+		}
+	}
+	return nil
+}
+
+func cacheContentTv(db *gorm.DB, content TMDBShowDetails, onlyUpdate bool) (Content, error) {
+	slog.Debug("cacheContentTv", "content", content)
+	var (
+		releaseDate time.Time
+		runtime     uint32
+	)
+	var dateFormat = "2006-01-02"
+	releaseDate, err := time.Parse(dateFormat, content.FirstAirDate)
+	if err != nil {
+		slog.Error("Failed to parse tv release date", "error", err)
+	}
+	if len(content.EpisodeRunTime) > 0 {
+		runtime = uint32(content.EpisodeRunTime[0])
+	}
+
+	c := Content{
+		TmdbID:           content.ID,
+		Title:            content.Name,
+		Overview:         content.Overview,
+		PosterPath:       content.PosterPath,
+		Type:             SHOW,
+		ReleaseDate:      &releaseDate,
+		Popularity:       content.Popularity,
+		VoteAverage:      content.VoteAverage,
+		VoteCount:        content.VoteCount,
+		Status:           content.Status,
+		Runtime:          runtime,
+		NumberOfEpisodes: content.NumberOfEpisodes,
+		NumberOfSeasons:  content.NumberOfSeasons,
+	}
+
+	err = saveContent(db, &c, onlyUpdate)
+	if err != nil {
+		slog.Error("cacheContentTv: Failed to save content!", "error", err)
+		return Content{}, errors.New("failed to save content")
+	}
+
+	return c, nil
+}
+
+func cacheContentMovie(db *gorm.DB, content TMDBMovieDetails, onlyUpdate bool) (Content, error) {
+	var (
+		releaseDate time.Time
+	)
+	var dateFormat = "2006-01-02"
+	// Get details from movie/show response and fill out needed vars
+	releaseDate, err := time.Parse(dateFormat, content.ReleaseDate)
+	if err != nil {
+		slog.Error("Failed to parse movie release date", "error", err)
+	}
+
+	c := Content{
+		TmdbID:      content.ID,
+		Title:       content.Title,
+		Overview:    content.Overview,
+		PosterPath:  content.PosterPath,
+		Type:        MOVIE,
+		ReleaseDate: &releaseDate,
+		Popularity:  content.Popularity,
+		VoteAverage: content.VoteAverage,
+		VoteCount:   content.VoteCount,
+		ImdbID:      content.ImdbID,
+		Status:      content.Status,
+		Budget:      content.Budget,
+		Revenue:     content.Revenue,
+		Runtime:     content.Runtime,
+	}
+
+	err = saveContent(db, &c, onlyUpdate)
+	if err != nil {
+		slog.Error("cacheContentMovie: Failed to save content!", "error", err)
+		return Content{}, errors.New("failed to save content")
+	}
+
+	return c, nil
 }
 
 // Getting only region needed from api is not a feature yet
@@ -68,7 +204,7 @@ func searchContent(query string) (TMDBSearchMultiResponse, error) {
 	return *resp, nil
 }
 
-func movieDetails(id string, country string, rParams map[string]string) (TMDBMovieDetails, error) {
+func movieDetails(db *gorm.DB, id string, country string, rParams map[string]string) (TMDBMovieDetails, error) {
 	resp := new(TMDBMovieDetails)
 	err := tmdbRequest("/movie/"+id, rParams, &resp)
 	if err != nil {
@@ -76,6 +212,7 @@ func movieDetails(id string, country string, rParams map[string]string) (TMDBMov
 		return TMDBMovieDetails{}, errors.New("failed to complete movie details request")
 	}
 	transformProviders(&resp.WatchProviders, country)
+	go cacheContentMovie(db, *resp, true)
 	return *resp, nil
 }
 
@@ -89,7 +226,7 @@ func movieCredits(id string) (TMDBContentCredits, error) {
 	return *resp, nil
 }
 
-func tvDetails(id string, country string, rParams map[string]string) (TMDBShowDetails, error) {
+func tvDetails(db *gorm.DB, id string, country string, rParams map[string]string) (TMDBShowDetails, error) {
 	resp := new(TMDBShowDetails)
 	err := tmdbRequest("/tv/"+id, rParams, &resp)
 	if err != nil {
@@ -97,6 +234,7 @@ func tvDetails(id string, country string, rParams map[string]string) (TMDBShowDe
 		return TMDBShowDetails{}, errors.New("failed to complete tv details request")
 	}
 	transformProviders(&resp.WatchProviders, country)
+	go cacheContentTv(db, *resp, true)
 	return *resp, nil
 }
 
