@@ -116,7 +116,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 				slog.Error("Failed to unmarshal movie details", "error", err)
 				return Watched{}, errors.New("failed to process movie details response")
 			}
-			content, err = cacheContentMovie(db, *c)
+			content, err = cacheContentMovie(db, *c, false)
 			if err != nil {
 				slog.Error("addWatched failed to cache movie content", "content_id", ar.ContentID, "err", err)
 				return Watched{}, errors.New("failed to cache content")
@@ -128,7 +128,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 				slog.Error("Failed to unmarshal tv details", "error", err)
 				return Watched{}, errors.New("failed to process tv details response")
 			}
-			content, err = cacheContentTv(db, *c)
+			content, err = cacheContentTv(db, *c, false)
 			if err != nil {
 				slog.Error("addWatched failed to cache tv content", "content_id", ar.ContentID, "err", err)
 				return Watched{}, errors.New("failed to cache content")
