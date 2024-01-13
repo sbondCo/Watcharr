@@ -48,15 +48,10 @@ func saveContent(db *gorm.DB, c *Content, onlyUpdate bool) error {
 	var res *gorm.DB
 	if onlyUpdate {
 		// We only want to update an existing row, if it exists.
-		res = db.Debug().Model(&Content{}).Where("type = ? AND tmdb_id = ?", c.Type, c.TmdbID).Updates(c)
-		slog.Debug("saveContent: UPDATE errr?.", "error", res.Error)
+		res = db.Model(&Content{}).Where("type = ? AND tmdb_id = ?", c.Type, c.TmdbID).Updates(c)
 		if res.Error != nil {
-			// Error if anything but unique contraint error
-			if res.Error != gorm.ErrRecordNotFound {
-				slog.Error("saveContent: Error creating content in database", "error", res.Error.Error())
-				return errors.New("failed to cache content in database")
-			}
-			slog.Debug("saveContent: Didn't update content since it doesn't exist.")
+			slog.Error("saveContent: Error updating content in database", "error", res.Error.Error())
+			return errors.New("failed to update cached content in database")
 		}
 	} else {
 		// On conflict, update existing row with details incase any were updated/missing.
