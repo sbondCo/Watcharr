@@ -14,6 +14,7 @@
   import Stats from "@/lib/stats/Stats.svelte";
   import Error from "@/lib/Error.svelte";
   import Stat from "@/lib/stats/Stat.svelte";
+  import TwitchModal from "./modals/TwitchModal.svelte";
 
   let serverConfig: ServerConfig;
   let sonarrModalOpen = false;
@@ -22,6 +23,7 @@
   let radarrModalOpen = false;
   let radarrServerEditing: RadarrSettings;
   let radarrModalEditing = false;
+  let twitchModalOpen = false;
   // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
@@ -186,6 +188,17 @@
           </h5>
         </div>
 
+        <Setting title="Twitch">
+          <SettingButton
+            title="Twitch"
+            desc="Twitch application credentials for enabling game support (via IGDB)."
+            icon={Object.keys(serverConfig.TWITCH).length > 0 ? "arrow" : "add"}
+            onClick={() => {
+              twitchModalOpen = true;
+            }}
+          />
+        </Setting>
+
         <Setting title="Sonarr">
           {#if serverConfig.SONARR?.length > 0}
             {#each serverConfig.SONARR as server}
@@ -247,6 +260,19 @@
             }}
           />
         </Setting>
+
+        {#if twitchModalOpen}
+          <TwitchModal
+            cfg={serverConfig.TWITCH}
+            onClose={() => {
+              // "temporary" solution to showing added servers
+              // and reloading data to revert modified but not saved changes.
+              getServerConfig();
+              getServerFeatures();
+              twitchModalOpen = false;
+            }}
+          />
+        {/if}
 
         {#if sonarrModalOpen}
           <SonarrModal

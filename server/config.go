@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/sbondCo/Watcharr/game"
 	"gorm.io/gorm"
 )
 
@@ -31,6 +32,7 @@ type ServerConfig struct {
 
 	SONARR []SonarrSettings `json:",omitempty"`
 	RADARR []RadarrSettings `json:",omitempty"`
+	TWITCH game.IGDB        `json:",omitempty"`
 
 	// Enable/disable debug logging. Useful for when trying
 	// to figure out exactly what the server is doing at a point
@@ -53,6 +55,10 @@ func (c *ServerConfig) GetSafe() ServerConfig {
 		DEBUG:          c.DEBUG,
 		SONARR:         c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
 		RADARR:         c.RADARR, // Dont act safe, this contains radarr api key, needed for config
+		TWITCH: game.IGDB{
+			ClientID:     c.TWITCH.ClientID,
+			ClientSecret: c.TWITCH.ClientSecret,
+		}, // Dont act safe, this contains twitch secrets, needed for config
 	}
 }
 
@@ -163,6 +169,21 @@ func getEnabledFeatures(userPerms int) ServerFeatures {
 		f.Radarr = true
 	}
 	return f
+}
+
+func saveTwitchConfig(c game.IGDB) error {
+	err := c.Init()
+	if err != nil {
+		slog.Error("saveTwitchConfig config provided was unable to get a token", "error", err)
+		return errors.New("failed to retrieve a token")
+	}
+	Config.TWITCH = c
+	err = writeConfig()
+	if err != nil {
+		slog.Error("saveTwitchConfig failed to write config", "error", err)
+		return errors.New("failed to save config")
+	}
+	return nil
 }
 
 type ServerStats struct {

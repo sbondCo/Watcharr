@@ -115,6 +115,7 @@ func main() {
 	}
 	br.addAuthRoutes()
 	br.addContentRoutes()
+	br.addGameRoutes()
 	br.addWatchedRoutes()
 	br.addActivityRoutes()
 	br.addProfileRoutes()

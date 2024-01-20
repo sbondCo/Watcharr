@@ -10,6 +10,7 @@ import (
 	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-gonic/gin"
 	"github.com/sbondCo/Watcharr/arr"
+	"github.com/sbondCo/Watcharr/game"
 	"gorm.io/gorm"
 )
 
@@ -235,6 +236,50 @@ func (b *BaseRouter) addContentRoutes() {
 		}
 		c.JSON(http.StatusOK, content)
 	}))
+}
+
+func (b *BaseRouter) addGameRoutes() {
+	gamer := b.rg.Group("/game").Use(AuthRequired(nil))
+	// exp := time.Hour * 24
+	exp := time.Second
+
+	igdb := Config.TWITCH
+
+	// Search for games
+	gamer.GET("/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("query") == "" {
+			c.Status(400)
+			return
+		}
+		igdb.Search()
+		c.Status(http.StatusOK)
+		// content, err := searchContent(c.Param("query"))
+		// if err != nil {
+		// 	c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		// 	return
+		// }
+		// c.JSON(http.StatusOK, content)
+	}))
+
+	// IMPORTANT: Routes below only for admins!
+	gamer.Use(AuthRequired(b.db), AdminRequired())
+	{
+		gamer.POST("/config", func(c *gin.Context) {
+			var ar game.IGDB
+			err := c.ShouldBindJSON(&ar)
+			if err == nil {
+				err := saveTwitchConfig(ar)
+				if err != nil {
+					c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+					return
+				}
+				igdb = ar
+				c.Status(http.StatusOK)
+				return
+			}
+			c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		})
+	}
 }
 
 func (b *BaseRouter) addWatchedRoutes() {

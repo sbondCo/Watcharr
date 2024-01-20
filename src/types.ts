@@ -719,6 +719,7 @@ export interface ServerConfig {
   TMDB_KEY: string;
   SONARR: SonarrSettings[];
   RADARR: RadarrSettings[];
+  TWITCH: TwitchSettings;
   DEBUG: boolean;
 }
 
@@ -739,6 +740,11 @@ export interface RadarrSettings {
   qualityProfile?: number;
   rootFolder?: number;
   automaticSearch?: boolean;
+}
+
+export interface TwitchSettings {
+  clientId: string;
+  clientSecret: string;
 }
 
 export interface DropDownItem {
