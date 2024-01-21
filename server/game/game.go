@@ -22,10 +22,10 @@ const (
 // }
 
 type IGDB struct {
-	ClientID           *string `json:"clientId,omitempty"`
-	ClientSecret       *string `json:"clientSecret,omitempty"`
-	accessToken        string
-	accessTokenExpires time.Time
+	ClientID           *string   `json:"clientId,omitempty"`
+	ClientSecret       *string   `json:"clientSecret,omitempty"`
+	AccessToken        string    `json:"accessToken,omitempty"`
+	AccessTokenExpires time.Time `json:"accessTokenExpires,omitempty"`
 }
 
 func New(cfg *IGDB) *IGDB {
@@ -33,8 +33,11 @@ func New(cfg *IGDB) *IGDB {
 	return cfg
 }
 
-func (i *IGDB) req(host string, ep string, p map[string]string, b map[string]interface{}, resp interface{}) error {
-	// TODO if using igdb host and we have no access token, error before running req
+func (i *IGDB) req(host string, ep string, p map[string]string, b string, resp interface{}) error {
+	// if using igdb host and we have no access token, error before running req
+	if host == igdbHost && (i.ClientID == nil || i.AccessToken == "") {
+		return errors.New("using igdbHost without a clientID or accessToken")
+	}
 
 	base, err := url.Parse(host)
 	if err != nil {
@@ -43,8 +46,6 @@ func (i *IGDB) req(host string, ep string, p map[string]string, b map[string]int
 
 	// Path params
 	base.Path += ep
-
-	var res *http.Response
 
 	// Query params
 	params := url.Values{}
@@ -57,20 +58,20 @@ func (i *IGDB) req(host string, ep string, p map[string]string, b map[string]int
 
 	slog.Info("req", "base", base.String())
 
-	if len(b) > 0 {
-		jsonp, err := json.Marshal(b)
-		if err != nil {
-			return err
-		}
-		res, err = http.Post(base.String(), "application/json", bytes.NewBuffer(jsonp))
-		if err != nil {
-			return err
-		}
-	} else {
-		res, err = http.Post(base.String(), "application/json", bytes.NewBuffer(nil))
-		if err != nil {
-			return err
-		}
+	req, err := http.NewRequest("POST", base.String(), bytes.NewBuffer([]byte(b)))
+	if err != nil {
+		return err
+	}
+
+	// Add igdb auth headers
+	if host == igdbHost {
+		req.Header.Add("Client-ID", *i.ClientID)
+		req.Header.Add("Authorization", "Bearer "+i.AccessToken)
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
 	}
 
 	body, err := io.ReadAll(res.Body)
@@ -96,24 +97,45 @@ func (i *IGDB) Init() error {
 		return errors.New("client id and or secret not provided")
 	}
 	slog.Debug("IGDB init running.", "client_id", *i.ClientID, "client_secret", *i.ClientSecret)
+	// If we have an unexpired access token already, use that instead of requesting a new one.
+	if i.AccessToken != "" && !i.AccessTokenExpires.IsZero() {
+		if i.AccessTokenExpires.Compare(time.Now()) == 1 {
+			slog.Debug("IGDB init current access token hasn't expired. Will continue using that one.")
+			return nil
+		}
+		slog.Debug("IGDB init current access token has expired.. fetching a new one.")
+	}
 	var resp TwitchTokenResponse
 	err := i.req(
 		"https://id.twitch.tv/oauth2",
 		"/token",
 		map[string]string{"client_id": *i.ClientID, "client_secret": *i.ClientSecret, "grant_type": tokenGrantType},
-		map[string]interface{}{},
+		"",
 		&resp,
 	)
 	if err != nil {
 		slog.Error("IGDB init token request failed", "error", err)
 		return errors.New("token request failed, check client id and secret")
 	}
-	i.accessToken = resp.AccessToken
-	i.accessTokenExpires = time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second)
-	slog.Debug("IGDB init token response", "resp", resp, "token_expires", i.accessTokenExpires)
+	i.AccessToken = resp.AccessToken
+	i.AccessTokenExpires = time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second)
+	slog.Debug("IGDB init token response", "resp", resp, "token_expires", i.AccessTokenExpires)
 	return nil
 }
 
-func (i *IGDB) Search() {
-	slog.Debug("IGDB Search called")
+func (i *IGDB) Search(q string) (GameSearchResponse, error) {
+	slog.Debug("IGDB Search called", "query", q)
+	var resp GameSearchResponse
+	err := i.req(
+		igdbHost,
+		"/games",
+		map[string]string{},
+		"fields name, cover.image_id, version_title, summary, first_release_date; search \""+q+"\";",
+		&resp,
+	)
+	if err != nil {
+		slog.Error("IGDB Search request failed!", "error", err)
+		return GameSearchResponse{}, errors.New("request failed")
+	}
+	return resp, nil
 }

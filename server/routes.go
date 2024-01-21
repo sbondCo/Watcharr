@@ -243,7 +243,12 @@ func (b *BaseRouter) addGameRoutes() {
 	// exp := time.Hour * 24
 	exp := time.Second
 
-	igdb := Config.TWITCH
+	igdb := &Config.TWITCH
+	err := igdb.Init()
+	// Save cfg if init succeeded, this will save our access token
+	if err == nil {
+		writeConfig()
+	}
 
 	// Search for games
 	gamer.GET("/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
@@ -251,14 +256,12 @@ func (b *BaseRouter) addGameRoutes() {
 			c.Status(400)
 			return
 		}
-		igdb.Search()
-		c.Status(http.StatusOK)
-		// content, err := searchContent(c.Param("query"))
-		// if err != nil {
-		// 	c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
-		// 	return
-		// }
-		// c.JSON(http.StatusOK, content)
+		games, err := igdb.Search(c.Param("query"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, games)
 	}))
 
 	// IMPORTANT: Routes below only for admins!
@@ -273,7 +276,7 @@ func (b *BaseRouter) addGameRoutes() {
 					c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 					return
 				}
-				igdb = ar
+				igdb = &ar
 				c.Status(http.StatusOK)
 				return
 			}
