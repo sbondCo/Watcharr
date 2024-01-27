@@ -241,7 +241,7 @@ func (b *BaseRouter) addContentRoutes() {
 func (b *BaseRouter) addGameRoutes() {
 	gamer := b.rg.Group("/game").Use(AuthRequired(nil))
 	// exp := time.Hour * 24
-	exp := time.Second
+	exp := time.Second * 60
 
 	igdb := &Config.TWITCH
 	err := igdb.Init()
@@ -251,7 +251,7 @@ func (b *BaseRouter) addGameRoutes() {
 	}
 
 	// Search for games
-	gamer.GET("/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	gamer.GET("/search/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("query") == "" {
 			c.Status(400)
 			return
@@ -262,6 +262,20 @@ func (b *BaseRouter) addGameRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, games)
+	}))
+
+	// Game details for game page
+	gamer.GET("/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("id") == "" {
+			c.Status(400)
+			return
+		}
+		content, err := igdb.GameDetails(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
 	}))
 
 	// IMPORTANT: Routes below only for admins!

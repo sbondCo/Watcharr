@@ -680,6 +680,18 @@ export interface ContentSearchPerson {
   popularity?: number;
 }
 
+export interface GameSearch {
+  id: number;
+  cover: {
+    id: number;
+    image_id: string;
+  };
+  first_release_date: string;
+  name: string;
+  summary?: string;
+  version_title?: string;
+}
+
 export enum ImportResponseType {
   IMPORT_SUCCESS = "IMPORT_SUCCESS",
   IMPORT_FAILED = "IMPORT_FAILED",
@@ -841,4 +853,74 @@ export interface MovaryRatings extends MovaryExportBase {
 
 export interface MovaryWatchlist extends MovaryExportBase {
   addedAt: string;
+}
+
+export interface GameDetailsResponse {
+  id: number;
+  artworks: {
+    width: number;
+    height: number;
+    image_id: string;
+  }[];
+  category: number;
+  cover: {
+    id: number;
+    image_id: string;
+  };
+  first_release_date: number;
+  game_modes: {
+    id: number;
+    name: string;
+  }[];
+  genres: {
+    id: number;
+    name: string;
+  }[];
+  involved_companies: {
+    id: number;
+    company: {
+      id: number;
+      description: string;
+      name: string;
+      slug: string;
+      websites: {
+        id: number;
+        category: number;
+        trusted: boolean;
+        url: string;
+      }[];
+    };
+    developer: boolean;
+    porting: boolean;
+    publisher: boolean;
+    supporting: boolean;
+  }[];
+  name: string;
+  platforms: {
+    id: number;
+    name: string;
+  }[];
+  rating: number;
+  rating_count: number;
+  summary: string;
+  url: string;
+  videos: {
+    id: number;
+    name: string;
+    video_id: string;
+  }[];
+  websites: {
+    id: number;
+    category: number;
+    trusted: boolean;
+    url: string;
+  }[];
+}
+
+export enum GameWebsiteCategory {
+  Official = 1,
+  Wikipedia = 3,
+  Twitch = 6,
+  Steam = 13,
+  Reddit = 14
 }

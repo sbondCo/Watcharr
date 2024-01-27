@@ -121,7 +121,7 @@
           <Title
             title={movie.title}
             homepage={movie.homepage}
-            releaseDate={movie.release_date}
+            releaseYear={new Date(Date.parse(movie.release_date)).getFullYear()}
             voteAverage={movie.vote_average}
             voteCount={movie.vote_count}
           />

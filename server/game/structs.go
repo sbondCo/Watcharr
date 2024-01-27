@@ -26,7 +26,8 @@ func (u *UnixTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Only the fields we request
+// Only the fields we request included in each struct
+
 type GameSearchResponse []struct {
 	ID    int `json:"id"`
 	Cover struct {
@@ -37,4 +38,66 @@ type GameSearchResponse []struct {
 	Name             string   `json:"name"`
 	Summary          string   `json:"summary,omitempty"`
 	VersionTitle     string   `json:"version_title,omitempty"`
+}
+
+type GameDetailsResponse struct {
+	ID       int `json:"id"`
+	Artworks []struct {
+		Width   int    `json:"width"`
+		Height  int    `json:"height"`
+		ImageID string `json:"image_id"`
+	} `json:"artworks"`
+	Category int `json:"category"`
+	Cover    struct {
+		ID      int    `json:"id"`
+		ImageID string `json:"image_id"`
+	} `json:"cover"`
+	FirstReleaseDate int `json:"first_release_date"`
+	GameModes        []struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"game_modes"`
+	Genres []struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"genres"`
+	InvolvedCompanies []struct {
+		ID      int `json:"id"`
+		Company struct {
+			ID          int    `json:"id"`
+			Description string `json:"description"`
+			Name        string `json:"name"`
+			Slug        string `json:"slug"`
+			Websites    []struct {
+				ID       int    `json:"id"`
+				Category int    `json:"category"`
+				Trusted  bool   `json:"trusted"`
+				URL      string `json:"url"`
+			} `json:"websites"`
+		} `json:"company"`
+		Developer  bool `json:"developer"`
+		Porting    bool `json:"porting"`
+		Publisher  bool `json:"publisher"`
+		Supporting bool `json:"supporting"`
+	} `json:"involved_companies"`
+	Name      string `json:"name"`
+	Platforms []struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"platforms"`
+	Rating      float64 `json:"rating"`
+	RatingCount int     `json:"rating_count"`
+	Summary     string  `json:"summary"`
+	URL         string  `json:"url"`
+	Videos      []struct {
+		ID      int    `json:"id"`
+		Name    string `json:"name"`
+		VideoID string `json:"video_id"`
+	} `json:"videos"`
+	Websites []struct {
+		ID       int    `json:"id"`
+		Category int    `json:"category"`
+		Trusted  bool   `json:"trusted"`
+		URL      string `json:"url"`
+	} `json:"websites"`
 }

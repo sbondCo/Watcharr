@@ -7,18 +7,83 @@
   import axios from "axios";
   import { getWatchedDependedProps } from "@/lib/util/helpers";
   import PersonPoster from "@/lib/poster/PersonPoster.svelte";
-  import type { ContentSearch, PublicUser } from "@/types";
+  import type {
+    ContentSearch,
+    ContentSearchMovie,
+    ContentSearchPerson,
+    ContentSearchTv,
+    GameSearch,
+    MediaType,
+    PublicUser
+  } from "@/types";
   import UsersList from "@/lib/UsersList.svelte";
   import { onDestroy, onMount } from "svelte";
   import Error from "@/lib/Error.svelte";
+  import GamePoster from "@/lib/poster/GamePoster.svelte";
 
   export let data;
 
   $: searchQ = $searchQuery;
   $: wList = $watchedList;
 
+  interface CombinedSearchResults {
+    id: number;
+    name: string;
+    type: MediaType | "game";
+    og: (ContentSearchMovie | ContentSearchTv | ContentSearchPerson | GameSearch)[];
+  }
+
+  type GameWithMediaType = GameSearch & { media_type: "game" };
+  type CombinedResult =
+    | ContentSearchMovie
+    | ContentSearchTv
+    | ContentSearchPerson
+    | GameWithMediaType;
+
+  // async function search(query: string) {
+  //   return (await axios.get(`/content/${query}`)).data as ContentSearch;
+  // }
+
+  // async function searchGames(query: string) {
+  //   return (await axios.get(`/game/${query}`)).data as GameSearch[];
+  // }
+
+  // TODO only search games as well if that server feature is enabled.
   async function search(query: string) {
-    return (await axios.get(`/content/${query}`)).data as ContentSearch;
+    const r = await Promise.all([
+      axios.get<ContentSearch>(`/content/${query}`),
+      axios.get<GameSearch[]>(`/game/search/${query}`)
+    ]);
+    const games: GameWithMediaType[] = r[1].data.map((g) => ({
+      ...g,
+      media_type: "game"
+    }));
+    const d = new Array<CombinedResult>().concat
+      .apply([], [r[0].data.results, games])
+      ?.sort((a, b) => {
+        let name = "";
+        if (a.media_type === "game" || a.media_type === "tv" || a.media_type === "person") {
+          name = a.name ?? "";
+        } else if (a.media_type === "movie") {
+          name = a.title ?? "";
+        }
+
+        let name2 = "";
+        if (b.media_type === "game" || b.media_type === "tv" || b.media_type === "person") {
+          name2 = b.name ?? "";
+        } else if (b.media_type === "movie") {
+          name2 = b.title ?? "";
+        }
+
+        if (name < name2) {
+          return 1;
+        }
+        if (name > name2) {
+          return -1;
+        }
+        return 0;
+      });
+    return d;
   }
 
   async function searchUsers(query: string) {
@@ -56,6 +121,46 @@
       {:then results}
         <h2>Results</h2>
         <PosterList>
+          {#if results?.length > 0}
+            {#each results as w (w.id)}
+              {#if w.media_type === "person"}
+                <PersonPoster id={w.id} name={w.name} path={w.profile_path} />
+              {:else if w.media_type === "game"}
+                <GamePoster media={w} />
+              {:else}
+                <Poster media={w} {...getWatchedDependedProps(w.id, w.media_type, wList)} />
+              {/if}
+            {/each}
+          {:else}
+            No Search Results!
+          {/if}
+        </PosterList>
+      {:catch err}
+        <Error pretty="Failed to load results!" error={err} />
+      {/await}
+
+      <!-- {#await searchGames(data.slug)}
+        <Spinner />
+      {:then results}
+        <h2>Results</h2>
+        <PosterList>
+          {#if results?.length > 0}
+            {#each results as w (w.id)}
+              <GamePoster media={w} />
+            {/each}
+          {:else}
+            No Search Results!
+          {/if}
+        </PosterList>
+      {:catch err}
+        <Error pretty="Failed to load results!" error={err} />
+      {/await} -->
+
+      <!-- {#await search(data.slug)}
+        <Spinner />
+      {:then results}
+        <h2>Results</h2>
+        <PosterList>
           {#if results?.results?.length > 0}
             {#each results.results as w (w.id)}
               {#if w.media_type === "person"}
@@ -70,7 +175,7 @@
         </PosterList>
       {:catch err}
         <Error pretty="Failed to load results!" error={err} />
-      {/await}
+      {/await} -->
     {:else}
       <h2>No Search Query!</h2>
     {/if}

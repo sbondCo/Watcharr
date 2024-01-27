@@ -1,46 +1,35 @@
 <script lang="ts">
-  import { page } from "$app/stores";
-  import Activity from "@/lib/Activity.svelte";
-  import Error from "@/lib/Error.svelte";
-  import HorizontalList from "@/lib/HorizontalList.svelte";
-  import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/poster/PersonPoster.svelte";
   import Rating from "@/lib/Rating.svelte";
-  import SeasonsList from "@/lib/SeasonsList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
-  import ProvidersList from "@/lib/content/ProvidersList.svelte";
-  import SimilarContent from "@/lib/content/SimilarContent.svelte";
+  import HorizontalList from "@/lib/HorizontalList.svelte";
+  import { serverFeatures, watchedList } from "@/store";
+  import { GameWebsiteCategory, type GameDetailsResponse } from "@/types";
+  import axios from "axios";
+  import Activity from "@/lib/Activity.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
-  import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
-  import { getTopCrew } from "@/lib/util/helpers.js";
-  import { serverFeatures, watchedList } from "@/store";
-  import type {
-    TMDBContentCredits,
-    TMDBContentCreditsCrew,
-    TMDBShowDetails,
-    WatchedStatus
-  } from "@/types";
-  import axios from "axios";
+  import ProvidersList from "@/lib/content/ProvidersList.svelte";
+  import SimilarContent from "@/lib/content/SimilarContent.svelte";
   import { onMount } from "svelte";
-  import RequestShow from "@/lib/request/RequestShow.svelte";
+  import { page } from "$app/stores";
+  import Error from "@/lib/Error.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
 
   export let data;
 
   let trailer: string | undefined;
-  let trailerShown = false;
   let requestModalShown = false;
-  let jellyfinUrl: string | undefined;
+  let trailerShown = false;
 
   $: wListItem = $watchedList.find(
-    (w) => w.content.type === "tv" && w.content.tmdbId === data.tvId
+    (w) => w.content.type === "movie" && w.content.tmdbId === data.gameId
   );
 
-  let showId: number | undefined;
-  let show: TMDBShowDetails | undefined;
+  let gameId: number | undefined;
+  let game: GameDetailsResponse | undefined;
   let pageError: Error | undefined;
 
   onMount(() => {
@@ -48,98 +37,103 @@
       console.log(value);
       const params = value.params;
       if (params && params.id) {
-        showId = Number(params.id);
+        gameId = Number(params.id);
       }
     });
+
     return unsubscribe;
   });
 
   $: {
     (async () => {
       try {
-        show = undefined;
+        game = undefined;
         pageError = undefined;
-        if (!showId) {
+        if (!gameId) {
           return;
         }
-        const data = (await axios.get(`/content/tv/${showId}`)).data as TMDBShowDetails;
-        if (data.videos?.results?.length > 0) {
-          const t = data.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
-          if (t?.key) {
-            if (t?.site?.toLowerCase() === "youtube") {
-              trailer = `https://www.youtube.com/embed/${t?.key}`;
-            }
+        const data = (await axios.get(`/game/${gameId}`)).data as GameDetailsResponse;
+        if (data.videos?.length > 0) {
+          const t = data.videos.find((v) => v.name?.toLowerCase() === "trailer");
+          // Doc says the video_id is "usually youtube", so we are gonna go with that assumption too ( 0 _ 0 )
+          if (t?.video_id) {
+            trailer = `https://www.youtube.com/embed/${t?.video_id}`;
           }
         }
-        contentExistsOnJellyfin("tv", data.name, data.id).then((j) => {
-          if (j?.hasContent && j?.url !== "") {
-            jellyfinUrl = j.url;
-          }
-        });
-        show = data;
+        game = data;
       } catch (err: any) {
-        show = undefined;
+        game = undefined;
         pageError = err;
       }
     })();
   }
 
-  async function getTvCredits() {
-    const credits = (await axios.get(`/content/tv/${data.tvId}/credits`))
-      .data as TMDBContentCredits & { topCrew: TMDBContentCreditsCrew[] };
-    if (credits.crew?.length > 0) {
-      credits.topCrew = getTopCrew(credits.crew);
-    }
-    return credits;
-  }
+  // async function getMovieCredits() {
+  //   const credits = (await axios.get(`/game/${data.gameId}/credits`))
+  //     .data as TMDBContentCredits & { topCrew: TMDBContentCreditsCrew[] };
+  //   if (credits.crew?.length > 0) {
+  //     credits.topCrew = getTopCrew(credits.crew);
+  //   }
+  //   return credits;
+  // }
 
-  function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
-    updateWatched(data.tvId, "tv", newStatus, newRating, newThoughts);
-  }
+  // function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
+  //   updateWatched(data.movieId, "movie", newStatus, newRating, newThoughts);
+  // }
 </script>
 
 {#if pageError}
-  <PageError pretty="Failed to load tv show!" error={pageError} />
-{:else if !show}
+  <PageError pretty="Failed to load movie!" error={pageError} />
+{:else if !game}
   <Spinner />
-{:else if Object.keys(show).length > 0}
+{:else if Object.keys(game).length > 0}
   <div>
     <div class="content">
-      {#if show?.backdrop_path}
+      {#if game?.artworks?.length > 0}
         <img
           class="backdrop"
-          src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + show.backdrop_path}
+          src={"https://images.igdb.com/igdb/image/upload/t_720p/" +
+            game.artworks[Math.floor(Math.random() * game.artworks.length)].image_id +
+            ".jpg"}
           alt=""
         />
       {/if}
       <div class="vignette" />
 
       <div class="details-container">
-        <img class="poster" src={"https://image.tmdb.org/t/p/w500" + show.poster_path} alt="" />
+        <img
+          class="poster"
+          src={"https://images.igdb.com/igdb/image/upload/t_cover_big/" +
+            game.cover.image_id +
+            ".jpg"}
+          alt=""
+        />
 
         <div class="details">
           <Title
-            title={show.name}
-            homepage={show.homepage}
-            releaseYear={new Date(Date.parse(show.first_air_date)).getFullYear()}
-            voteAverage={show.vote_average}
-            voteCount={show.vote_count}
+            title={game.name}
+            homepage={game.websites?.find((w) => w.category == GameWebsiteCategory.Official)?.url}
+            releaseYear={new Date(game.first_release_date * 1000).getFullYear()}
+            voteAverage={game.rating}
+            voteCount={game.rating_count}
           />
 
           <span class="quick-info">
-            {#if show?.episode_run_time?.length > 0}
-              <span>{show.episode_run_time.join(",")}m</span>
-            {/if}
-
             <div>
-              {#each show.genres as g, i}
-                <span>{g.name}{i !== show.genres.length - 1 ? ", " : ""}</span>
+              {#each game.genres as g, i}
+                <span>{g.name}{i !== game.genres.length - 1 ? ", " : ""}</span>
+              {/each}
+            </div>
+            <span></span>
+            <div>
+              {#each game.game_modes as g, i}
+                <span>{g.name}{i !== game.game_modes.length - 1 ? ", " : ""}</span>
               {/each}
             </div>
           </span>
 
           <span style="font-weight: bold; font-size: 14px;">Overview</span>
-          <p>{show.overview}</p>
+          <p>{game.summary}</p>
 
           <div class="btns">
             {#if trailer}
@@ -148,35 +142,22 @@
                 <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
               {/if}
             {/if}
-            {#if jellyfinUrl}
-              <a class="btn" href={jellyfinUrl} target="_blank">
-                <Icon i="jellyfin" wh={14} />Play On Jellyfin
-              </a>
-            {/if}
-            {#if $serverFeatures.sonarr}
-              <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
-            {/if}
           </div>
 
-          <ProvidersList providers={show["watch/providers"]} />
+          <!-- <ProvidersList providers={game["watch/providers"]} /> -->
         </div>
       </div>
     </div>
 
-    {#if requestModalShown}
-      <RequestShow content={show} onClose={() => (requestModalShown = false)} />
-    {/if}
-
     <div class="page">
       <div class="review">
-        <!-- <span>What did you think?</span> -->
-        <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
+        <!-- <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
         <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
         {#if wListItem}
           <textarea
             name="Thoughts"
             rows="3"
-            placeholder={`My thoughts on ${show.name}`}
+            placeholder={`My thoughts on ${game.title}`}
             value={wListItem?.thoughts}
             on:blur={(e) => {
               if (wListItem?.thoughts === e.currentTarget.value) {
@@ -186,14 +167,14 @@
               contentChanged(undefined, undefined, e.currentTarget?.value);
             }}
           />
-        {/if}
+        {/if} -->
       </div>
 
-      {#if showId}
-        <FollowedThoughts mediaType="tv" tmdbId={showId} />
-      {/if}
+      <!-- {#if gameId}
+        <FollowedThoughts mediaType="game" tmdbId={gameId} />
+      {/if} -->
 
-      {#await getTvCredits()}
+      <!-- {#await getgameCredits()}
         <Spinner />
       {:then credits}
         {#if credits.topCrew?.length > 0}
@@ -224,29 +205,21 @@
         <Error error={err} pretty="Failed to load cast!" />
       {/await}
 
-      <SimilarContent type="tv" similar={show.similar} />
+      <SimilarContent type="game" similar={game.similar} /> -->
 
       {#if wListItem}
         <Activity activity={wListItem?.activity} />
       {/if}
-      <SeasonsList tvId={data.tvId} seasons={show.seasons} watchedItem={wListItem} />
     </div>
   </div>
 {:else}
-  Show not found
+  <Error error="Game not found" pretty="Game not found" />
 {/if}
 
 <style lang="scss">
   .content {
     position: relative;
     color: white;
-
-    img.provider {
-      width: 45px;
-      height: 45px;
-      box-shadow: 0px 0px 8px -4px #9c8080;
-      border-radius: 50px;
-    }
 
     img.backdrop {
       position: absolute;

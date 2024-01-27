@@ -150,6 +150,7 @@ func writeConfig() error {
 type ServerFeatures struct {
 	Sonarr bool `json:"sonarr"`
 	Radarr bool `json:"radarr"`
+	Games  bool `json:"games"`
 }
 
 // Get enabled server functionality from Config.
@@ -157,6 +158,9 @@ type ServerFeatures struct {
 // which btns should be shown, etc.
 func getEnabledFeatures(userPerms int) ServerFeatures {
 	var f ServerFeatures
+	if Config.TWITCH.ClientID != nil && Config.TWITCH.ClientSecret != nil {
+		f.Games = true
+	}
 	// https://github.com/sbondCo/Watcharr/issues/211
 	// Currently requesting permissions have not been setup, only admins for now.
 	if !hasPermission(userPerms, PERM_ADMIN) {

@@ -139,3 +139,56 @@ func (i *IGDB) Search(q string) (GameSearchResponse, error) {
 	}
 	return resp, nil
 }
+
+func (i *IGDB) GameDetails(id string) (GameDetailsResponse, error) {
+	slog.Debug("IGDB GameDetails called", "id", id)
+	var resp []GameDetailsResponse
+	err := i.req(
+		igdbHost,
+		"/games",
+		map[string]string{},
+		`fields 
+			name,
+			cover.image_id,
+			version_title,
+			summary,
+			first_release_date,
+			artworks.width,
+			artworks.height,
+			artworks.image_id,
+			category,
+			platforms.name,
+			game_modes.name,
+			genres.id,
+			genres.name,
+			involved_companies.developer,
+			involved_companies.publisher,
+			involved_companies.porting,
+			involved_companies.supporting,
+			involved_companies.company.name,
+			involved_companies.company.description,
+			involved_companies.company.slug,
+			involved_companies.company.websites.category,
+			involved_companies.company.websites.trusted,
+			involved_companies.company.websites.url,
+			rating,
+			rating_count,
+			status,
+			url,
+			websites.trusted,
+			websites.category,
+			websites.url,
+			videos.name,
+			videos.video_id;
+		where id = `+id+";",
+		&resp,
+	)
+	if err != nil {
+		slog.Error("IGDB GameDetails request failed!", "error", err)
+		return GameDetailsResponse{}, errors.New("request failed")
+	}
+	if len(resp) > 0 {
+		return resp[0], nil
+	}
+	return GameDetailsResponse{}, errors.New("no game details recieved")
+}
