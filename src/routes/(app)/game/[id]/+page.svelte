@@ -100,6 +100,13 @@
             ".jpg"}
           alt=""
         />
+      {:else if game?.cover?.image_id}
+        <!-- Fallback to using the game cover for backdrop if there is no artwork -->
+        <img
+          class="backdrop"
+          src={"https://images.igdb.com/igdb/image/upload/t_720p/" + game.cover.image_id + ".jpg"}
+          alt=""
+        />
       {/if}
       <div class="vignette" />
 
