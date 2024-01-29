@@ -20,9 +20,51 @@ const { MODE } = import.meta.env;
 export const baseURL = MODE === "development" ? "http://127.0.0.1:3080/api" : "/api";
 
 /**
- *
+ * Updates watched item with new status, rating or thoughts.
+ */
+function _updateWatched(
+  wEntry: Watched,
+  status?: WatchedStatus,
+  rating?: number,
+  thoughts?: string
+) {
+  const nid = notify({ text: `Saving`, type: "loading" });
+  if (!status && !rating && typeof thoughts === "undefined") return;
+  const obj = {} as WatchedUpdateRequest;
+  if (status) obj.status = status;
+  if (rating) obj.rating = rating;
+  if (typeof thoughts !== "undefined") obj.thoughts = thoughts;
+  if (thoughts === "") obj.removeThoughts = true;
+  axios
+    .put<WatchedUpdateResponse>(`/watched/${wEntry.id}`, obj)
+    .then((resp) => {
+      if (status) wEntry.status = status;
+      if (rating) wEntry.rating = rating;
+      if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
+      if (resp?.data?.newActivity) {
+        if (wEntry.activity?.length > 0) {
+          wEntry.activity.push(resp.data.newActivity);
+        } else {
+          wEntry.activity = [resp.data.newActivity];
+        }
+        // We want to update the updatedAt field too (so
+        // change is reflected when filtering modified at)
+        // We can piggy back from this data for now.
+        wEntry.updatedAt = resp.data.newActivity.createdAt;
+      }
+      watchedList.update((w) => w);
+      notify({ id: nid, text: `Saved!`, type: "success" });
+    })
+    .catch((err) => {
+      console.error(err);
+      notify({ id: nid, text: "Failed To Update!", type: "error" });
+    });
+}
+
+/**
+ * Add or update watched show/movie.
  * @param contentId TMDB ID
- * @param contentType
+ * @param contentType show/movie
  * @param status
  * @param rating
  * @returns
@@ -40,37 +82,7 @@ export function updateWatched(
     (w) => w.content?.tmdbId === contentId && w.content?.type === contentType
   );
   if (wEntry?.id) {
-    const nid = notify({ text: `Saving`, type: "loading" });
-    if (!status && !rating && typeof thoughts === "undefined") return;
-    const obj = {} as WatchedUpdateRequest;
-    if (status) obj.status = status;
-    if (rating) obj.rating = rating;
-    if (typeof thoughts !== "undefined") obj.thoughts = thoughts;
-    if (thoughts === "") obj.removeThoughts = true;
-    axios
-      .put<WatchedUpdateResponse>(`/watched/${wEntry.id}`, obj)
-      .then((resp) => {
-        if (status) wEntry.status = status;
-        if (rating) wEntry.rating = rating;
-        if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
-        if (resp?.data?.newActivity) {
-          if (wEntry.activity?.length > 0) {
-            wEntry.activity.push(resp.data.newActivity);
-          } else {
-            wEntry.activity = [resp.data.newActivity];
-          }
-          // We want to update the updatedAt field too (so
-          // change is reflected when filtering modified at)
-          // We can piggy back from this data for now.
-          wEntry.updatedAt = resp.data.newActivity.createdAt;
-        }
-        watchedList.update((w) => w);
-        notify({ id: nid, text: `Saved!`, type: "success" });
-      })
-      .catch((err) => {
-        console.error(err);
-        notify({ id: nid, text: "Failed To Update!", type: "error" });
-      });
+    _updateWatched(wEntry, status, rating, thoughts);
     return;
   }
   // Add new watched item
@@ -129,8 +141,9 @@ export function updatePlayed(
 ) {
   // If item is already in watched store, run update request instead
   const wList = get(watchedList);
-  const wEntry = wList.find((w) => w.game?.id === igdbId);
+  const wEntry = wList.find((w) => w.game?.igdbId === igdbId);
   if (wEntry?.id) {
+    _updateWatched(wEntry, status, rating, thoughts);
     return;
   }
   // Add new played item
