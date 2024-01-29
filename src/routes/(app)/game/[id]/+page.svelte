@@ -6,7 +6,7 @@
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
   import { serverFeatures, watchedList } from "@/store";
-  import { GameWebsiteCategory, type GameDetailsResponse } from "@/types";
+  import { GameWebsiteCategory, type GameDetailsResponse, type WatchedStatus } from "@/types";
   import axios from "axios";
   import Activity from "@/lib/Activity.svelte";
   import Title from "@/lib/content/Title.svelte";
@@ -17,6 +17,7 @@
   import { page } from "$app/stores";
   import Error from "@/lib/Error.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
+  import { updatePlayed } from "@/lib/util/api.js";
 
   export let data;
 
@@ -24,9 +25,7 @@
   let requestModalShown = false;
   let trailerShown = false;
 
-  $: wListItem = $watchedList.find(
-    (w) => w.content.type === "movie" && w.content.tmdbId === data.gameId
-  );
+  $: wListItem = $watchedList.find((w) => w.game?.igdbId === data.gameId);
 
   let gameId: number | undefined;
   let game: GameDetailsResponse | undefined;
@@ -77,9 +76,13 @@
   //   return credits;
   // }
 
-  // function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
-  //   updateWatched(data.movieId, "movie", newStatus, newRating, newThoughts);
-  // }
+  function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
+    if (!gameId) {
+      console.error("contentChanged: no gameId");
+      return;
+    }
+    updatePlayed(gameId, newStatus, newRating, newThoughts);
+  }
 </script>
 
 {#if pageError}
@@ -113,7 +116,7 @@
           <Title
             title={game.name}
             homepage={game.websites?.find((w) => w.category == GameWebsiteCategory.Official)?.url}
-            releaseYear={new Date(game.first_release_date * 1000).getFullYear()}
+            releaseYear={new Date(game.first_release_date).getFullYear()}
             voteAverage={game.rating}
             voteCount={game.rating_count}
           />
@@ -151,13 +154,13 @@
 
     <div class="page">
       <div class="review">
-        <!-- <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
+        <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
         <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
         {#if wListItem}
           <textarea
             name="Thoughts"
             rows="3"
-            placeholder={`My thoughts on ${game.title}`}
+            placeholder={`My thoughts on ${game.name}`}
             value={wListItem?.thoughts}
             on:blur={(e) => {
               if (wListItem?.thoughts === e.currentTarget.value) {
@@ -167,7 +170,7 @@
               contentChanged(undefined, undefined, e.currentTarget?.value);
             }}
           />
-        {/if} -->
+        {/if}
       </div>
 
       <!-- {#if gameId}

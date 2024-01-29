@@ -78,7 +78,8 @@ export interface Watched extends dbModel {
   id: number;
   watched: boolean;
   rating?: number;
-  content: Content;
+  content?: Content;
+  game?: Game;
   activity: Activity[];
   status: WatchedStatus;
   thoughts: string;
@@ -90,6 +91,12 @@ export interface WatchedAddRequest {
   contentType: ContentType;
   rating?: number;
   status: WatchedStatus;
+}
+
+export interface PlayedAddRequest {
+  rating?: number;
+  status?: WatchedStatus;
+  igdbId?: number;
 }
 
 export interface WatchedUpdateRequest {
@@ -855,6 +862,21 @@ export interface MovaryWatchlist extends MovaryExportBase {
   addedAt: string;
 }
 
+export interface Game {
+  id: number;
+  updatedAt: string;
+  igdbId: number;
+  name: string;
+  coverId: string;
+  summary: string;
+  storyline: string;
+  releaseDate?: string;
+  rating: number;
+  ratingCount: number;
+  status: number;
+  category: number;
+}
+
 export interface GameDetailsResponse {
   id: number;
   artworks: {
@@ -903,6 +925,7 @@ export interface GameDetailsResponse {
   rating: number;
   rating_count: number;
   summary: string;
+  storyline: string;
   url: string;
   videos: {
     id: number;

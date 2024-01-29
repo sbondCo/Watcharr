@@ -152,6 +152,7 @@ func (i *IGDB) GameDetails(id string) (GameDetailsResponse, error) {
 			cover.image_id,
 			version_title,
 			summary,
+			storyline,
 			first_release_date,
 			artworks.width,
 			artworks.height,
@@ -191,4 +192,39 @@ func (i *IGDB) GameDetails(id string) (GameDetailsResponse, error) {
 		return resp[0], nil
 	}
 	return GameDetailsResponse{}, errors.New("no game details recieved")
+}
+
+// Basic game details for when we are using them only to update our cache.
+// In these cases, it's a waste to ask for everything, when we don't need it.
+func (i *IGDB) GameDetailsBasic(id string) (GameDetailsBasicResponse, error) {
+	slog.Debug("IGDB GameDetails called", "id", id)
+	var resp []GameDetailsBasicResponse
+	err := i.req(
+		igdbHost,
+		"/games",
+		map[string]string{},
+		`fields 
+			name,
+			cover.image_id,
+			summary,
+			storyline,
+			first_release_date,
+			category,
+			platforms.name,
+			game_modes.name,
+			genres.name,
+			rating,
+			rating_count,
+			status;
+		where id = `+id+";",
+		&resp,
+	)
+	if err != nil {
+		slog.Error("IGDB GameDetails request failed!", "error", err)
+		return GameDetailsBasicResponse{}, errors.New("request failed")
+	}
+	if len(resp) > 0 {
+		return resp[0], nil
+	}
+	return GameDetailsBasicResponse{}, errors.New("no game details recieved")
 }

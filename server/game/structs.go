@@ -52,7 +52,7 @@ type GameDetailsResponse struct {
 		ID      int    `json:"id"`
 		ImageID string `json:"image_id"`
 	} `json:"cover"`
-	FirstReleaseDate int `json:"first_release_date"`
+	FirstReleaseDate UnixTime `json:"first_release_date"`
 	GameModes        []struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
@@ -88,6 +88,8 @@ type GameDetailsResponse struct {
 	Rating      float64 `json:"rating"`
 	RatingCount int     `json:"rating_count"`
 	Summary     string  `json:"summary"`
+	Storyline   string  `json:"storyline"`
+	Status      int     `json:"status"`
 	URL         string  `json:"url"`
 	Videos      []struct {
 		ID      int    `json:"id"`
@@ -100,4 +102,28 @@ type GameDetailsResponse struct {
 		Trusted  bool   `json:"trusted"`
 		URL      string `json:"url"`
 	} `json:"websites"`
+}
+
+type GameDetailsBasicResponse struct {
+	ID       int `json:"id"`
+	Category int `json:"category"`
+	Cover    struct {
+		ImageID string `json:"image_id"`
+	} `json:"cover"`
+	FirstReleaseDate UnixTime `json:"first_release_date"`
+	GameModes        []struct {
+		Name string `json:"name"`
+	} `json:"game_modes"`
+	Genres []struct {
+		Name string `json:"name"`
+	} `json:"genres"`
+	Name      string `json:"name"`
+	Platforms []struct {
+		Name string `json:"name"`
+	} `json:"platforms"`
+	Rating      float64 `json:"rating"`
+	RatingCount int     `json:"rating_count"`
+	Summary     string  `json:"summary"`
+	Storyline   string  `json:"storyline"`
+	Status      int     `json:"status"`
 }

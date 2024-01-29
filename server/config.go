@@ -231,13 +231,13 @@ func getServerStats(db *gorm.DB) ServerStats {
 	if resp.Error != nil {
 		slog.Error("getServerStats - MostWatchedShow query failed", "error", resp.Error)
 	} else {
-		stats.MostWatchedShow = w.Content
+		stats.MostWatchedShow = *w.Content
 	}
 	resp = db.Model(&Watched{}).Select("content_id, COUNT(*) AS mag").Joins("JOIN contents ON contents.type = ? AND contents.id = watcheds.content_id", "movie").Group("content_id").Order("mag DESC").Preload("Content").First(&w)
 	if resp.Error != nil {
 		slog.Error("getServerStats - MostWatchedMovie query failed", "error", resp.Error)
 	} else {
-		stats.MostWatchedMovie = w.Content
+		stats.MostWatchedMovie = *w.Content
 	}
 	return stats
 }

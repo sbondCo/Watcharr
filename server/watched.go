@@ -30,9 +30,11 @@ type Watched struct {
 	Status         WatchedStatus   `json:"status"`
 	Rating         int8            `json:"rating"`
 	Thoughts       string          `json:"thoughts"`
-	UserID         uint            `json:"-" gorm:"uniqueIndex:usernctnidx"`
-	ContentID      int             `json:"-" gorm:"uniqueIndex:usernctnidx"`
-	Content        Content         `json:"content"`
+	UserID         uint            `json:"-" gorm:"uniqueIndex:usernctnidx;uniqueIndex:userngamidx"`
+	ContentID      *int            `json:"-" gorm:"uniqueIndex:usernctnidx"`
+	Content        *Content        `json:"content,omitempty"`
+	GameID         *int            `json:"-" gorm:"uniqueIndex:userngamidx"`
+	Game           *Game           `json:"game,omitempty"`
 	Activity       []Activity      `json:"activity"`
 	WatchedSeasons []WatchedSeason `json:"watchedSeasons,omitempty"` // For shows
 }
@@ -65,7 +67,7 @@ type WatchedRemoveResponse struct {
 
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
-	res := db.Model(&Watched{}).Preload("Content").Preload("Activity").Preload("WatchedSeasons").Where("user_id = ?", userId).Find(&watched)
+	res := db.Model(&Watched{}).Preload("Content").Preload("Game").Preload("Activity").Preload("WatchedSeasons").Where("user_id = ?", userId).Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}
@@ -154,7 +156,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 			ar.Status = WATCHING
 		}
 	}
-	watched := Watched{Status: ar.Status, Rating: ar.Rating, UserID: userId, ContentID: content.ID}
+	watched := Watched{Status: ar.Status, Rating: ar.Rating, UserID: userId, ContentID: &content.ID}
 	if ar.Thoughts != "" {
 		watched.Thoughts = ar.Thoughts
 	}
@@ -199,7 +201,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 		activity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: watched.ID, Type: at, Data: string(activityJson)})
 	}
 	watched.Activity = append(watched.Activity, activity)
-	watched.Content = content
+	watched.Content = &content
 	return watched, nil
 }
 

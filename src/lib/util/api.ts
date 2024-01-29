@@ -9,7 +9,8 @@ import {
   type WatchedUpdateRequest,
   type WatchedUpdateResponse,
   type UserSettings,
-  type Follow
+  type Follow,
+  type PlayedAddRequest
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
@@ -36,7 +37,7 @@ export function updateWatched(
   // If item is already in watched store, run update request instead
   const wList = get(watchedList);
   const wEntry = wList.find(
-    (w) => w.content.tmdbId === contentId && w.content.type === contentType
+    (w) => w.content?.tmdbId === contentId && w.content?.type === contentType
   );
   if (wEntry?.id) {
     const nid = notify({ text: `Saving`, type: "loading" });
@@ -117,6 +118,38 @@ export function removeWatched(id: number) {
     .catch((err) => {
       console.error(err);
       notify({ id: nid, text: "Failed To Remove!", type: "error" });
+    });
+}
+
+export function updatePlayed(
+  igdbId: number,
+  status?: WatchedStatus,
+  rating?: number,
+  thoughts?: string
+) {
+  // If item is already in watched store, run update request instead
+  const wList = get(watchedList);
+  const wEntry = wList.find((w) => w.game?.id === igdbId);
+  if (wEntry?.id) {
+    return;
+  }
+  // Add new played item
+  const nid = notify({ text: `Adding`, type: "loading" });
+  axios
+    .post("/game/played", {
+      igdbId,
+      rating,
+      status
+    } as PlayedAddRequest)
+    .then((resp) => {
+      console.log("Added watched(played) game:", resp.data);
+      wList.push(resp.data as Watched);
+      watchedList.update(() => wList);
+      notify({ id: nid, text: `Added!`, type: "success" });
+    })
+    .catch((err) => {
+      console.error(err);
+      notify({ id: nid, text: "Failed To Add!", type: "error" });
     });
 }
 

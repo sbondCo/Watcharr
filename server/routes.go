@@ -278,6 +278,23 @@ func (b *BaseRouter) addGameRoutes() {
 		c.JSON(http.StatusOK, content)
 	}))
 
+	// Add game to played(watched) list
+	gamer.POST("/played", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ar PlayedAddRequest
+		err := c.ShouldBindJSON(&ar)
+		if err == nil {
+			response, err := addPlayed(b.db, igdb, userId, ar, ADDED_WATCHED)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
 	// IMPORTANT: Routes below only for admins!
 	gamer.Use(AuthRequired(b.db), AdminRequired())
 	{
