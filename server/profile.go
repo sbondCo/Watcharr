@@ -92,20 +92,24 @@ func getProfile(db *gorm.DB, userId uint) (Profile, error) {
 			isFinished = true
 		}
 		if isFinished {
-			if w.Content.Type == SHOW {
+			if w.Content == nil {
+				continue
+			}
+			c := *w.Content
+			if c.Type == SHOW {
 				showsWatched++
 				// This aint a science, just a very inaccurate guesstimate.
-				if w.Content.NumberOfEpisodes != 0 {
+				if c.NumberOfEpisodes != 0 {
 					var showRuntime uint32 = 30
-					if w.Content.Runtime != 0 {
-						showRuntime = w.Content.Runtime
+					if c.Runtime != 0 {
+						showRuntime = c.Runtime
 					}
-					showsWatchedRuntime += showRuntime * w.Content.NumberOfEpisodes
-					slog.Debug("calcualted", "show", w.Content.Title, "runti", showRuntime*w.Content.NumberOfEpisodes)
+					showsWatchedRuntime += showRuntime * c.NumberOfEpisodes
+					slog.Debug("calcualted", "show", c.Title, "runti", showRuntime*c.NumberOfEpisodes)
 				}
-			} else if w.Content.Type == MOVIE {
+			} else if c.Type == MOVIE {
 				moviesWatched++
-				moviesWatchedRuntime += w.Content.Runtime
+				moviesWatchedRuntime += c.Runtime
 			}
 		}
 	}
