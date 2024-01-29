@@ -16,11 +16,6 @@ const (
 	tokenGrantType = "client_credentials"
 )
 
-// Config (for admins to set) required to be set for use of igdb.
-// type IGDBConfig struct {
-
-// }
-
 type IGDB struct {
 	ClientID           *string   `json:"clientId,omitempty"`
 	ClientSecret       *string   `json:"clientSecret,omitempty"`

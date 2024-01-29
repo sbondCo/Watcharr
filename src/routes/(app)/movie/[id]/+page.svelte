@@ -35,7 +35,7 @@
   let jellyfinUrl: string | undefined;
 
   $: wListItem = $watchedList.find(
-    (w) => w.content.type === "movie" && w.content.tmdbId === data.movieId
+    (w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId
   );
 
   let movieId: number | undefined;

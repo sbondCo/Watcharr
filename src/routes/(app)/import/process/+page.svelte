@@ -238,9 +238,9 @@
         const w = resp.data.watchedEntry;
         if (w) {
           const release =
-            w.content.type === "movie" ? w.content.release_date : w.content.first_air_date;
+            w.content?.type === "movie" ? w.content?.release_date : w.content?.first_air_date;
           if (release) item.year = String(new Date(Date.parse(release)).getFullYear());
-          item.type = w.content.type;
+          item.type = w.content?.type;
           wList.push(w);
           watchedList.update(() => wList);
         }

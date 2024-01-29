@@ -57,9 +57,9 @@ export function isTouch() {
 // Not passing wList from #each loop caused it not to have reactivity.
 // Passing it through must allow it to recognize it as a dependency?
 export function getWatchedDependedProps(wid: number, wtype: MediaType, list: Watched[]) {
-  const wel = list.find((wl) => wl.content.tmdbId === wid && wl.content.type === wtype);
+  const wel = list.find((wl) => wl.content?.tmdbId === wid && wl.content?.type === wtype);
   if (!wel) return {};
-  console.log(wid, wtype, wel?.content.title, wel?.status, wel?.rating);
+  console.log(wid, wtype, wel?.content?.title, wel?.status, wel?.rating);
   return {
     id: wel.id,
     status: wel.status,
