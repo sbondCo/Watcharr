@@ -1,11 +1,5 @@
 <script lang="ts">
-  import type {
-    ExtraDetails,
-    GameSearch,
-    MediaType,
-    WLDetailedViewOption,
-    WatchedStatus
-  } from "@/types";
+  import type { ExtraDetails, WatchedStatus } from "@/types";
   import Icon from "../Icon.svelte";
   import {
     addClassToParent,
@@ -16,8 +10,7 @@
     watchedStatuses
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
-  import tooltip from "../actions/tooltip";
-  import { baseURL, removeWatched, updateWatched } from "../util/api";
+  import { removeWatched } from "../util/api";
   import { notify } from "../util/notify";
   import { onMount } from "svelte";
   import PosterStatus from "./PosterStatus.svelte";
@@ -26,7 +19,13 @@
   import { page } from "$app/stores";
 
   export let id: number | undefined = undefined; // Watched list id
-  export let media: GameSearch;
+  export let media: {
+    id: number;
+    coverId: string;
+    firstReleaseDate?: string;
+    name: string;
+    summary?: string;
+  };
   export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
   export let small = false;
@@ -50,9 +49,9 @@
   // const poster = id
   //   ? `${baseURL}/img${media.poster_path}`
   //   : `https://image.tmdb.org/t/p/w500${media.poster_path}`;
-  const poster = `https://images.igdb.com/igdb/image/upload/t_cover_big/${media.cover.image_id}.jpg`;
+  const poster = `https://images.igdb.com/igdb/image/upload/t_cover_big/${media.coverId}.jpg`;
   const link = media.id ? `/game/${media.id}` : undefined;
-  const dateStr = media.first_release_date;
+  const dateStr = media.firstReleaseDate;
   const year = dateStr ? new Date(dateStr).getFullYear() : undefined;
 
   function handleStarClick(r: number) {

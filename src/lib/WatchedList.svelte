@@ -5,6 +5,7 @@
   import PosterList from "@/lib/poster/PosterList.svelte";
   import { activeFilters, activeSort, userSettings } from "@/store";
   import type { Watched, WatchedSeason } from "@/types";
+  import GamePoster from "./poster/GamePoster.svelte";
 
   export let list: Watched[];
   export let isPublicList: boolean = false;
@@ -58,8 +59,13 @@
       if (sort[0] === "DATEADDED" && sort[1] === "UP") {
         return Date.parse(a.createdAt) - Date.parse(b.createdAt);
       } else if (sort[0] === "ALPHA") {
-        if (sort[1] === "UP") return a.content.title.localeCompare(b.content.title);
-        else if (sort[1] === "DOWN") return b.content.title.localeCompare(a.content.title);
+        const atitle = a.content ? a.content.title : a.game ? a.game.name : "";
+        const btitle = b.content ? b.content.title : b.game ? b.game.name : "";
+        if (sort[1] === "UP") {
+          return atitle.localeCompare(btitle);
+        } else if (sort[1] === "DOWN") {
+          return btitle.localeCompare(atitle);
+        }
       } else if (sort[0] === "LASTCHANGED") {
         if (sort[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
         else if (sort[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
@@ -139,26 +145,38 @@
 <PosterList>
   {#if watched?.length > 0}
     {#each watched as w (w.id)}
-      <Poster
-        id={w.id}
-        media={{
-          id: w.content.tmdbId,
-          poster_path: w.content.poster_path,
-          title: w.content.title,
-          overview: w.content.overview,
-          media_type: w.content.type,
-          release_date: w.content.release_date,
-          first_air_date: w.content.first_air_date
-        }}
-        rating={w.rating}
-        status={w.status}
-        disableInteraction={isPublicList}
-        extraDetails={{
-          dateAdded: w.createdAt,
-          dateModified: w.updatedAt,
-          lastWatched: getLatestWatchedSeason(w.watchedSeasons)
-        }}
-      />
+      {#if w.game}
+        <GamePoster
+          media={{
+            id: w.game.igdbId,
+            coverId: w.game.coverId,
+            name: w.game.name,
+            summary: w.game.summary,
+            firstReleaseDate: w.game.releaseDate
+          }}
+        />
+      {:else if w.content}
+        <Poster
+          id={w.id}
+          media={{
+            id: w.content.tmdbId,
+            poster_path: w.content.poster_path,
+            title: w.content.title,
+            overview: w.content.overview,
+            media_type: w.content.type,
+            release_date: w.content.release_date,
+            first_air_date: w.content.first_air_date
+          }}
+          rating={w.rating}
+          status={w.status}
+          disableInteraction={isPublicList}
+          extraDetails={{
+            dateAdded: w.createdAt,
+            dateModified: w.updatedAt,
+            lastWatched: getLatestWatchedSeason(w.watchedSeasons)
+          }}
+        />
+      {/if}
     {/each}
   {:else}
     <div class="empty-list">

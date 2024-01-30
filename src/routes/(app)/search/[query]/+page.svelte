@@ -126,7 +126,15 @@
               {#if w.media_type === "person"}
                 <PersonPoster id={w.id} name={w.name} path={w.profile_path} />
               {:else if w.media_type === "game"}
-                <GamePoster media={w} />
+                <GamePoster
+                  media={{
+                    id: w.id,
+                    coverId: w.cover.image_id,
+                    name: w.name,
+                    summary: w.summary,
+                    firstReleaseDate: w.first_release_date
+                  }}
+                />
               {:else}
                 <Poster media={w} {...getWatchedDependedProps(w.id, w.media_type, wList)} />
               {/if}
