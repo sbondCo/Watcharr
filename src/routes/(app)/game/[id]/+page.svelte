@@ -129,16 +129,24 @@
           />
 
           <span class="quick-info">
-            <div>
-              {#each game.genres as g, i}
-                <span>{g.name}{i !== game.genres.length - 1 ? ", " : ""}</span>
-              {/each}
-            </div>
+            {#if game.genres?.length > 0}
+              <div>
+                {#each game.genres as g, i}
+                  <span>{g.name}{i !== game.genres.length - 1 ? ", " : ""}</span>
+                {/each}
+              </div>
+            {:else}
+              <span>Unknown Genres</span>
+            {/if}
             <span></span>
             <div>
-              {#each game.game_modes as g, i}
-                <span>{g.name}{i !== game.game_modes.length - 1 ? ", " : ""}</span>
-              {/each}
+              {#if game.game_modes?.length > 0}
+                {#each game.game_modes as g, i}
+                  <span>{g.name}{i !== game.game_modes.length - 1 ? ", " : ""}</span>
+                {/each}
+              {:else}
+                <span>Unknown Game Modes</span>
+              {/if}
             </div>
           </span>
 
