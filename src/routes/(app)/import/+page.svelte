@@ -7,14 +7,13 @@
 
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import Icon from "@/lib/Icon.svelte";
+  import DropFileButton from "@/lib/DropFileButton.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
   import { importedList } from "@/store";
   import { onMount } from "svelte";
+  import papa from "papaparse";
 
-  let fileInput: HTMLInputElement;
-  let dragEnterTarget: EventTarget | null;
   let isDragOver = false;
   let isLoading = false;
 
@@ -72,18 +71,121 @@
     }
   }
 
-  function importFile() {
-    fileInput.click();
+  async function readFile(fr: FileReader, file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const res = () => {
+        fr.removeEventListener("load", res);
+        fr.removeEventListener("error", rej);
+        if (fr.result) {
+          resolve(fr.result.toString());
+        } else {
+          reject("no result");
+        }
+      };
+      const rej = () => {
+        fr.removeEventListener("load", res);
+        fr.removeEventListener("error", rej);
+        reject();
+      };
+      fr.addEventListener("load", res);
+      fr.addEventListener("error", rej);
+      fr.readAsText(file);
+    });
+  }
+
+  interface MovaryExportBase {
+    title: string;
+    year: string;
+    tmdbId: string;
+    imdbId: string;
+  }
+
+  interface MovaryHistory extends MovaryExportBase {
+    watchedAt: string;
+    comment: string;
+  }
+
+  interface MovaryRatings extends MovaryExportBase {
+    userRating: string;
+  }
+
+  interface MovaryWatchlist extends MovaryExportBase {
+    addedAt: string;
+  }
+
+  async function processFilesMovary(files?: FileList | null) {
+    try {
+      console.log("processFilesMovary", files);
+      if (!files || files?.length <= 0) {
+        console.error("processFilesMovary", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
+        });
+        isDragOver = false;
+        return;
+      }
+      if (files.length !== 3) {
+        notify({
+          type: "error",
+          text: "You must select or drop 3 files: history.csv, ratings.csv and watchlist.csv.",
+          time: 6000
+        });
+        isDragOver = false;
+        return;
+      }
+      isLoading = true;
+      // Read file data into strings
+      let history: string | undefined;
+      let ratings: string | undefined;
+      let watchlist: string | undefined;
+      const r = new FileReader();
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        if (f.name === "history.csv") {
+          history = await readFile(r, f);
+        } else if (f.name === "ratings.csv") {
+          ratings = await readFile(r, f);
+        } else if (f.name === "watchlist.csv") {
+          watchlist = await readFile(r, f);
+        }
+      }
+      if (!history || !ratings || !watchlist) {
+        notify({
+          type: "error",
+          text: "Failed to read history, ratings or watchlist. Ensure you have attached 3 files: history.csv, ratings.csv and watchlist.csv.",
+          time: 6000
+        });
+        isDragOver = false;
+        isLoading = false;
+        return;
+      }
+      console.log("loaded all files");
+      // Convert csv strings into json
+      const historyJson = papa.parse<MovaryHistory>(history.trim(), { header: true });
+      const ratingsJson = papa.parse<MovaryRatings>(ratings.trim(), { header: true });
+      const watchlistJson = papa.parse<MovaryWatchlist>(watchlist.trim(), { header: true });
+      for (let i = 0; i < watchlistJson.data.length; i++) {
+        const wl = watchlistJson.data[i];
+        const historyEntry = historyJson.data.find(
+          (h) => h.title == wl.title && h.tmdbId == wl.tmdbId
+        );
+        const ratingsEntry = ratingsJson.data.find(
+          (r) => r.title == wl.title && r.tmdbId == wl.tmdbId
+        );
+        console.log(wl, historyEntry, ratingsEntry);
+      }
+    } catch (err) {
+      isLoading = false;
+      notify({ type: "error", text: "Failed to read files!" });
+      console.error("import: Failed to read files!", err);
+    }
   }
 
   onMount(() => {
     if (!localStorage.getItem("token")) {
       goto("/login");
-    }
-    if (fileInput) {
-      fileInput.addEventListener("change", (ev) => {
-        processFiles(fileInput.files);
-      });
     }
   });
 </script>
@@ -95,56 +197,26 @@
         <h2>Import Your Watchlist</h2>
         <h5 class="norm">beta</h5>
       </span>
-      <h4 class="norm">Currently txt and csv (TMDb export) files are supported.</h4>
+      <!-- <h4 class="norm">Currently txt and csv (TMDb export) files are supported.</h4> -->
     </div>
     <div class="big-btns">
       {#if isLoading}
         <Spinner />
       {:else}
-        <button
-          on:click={importFile}
-          on:dragover={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-          }}
-          on:dragenter={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            dragEnterTarget = ev.target;
-            console.log("enter");
-            isDragOver = true;
-          }}
-          on:dragleave={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            if (dragEnterTarget === ev.target) {
-              console.log("leave");
-              isDragOver = false;
-            }
-          }}
-          on:drop={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            processFiles(ev.dataTransfer?.files);
-          }}
-          class={isDragOver ? "dragging-over" : ""}
-        >
-          <Icon i={isDragOver ? "add" : "document"} wh="100%" />
-          <div>
-            <h4 class="norm">
-              {#if isDragOver}
-                Import
-              {:else}
-                Browse
-              {/if}
-            </h4>
-            <!-- <h5 class="norm">Or Drag And Drop</h5> -->
-          </div>
-        </button>
+        <DropFileButton
+          text=".txt list or .csv TMDb Export"
+          filesSelected={(f) => processFiles(f)}
+        />
+
+        <DropFileButton
+          icon="movary"
+          text="Movary Exports"
+          filesSelected={(f) => processFilesMovary(f)}
+          allowSelectMultipleFiles
+        />
       {/if}
     </div>
   </div>
-  <input type="file" bind:this={fileInput} />
 </div>
 
 <style lang="scss">
@@ -162,6 +234,14 @@
       overflow: hidden;
     }
 
+    .big-btns {
+      display: flex;
+      justify-content: center;
+      flex-flow: column;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
     .header {
       display: flex;
       gap: 10px;
@@ -169,62 +249,6 @@
       h5 {
         margin-top: 3px;
       }
-    }
-
-    .big-btns {
-      display: flex;
-      justify-content: center;
-      flex-flow: row;
-      gap: 20px;
-      margin-top: 20px;
-
-      button {
-        display: flex;
-        flex-flow: column;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        height: 180px;
-        padding: 20px;
-        background-color: $accent-color;
-        border: unset;
-        border-radius: 10px;
-        user-select: none;
-        transition: 180ms ease-in-out;
-
-        :global {
-          #reel path {
-            transition: 180ms ease-in-out;
-
-            &:first-of-type {
-              fill: transparent;
-            }
-
-            &:last-of-type {
-              fill: $text-color;
-            }
-          }
-        }
-
-        &:hover,
-        &.dragging-over {
-          color: $bg-color;
-          background-color: $accent-color-hover;
-
-          :global(#reel path:last-of-type) {
-            fill: $bg-color;
-          }
-        }
-      }
-    }
-
-    input[type="file"] {
-      width: 0px;
-      overflow: hidden;
-      border: unset;
-      background-color: transparent;
-      position: absolute;
-      top: -500px;
     }
   }
 </style>

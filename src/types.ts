@@ -29,7 +29,8 @@ export type Icon =
   | "person-minus"
   | "pencil"
   | "eye"
-  | "star";
+  | "star"
+  | "movary";
 
 export type Theme = "light" | "dark";
 
