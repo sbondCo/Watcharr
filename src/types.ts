@@ -29,7 +29,8 @@ export type Icon =
   | "person-minus"
   | "pencil"
   | "eye"
-  | "star";
+  | "star"
+  | "movary";
 
 export type Theme = "light" | "dark";
 
@@ -171,11 +172,6 @@ export interface TokenClaims {
   userId: number;
   username: string;
   type: number;
-}
-
-export interface FileWithData {
-  file: File;
-  data: string;
 }
 
 export interface TMDBContentDetails {
@@ -706,6 +702,9 @@ export interface ImportedList {
   state?: string;
   rating?: number;
   ratingCustomDate?: Date;
+  status?: WatchedStatus;
+  thoughts?: string;
+  datesWatched?: Date[];
 }
 
 export interface Filters {
@@ -815,4 +814,24 @@ export interface ServerFeatures {
 export interface Follow {
   createdAt: Date;
   followedUser: PublicUser;
+}
+
+interface MovaryExportBase {
+  title: string;
+  year: string;
+  tmdbId: string;
+  imdbId: string;
+}
+
+export interface MovaryHistory extends MovaryExportBase {
+  watchedAt: string;
+  comment: string;
+}
+
+export interface MovaryRatings extends MovaryExportBase {
+  userRating: string;
+}
+
+export interface MovaryWatchlist extends MovaryExportBase {
+  addedAt: string;
 }

@@ -39,6 +39,7 @@ type Watched struct {
 type WatchedAddRequest struct {
 	Status      WatchedStatus `json:"status"`
 	Rating      int8          `json:"rating" binding:"max=10"`
+	Thoughts    string        `json:"thoughts"`
 	ContentID   int           `json:"contentId" binding:"required"`
 	ContentType ContentType   `json:"contentType" binding:"required,oneof=movie tv"`
 }
@@ -150,6 +151,9 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 		}
 	}
 	watched := Watched{Status: ar.Status, Rating: ar.Rating, UserID: userId, ContentID: content.ID}
+	if ar.Thoughts != "" {
+		watched.Thoughts = ar.Thoughts
+	}
 	res := db.Create(&watched)
 	if res.Error != nil {
 		if res.Error == gorm.ErrDuplicatedKey {
@@ -164,6 +168,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 				res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Updates(map[string]interface{}{"status": ar.Status, "rating": ar.Rating, "deleted_at": nil})
 				watched.Status = ar.Status
 				watched.Rating = ar.Rating
+				watched.Thoughts = ar.Thoughts
 				if res.Error != nil {
 					slog.Error("addWatched: Failed to restore soft deleted watch list item", "error", res.Error)
 					return Watched{}, errors.New("content already on watched list. errored removing soft delete timestamp")

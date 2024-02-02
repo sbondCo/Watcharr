@@ -11,18 +11,19 @@ import (
 type ActivityType string
 
 var (
-	ADDED_WATCHED         ActivityType = "ADDED_WATCHED"
-	REMOVED_WATCHED       ActivityType = "REMOVED_WATCHED"
-	RATING_CHANGED        ActivityType = "RATING_CHANGED"
-	STATUS_CHANGED        ActivityType = "STATUS_CHANGED"
-	THOUGHTS_CHANGED      ActivityType = "THOUGHTS_CHANGED"
-	THOUGHTS_REMOVED      ActivityType = "THOUGHTS_REMOVED"
-	IMPORTED_WATCHED      ActivityType = "IMPORTED_WATCHED"
-	IMPORTED_RATING       ActivityType = "IMPORTED_RATING" // Imported rating, but with no rating acts as original import of content to old platform (where they are importing from) activity
-	SEASON_ADDED          ActivityType = "SEASON_ADDED"
-	SEASON_REMOVED        ActivityType = "SEASON_REMOVED"
-	SEASON_RATING_CHANGED ActivityType = "SEASON_RATING_CHANGED"
-	SEASON_STATUS_CHANGED ActivityType = "SEASON_STATUS_CHANGED"
+	ADDED_WATCHED          ActivityType = "ADDED_WATCHED"
+	REMOVED_WATCHED        ActivityType = "REMOVED_WATCHED"
+	RATING_CHANGED         ActivityType = "RATING_CHANGED"
+	STATUS_CHANGED         ActivityType = "STATUS_CHANGED"
+	THOUGHTS_CHANGED       ActivityType = "THOUGHTS_CHANGED"
+	THOUGHTS_REMOVED       ActivityType = "THOUGHTS_REMOVED"
+	IMPORTED_WATCHED       ActivityType = "IMPORTED_WATCHED"
+	IMPORTED_RATING        ActivityType = "IMPORTED_RATING"        // Imported rating, but with no rating acts as original import of content to old platform (where they are importing from) activity
+	IMPORTED_ADDED_WATCHED ActivityType = "IMPORTED_ADDED_WATCHED" // Imported watched date, so we can save the original watch dates of content from users old platform (where they are importing from).
+	SEASON_ADDED           ActivityType = "SEASON_ADDED"
+	SEASON_REMOVED         ActivityType = "SEASON_REMOVED"
+	SEASON_RATING_CHANGED  ActivityType = "SEASON_RATING_CHANGED"
+	SEASON_STATUS_CHANGED  ActivityType = "SEASON_STATUS_CHANGED"
 )
 
 type Activity struct {

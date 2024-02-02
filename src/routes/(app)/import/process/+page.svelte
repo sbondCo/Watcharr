@@ -40,6 +40,7 @@
   let rList: ImportedList[] = [];
   let isImporting = false;
   let cancelled = false;
+  let importText = "";
 
   onDestroy(() => {
     cancelled = true;
@@ -57,7 +58,8 @@
       return;
     }
     console.log("getList", list);
-    if (list?.file.type === "text/plain") {
+    if (list?.type === "text-list") {
+      importText = "Text List";
       // Regex to match a year in between brackets,
       // which we assume is the release year of content.
       const yearRegex = new RegExp(/\([0-9]{4}\)/);
@@ -74,7 +76,8 @@
           rList.push(l);
         }
       }
-    } else if (list?.file.type === "text/csv") {
+    } else if (list?.type === "tmdb") {
+      importText = "TMDB";
       const s = papa.parse(list.data.trim(), { header: true });
       console.debug("parsed csv", s);
       for (let i = 0; i < s.data.length; i++) {
@@ -112,6 +115,19 @@
             text: "Failed to process an item!"
           });
         }
+      }
+    } else if (list?.type === "movary") {
+      importText = "Movary";
+      try {
+        const s = JSON.parse(list.data);
+        // Builds imported list in previous step for ease.
+        rList = s;
+      } catch (err) {
+        console.error("Movary import processing failed!", err);
+        notify({
+          type: "error",
+          text: "Processing failed!. Please report this issue if it persists."
+        });
       }
     }
     // TODO: remove duplicate names in list
@@ -245,7 +261,7 @@
   <div class="content">
     <div class="inner">
       {#if rList}
-        <h2>Importing {list?.file.name ? list.file.name : ""}</h2>
+        <h2>Importing {importText ? `From ${importText}` : ""}</h2>
         <h5 class="norm">
           {#if !isImporting}
             Review your imported list and fix any problems.
