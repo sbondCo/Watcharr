@@ -27,11 +27,14 @@ var (
 )
 
 type ImportRequest struct {
-	Name             string      `json:"name"`
-	TmdbID           int         `json:"tmdbId"`
-	Type             ContentType `json:"type"`
-	Rating           int8        `json:"rating"`
-	RatingCustomDate *time.Time  `json:"ratingCustomDate"`
+	Name             string        `json:"name"`
+	TmdbID           int           `json:"tmdbId"`
+	Type             ContentType   `json:"type"`
+	Rating           int8          `json:"rating"`
+	RatingCustomDate *time.Time    `json:"ratingCustomDate"`
+	Status           WatchedStatus `json:"status"`
+	Thoughts         string        `json:"thoughts"`
+	DatesWatched     []time.Time   `json:"datesWatched"`
 }
 
 type ImportResponse struct {
@@ -115,11 +118,16 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 }
 
 func successfulImport(db *gorm.DB, userId uint, contentId int, contentType ContentType, ar ImportRequest) (ImportResponse, error) {
+	status := FINISHED
+	if ar.Status != "" {
+		status = ar.Status
+	}
 	w, err := addWatched(db, userId, WatchedAddRequest{
-		Status:      FINISHED,
+		Status:      status,
 		ContentID:   contentId,
 		ContentType: contentType,
 		Rating:      ar.Rating,
+		Thoughts:    ar.Thoughts,
 	}, IMPORTED_WATCHED)
 	if err != nil {
 		if err.Error() == "content already on watched list" {
@@ -139,6 +147,17 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 			addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_RATING, Data: strconv.Itoa(int(ar.Rating)), CustomDate: ar.RatingCustomDate})
 		}
 		w.Activity = append(w.Activity, addedActivity)
+	}
+	// Add all dates watched as activity, if any
+	if len(ar.DatesWatched) > 0 {
+		for _, v := range ar.DatesWatched {
+			addedActivity, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_ADDED_WATCHED, CustomDate: &v})
+			if err == nil {
+				w.Activity = append(w.Activity, addedActivity)
+			} else {
+				slog.Error("successfulImport: Failed to add dateswatched activity.", "date", v)
+			}
+		}
 	}
 	return ImportResponse{Type: IMPORT_SUCCESS, WatchedEntry: w}, nil
 }

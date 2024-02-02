@@ -48,6 +48,8 @@
           }
         }
         return "imported rating";
+      case "IMPORTED_ADDED_WATCHED":
+        return "Imported Watch Date";
       case "SEASON_ADDED":
         if (a.data) {
           const data = JSON.parse(a.data);
