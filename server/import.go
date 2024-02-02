@@ -155,7 +155,7 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
 			} else {
-				slog.Error("successfulImport: Failed to add dateswatched activity.", "date", v)
+				slog.Error("successfulImport: Failed to add dateswatched activity.", "date", v, "error", err)
 			}
 		}
 	}
