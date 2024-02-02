@@ -1,6 +1,5 @@
 import { writable } from "svelte/store";
 import type {
-  FileWithData,
   Filters,
   Follow,
   ImportedList,
@@ -24,7 +23,9 @@ export const notifications = writable<Notification[]>([]);
 export const activeSort = writable<string[]>(defaultSort);
 export const activeFilters = writable<Filters>({ type: [], status: [] });
 export const appTheme = writable<Theme>();
-export const importedList = writable<FileWithData | undefined>();
+export const importedList = writable<
+  { data: string; type: "text-list" | "tmdb" | "movary" } | undefined
+>();
 export const parsedImportedList = writable<ImportedList[] | undefined>();
 export const searchQuery = writable<string>("");
 export const serverFeatures = writable<ServerFeatures>();

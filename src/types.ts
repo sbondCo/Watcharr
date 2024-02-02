@@ -174,11 +174,6 @@ export interface TokenClaims {
   type: number;
 }
 
-export interface FileWithData {
-  file: File;
-  data: string;
-}
-
 export interface TMDBContentDetails {
   id: number;
   backdrop_path: string;
@@ -707,6 +702,9 @@ export interface ImportedList {
   state?: string;
   rating?: number;
   ratingCustomDate?: Date;
+  status?: WatchedStatus;
+  thoughts?: string;
+  datesWatched?: Date[];
 }
 
 export interface Filters {
@@ -816,4 +814,24 @@ export interface ServerFeatures {
 export interface Follow {
   createdAt: Date;
   followedUser: PublicUser;
+}
+
+interface MovaryExportBase {
+  title: string;
+  year: string;
+  tmdbId: string;
+  imdbId: string;
+}
+
+export interface MovaryHistory extends MovaryExportBase {
+  watchedAt: string;
+  comment: string;
+}
+
+export interface MovaryRatings extends MovaryExportBase {
+  userRating: string;
+}
+
+export interface MovaryWatchlist extends MovaryExportBase {
+  addedAt: string;
 }

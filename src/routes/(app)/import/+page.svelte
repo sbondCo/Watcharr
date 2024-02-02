@@ -13,6 +13,8 @@
   import { importedList } from "@/store";
   import { onMount } from "svelte";
   import papa from "papaparse";
+  import type { ImportedList, MovaryHistory, MovaryRatings, MovaryWatchlist } from "@/types";
+  import { json } from "@sveltejs/kit";
 
   let isDragOver = false;
   let isLoading = false;
@@ -50,13 +52,15 @@
         return;
       }
       const r = new FileReader();
+      let type: "text-list" | "tmdb" = "text-list";
+      if (file.type === "text/csv") type = "tmdb";
       r.addEventListener(
         "load",
         () => {
           if (r.result) {
             importedList.set({
-              file,
-              data: r.result.toString()
+              data: r.result.toString(),
+              type
             });
             goto("/import/process");
           }
@@ -93,26 +97,18 @@
     });
   }
 
-  interface MovaryExportBase {
-    title: string;
-    year: string;
-    tmdbId: string;
-    imdbId: string;
-  }
-
-  interface MovaryHistory extends MovaryExportBase {
-    watchedAt: string;
-    comment: string;
-  }
-
-  interface MovaryRatings extends MovaryExportBase {
-    userRating: string;
-  }
-
-  interface MovaryWatchlist extends MovaryExportBase {
-    addedAt: string;
-  }
-
+  /**
+   * Process movary import files.
+   *
+   * Movary exports 3 different files:
+   *
+   *  - watchlist.csv = Planned movies.
+   *  - history.csv   = Watched movies, movie can be watched multiple times.
+   *  - ratings.csv   = Ratings for movies. One rating per movie.
+   *
+   * Export types explained better here:
+   * https://github.com/sbondCo/Watcharr/issues/332#issuecomment-1920662244
+   */
   async function processFilesMovary(files?: FileList | null) {
     try {
       console.log("processFilesMovary", files);
@@ -166,16 +162,63 @@
       const historyJson = papa.parse<MovaryHistory>(history.trim(), { header: true });
       const ratingsJson = papa.parse<MovaryRatings>(ratings.trim(), { header: true });
       const watchlistJson = papa.parse<MovaryWatchlist>(watchlist.trim(), { header: true });
+      // Build toImport array
+      const toImport: ImportedList[] = [];
+      // Add all watchlist movies (planned).
       for (let i = 0; i < watchlistJson.data.length; i++) {
         const wl = watchlistJson.data[i];
-        const historyEntry = historyJson.data.find(
-          (h) => h.title == wl.title && h.tmdbId == wl.tmdbId
-        );
-        const ratingsEntry = ratingsJson.data.find(
-          (r) => r.title == wl.title && r.tmdbId == wl.tmdbId
-        );
-        console.log(wl, historyEntry, ratingsEntry);
+        toImport.push({
+          name: wl.title,
+          tmdbId: Number(wl.tmdbId),
+          status: "PLANNED",
+          type: "movie" // movary only supports movies
+        });
       }
+      // Add all history movies (watched). There can be multiple entries for each movie.
+      for (let i = 0; i < historyJson.data.length; i++) {
+        const h = historyJson.data[i];
+        // Skip if no tmdb id.
+        if (!h.tmdbId) {
+          continue;
+        }
+        // Skip if already added. The first time it is added we get all info needed from other entries.
+        if (toImport.filter((ti) => ti.tmdbId == Number(h.tmdbId)).length > 0) {
+          continue;
+        }
+        const ratingsEntry = ratingsJson.data.find((r) => r.tmdbId == h.tmdbId);
+        const t: ImportedList = {
+          name: h.title,
+          tmdbId: Number(h.tmdbId),
+          status: "FINISHED",
+          type: "movie", // movary only supports movies
+          datesWatched: [],
+          thoughts: ""
+        };
+        // Movie can be watched more than once, get all entries to store all watch dates.
+        const allEntries = historyJson.data.filter((he) => he.tmdbId === h.tmdbId);
+        for (let i = 0; i < allEntries.length; i++) {
+          const e = allEntries[i];
+          if (e.watchedAt) {
+            t.datesWatched?.push(new Date(e.watchedAt));
+          }
+          if (e.comment) {
+            t.thoughts += e.comment + "\n";
+          }
+        }
+        if (h.year) {
+          t.year = h.year;
+        }
+        if (ratingsEntry && ratingsEntry?.userRating) {
+          t.rating = Number(ratingsEntry.userRating);
+        }
+        toImport.push(t);
+      }
+      console.log("toImport:", toImport);
+      importedList.set({
+        data: JSON.stringify(toImport),
+        type: "movary"
+      });
+      goto("/import/process");
     } catch (err) {
       isLoading = false;
       notify({ type: "error", text: "Failed to read files!" });
