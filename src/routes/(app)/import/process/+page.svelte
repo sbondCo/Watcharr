@@ -77,7 +77,7 @@
         }
       }
     } else if (list?.type === "tmdb") {
-      importText = "TMDb";
+      importText = "TMDB";
       const s = papa.parse(list.data.trim(), { header: true });
       console.debug("parsed csv", s);
       for (let i = 0; i < s.data.length; i++) {
