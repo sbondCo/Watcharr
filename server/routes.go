@@ -240,8 +240,7 @@ func (b *BaseRouter) addContentRoutes() {
 
 func (b *BaseRouter) addGameRoutes() {
 	gamer := b.rg.Group("/game").Use(AuthRequired(nil))
-	// exp := time.Hour * 24
-	exp := time.Second * 60
+	exp := time.Hour * 24
 
 	igdb := &Config.TWITCH
 	err := igdb.Init()
