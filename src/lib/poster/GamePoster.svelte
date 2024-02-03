@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ExtraDetails, WatchedStatus } from "@/types";
+  import type { ExtraDetails, ExtraDetailsGame, WatchedStatus } from "@/types";
   import Icon from "../Icon.svelte";
   import {
     addClassToParent,
@@ -10,7 +10,7 @@
     watchedStatuses
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
-  import { removeWatched } from "../util/api";
+  import { removeWatched, updatePlayed } from "../util/api";
   import { notify } from "../util/notify";
   import { onMount } from "svelte";
   import PosterStatus from "./PosterStatus.svelte";
@@ -31,7 +31,7 @@
   export let small = false;
   export let disableInteraction = false;
   export let hideButtons = false;
-  export let extraDetails: ExtraDetails | undefined = undefined;
+  export let extraDetails: ExtraDetailsGame | undefined = undefined;
   // When provided, default click handlers will instead run this callback.
   export let onClick: (() => void) | undefined = undefined;
 
@@ -56,7 +56,7 @@
 
   function handleStarClick(r: number) {
     if (r == rating) return;
-    // updateWatched(media.id, media.media_type, undefined, r);
+    updatePlayed(media.id, undefined, r);
   }
 
   function handleStatusClick(type: WatchedStatus | "DELETE") {
@@ -69,7 +69,7 @@
       return;
     }
     if (type == status) return;
-    // updateWatched(media.id, media.media_type, type);
+    updatePlayed(media.id, type);
   }
 
   function handleInnerKeyUp(e: KeyboardEvent) {
@@ -144,7 +144,7 @@
           So ye this is probably gonna be one line until the end of time.
         -->
         <!-- prettier-ignore -->
-        <div>{#if dve.includes("dateAdded")}<span title="Date added to watch list"><i><Icon i="calendar" /></i><span>{formatDate(Date.parse(extraDetails.dateAdded))}</span></span>{/if}{#if dve.includes("dateModified")}<span title="Date last modified"><i><Icon i="pencil" wh={15} /></i><span>{formatDate(Date.parse(extraDetails.dateModified))}</span></span>{/if}{#if extraDetails.lastWatched && dve.includes("lastWatched")}<span title="Latest season watched"><i><Icon i="play" wh={15} /></i><span>{extraDetails.lastWatched}</span></span>{/if}{#if dve.includes("statusRating")}<span class="status-rating" title="Status and Rating"><i><Icon i="star" /></i><span>{rating}</span>{#if status}<i><Icon i={watchedStatuses[status]} wh={15} /></i>{/if}</span>{/if}</div>
+        <div>{#if dve.includes("dateAdded")}<span title="Date added to watch list"><i><Icon i="calendar" /></i><span>{formatDate(Date.parse(extraDetails.dateAdded))}</span></span>{/if}{#if dve.includes("dateModified")}<span title="Date last modified"><i><Icon i="pencil" wh={15} /></i><span>{formatDate(Date.parse(extraDetails.dateModified))}</span></span>{/if}{#if dve.includes("statusRating")}<span class="status-rating" title="Status and Rating"><i><Icon i="star" /></i><span>{rating}</span>{#if status}<i><Icon i={watchedStatuses[status]} wh={15} /></i>{/if}</span>{/if}</div>
       </div>
     {/if}
     <div

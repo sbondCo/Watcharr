@@ -70,9 +70,6 @@
   // async function getMovieCredits() {
   //   const credits = (await axios.get(`/game/${data.gameId}/credits`))
   //     .data as TMDBContentCredits & { topCrew: TMDBContentCreditsCrew[] };
-  //   if (credits.crew?.length > 0) {
-  //     credits.topCrew = getTopCrew(credits.crew);
-  //   }
   //   return credits;
   // }
 

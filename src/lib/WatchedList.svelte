@@ -147,12 +147,20 @@
     {#each watched as w (w.id)}
       {#if w.game}
         <GamePoster
+          id={w.id}
+          rating={w.rating}
+          status={w.status}
           media={{
             id: w.game.igdbId,
             coverId: w.game.coverId,
             name: w.game.name,
             summary: w.game.summary,
             firstReleaseDate: w.game.releaseDate
+          }}
+          disableInteraction={isPublicList}
+          extraDetails={{
+            dateAdded: w.createdAt,
+            dateModified: w.updatedAt
           }}
         />
       {:else if w.content}
