@@ -23,6 +23,7 @@
   let privateThoughtsDisabled = false;
   let exportDisabled = false;
   let hideSpoilersDisabled = false;
+  let includePreviouslyWatchedDisabled = false;
   let pwChangeModalOpen = false;
 
   async function getProfile() {
@@ -232,6 +233,24 @@
             hideSpoilersDisabled = true;
             updateUserSetting("hideSpoilers", on, () => {
               hideSpoilersDisabled = false;
+            });
+          }}
+        />
+      </Setting>
+
+      <Setting
+        title="Include Previously Watched"
+        desc="Do you want to include previously watched content in the 'finished' filter, even if their status has now been changed?"
+        row
+      >
+        <Checkbox
+          name="includePreviouslyWatched"
+          disabled={includePreviouslyWatchedDisabled}
+          value={settings?.includePreviouslyWatched}
+          toggled={(on) => {
+            includePreviouslyWatchedDisabled = true;
+            updateUserSetting("includePreviouslyWatched", on, () => {
+              includePreviouslyWatchedDisabled = false;
             });
           }}
         />

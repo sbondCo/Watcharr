@@ -3,7 +3,7 @@
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
-  import { activeFilters, activeSort } from "@/store";
+  import { activeFilters, activeSort, userSettings } from "@/store";
   import type { Watched, WatchedSeason } from "@/types";
 
   export let list: Watched[];
@@ -11,8 +11,50 @@
 
   $: sort = $activeSort;
   $: filters = $activeFilters;
-  $: watched = list
-    .sort((a, b) => {
+  $: watched = list;
+  $: settings = $userSettings;
+
+  /**
+   * Checks if content has been watched previously
+   * by analyzing the watched entrys activity (with
+   * the latest AI improvements added in of course.)
+   */
+  function contentWatchedPreviously(w: Watched) {
+    let wp = false;
+    const relatedActivity = w.activity.filter(
+      (a) =>
+        a.type === "ADDED_WATCHED" ||
+        a.type === "IMPORTED_ADDED_WATCHED" ||
+        a.type === "IMPORTED_WATCHED" ||
+        a.type === "STATUS_CHANGED"
+    );
+    for (let i = 0; i < relatedActivity.length; i++) {
+      const ra = relatedActivity[i];
+      if (ra.type === "IMPORTED_ADDED_WATCHED") {
+        wp = true;
+        break;
+      } else if (ra.type === "ADDED_WATCHED" || ra.type === "IMPORTED_WATCHED") {
+        const data = JSON.parse(ra.data);
+        if (data?.status == "FINISHED") {
+          wp = true;
+          break;
+        }
+      } else if (ra.type === "STATUS_CHANGED") {
+        if (ra.data === "FINISHED") {
+          wp = true;
+          break;
+        }
+      }
+    }
+    return wp;
+  }
+
+  // Monsterous code for filters. Soz.
+  $: (watched, filters, sort), filt();
+
+  function filt() {
+    // Set watched to list and sort it.
+    watched = list.sort((a, b) => {
       if (sort[0] === "DATEADDED" && sort[1] === "UP") {
         return Date.parse(a.createdAt) - Date.parse(b.createdAt);
       } else if (sort[0] === "ALPHA") {
@@ -27,21 +69,38 @@
       }
       // default DATEADDED DOWN
       return Date.parse(b.createdAt) - Date.parse(a.createdAt);
-    })
-    .filter((w) => {
-      if (filters.status.length <= 0 && filters.type.length <= 0) return w;
-      if (filters.status.length > 0 && filters.type.length > 0) {
-        return (
-          filters.status.includes(w.status?.toLowerCase()) && filters.type.includes(w.content.type)
+    });
+    // Now apply filters to watch list.
+    if (filters.status.length > 0 && filters.type.length > 0) {
+      // If status and type filters applied, combine both.
+      if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
+        watched = watched.filter(
+          (w) =>
+            (filters.status.includes(w.status?.toLowerCase()) &&
+              filters.type.includes(w.content.type)) ||
+            contentWatchedPreviously(w)
+        );
+      } else {
+        watched = watched.filter(
+          (w) =>
+            filters.status.includes(w.status?.toLowerCase()) &&
+            filters.type.includes(w.content.type)
         );
       }
-      if (filters.type.length > 0) {
-        return filters.type.includes(w.content.type);
+    } else if (filters.type.length > 0) {
+      // Only filter type
+      watched = watched.filter((w) => filters.type.includes(w.content.type));
+    } else if (filters.status.length > 0) {
+      // Only filter status
+      if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
+        watched = watched.filter(
+          (w) => filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)
+        );
+      } else {
+        watched = watched.filter((w) => filters.status.includes(w.status?.toLowerCase()));
       }
-      if (filters.status.length > 0) {
-        return filters.status.includes(w.status?.toLowerCase());
-      }
-    });
+    }
+  }
 
   // Get biggest season watching or biggest season watched.
   // This could probably be simpler but -_-

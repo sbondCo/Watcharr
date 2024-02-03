@@ -122,12 +122,22 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 	if ar.Status != "" {
 		status = ar.Status
 	}
+	// Get the latest date from DatesWatched if we have any.
+	var wDate time.Time
+	if len(ar.DatesWatched) > 0 {
+		for _, dw := range ar.DatesWatched {
+			if dw.After(wDate) {
+				wDate = dw
+			}
+		}
+	}
 	w, err := addWatched(db, userId, WatchedAddRequest{
 		Status:      status,
 		ContentID:   contentId,
 		ContentType: contentType,
 		Rating:      ar.Rating,
 		Thoughts:    ar.Thoughts,
+		WatchedDate: wDate,
 	}, IMPORTED_WATCHED)
 	if err != nil {
 		if err.Error() == "content already on watched list" {

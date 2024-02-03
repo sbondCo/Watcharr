@@ -120,6 +120,7 @@ export interface UserSettings {
   private: boolean;
   privateThoughts: boolean;
   hideSpoilers: boolean;
+  includePreviouslyWatched: boolean;
 }
 
 export interface ChangePasswordForm {

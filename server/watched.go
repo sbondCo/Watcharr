@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -42,6 +43,9 @@ type WatchedAddRequest struct {
 	Thoughts    string        `json:"thoughts"`
 	ContentID   int           `json:"contentId" binding:"required"`
 	ContentType ContentType   `json:"contentType" binding:"required,oneof=movie tv"`
+	// Pass a watched date and we will set the CreatedAt (and initial UpdatedAt)
+	// properties for this watched entry to this specific date.
+	WatchedDate time.Time `json:"watchedDate,omitempty"`
 }
 
 type WatchedUpdateRequest struct {
@@ -153,6 +157,11 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 	watched := Watched{Status: ar.Status, Rating: ar.Rating, UserID: userId, ContentID: content.ID}
 	if ar.Thoughts != "" {
 		watched.Thoughts = ar.Thoughts
+	}
+	// If custom WatchedDate passed, set CreatedAt and UpdatedAt fields to it.
+	if !ar.WatchedDate.IsZero() {
+		watched.CreatedAt = ar.WatchedDate
+		watched.UpdatedAt = ar.WatchedDate
 	}
 	res := db.Create(&watched)
 	if res.Error != nil {

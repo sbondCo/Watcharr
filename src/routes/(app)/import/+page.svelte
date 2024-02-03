@@ -164,16 +164,6 @@
       const watchlistJson = papa.parse<MovaryWatchlist>(watchlist.trim(), { header: true });
       // Build toImport array
       const toImport: ImportedList[] = [];
-      // Add all watchlist movies (planned).
-      for (let i = 0; i < watchlistJson.data.length; i++) {
-        const wl = watchlistJson.data[i];
-        toImport.push({
-          name: wl.title,
-          tmdbId: Number(wl.tmdbId),
-          status: "PLANNED",
-          type: "movie" // movary only supports movies
-        });
-      }
       // Add all history movies (watched). There can be multiple entries for each movie.
       for (let i = 0; i < historyJson.data.length; i++) {
         const h = historyJson.data[i];
@@ -212,6 +202,24 @@
           t.rating = Number(ratingsEntry.userRating);
         }
         toImport.push(t);
+      }
+      // Add all watchlist movies (planned).
+      for (let i = 0; i < watchlistJson.data.length; i++) {
+        const wl = watchlistJson.data[i];
+        const existing = toImport.find((ti) => ti.tmdbId == Number(wl.tmdbId));
+        // If already exists in toImport, simply update status to PLANNED.
+        // The movie must have been completed in past, but added back to
+        // the users movary watch list as they are planning to watch it again.
+        if (existing) {
+          existing.status = "PLANNED";
+          continue;
+        }
+        toImport.push({
+          name: wl.title,
+          tmdbId: Number(wl.tmdbId),
+          status: "PLANNED",
+          type: "movie" // movary only supports movies
+        });
       }
       console.log("toImport:", toImport);
       importedList.set({

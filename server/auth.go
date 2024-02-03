@@ -80,6 +80,10 @@ type UserSettings struct {
 	PrivateThoughts *bool `gorm:"default:false" json:"privateThoughts"`
 	// If ui 'spoilers' should be shown
 	HideSpoilers *bool `gorm:"default:false" json:"hideSpoilers"`
+	// If user wants previously watched items to show in 'Finished' filter,
+	// even if the watched item state has since been changed. Used only in
+	// frontend.
+	IncludePreviouslyWatched *bool `gorm:"default:false" json:"includePreviouslyWatched"`
 }
 
 // We use a separate struct for registration to avoid confusion
