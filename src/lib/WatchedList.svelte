@@ -14,13 +14,19 @@
   $: watched = list;
   $: settings = $userSettings;
 
+  /**
+   * Checks if content has been watched previously
+   * by analyzing the watched entrys activity (with
+   * the latest AI improvements added in of course.)
+   */
   function contentWatchedPreviously(w: Watched) {
     let wp = false;
     const relatedActivity = w.activity.filter(
       (a) =>
         a.type === "ADDED_WATCHED" ||
         a.type === "IMPORTED_ADDED_WATCHED" ||
-        a.type === "IMPORTED_WATCHED"
+        a.type === "IMPORTED_WATCHED" ||
+        a.type === "STATUS_CHANGED"
     );
     for (let i = 0; i < relatedActivity.length; i++) {
       const ra = relatedActivity[i];
@@ -33,13 +39,18 @@
           wp = true;
           break;
         }
+      } else if (ra.type === "STATUS_CHANGED") {
+        if (ra.data === "FINISHED") {
+          wp = true;
+          break;
+        }
       }
     }
     return wp;
   }
 
   // Monsterous code for filters. Soz.
-  $: (watched, filters), filt();
+  $: (watched, filters, sort), filt();
 
   function filt() {
     // Set watched to list and sort it.
