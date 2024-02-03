@@ -175,7 +175,12 @@ func (i *IGDB) GameDetails(id string) (GameDetailsResponse, error) {
 			websites.category,
 			websites.url,
 			videos.name,
-			videos.video_id;
+			videos.video_id,
+			similar_games.id,
+			similar_games.name,
+			similar_games.summary,
+			similar_games.cover.image_id,
+			similar_games.first_release_date;
 		where id = `+id+";",
 		&resp,
 	)

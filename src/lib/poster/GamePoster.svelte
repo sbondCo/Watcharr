@@ -22,7 +22,7 @@
   export let media: {
     id: number;
     coverId: string;
-    firstReleaseDate?: string;
+    firstReleaseDate?: string | number;
     name: string;
     summary?: string;
   };

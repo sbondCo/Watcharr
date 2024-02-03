@@ -11,13 +11,13 @@
   import Activity from "@/lib/Activity.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
-  import ProvidersList from "@/lib/content/ProvidersList.svelte";
-  import SimilarContent from "@/lib/content/SimilarContent.svelte";
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import Error from "@/lib/Error.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
   import { updatePlayed } from "@/lib/util/api.js";
+  import GamePoster from "@/lib/poster/GamePoster.svelte";
+  import { getPlayedDependedProps } from "@/lib/util/helpers";
 
   export let data;
 
@@ -25,6 +25,7 @@
   let requestModalShown = false;
   let trailerShown = false;
 
+  $: wList = $watchedList;
   $: wListItem = $watchedList.find((w) => w.game?.igdbId === data.gameId);
 
   let gameId: number | undefined;
@@ -221,6 +222,24 @@
       {/await}
 
       <SimilarContent type="game" similar={game.similar} /> -->
+
+      {#if game.similar_games?.length > 0}
+        <HorizontalList title="Similar">
+          {#each game.similar_games as g}
+            <GamePoster
+              media={{
+                id: g.id,
+                coverId: g.cover.image_id,
+                name: g.name,
+                summary: g.summary,
+                firstReleaseDate: g.first_release_date
+              }}
+              {...getPlayedDependedProps(game.id, wList)}
+              small={true}
+            />
+          {/each}
+        </HorizontalList>
+      {/if}
 
       {#if wListItem}
         <Activity activity={wListItem?.activity} />

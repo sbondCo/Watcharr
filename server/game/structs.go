@@ -102,6 +102,16 @@ type GameDetailsResponse struct {
 		Trusted  bool   `json:"trusted"`
 		URL      string `json:"url"`
 	} `json:"websites"`
+	SimilarGame []struct {
+		ID               int      `json:"id"`
+		Name             string   `json:"name"`
+		Summary          string   `json:"summary"`
+		FirstReleaseDate UnixTime `json:"first_release_date"`
+		Cover            struct {
+			ID      int    `json:"id"`
+			ImageID string `json:"image_id"`
+		} `json:"cover"`
+	} `json:"similar_games"`
 }
 
 type GameDetailsBasicResponse struct {

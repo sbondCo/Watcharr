@@ -939,6 +939,16 @@ export interface GameDetailsResponse {
     trusted: boolean;
     url: string;
   }[];
+  similar_games: {
+    id: number;
+    name: string;
+    summary: string;
+    first_release_date: number;
+    cover: {
+      id: number;
+      image_id: string;
+    };
+  }[];
 }
 
 export enum GameWebsiteCategory {
