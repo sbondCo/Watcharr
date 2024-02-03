@@ -25,6 +25,7 @@
   let hideSpoilersDisabled = false;
   let includePreviouslyWatchedDisabled = false;
   let pwChangeModalOpen = false;
+  let getProfilePromise = getProfile();
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -150,7 +151,7 @@
     </div>
 
     <Stats>
-      {#await getProfile()}
+      {#await getProfilePromise}
         <Spinner />
       {:then profile}
         <Stat name="Joined" value={formatDate(new Date(profile.joined))} />
@@ -251,6 +252,8 @@
             includePreviouslyWatchedDisabled = true;
             updateUserSetting("includePreviouslyWatched", on, () => {
               includePreviouslyWatchedDisabled = false;
+              // Get profile stats again
+              getProfilePromise = getProfile();
             });
           }}
         />

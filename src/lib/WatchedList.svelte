@@ -76,9 +76,8 @@
       if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
         watched = watched.filter(
           (w) =>
-            (filters.status.includes(w.status?.toLowerCase()) &&
-              filters.type.includes(w.content.type)) ||
-            contentWatchedPreviously(w)
+            (filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)) &&
+            filters.type.includes(w.content.type)
         );
       } else {
         watched = watched.filter(
