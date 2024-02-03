@@ -161,7 +161,8 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 	// Add all dates watched as activity, if any
 	if len(ar.DatesWatched) > 0 {
 		for _, v := range ar.DatesWatched {
-			addedActivity, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_ADDED_WATCHED, CustomDate: &v})
+			customDate := v
+			addedActivity, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_ADDED_WATCHED, CustomDate: &customDate})
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
 			} else {
