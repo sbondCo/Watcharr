@@ -5,7 +5,7 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import axios from "axios";
-  import { getWatchedDependedProps } from "@/lib/util/helpers";
+  import { getWatchedDependedProps, getPlayedDependedProps } from "@/lib/util/helpers";
   import PersonPoster from "@/lib/poster/PersonPoster.svelte";
   import type {
     ContentSearch,
@@ -134,6 +134,7 @@
                     summary: w.summary,
                     firstReleaseDate: w.first_release_date
                   }}
+                  {...getPlayedDependedProps(w.id, wList)}
                 />
               {:else}
                 <Poster media={w} {...getWatchedDependedProps(w.id, w.media_type, wList)} />

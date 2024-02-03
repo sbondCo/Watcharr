@@ -67,6 +67,16 @@ export function getWatchedDependedProps(wid: number, wtype: MediaType, list: Wat
   };
 }
 
+export function getPlayedDependedProps(wid: number, list: Watched[]) {
+  const wel = list.find((wl) => wl.game?.igdbId === wid);
+  if (!wel) return {};
+  return {
+    id: wel.id,
+    status: wel.status,
+    rating: wel.rating
+  };
+}
+
 /**
  * Add a class to the parent node of a clicked element.
  * @param e Event with currentTarget.
