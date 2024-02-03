@@ -55,8 +55,16 @@ func userUpdate(db *gorm.DB, userId uint, ur UserSettings) (UserSettings, error)
 	if ur.PrivateThoughts != nil {
 		user.PrivateThoughts = ur.PrivateThoughts
 	}
+	if ur.IncludePreviouslyWatched != nil {
+		user.IncludePreviouslyWatched = ur.IncludePreviouslyWatched
+	}
 	db.Save(&user)
-	return UserSettings{Private: user.Private, PrivateThoughts: user.PrivateThoughts, HideSpoilers: user.HideSpoilers}, nil
+	return UserSettings{
+		Private:                  user.Private,
+		PrivateThoughts:          user.PrivateThoughts,
+		HideSpoilers:             user.HideSpoilers,
+		IncludePreviouslyWatched: user.IncludePreviouslyWatched,
+	}, nil
 }
 
 func userGetSettings(db *gorm.DB, userId uint) (UserSettings, error) {
@@ -67,7 +75,12 @@ func userGetSettings(db *gorm.DB, userId uint) (UserSettings, error) {
 		slog.Error("user get failed", "user_id", userId, "error", res.Error)
 		return UserSettings{}, errors.New("failed to retrieve user")
 	}
-	return UserSettings{Private: user.Private, PrivateThoughts: user.PrivateThoughts, HideSpoilers: user.HideSpoilers}, nil
+	return UserSettings{
+		Private:                  user.Private,
+		PrivateThoughts:          user.PrivateThoughts,
+		HideSpoilers:             user.HideSpoilers,
+		IncludePreviouslyWatched: user.IncludePreviouslyWatched,
+	}, nil
 }
 
 func userSearch(db *gorm.DB, currentUsersId uint, q string) ([]PublicUser, error) {
