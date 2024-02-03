@@ -81,8 +81,8 @@ type UserSettings struct {
 	// If ui 'spoilers' should be shown
 	HideSpoilers *bool `gorm:"default:false" json:"hideSpoilers"`
 	// If user wants previously watched items to show in 'Finished' filter,
-	// even if the watched item state has since been changed. Used only in
-	// frontend.
+	// even if the watched item state has since been changed.
+	// Also if user wants to show in watched stats.
 	IncludePreviouslyWatched *bool `gorm:"default:false" json:"includePreviouslyWatched"`
 }
 
