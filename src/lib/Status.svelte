@@ -1,50 +1,51 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import type { WatchedStatus } from "../types";
+  import type { Watched, WatchedStatus } from "../types";
   import tooltip from "./actions/tooltip";
+  import { toUnderstandableWatchedStatus } from "./util/helpers";
 
-  export let status: WatchedStatus | undefined;
+  export let w: Watched | undefined;
   export let onChange: (newStatus: WatchedStatus) => void;
 
   function handleStatusClick(s: WatchedStatus) {
-    if (s === status) return;
+    if (s === w?.status) return;
     onChange(s);
   }
 </script>
 
 <div class="status">
   <button
-    class={status && status !== "PLANNED" ? "not-active" : ""}
+    class={w?.status && w?.status !== "PLANNED" ? "not-active" : ""}
     on:click={() => handleStatusClick("PLANNED")}
-    use:tooltip={{ text: "Planned", pos: "top" }}
+    use:tooltip={{ text: toUnderstandableWatchedStatus(w, "PLANNED"), pos: "top" }}
   >
     <Icon i="calendar" />
   </button>
   <button
-    class={status && status !== "WATCHING" ? "not-active" : ""}
+    class={w?.status && w?.status !== "WATCHING" ? "not-active" : ""}
     on:click={() => handleStatusClick("WATCHING")}
-    use:tooltip={{ text: "Watching", pos: "top" }}
+    use:tooltip={{ text: toUnderstandableWatchedStatus(w, "WATCHING"), pos: "top" }}
   >
     <Icon i="clock" />
   </button>
   <button
-    class={status && status !== "FINISHED" ? "not-active" : ""}
+    class={w?.status && w?.status !== "FINISHED" ? "not-active" : ""}
     on:click={() => handleStatusClick("FINISHED")}
-    use:tooltip={{ text: "Finished", pos: "top" }}
+    use:tooltip={{ text: toUnderstandableWatchedStatus(w, "FINISHED"), pos: "top" }}
   >
     <Icon i="check" />
   </button>
   <button
-    class={status && status !== "HOLD" ? "not-active" : ""}
+    class={w?.status && w?.status !== "HOLD" ? "not-active" : ""}
     on:click={() => handleStatusClick("HOLD")}
-    use:tooltip={{ text: "On Hold", pos: "top" }}
+    use:tooltip={{ text: toUnderstandableWatchedStatus(w, "HOLD"), pos: "top" }}
   >
     <Icon i="pause" />
   </button>
   <button
-    class={status && status !== "DROPPED" ? "not-active" : ""}
+    class={w?.status && w?.status !== "DROPPED" ? "not-active" : ""}
     on:click={() => handleStatusClick("DROPPED")}
-    use:tooltip={{ text: "Dropped", pos: "top" }}
+    use:tooltip={{ text: toUnderstandableWatchedStatus(w, "DROPPED"), pos: "top" }}
   >
     <Icon i="thumb-down" />
   </button>

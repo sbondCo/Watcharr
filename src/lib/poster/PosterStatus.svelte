@@ -2,7 +2,7 @@
   import type { WatchedStatus } from "@/types";
   import Icon from "../Icon.svelte";
   import tooltip from "../actions/tooltip";
-  import { watchedStatuses } from "../util/helpers";
+  import { toUnderstandableStatus, watchedStatuses } from "../util/helpers";
 
   export let status: WatchedStatus | undefined = undefined;
   export let handleStatusClick: (status: WatchedStatus | "DELETE") => void;
@@ -11,6 +11,7 @@
   export let small = false;
   export let btnTooltip: string = "";
   export let disableInteraction: boolean = false;
+  export let isForGame = false;
 
   let statusesShown = false;
 </script>
@@ -39,7 +40,9 @@
         <button
           class="plain{status && status !== statusName ? ' not-active' : ''}"
           on:click={() => handleStatusClick(statusName)}
-          use:tooltip={{ text: statusName }}
+          use:tooltip={{
+            text: toUnderstandableStatus(statusName, isForGame)
+          }}
         >
           <Icon i={icon} />
         </button>

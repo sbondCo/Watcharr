@@ -178,7 +178,7 @@
       {#if !hideButtons}
         <div class="buttons">
           <PosterRating {rating} {handleStarClick} {disableInteraction} />
-          <PosterStatus {status} {handleStatusClick} {disableInteraction} />
+          <PosterStatus {status} {handleStatusClick} {disableInteraction} isForGame={true} />
         </div>
       {/if}
     </div>

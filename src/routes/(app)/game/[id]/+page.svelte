@@ -168,7 +168,7 @@
     <div class="page">
       <div class="review">
         <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
-        <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
+        <Status w={wListItem} onChange={(n) => contentChanged(n)} />
         {#if wListItem}
           <textarea
             name="Thoughts"
