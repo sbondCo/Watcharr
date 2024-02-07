@@ -91,15 +91,6 @@ func saveGame(db *gorm.DB, c *Game, onlyUpdate bool) error {
 			}
 		}
 	}
-	// TODO use img tablE for dis, den we can haf blurhashes! yippee
-	// If row created, download the image
-	// if res.RowsAffected > 0 {
-	// 	slog.Debug("saveGame: Downloading poster.")
-	// 	err := download("https://image.tmdb.org/t/p/w500"+c.PosterPath, path.Join("./data/img", c.PosterPath))
-	// 	if err != nil {
-	// 		slog.Error("saveGame: Failed to download content image!", "error", err.Error())
-	// 	}
-	// }
 	return nil
 }
 

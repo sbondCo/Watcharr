@@ -190,39 +190,6 @@
         <FollowedThoughts mediaType="game" tmdbId={gameId} />
       {/if} -->
 
-      <!-- {#await getgameCredits()}
-        <Spinner />
-      {:then credits}
-        {#if credits.topCrew?.length > 0}
-          <div class="creators">
-            {#each credits.topCrew as crew}
-              <div>
-                <span>{crew.name}</span>
-                <span>{crew.job}</span>
-              </div>
-            {/each}
-          </div>
-        {/if}
-
-        {#if credits.cast?.length > 0}
-          <HorizontalList title="Cast">
-            {#each credits.cast?.slice(0, 50) as cast}
-              <PersonPoster
-                id={cast.id}
-                name={cast.name}
-                path={cast.profile_path}
-                role={cast.character}
-                zoomOnHover={false}
-              />
-            {/each}
-          </HorizontalList>
-        {/if}
-      {:catch err}
-        <Error error={err} pretty="Failed to load cast!" />
-      {/await}
-
-      <SimilarContent type="game" similar={game.similar} /> -->
-
       {#if game.similar_games?.length > 0}
         <HorizontalList title="Similar">
           {#each game.similar_games as g}
