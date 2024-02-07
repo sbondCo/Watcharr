@@ -234,7 +234,7 @@
                 summary: g.summary,
                 firstReleaseDate: g.first_release_date
               }}
-              {...getPlayedDependedProps(game.id, wList)}
+              {...getPlayedDependedProps(g.id, wList)}
               small={true}
             />
           {/each}
