@@ -155,7 +155,8 @@
             coverId: w.game.coverId,
             name: w.game.name,
             summary: w.game.summary,
-            firstReleaseDate: w.game.releaseDate
+            firstReleaseDate: w.game.releaseDate,
+            poster: w.game.poster
           }}
           disableInteraction={isPublicList}
           extraDetails={{

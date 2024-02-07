@@ -876,6 +876,7 @@ export interface Game {
   ratingCount: number;
   status: number;
   category: number;
+  poster?: Image;
 }
 
 export interface GameDetailsResponse {

@@ -31,6 +31,9 @@ type Game struct {
 	GameModes string `json:"gameModes"`
 	Genres    string `json:"genres"`
 	Platforms string `json:"platforms"`
+	// Id to poster image row (cached game cover)
+	PosterID *uint  `json:"-"`
+	Poster   *Image `json:"poster,omitempty"`
 }
 
 type PlayedAddRequest struct {
@@ -45,6 +48,15 @@ func saveGame(db *gorm.DB, c *Game, onlyUpdate bool) error {
 	if c.IgdbID == 0 || c.Name == "" {
 		slog.Error("saveGame: content missing id or name!", "id", c.IgdbID, "name", c.Name)
 		return errors.New("game missing id or title")
+	}
+	if c.CoverID != "" {
+		p, err := downloadAndInsertImage(db, "https://images.igdb.com/igdb/image/upload/t_cover_big/"+c.CoverID+".png", "games")
+		if err != nil {
+			slog.Error("saveGame: Failed to cache game cover.", "error", err)
+		} else {
+			slog.Debug("saveGame: Cached game cover", "p", p)
+			c.PosterID = &p.ID
+		}
 	}
 	var res *gorm.DB
 	if onlyUpdate {
