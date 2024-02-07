@@ -17,6 +17,7 @@
   import PosterRating from "./PosterRating.svelte";
   import { wlDetailedView } from "@/store";
   import { page } from "$app/stores";
+  import { decode } from "blurhash";
 
   export let id: number | undefined = undefined; // Watched list id
   export let media: {
@@ -42,6 +43,7 @@
   let posterActive = false;
 
   let containerEl: HTMLDivElement;
+  let bhCanvas: HTMLCanvasElement;
 
   const title = `${media.name}`;
   const poster = media.poster?.path
@@ -92,6 +94,18 @@
     ).substring(2, 4)}`;
   }
 
+  $: {
+    if (media.poster?.path && media.poster?.blurHash && bhCanvas) {
+      const pixels = decode(media.poster.blurHash, 170, 256);
+      const ctx = bhCanvas.getContext("2d");
+      if (ctx) {
+        const imageData = ctx.createImageData(170, 256);
+        imageData.data.set(pixels);
+        ctx.putImageData(imageData, 0, 0);
+      }
+    }
+  }
+
   onMount(() => {
     if (small && containerEl) {
       containerEl.classList.add("small");
@@ -118,7 +132,11 @@
 >
   <div class={`container${!poster ? " details-shown" : ""}`} bind:this={containerEl}>
     {#if poster}
-      <div class="img-loader" />
+      {#if media?.poster?.blurHash}
+        <canvas width="170" height="256" bind:this={bhCanvas} class="img-loader" />
+      {:else}
+        <div class="img-loader"></div>
+      {/if}
       <img
         loading="lazy"
         src={poster}
@@ -215,6 +233,9 @@
       position: absolute;
       width: 100%;
       height: 100%;
+    }
+
+    div.img-loader {
       background-color: gray;
       background: linear-gradient(359deg, #5c5c5c, #2c2929, #2c2424);
       background-size: 400% 400%;
@@ -229,6 +250,22 @@
         }
         100% {
           background-position: 50% 0%;
+        }
+      }
+    }
+
+    canvas.img-loader {
+      animation: cimgloader 4s ease infinite;
+
+      @keyframes cimgloader {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+        100% {
+          opacity: 1;
         }
       }
     }
