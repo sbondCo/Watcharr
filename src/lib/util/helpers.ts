@@ -81,6 +81,20 @@ export function getPlayedDependedProps(wid: number, list: Watched[]) {
  * Turn a watched status into understandable text
  * depending on if the status is for a game or not.
  */
+/**
+ * Turns a WatchedStatus into readable and context aware text.
+ * Watched statuses can be used normally for movies/tv, but
+ * for games, we want to transform the status to make more sense.
+ * ex: 'finished' would become 'played' for games, but remain
+ *     unmodified for series/movies.
+ *
+ * This is only for use when displaying a status in ui for a user
+ * to read, should **never** be involved in logic (comparing
+ * statuses for example).
+ *
+ * @param s The watched status.
+ * @param isForGame If this status is being displayed for a game or not.
+ */
 export function toUnderstandableStatus(s: WatchedStatus, isForGame: boolean) {
   if (isForGame) {
     if (s === "FINISHED") {
@@ -93,28 +107,6 @@ export function toUnderstandableStatus(s: WatchedStatus, isForGame: boolean) {
     return "on hold";
   }
   return s?.toLowerCase();
-}
-
-/**
- * Turns a WatchedStatus into readable and context aware text.
- * Watched statuses can be used normally for movies/tv, but
- * for games, we want to transform the status to make more sense.
- * ex: 'finished' would become 'played' for games, but remain
- *     unmodified for series/movies.
- *
- * This is only for use when displaying a status in ui for a user
- * to read, should **never** be involved in logic (comparing
- * statuses for example).
- *
- * @param w The watched item.
- * @param s A WatchedStatus to convert to readable form. If not
- *          provided, the watched item (w) status will be used.
- */
-export function toUnderstandableWatchedStatus(w: Watched | undefined, s?: WatchedStatus): string {
-  if (!w) {
-    return s ?? "";
-  }
-  return toUnderstandableStatus(s ?? w.status, !!w.game);
 }
 
 /**
