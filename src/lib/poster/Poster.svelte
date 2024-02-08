@@ -122,8 +122,11 @@
   on:keypress={() => console.log("on kpress")}
   class={`${posterActive ? "active " : ""}`}
 >
-  <div class={`container${!poster ? " details-shown" : ""}`} bind:this={containerEl}>
-    {#if poster}
+  <div
+    class={`container${!poster || !media.poster_path ? " details-shown" : ""}`}
+    bind:this={containerEl}
+  >
+    {#if poster && media.poster_path}
       <div class="img-loader" />
       <img
         loading="lazy"
