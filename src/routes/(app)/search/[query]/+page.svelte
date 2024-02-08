@@ -21,6 +21,7 @@
   import Error from "@/lib/Error.svelte";
   import GamePoster from "@/lib/poster/GamePoster.svelte";
   import { get } from "svelte/store";
+  import { notify } from "@/lib/util/notify.js";
 
   export let data;
 
@@ -36,12 +37,25 @@
 
   async function search(query: string) {
     const f = get(serverFeatures);
-    if (!f.game) {
+    if (!f.games) {
+      console.log("Search: Only for movies/tv");
       return (await axios.get<ContentSearch>(`/content/${query}`)).data.results;
     }
+    console.log("Search: For movies/tv and games");
+    // To get around promise.all rejecting both promises when one fails,
+    // catch them separately and return empty object so we can still
+    // display the other media types.
     const r = await Promise.all([
-      axios.get<ContentSearch>(`/content/${query}`),
-      axios.get<GameSearch[]>(`/game/search/${query}`)
+      axios.get<ContentSearch>(`/content/${query}`).catch((err) => {
+        console.error("Movies/Tv search failed!", err);
+        notify({ text: "Movie/Tv Search Failed!", type: "error" });
+        return { data: { results: [] } };
+      }),
+      axios.get<GameSearch[]>(`/game/search/${query}`).catch((err) => {
+        console.error("Game search failed!", err);
+        notify({ text: "Game Search Failed!", type: "error" });
+        return { data: [] };
+      })
     ]);
     const games: GameWithMediaType[] = r[1].data.map((g) => ({
       ...g,
