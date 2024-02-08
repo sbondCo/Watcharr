@@ -68,12 +68,6 @@
     })();
   }
 
-  // async function getMovieCredits() {
-  //   const credits = (await axios.get(`/game/${data.gameId}/credits`))
-  //     .data as TMDBContentCredits & { topCrew: TMDBContentCreditsCrew[] };
-  //   return credits;
-  // }
-
   function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
     if (!gameId) {
       console.error("contentChanged: no gameId");
@@ -84,7 +78,7 @@
 </script>
 
 {#if pageError}
-  <PageError pretty="Failed to load movie!" error={pageError} />
+  <PageError pretty="Failed to load game!" error={pageError} />
 {:else if !game}
   <Spinner />
 {:else if Object.keys(game).length > 0}

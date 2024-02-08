@@ -1,7 +1,7 @@
 <script lang="ts">
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
-  import { searchQuery, watchedList } from "@/store";
+  import { searchQuery, serverFeatures, watchedList } from "@/store";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import axios from "axios";
@@ -20,6 +20,7 @@
   import { onDestroy, onMount } from "svelte";
   import Error from "@/lib/Error.svelte";
   import GamePoster from "@/lib/poster/GamePoster.svelte";
+  import { get } from "svelte/store";
 
   export let data;
 
@@ -40,16 +41,12 @@
     | ContentSearchPerson
     | GameWithMediaType;
 
-  // async function search(query: string) {
-  //   return (await axios.get(`/content/${query}`)).data as ContentSearch;
-  // }
-
-  // async function searchGames(query: string) {
-  //   return (await axios.get(`/game/${query}`)).data as GameSearch[];
-  // }
-
   // TODO only search games as well if that server feature is enabled.
   async function search(query: string) {
+    const f = get(serverFeatures);
+    if (!f.game) {
+      return (await axios.get<ContentSearch>(`/content/${query}`)).data.results;
+    }
     const r = await Promise.all([
       axios.get<ContentSearch>(`/content/${query}`),
       axios.get<GameSearch[]>(`/game/search/${query}`)

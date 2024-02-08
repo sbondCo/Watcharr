@@ -836,6 +836,7 @@ export interface RadarrTestResponse {
 export interface ServerFeatures {
   sonarr: boolean;
   radarr: boolean;
+  game: boolean;
 }
 
 export interface Follow {
