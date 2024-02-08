@@ -27,13 +27,6 @@
   $: searchQ = $searchQuery;
   $: wList = $watchedList;
 
-  interface CombinedSearchResults {
-    id: number;
-    name: string;
-    type: MediaType | "game";
-    og: (ContentSearchMovie | ContentSearchTv | ContentSearchPerson | GameSearch)[];
-  }
-
   type GameWithMediaType = GameSearch & { media_type: "game" };
   type CombinedResult =
     | ContentSearchMovie
@@ -41,7 +34,6 @@
     | ContentSearchPerson
     | GameWithMediaType;
 
-  // TODO only search games as well if that server feature is enabled.
   async function search(query: string) {
     const f = get(serverFeatures);
     if (!f.game) {
