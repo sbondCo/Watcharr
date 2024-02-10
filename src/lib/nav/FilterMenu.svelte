@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { activeFilters } from "@/store";
+  import { activeFilters, serverFeatures } from "@/store";
   import type { Filters } from "@/types";
   import { get } from "svelte/store";
 
@@ -14,6 +14,7 @@
   }
 
   $: filter = $activeFilters;
+  $: features = $serverFeatures;
 </script>
 
 <div class="menu">
@@ -32,6 +33,14 @@
       >
         MOVIE
       </button>
+      {#if features.games}
+        <button
+          class={`${filter.type.includes("game") ? "active" : ""}`}
+          on:click={() => filterClicked("type", "game")}
+        >
+          GAME
+        </button>
+      {/if}
     </div>
     <h4 class="norm sm-caps">status</h4>
     <button
@@ -69,11 +78,11 @@
 
 <style lang="scss">
   div.menu {
-    width: 180px;
+    width: 200px;
     right: 35px;
 
     &:before {
-      left: 3px;
+      left: 23px;
     }
   }
 
@@ -117,8 +126,12 @@
         width: 100%;
 
         &:first-of-type {
-          border-right: 0;
           border-radius: 5px 0 0 5px;
+        }
+
+        &:not(&:first-of-type):not(&:last-of-type) {
+          border-left: unset;
+          border-right: unset;
         }
 
         &:last-of-type {
