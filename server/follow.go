@@ -129,7 +129,11 @@ func getFollowsThoughts(db *gorm.DB, userId uint, mediaType string, mediaId stri
 	}
 	// Get list of followeds watcheds for this content
 	var fw []Watched
-	res = db.Where("(content_id = ? OR game_id = ?) AND user_id IN ?", contentOrGameId, contentOrGameId, followIds).Find(&fw)
+	if mediaType == "game" {
+		res = db.Where("game_id = ? AND user_id IN ?", contentOrGameId, followIds).Find(&fw)
+	} else {
+		res = db.Where("content_id = ? AND user_id IN ?", contentOrGameId, followIds).Find(&fw)
+	}
 	if res.Error != nil {
 		slog.Error("getFollows: Error finding followed watcheds from db.", "error", res.Error)
 		return []FollowThoughts{}, errors.New("failed to find followed watcheds")
