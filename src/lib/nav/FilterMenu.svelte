@@ -54,12 +54,18 @@
       on:click={() => filterClicked("status", "watching")}
     >
       watching
+      {#if features.games}
+        (playing)
+      {/if}
     </button>
     <button
       class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
       on:click={() => filterClicked("status", "finished")}
     >
       finished
+      {#if features.games}
+        (played)
+      {/if}
     </button>
     <button
       class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
@@ -106,7 +112,7 @@
       &::before {
         position: absolute;
         top: 4px;
-        left: 12px;
+        left: 7.5px;
         font-family:
           system-ui,
           -apple-system,

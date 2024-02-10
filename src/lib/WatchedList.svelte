@@ -3,9 +3,10 @@
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
-  import { activeFilters, activeSort, userSettings } from "@/store";
+  import { activeFilters, activeSort, serverFeatures, userSettings } from "@/store";
   import type { Watched, WatchedSeason } from "@/types";
   import GamePoster from "./poster/GamePoster.svelte";
+  import { get } from "svelte/store";
 
   export let list: Watched[];
   export let isPublicList: boolean = false;
@@ -14,6 +15,7 @@
   $: filters = $activeFilters;
   $: watched = list;
   $: settings = $userSettings;
+  $: features = $serverFeatures;
 
   /**
    * Checks if content has been watched previously
@@ -76,6 +78,12 @@
       // default DATEADDED DOWN
       return Date.parse(b.createdAt) - Date.parse(a.createdAt);
     });
+    // If games type filter enabled, but games disabled on server, make sure we remove it from active filters.
+    if (!features.games) {
+      const af = get(activeFilters);
+      af.type = af.type?.filter((a) => a !== "game");
+      filters.type = filters.type.filter((f) => f !== "game");
+    }
     // Now apply filters to watch list.
     if (filters.status.length > 0 && filters.type.length > 0) {
       // If status and type filters applied, combine both.
