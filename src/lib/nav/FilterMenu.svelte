@@ -71,7 +71,7 @@
       class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
       on:click={() => filterClicked("status", "hold")}
     >
-      held
+      on hold
     </button>
     <button
       class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
