@@ -83,18 +83,20 @@
         watched = watched.filter(
           (w) =>
             (filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)) &&
-            filters.type.includes(w.content.type)
+            filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
         );
       } else {
         watched = watched.filter(
           (w) =>
             filters.status.includes(w.status?.toLowerCase()) &&
-            filters.type.includes(w.content.type)
+            filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
         );
       }
     } else if (filters.type.length > 0) {
       // Only filter type
-      watched = watched.filter((w) => filters.type.includes(w.content.type));
+      watched = watched.filter((w) =>
+        filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
+      );
     } else if (filters.status.length > 0) {
       // Only filter status
       if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
