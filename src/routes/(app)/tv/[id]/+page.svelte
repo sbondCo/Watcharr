@@ -190,7 +190,7 @@
       </div>
 
       {#if showId}
-        <FollowedThoughts mediaType="tv" tmdbId={showId} />
+        <FollowedThoughts mediaType="tv" mediaId={showId} />
       {/if}
 
       {#await getTvCredits()}

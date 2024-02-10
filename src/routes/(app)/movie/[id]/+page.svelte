@@ -192,7 +192,7 @@
       </div>
 
       {#if movieId}
-        <FollowedThoughts mediaType="movie" tmdbId={movieId} />
+        <FollowedThoughts mediaType="movie" mediaId={movieId} />
       {/if}
 
       {#await getMovieCredits()}

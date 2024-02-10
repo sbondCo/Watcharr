@@ -15,13 +15,14 @@
     rating: number;
   }
 
-  export let mediaType: ContentType;
-  export let tmdbId: number;
+  export let mediaType: ContentType | "game";
+  // The tmdbId for movie/tv, igdbId for games.
+  export let mediaId: number;
 
   let modalShownFor: FollowThoughts | undefined = undefined;
 
   async function getFollowsThoughts() {
-    return (await axios.get<FollowThoughts[]>(`/follow/thoughts/${mediaType}/${tmdbId}`)).data;
+    return (await axios.get<FollowThoughts[]>(`/follow/thoughts/${mediaType}/${mediaId}`)).data;
   }
 </script>
 

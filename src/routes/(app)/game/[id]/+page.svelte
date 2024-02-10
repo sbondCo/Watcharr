@@ -180,9 +180,9 @@
         {/if}
       </div>
 
-      <!-- {#if gameId}
-        <FollowedThoughts mediaType="game" tmdbId={gameId} />
-      {/if} -->
+      {#if gameId}
+        <FollowedThoughts mediaType="game" mediaId={gameId} />
+      {/if}
 
       {#if game.similar_games?.length > 0}
         <HorizontalList title="Similar">
