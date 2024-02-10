@@ -156,7 +156,7 @@ func (i *IGDB) Init() error {
 		slog.Error("IGDB init client id and or secret not provided")
 		return errors.New("client id and or secret not provided")
 	}
-	slog.Debug("IGDB init running.", "client_id", *i.ClientID, "client_secret", *i.ClientSecret)
+	slog.Debug("IGDB init running.")
 	ctx, cancel := context.WithCancel(context.Background())
 	tokenRefreshJobCancel = cancel
 	// Get and set first token if needed
