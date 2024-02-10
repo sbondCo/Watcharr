@@ -135,9 +135,8 @@
           border-radius: 5px 0 0 5px;
         }
 
-        &:not(&:first-of-type):not(&:last-of-type) {
+        &:not(:first-of-type) {
           border-left: unset;
-          border-right: unset;
         }
 
         &:last-of-type {
