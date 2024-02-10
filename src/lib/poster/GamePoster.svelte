@@ -131,10 +131,10 @@
   class={`${posterActive ? "active " : ""}`}
 >
   <div
-    class={`container${!poster || !media.poster?.path ? " details-shown" : ""}`}
+    class={`container${!poster || (!media.coverId && !media.poster?.path) ? " details-shown" : ""}`}
     bind:this={containerEl}
   >
-    {#if poster && media.poster?.path}
+    {#if poster && (media.coverId || media.poster?.path)}
       {#if media?.poster?.blurHash}
         <canvas width="170" height="256" bind:this={bhCanvas} class="img-loader" />
       {:else}

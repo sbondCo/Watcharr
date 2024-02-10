@@ -243,10 +243,17 @@ func (b *BaseRouter) addGameRoutes() {
 	exp := time.Hour * 24
 
 	igdb := &Config.TWITCH
+	igdb.OnTokenRefreshed(func() {
+		// Save new token to config when we refresh it.
+		slog.Debug("GameRoutes: token refreshed.. saving to config.")
+		if err := writeConfig(); err != nil {
+			slog.Error("GameRoutes: failed to save refreshed token to config.", "error", err)
+		}
+	})
 	err := igdb.Init()
 	// Save cfg if init succeeded, this will save our access token
 	if err == nil {
-		writeConfig()
+		slog.Error("GameRoutes: Twitch init failed!", "error", err)
 	}
 
 	// Search for games
@@ -306,7 +313,7 @@ func (b *BaseRouter) addGameRoutes() {
 					c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 					return
 				}
-				igdb = &ar
+				igdb = &Config.TWITCH
 				c.Status(http.StatusOK)
 				return
 			}

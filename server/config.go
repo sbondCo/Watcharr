@@ -6,6 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/sbondCo/Watcharr/game"
 	"gorm.io/gorm"
@@ -176,12 +177,23 @@ func getEnabledFeatures(userPerms int) ServerFeatures {
 }
 
 func saveTwitchConfig(c game.IGDB) error {
-	err := c.Init()
-	if err != nil {
-		slog.Error("saveTwitchConfig config provided was unable to get a token", "error", err)
-		return errors.New("failed to retrieve a token")
+	// If existing client id and secret are same.. just return here
+	if (Config.TWITCH.ClientID != nil && c.ClientID != nil && Config.TWITCH.ClientSecret != nil && c.ClientSecret != nil) &&
+		*Config.TWITCH.ClientID == *c.ClientID && *Config.TWITCH.ClientSecret == *c.ClientSecret {
+		slog.Info("saveTwitchConfig: New ClientID and ClientSecret match old ClientID and ClientSecret.. ignoring request to update.")
+		return nil
 	}
-	Config.TWITCH = c
+	// Update our config
+	Config.TWITCH.ClientID = c.ClientID
+	Config.TWITCH.ClientSecret = c.ClientSecret
+	Config.TWITCH.AccessToken = ""
+	Config.TWITCH.AccessTokenExpires = time.Time{}
+	// Try to init again
+	err := Config.TWITCH.Init()
+	if err != nil {
+		slog.Error("saveTwitchConfig failed to initialize TWITCH", "error", err)
+		return errors.New("initialization with credentials failed")
+	}
 	err = writeConfig()
 	if err != nil {
 		slog.Error("saveTwitchConfig failed to write config", "error", err)

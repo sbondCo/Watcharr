@@ -2,6 +2,7 @@ package game
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -16,16 +17,14 @@ const (
 	tokenGrantType = "client_credentials"
 )
 
+var tokenRefreshJobCancel context.CancelFunc
+
 type IGDB struct {
 	ClientID           *string   `json:"clientId,omitempty"`
 	ClientSecret       *string   `json:"clientSecret,omitempty"`
 	AccessToken        string    `json:"accessToken,omitempty"`
 	AccessTokenExpires time.Time `json:"accessTokenExpires,omitempty"`
-}
-
-func New(cfg *IGDB) *IGDB {
-	// cfg.init()
-	return cfg
+	onTokenRefreshed   *func()
 }
 
 func (i *IGDB) req(host string, ep string, p map[string]string, b string, resp interface{}) error {
@@ -85,21 +84,7 @@ func (i *IGDB) req(host string, ep string, p map[string]string, b string, resp i
 	return nil
 }
 
-// Get token and stuff
-func (i *IGDB) Init() error {
-	if i.ClientID == nil || i.ClientSecret == nil {
-		slog.Error("IGDB init client id and or secret not provided")
-		return errors.New("client id and or secret not provided")
-	}
-	slog.Debug("IGDB init running.", "client_id", *i.ClientID, "client_secret", *i.ClientSecret)
-	// If we have an unexpired access token already, use that instead of requesting a new one.
-	if i.AccessToken != "" && !i.AccessTokenExpires.IsZero() {
-		if i.AccessTokenExpires.Compare(time.Now()) == 1 {
-			slog.Debug("IGDB init current access token hasn't expired. Will continue using that one.")
-			return nil
-		}
-		slog.Debug("IGDB init current access token has expired.. fetching a new one.")
-	}
+func (i *IGDB) getNewAccessToken() (TwitchTokenResponse, error) {
 	var resp TwitchTokenResponse
 	err := i.req(
 		"https://id.twitch.tv/oauth2",
@@ -110,11 +95,72 @@ func (i *IGDB) Init() error {
 	)
 	if err != nil {
 		slog.Error("IGDB init token request failed", "error", err)
-		return errors.New("token request failed, check client id and secret")
+		return TwitchTokenResponse{}, errors.New("token request failed, check client id and secret")
 	}
-	i.AccessToken = resp.AccessToken
-	i.AccessTokenExpires = time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second)
-	slog.Debug("IGDB init token response", "resp", resp, "token_expires", i.AccessTokenExpires)
+	return resp, nil
+}
+
+func (i *IGDB) refreshToken(ctx context.Context) {
+	var exp <-chan time.Time
+
+	if i.AccessToken != "" && !i.AccessTokenExpires.IsZero() && i.AccessTokenExpires.Compare(time.Now()) == 1 {
+		// Stored token not expired.. set exp time to token exp time - 1h.
+		exp = time.After(i.AccessTokenExpires.Sub(time.Now().Add(60 * time.Second)))
+	} else {
+		// Token expired.. exp now..
+		exp = time.After(100 * time.Millisecond)
+	}
+
+	slog.Info("refreshToken running")
+
+	for {
+		select {
+		case <-exp:
+			slog.Info("IGDB refreshToken: Token expired (or is near expiry date)")
+			r, err := i.getNewAccessToken()
+			if err != nil {
+				slog.Error("IGDB refreshToken: Error refreshing token (retrying in 60s):", err)
+				exp = time.After(60 * time.Second)
+			} else {
+				slog.Info("IGDB refreshToken: Token successfully refreshed")
+				i.AccessToken = r.AccessToken
+				i.AccessTokenExpires = time.Now().Add(time.Duration(r.ExpiresIn) * time.Second)
+				exp = time.After(i.AccessTokenExpires.Sub(time.Now().Add(60 * time.Second)))
+				// Call token refresh callback if set
+				if i.onTokenRefreshed != nil {
+					(*i.onTokenRefreshed)()
+				}
+			}
+
+		case <-ctx.Done():
+			slog.Info("refreshToken cancelled")
+			return
+		}
+	}
+}
+
+func (i *IGDB) OnTokenRefreshed(tokenRefreshed func()) {
+	i.onTokenRefreshed = &tokenRefreshed
+}
+
+// Get token and stuff
+func (i *IGDB) Init() error {
+	// Cancel existing refresh job if we have a cancel func for its context
+	if tokenRefreshJobCancel != nil {
+		slog.Debug("IGDB init: Refresh job running.. cancelling it.")
+		tokenRefreshJobCancel()
+		tokenRefreshJobCancel = nil
+	}
+	// Stop here if we have no client id or secret.
+	if i.ClientID == nil || i.ClientSecret == nil {
+		slog.Error("IGDB init client id and or secret not provided")
+		return errors.New("client id and or secret not provided")
+	}
+	slog.Debug("IGDB init running.", "client_id", *i.ClientID, "client_secret", *i.ClientSecret)
+	ctx, cancel := context.WithCancel(context.Background())
+	tokenRefreshJobCancel = cancel
+	// Get and set first token if needed
+	go i.refreshToken(ctx)
 	return nil
 }
 
