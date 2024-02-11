@@ -69,7 +69,17 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	err = db.AutoMigrate(&User{}, &Content{}, &Watched{}, &WatchedSeason{}, &Activity{}, &Token{}, &Follow{}, &Image{})
+	err = db.AutoMigrate(
+		&User{},
+		&Content{},
+		&Watched{},
+		&WatchedSeason{},
+		&Activity{},
+		&Token{},
+		&Follow{},
+		&Image{},
+		&Game{},
+	)
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
@@ -115,6 +125,7 @@ func main() {
 	}
 	br.addAuthRoutes()
 	br.addContentRoutes()
+	br.addGameRoutes()
 	br.addWatchedRoutes()
 	br.addActivityRoutes()
 	br.addProfileRoutes()

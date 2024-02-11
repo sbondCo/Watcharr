@@ -3,8 +3,10 @@
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
-  import { activeFilters, activeSort, userSettings } from "@/store";
+  import { activeFilters, activeSort, serverFeatures, userSettings } from "@/store";
   import type { Watched, WatchedSeason } from "@/types";
+  import GamePoster from "./poster/GamePoster.svelte";
+  import { get } from "svelte/store";
 
   export let list: Watched[];
   export let isPublicList: boolean = false;
@@ -13,6 +15,7 @@
   $: filters = $activeFilters;
   $: watched = list;
   $: settings = $userSettings;
+  $: features = $serverFeatures;
 
   /**
    * Checks if content has been watched previously
@@ -58,8 +61,13 @@
       if (sort[0] === "DATEADDED" && sort[1] === "UP") {
         return Date.parse(a.createdAt) - Date.parse(b.createdAt);
       } else if (sort[0] === "ALPHA") {
-        if (sort[1] === "UP") return a.content.title.localeCompare(b.content.title);
-        else if (sort[1] === "DOWN") return b.content.title.localeCompare(a.content.title);
+        const atitle = a.content ? a.content.title : a.game ? a.game.name : "";
+        const btitle = b.content ? b.content.title : b.game ? b.game.name : "";
+        if (sort[1] === "UP") {
+          return atitle.localeCompare(btitle);
+        } else if (sort[1] === "DOWN") {
+          return btitle.localeCompare(atitle);
+        }
       } else if (sort[0] === "LASTCHANGED") {
         if (sort[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
         else if (sort[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
@@ -70,6 +78,12 @@
       // default DATEADDED DOWN
       return Date.parse(b.createdAt) - Date.parse(a.createdAt);
     });
+    // If games type filter enabled, but games disabled on server, make sure we remove it from active filters.
+    if (!features.games) {
+      const af = get(activeFilters);
+      af.type = af.type?.filter((a) => a !== "game");
+      filters.type = filters.type.filter((f) => f !== "game");
+    }
     // Now apply filters to watch list.
     if (filters.status.length > 0 && filters.type.length > 0) {
       // If status and type filters applied, combine both.
@@ -77,18 +91,20 @@
         watched = watched.filter(
           (w) =>
             (filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)) &&
-            filters.type.includes(w.content.type)
+            filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
         );
       } else {
         watched = watched.filter(
           (w) =>
             filters.status.includes(w.status?.toLowerCase()) &&
-            filters.type.includes(w.content.type)
+            filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
         );
       }
     } else if (filters.type.length > 0) {
       // Only filter type
-      watched = watched.filter((w) => filters.type.includes(w.content.type));
+      watched = watched.filter((w) =>
+        filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
+      );
     } else if (filters.status.length > 0) {
       // Only filter status
       if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
@@ -139,26 +155,47 @@
 <PosterList>
   {#if watched?.length > 0}
     {#each watched as w (w.id)}
-      <Poster
-        id={w.id}
-        media={{
-          id: w.content.tmdbId,
-          poster_path: w.content.poster_path,
-          title: w.content.title,
-          overview: w.content.overview,
-          media_type: w.content.type,
-          release_date: w.content.release_date,
-          first_air_date: w.content.first_air_date
-        }}
-        rating={w.rating}
-        status={w.status}
-        disableInteraction={isPublicList}
-        extraDetails={{
-          dateAdded: w.createdAt,
-          dateModified: w.updatedAt,
-          lastWatched: getLatestWatchedSeason(w.watchedSeasons)
-        }}
-      />
+      {#if w.game}
+        <GamePoster
+          id={w.id}
+          rating={w.rating}
+          status={w.status}
+          media={{
+            id: w.game.igdbId,
+            coverId: w.game.coverId,
+            name: w.game.name,
+            summary: w.game.summary,
+            firstReleaseDate: w.game.releaseDate,
+            poster: w.game.poster
+          }}
+          disableInteraction={isPublicList}
+          extraDetails={{
+            dateAdded: w.createdAt,
+            dateModified: w.updatedAt
+          }}
+        />
+      {:else if w.content}
+        <Poster
+          id={w.id}
+          media={{
+            id: w.content.tmdbId,
+            poster_path: w.content.poster_path,
+            title: w.content.title,
+            overview: w.content.overview,
+            media_type: w.content.type,
+            release_date: w.content.release_date,
+            first_air_date: w.content.first_air_date
+          }}
+          rating={w.rating}
+          status={w.status}
+          disableInteraction={isPublicList}
+          extraDetails={{
+            dateAdded: w.createdAt,
+            dateModified: w.updatedAt,
+            lastWatched: getLatestWatchedSeason(w.watchedSeasons)
+          }}
+        />
+      {/if}
     {/each}
   {:else}
     <div class="empty-list">

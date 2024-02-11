@@ -5,41 +5,31 @@
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
-  import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
   import { serverFeatures, watchedList } from "@/store";
-  import type {
-    TMDBContentCredits,
-    TMDBContentCreditsCrew,
-    TMDBMovieDetails,
-    WatchedStatus
-  } from "@/types";
+  import { GameWebsiteCategory, type GameDetailsResponse, type WatchedStatus } from "@/types";
   import axios from "axios";
-  import { getTopCrew } from "@/lib/util/helpers.js";
   import Activity from "@/lib/Activity.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
-  import ProvidersList from "@/lib/content/ProvidersList.svelte";
-  import Icon from "@/lib/Icon.svelte";
-  import SimilarContent from "@/lib/content/SimilarContent.svelte";
   import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import RequestMovie from "@/lib/request/RequestMovie.svelte";
   import Error from "@/lib/Error.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
+  import { updatePlayed } from "@/lib/util/api.js";
+  import GamePoster from "@/lib/poster/GamePoster.svelte";
+  import { getPlayedDependedProps } from "@/lib/util/helpers";
 
   export let data;
 
   let trailer: string | undefined;
   let requestModalShown = false;
   let trailerShown = false;
-  let jellyfinUrl: string | undefined;
 
-  $: wListItem = $watchedList.find(
-    (w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId
-  );
+  $: wList = $watchedList;
+  $: wListItem = $watchedList.find((w) => w.game?.igdbId === data.gameId);
 
-  let movieId: number | undefined;
-  let movie: TMDBMovieDetails | undefined;
+  let gameId: number | undefined;
+  let game: GameDetailsResponse | undefined;
   let pageError: Error | undefined;
 
   onMount(() => {
@@ -47,7 +37,7 @@
       console.log(value);
       const params = value.params;
       if (params && params.id) {
-        movieId = Number(params.id);
+        gameId = Number(params.id);
       }
     });
 
@@ -57,91 +47,103 @@
   $: {
     (async () => {
       try {
-        movie = undefined;
+        game = undefined;
         pageError = undefined;
-        if (!movieId) {
+        if (!gameId) {
           return;
         }
-        const data = (await axios.get(`/content/movie/${movieId}`)).data as TMDBMovieDetails;
-        if (data.videos?.results?.length > 0) {
-          const t = data.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
-          if (t?.key) {
-            if (t?.site?.toLowerCase() === "youtube") {
-              trailer = `https://www.youtube.com/embed/${t?.key}`;
-            }
+        const data = (await axios.get(`/game/${gameId}`)).data as GameDetailsResponse;
+        if (data.videos?.length > 0) {
+          const t = data.videos.find((v) => v.name?.toLowerCase() === "trailer");
+          // Doc says the video_id is "usually youtube", so we are gonna go with that assumption too ( 0 _ 0 )
+          if (t?.video_id) {
+            trailer = `https://www.youtube.com/embed/${t?.video_id}`;
           }
         }
-        contentExistsOnJellyfin("movie", data.title, data.id).then((j) => {
-          if (j?.hasContent && j?.url !== "") {
-            jellyfinUrl = j.url;
-          }
-        });
-        movie = data;
+        game = data;
       } catch (err: any) {
-        movie = undefined;
+        game = undefined;
         pageError = err;
       }
     })();
   }
 
-  async function getMovieCredits() {
-    const credits = (await axios.get(`/content/movie/${data.movieId}/credits`))
-      .data as TMDBContentCredits & { topCrew: TMDBContentCreditsCrew[] };
-    if (credits.crew?.length > 0) {
-      credits.topCrew = getTopCrew(credits.crew);
-    }
-    return credits;
-  }
-
   function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
-    updateWatched(data.movieId, "movie", newStatus, newRating, newThoughts);
+    if (!gameId) {
+      console.error("contentChanged: no gameId");
+      return;
+    }
+    updatePlayed(gameId, newStatus, newRating, newThoughts);
   }
 </script>
 
 {#if pageError}
-  <PageError pretty="Failed to load movie!" error={pageError} />
-{:else if !movie}
+  <PageError pretty="Failed to load game!" error={pageError} />
+{:else if !game}
   <Spinner />
-{:else if Object.keys(movie).length > 0}
+{:else if Object.keys(game).length > 0}
   <div>
     <div class="content">
-      {#if movie?.backdrop_path}
+      {#if game?.artworks?.length > 0}
         <img
           class="backdrop"
-          src={"https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces" + movie.backdrop_path}
+          src={"https://images.igdb.com/igdb/image/upload/t_720p/" +
+            game.artworks[Math.floor(Math.random() * game.artworks.length)].image_id +
+            ".jpg"}
+          alt=""
+        />
+      {:else if game?.cover?.image_id}
+        <!-- Fallback to using the game cover for backdrop if there is no artwork -->
+        <img
+          class="backdrop"
+          src={"https://images.igdb.com/igdb/image/upload/t_720p/" + game.cover.image_id + ".jpg"}
           alt=""
         />
       {/if}
       <div class="vignette" />
 
       <div class="details-container">
-        <img class="poster" src={"https://image.tmdb.org/t/p/w500" + movie.poster_path} alt="" />
+        <img
+          class="poster"
+          src={"https://images.igdb.com/igdb/image/upload/t_cover_big/" +
+            game.cover.image_id +
+            ".jpg"}
+          alt=""
+        />
 
         <div class="details">
           <Title
-            title={movie.title}
-            homepage={movie.homepage}
-            releaseYear={new Date(Date.parse(movie.release_date)).getFullYear()}
-            voteAverage={movie.vote_average}
-            voteCount={movie.vote_count}
+            title={game.name}
+            homepage={game.websites?.find((w) => w.category == GameWebsiteCategory.Official)?.url}
+            releaseYear={new Date(game.first_release_date).getFullYear()}
+            voteAverage={game.rating}
+            voteCount={game.rating_count}
           />
 
           <span class="quick-info">
-            <span>{movie.runtime}m</span>
-
+            {#if game.genres?.length > 0}
+              <div>
+                {#each game.genres as g, i}
+                  <span>{g.name}{i !== game.genres.length - 1 ? ", " : ""}</span>
+                {/each}
+              </div>
+            {:else}
+              <span>Unknown Genres</span>
+            {/if}
+            <span></span>
             <div>
-              {#each movie.genres as g, i}
-                <span>{g.name}{i !== movie.genres.length - 1 ? ", " : ""}</span>
-              {/each}
+              {#if game.game_modes?.length > 0}
+                {#each game.game_modes as g, i}
+                  <span>{g.name}{i !== game.game_modes.length - 1 ? ", " : ""}</span>
+                {/each}
+              {:else}
+                <span>Unknown Game Modes</span>
+              {/if}
             </div>
           </span>
 
-          <!-- <span>{movie.tagline}</span> -->
-
-          <!-- {movie.status} -->
-
           <span style="font-weight: bold; font-size: 14px;">Overview</span>
-          <p>{movie.overview}</p>
+          <p>{game.summary}</p>
 
           <div class="btns">
             {#if trailer}
@@ -150,35 +152,22 @@
                 <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
               {/if}
             {/if}
-            {#if jellyfinUrl}
-              <a class="btn" href={jellyfinUrl} target="_blank">
-                <Icon i="jellyfin" wh={14} />Play On Jellyfin
-              </a>
-            {/if}
-            {#if $serverFeatures.radarr}
-              <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
-            {/if}
           </div>
 
-          <ProvidersList providers={movie["watch/providers"]} />
+          <!-- <ProvidersList providers={game["watch/providers"]} /> -->
         </div>
       </div>
     </div>
 
-    {#if requestModalShown}
-      <RequestMovie content={movie} onClose={() => (requestModalShown = false)} />
-    {/if}
-
     <div class="page">
       <div class="review">
-        <!-- <span>What did you think?</span> -->
         <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
-        <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
+        <Status status={wListItem?.status} isForGame={true} onChange={(n) => contentChanged(n)} />
         {#if wListItem}
           <textarea
             name="Thoughts"
             rows="3"
-            placeholder={`My thoughts on ${movie.title}`}
+            placeholder={`My thoughts on ${game.name}`}
             value={wListItem?.thoughts}
             on:blur={(e) => {
               if (wListItem?.thoughts === e.currentTarget.value) {
@@ -191,42 +180,27 @@
         {/if}
       </div>
 
-      {#if movieId}
-        <FollowedThoughts mediaType="movie" mediaId={movieId} />
+      {#if gameId}
+        <FollowedThoughts mediaType="game" mediaId={gameId} />
       {/if}
 
-      {#await getMovieCredits()}
-        <Spinner />
-      {:then credits}
-        {#if credits.topCrew?.length > 0}
-          <div class="creators">
-            {#each credits.topCrew as crew}
-              <div>
-                <span>{crew.name}</span>
-                <span>{crew.job}</span>
-              </div>
-            {/each}
-          </div>
-        {/if}
-
-        {#if credits.cast?.length > 0}
-          <HorizontalList title="Cast">
-            {#each credits.cast?.slice(0, 50) as cast}
-              <PersonPoster
-                id={cast.id}
-                name={cast.name}
-                path={cast.profile_path}
-                role={cast.character}
-                zoomOnHover={false}
-              />
-            {/each}
-          </HorizontalList>
-        {/if}
-      {:catch err}
-        <Error error={err} pretty="Failed to load cast!" />
-      {/await}
-
-      <SimilarContent type="movie" similar={movie.similar} />
+      {#if game.similar_games?.length > 0}
+        <HorizontalList title="Similar">
+          {#each game.similar_games as g}
+            <GamePoster
+              media={{
+                id: g.id,
+                coverId: g.cover.image_id,
+                name: g.name,
+                summary: g.summary,
+                firstReleaseDate: g.first_release_date
+              }}
+              {...getPlayedDependedProps(g.id, wList)}
+              small={true}
+            />
+          {/each}
+        </HorizontalList>
+      {/if}
 
       {#if wListItem}
         <Activity activity={wListItem?.activity} />
@@ -234,7 +208,7 @@
     </div>
   </div>
 {:else}
-  Movie not found
+  <Error error="Game not found" pretty="Game not found" />
 {/if}
 
 <style lang="scss">

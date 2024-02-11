@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { activeFilters } from "@/store";
+  import { activeFilters, serverFeatures } from "@/store";
   import type { Filters } from "@/types";
   import { get } from "svelte/store";
 
@@ -14,6 +14,7 @@
   }
 
   $: filter = $activeFilters;
+  $: features = $serverFeatures;
 </script>
 
 <div class="menu">
@@ -32,6 +33,14 @@
       >
         MOVIE
       </button>
+      {#if features.games}
+        <button
+          class={`${filter.type.includes("game") ? "active" : ""}`}
+          on:click={() => filterClicked("type", "game")}
+        >
+          GAME
+        </button>
+      {/if}
     </div>
     <h4 class="norm sm-caps">status</h4>
     <button
@@ -45,18 +54,24 @@
       on:click={() => filterClicked("status", "watching")}
     >
       watching
+      {#if features.games}
+        (playing)
+      {/if}
     </button>
     <button
       class={`plain ${filter.status.includes("finished") ? "on" : ""}`}
       on:click={() => filterClicked("status", "finished")}
     >
       finished
+      {#if features.games}
+        (played)
+      {/if}
     </button>
     <button
       class={`plain ${filter.status.includes("hold") ? "on" : ""}`}
       on:click={() => filterClicked("status", "hold")}
     >
-      held
+      on hold
     </button>
     <button
       class={`plain ${filter.status.includes("dropped") ? "on" : ""}`}
@@ -69,11 +84,11 @@
 
 <style lang="scss">
   div.menu {
-    width: 180px;
+    width: 200px;
     right: 35px;
 
     &:before {
-      left: 3px;
+      left: 23px;
     }
   }
 
@@ -97,7 +112,7 @@
       &::before {
         position: absolute;
         top: 4px;
-        left: 12px;
+        left: 7.5px;
         font-family:
           system-ui,
           -apple-system,
@@ -117,8 +132,11 @@
         width: 100%;
 
         &:first-of-type {
-          border-right: 0;
           border-radius: 5px 0 0 5px;
+        }
+
+        &:not(:first-of-type) {
+          border-left: unset;
         }
 
         &:last-of-type {

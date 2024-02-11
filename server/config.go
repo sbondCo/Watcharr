@@ -6,7 +6,9 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
+	"github.com/sbondCo/Watcharr/game"
 	"gorm.io/gorm"
 )
 
@@ -31,6 +33,7 @@ type ServerConfig struct {
 
 	SONARR []SonarrSettings `json:",omitempty"`
 	RADARR []RadarrSettings `json:",omitempty"`
+	TWITCH game.IGDB        `json:",omitempty"`
 
 	// Enable/disable debug logging. Useful for when trying
 	// to figure out exactly what the server is doing at a point
@@ -53,6 +56,10 @@ func (c *ServerConfig) GetSafe() ServerConfig {
 		DEBUG:          c.DEBUG,
 		SONARR:         c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
 		RADARR:         c.RADARR, // Dont act safe, this contains radarr api key, needed for config
+		TWITCH: game.IGDB{
+			ClientID:     c.TWITCH.ClientID,
+			ClientSecret: c.TWITCH.ClientSecret,
+		}, // Dont act safe, this contains twitch secrets, needed for config
 	}
 }
 
@@ -144,6 +151,7 @@ func writeConfig() error {
 type ServerFeatures struct {
 	Sonarr bool `json:"sonarr"`
 	Radarr bool `json:"radarr"`
+	Games  bool `json:"games"`
 }
 
 // Get enabled server functionality from Config.
@@ -151,6 +159,9 @@ type ServerFeatures struct {
 // which btns should be shown, etc.
 func getEnabledFeatures(userPerms int) ServerFeatures {
 	var f ServerFeatures
+	if Config.TWITCH.ClientID != nil && Config.TWITCH.ClientSecret != nil {
+		f.Games = true
+	}
 	// https://github.com/sbondCo/Watcharr/issues/211
 	// Currently requesting permissions have not been setup, only admins for now.
 	if !hasPermission(userPerms, PERM_ADMIN) {
@@ -163,6 +174,32 @@ func getEnabledFeatures(userPerms int) ServerFeatures {
 		f.Radarr = true
 	}
 	return f
+}
+
+func saveTwitchConfig(c game.IGDB) error {
+	// If existing client id and secret are same.. just return here
+	if (Config.TWITCH.ClientID != nil && c.ClientID != nil && Config.TWITCH.ClientSecret != nil && c.ClientSecret != nil) &&
+		*Config.TWITCH.ClientID == *c.ClientID && *Config.TWITCH.ClientSecret == *c.ClientSecret {
+		slog.Info("saveTwitchConfig: New ClientID and ClientSecret match old ClientID and ClientSecret.. ignoring request to update.")
+		return nil
+	}
+	// Update our config
+	Config.TWITCH.ClientID = c.ClientID
+	Config.TWITCH.ClientSecret = c.ClientSecret
+	Config.TWITCH.AccessToken = ""
+	Config.TWITCH.AccessTokenExpires = time.Time{}
+	// Try to init again
+	err := Config.TWITCH.Init()
+	if err != nil {
+		slog.Error("saveTwitchConfig failed to initialize TWITCH", "error", err)
+		return errors.New("initialization with credentials failed")
+	}
+	err = writeConfig()
+	if err != nil {
+		slog.Error("saveTwitchConfig failed to write config", "error", err)
+		return errors.New("failed to save config")
+	}
+	return nil
 }
 
 type ServerStats struct {
@@ -206,13 +243,13 @@ func getServerStats(db *gorm.DB) ServerStats {
 	if resp.Error != nil {
 		slog.Error("getServerStats - MostWatchedShow query failed", "error", resp.Error)
 	} else {
-		stats.MostWatchedShow = w.Content
+		stats.MostWatchedShow = *w.Content
 	}
 	resp = db.Model(&Watched{}).Select("content_id, COUNT(*) AS mag").Joins("JOIN contents ON contents.type = ? AND contents.id = watcheds.content_id", "movie").Group("content_id").Order("mag DESC").Preload("Content").First(&w)
 	if resp.Error != nil {
 		slog.Error("getServerStats - MostWatchedMovie query failed", "error", resp.Error)
 	} else {
-		stats.MostWatchedMovie = w.Content
+		stats.MostWatchedMovie = *w.Content
 	}
 	return stats
 }

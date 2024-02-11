@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ExtraDetails, MediaType, WLDetailedViewOption, WatchedStatus } from "@/types";
+  import type { ExtraDetails, ExtraDetailsGame, Image, WatchedStatus } from "@/types";
   import Icon from "../Icon.svelte";
   import {
     addClassToParent,
@@ -10,32 +10,30 @@
     watchedStatuses
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
-  import tooltip from "../actions/tooltip";
-  import { baseURL, removeWatched, updateWatched } from "../util/api";
+  import { baseURL, removeWatched, updatePlayed } from "../util/api";
   import { notify } from "../util/notify";
   import { onMount } from "svelte";
   import PosterStatus from "./PosterStatus.svelte";
   import PosterRating from "./PosterRating.svelte";
   import { wlDetailedView } from "@/store";
   import { page } from "$app/stores";
+  import { decode } from "blurhash";
 
   export let id: number | undefined = undefined; // Watched list id
   export let media: {
-    poster_path?: string;
-    title?: string;
-    name?: string;
-    overview?: string;
-    id: number; // tmdb id
-    media_type: MediaType;
-    release_date?: string;
-    first_air_date?: string;
+    id: number;
+    coverId: string;
+    firstReleaseDate?: string | number;
+    name: string;
+    summary?: string;
+    poster?: Image;
   };
   export let rating: number | undefined = undefined;
   export let status: WatchedStatus | undefined = undefined;
   export let small = false;
   export let disableInteraction = false;
   export let hideButtons = false;
-  export let extraDetails: ExtraDetails | undefined = undefined;
+  export let extraDetails: ExtraDetailsGame | undefined = undefined;
   // When provided, default click handlers will instead run this callback.
   export let onClick: (() => void) | undefined = undefined;
 
@@ -45,21 +43,19 @@
   let posterActive = false;
 
   let containerEl: HTMLDivElement;
+  let bhCanvas: HTMLCanvasElement;
 
-  const title = media.title || media.name;
-  // For now, if the content is on watched list, we can assume we have a local
-  // cached image. Could be improved, since we could have a cached image for
-  // show not on someone elses watched list.
-  const poster = id
-    ? `${baseURL}/img${media.poster_path}`
-    : `https://image.tmdb.org/t/p/w500${media.poster_path}`;
-  const link = media.id ? `/${media.media_type}/${media.id}` : undefined;
-  const dateStr = media.release_date || media.first_air_date;
+  const title = `${media.name}`;
+  const poster = media.poster?.path
+    ? `${baseURL}/${media.poster.path}`
+    : `https://images.igdb.com/igdb/image/upload/t_cover_big/${media.coverId}.jpg`;
+  const link = media.id ? `/game/${media.id}` : undefined;
+  const dateStr = media.firstReleaseDate;
   const year = dateStr ? new Date(dateStr).getFullYear() : undefined;
 
   function handleStarClick(r: number) {
     if (r == rating) return;
-    updateWatched(media.id, media.media_type, undefined, r);
+    updatePlayed(media.id, undefined, r);
   }
 
   function handleStatusClick(type: WatchedStatus | "DELETE") {
@@ -72,7 +68,7 @@
       return;
     }
     if (type == status) return;
-    updateWatched(media.id, media.media_type, type);
+    updatePlayed(media.id, type);
   }
 
   function handleInnerKeyUp(e: KeyboardEvent) {
@@ -96,6 +92,18 @@
     return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]} '${String(
       d.getFullYear()
     ).substring(2, 4)}`;
+  }
+
+  $: {
+    if (media.poster?.path && media.poster?.blurHash && bhCanvas) {
+      const pixels = decode(media.poster.blurHash, 170, 256);
+      const ctx = bhCanvas.getContext("2d");
+      if (ctx) {
+        const imageData = ctx.createImageData(170, 256);
+        imageData.data.set(pixels);
+        ctx.putImageData(imageData, 0, 0);
+      }
+    }
   }
 
   onMount(() => {
@@ -123,11 +131,15 @@
   class={`${posterActive ? "active " : ""}`}
 >
   <div
-    class={`container${!poster || !media.poster_path ? " details-shown" : ""}`}
+    class={`container${!poster || (!media.coverId && !media.poster?.path) ? " details-shown" : ""}`}
     bind:this={containerEl}
   >
-    {#if poster && media.poster_path}
-      <div class="img-loader" />
+    {#if poster && (media.coverId || media.poster?.path)}
+      {#if media?.poster?.blurHash}
+        <canvas width="170" height="256" bind:this={bhCanvas} class="img-loader" />
+      {:else}
+        <div class="img-loader"></div>
+      {/if}
       <img
         loading="lazy"
         src={poster}
@@ -150,7 +162,7 @@
           So ye this is probably gonna be one line until the end of time.
         -->
         <!-- prettier-ignore -->
-        <div>{#if dve.includes("dateAdded")}<span title="Date added to watch list"><i><Icon i="calendar" /></i><span>{formatDate(Date.parse(extraDetails.dateAdded))}</span></span>{/if}{#if dve.includes("dateModified")}<span title="Date last modified"><i><Icon i="pencil" wh={15} /></i><span>{formatDate(Date.parse(extraDetails.dateModified))}</span></span>{/if}{#if extraDetails.lastWatched && dve.includes("lastWatched")}<span title="Latest season watched"><i><Icon i="play" wh={15} /></i><span>{extraDetails.lastWatched}</span></span>{/if}{#if dve.includes("statusRating")}<span class="status-rating" title="Status and Rating"><i><Icon i="star" /></i><span>{rating}</span>{#if status}<i><Icon i={watchedStatuses[status]} wh={15} /></i>{/if}</span>{/if}</div>
+        <div>{#if dve.includes("dateAdded")}<span title="Date added to watch list"><i><Icon i="calendar" /></i><span>{formatDate(Date.parse(extraDetails.dateAdded))}</span></span>{/if}{#if dve.includes("dateModified")}<span title="Date last modified"><i><Icon i="pencil" wh={15} /></i><span>{formatDate(Date.parse(extraDetails.dateModified))}</span></span>{/if}{#if dve.includes("statusRating")}<span class="status-rating" title="Status and Rating"><i><Icon i="star" /></i><span>{rating}</span>{#if status}<i><Icon i={watchedStatuses[status]} wh={15} /></i>{/if}</span>{/if}</div>
       </div>
     {/if}
     <div
@@ -179,12 +191,12 @@
           <time>{year}</time>
         {/if}
       </h2>
-      <span>{media.overview}</span>
+      <span>{media.summary}</span>
 
       {#if !hideButtons}
         <div class="buttons">
           <PosterRating {rating} {handleStarClick} {disableInteraction} />
-          <PosterStatus {status} {handleStatusClick} {disableInteraction} />
+          <PosterStatus {status} {handleStatusClick} {disableInteraction} isForGame={true} />
         </div>
       {/if}
     </div>
@@ -224,6 +236,9 @@
       position: absolute;
       width: 100%;
       height: 100%;
+    }
+
+    div.img-loader {
       background-color: gray;
       background: linear-gradient(359deg, #5c5c5c, #2c2929, #2c2424);
       background-size: 400% 400%;
@@ -238,6 +253,22 @@
         }
         100% {
           background-position: 50% 0%;
+        }
+      }
+    }
+
+    canvas.img-loader {
+      animation: cimgloader 4s ease infinite;
+
+      @keyframes cimgloader {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+        100% {
+          opacity: 1;
         }
       }
     }

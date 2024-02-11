@@ -36,6 +36,7 @@ export type Theme = "light" | "dark";
 
 export type WLDetailedViewOption = "statusRating" | "lastWatched" | "dateAdded" | "dateModified";
 export type ExtraDetails = { lastWatched: string; dateAdded: string; dateModified: string };
+export type ExtraDetailsGame = { dateAdded: string; dateModified: string };
 
 export enum UserType {
   // Assume watcharr user if none of these...
@@ -78,7 +79,8 @@ export interface Watched extends dbModel {
   id: number;
   watched: boolean;
   rating?: number;
-  content: Content;
+  content?: Content;
+  game?: Game;
   activity: Activity[];
   status: WatchedStatus;
   thoughts: string;
@@ -90,6 +92,12 @@ export interface WatchedAddRequest {
   contentType: ContentType;
   rating?: number;
   status: WatchedStatus;
+}
+
+export interface PlayedAddRequest {
+  rating?: number;
+  status?: WatchedStatus;
+  igdbId?: number;
 }
 
 export interface WatchedUpdateRequest {
@@ -680,6 +688,18 @@ export interface ContentSearchPerson {
   popularity?: number;
 }
 
+export interface GameSearch {
+  id: number;
+  cover: {
+    id: number;
+    image_id: string;
+  };
+  first_release_date: string;
+  name: string;
+  summary?: string;
+  version_title?: string;
+}
+
 export enum ImportResponseType {
   IMPORT_SUCCESS = "IMPORT_SUCCESS",
   IMPORT_FAILED = "IMPORT_FAILED",
@@ -719,6 +739,7 @@ export interface ServerConfig {
   TMDB_KEY: string;
   SONARR: SonarrSettings[];
   RADARR: RadarrSettings[];
+  TWITCH: TwitchSettings;
   DEBUG: boolean;
 }
 
@@ -739,6 +760,11 @@ export interface RadarrSettings {
   qualityProfile?: number;
   rootFolder?: number;
   automaticSearch?: boolean;
+}
+
+export interface TwitchSettings {
+  clientId: string;
+  clientSecret: string;
 }
 
 export interface DropDownItem {
@@ -810,6 +836,7 @@ export interface RadarrTestResponse {
 export interface ServerFeatures {
   sonarr: boolean;
   radarr: boolean;
+  games: boolean;
 }
 
 export interface Follow {
@@ -835,4 +862,101 @@ export interface MovaryRatings extends MovaryExportBase {
 
 export interface MovaryWatchlist extends MovaryExportBase {
   addedAt: string;
+}
+
+export interface Game {
+  id: number;
+  updatedAt: string;
+  igdbId: number;
+  name: string;
+  coverId: string;
+  summary: string;
+  storyline: string;
+  releaseDate?: string;
+  rating: number;
+  ratingCount: number;
+  status: number;
+  category: number;
+  poster?: Image;
+}
+
+export interface GameDetailsResponse {
+  id: number;
+  artworks: {
+    width: number;
+    height: number;
+    image_id: string;
+  }[];
+  category: number;
+  cover: {
+    id: number;
+    image_id: string;
+  };
+  first_release_date: number;
+  game_modes: {
+    id: number;
+    name: string;
+  }[];
+  genres: {
+    id: number;
+    name: string;
+  }[];
+  involved_companies: {
+    id: number;
+    company: {
+      id: number;
+      description: string;
+      name: string;
+      slug: string;
+      websites: {
+        id: number;
+        category: number;
+        trusted: boolean;
+        url: string;
+      }[];
+    };
+    developer: boolean;
+    porting: boolean;
+    publisher: boolean;
+    supporting: boolean;
+  }[];
+  name: string;
+  platforms: {
+    id: number;
+    name: string;
+  }[];
+  rating: number;
+  rating_count: number;
+  summary: string;
+  storyline: string;
+  url: string;
+  videos: {
+    id: number;
+    name: string;
+    video_id: string;
+  }[];
+  websites: {
+    id: number;
+    category: number;
+    trusted: boolean;
+    url: string;
+  }[];
+  similar_games: {
+    id: number;
+    name: string;
+    summary: string;
+    first_release_date: number;
+    cover: {
+      id: number;
+      image_id: string;
+    };
+  }[];
+}
+
+export enum GameWebsiteCategory {
+  Official = 1,
+  Wikipedia = 3,
+  Twitch = 6,
+  Steam = 13,
+  Reddit = 14
 }

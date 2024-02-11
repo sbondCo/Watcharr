@@ -10,6 +10,7 @@ import (
 	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-gonic/gin"
 	"github.com/sbondCo/Watcharr/arr"
+	"github.com/sbondCo/Watcharr/game"
 	"gorm.io/gorm"
 )
 
@@ -235,6 +236,90 @@ func (b *BaseRouter) addContentRoutes() {
 		}
 		c.JSON(http.StatusOK, content)
 	}))
+}
+
+func (b *BaseRouter) addGameRoutes() {
+	gamer := b.rg.Group("/game").Use(AuthRequired(nil))
+	exp := time.Hour * 24
+
+	igdb := &Config.TWITCH
+	igdb.OnTokenRefreshed(func() {
+		// Save new token to config when we refresh it.
+		slog.Debug("GameRoutes: token refreshed.. saving to config.")
+		if err := writeConfig(); err != nil {
+			slog.Error("GameRoutes: failed to save refreshed token to config.", "error", err)
+		}
+	})
+	err := igdb.Init()
+	// Save cfg if init succeeded, this will save our access token
+	if err == nil {
+		slog.Error("GameRoutes: Twitch init failed!", "error", err)
+	}
+
+	// Search for games
+	gamer.GET("/search/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("query") == "" {
+			c.Status(400)
+			return
+		}
+		games, err := igdb.Search(c.Param("query"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, games)
+	}))
+
+	// Game details for game page
+	gamer.GET("/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("id") == "" {
+			c.Status(400)
+			return
+		}
+		content, err := igdb.GameDetails(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	}))
+
+	// Add game to played(watched) list
+	gamer.POST("/played", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ar PlayedAddRequest
+		err := c.ShouldBindJSON(&ar)
+		if err == nil {
+			response, err := addPlayed(b.db, igdb, userId, ar, ADDED_WATCHED)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	// IMPORTANT: Routes below only for admins!
+	gamer.Use(AuthRequired(b.db), AdminRequired())
+	{
+		gamer.POST("/config", func(c *gin.Context) {
+			var ar game.IGDB
+			err := c.ShouldBindJSON(&ar)
+			if err == nil {
+				err := saveTwitchConfig(ar)
+				if err != nil {
+					c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+					return
+				}
+				igdb = &Config.TWITCH
+				c.Status(http.StatusOK)
+				return
+			}
+			c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		})
+	}
 }
 
 func (b *BaseRouter) addWatchedRoutes() {
@@ -675,9 +760,9 @@ func (b *BaseRouter) addFollowRoutes() {
 
 	// Get follows thoughts on content
 	f.GET("/thoughts/:type/:tmdbId", func(c *gin.Context) {
-		t := ContentType(c.Param("type"))
-		if t != MOVIE && t != SHOW {
-			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "only movie or show types are supported"})
+		t := c.Param("type")
+		if t != "movie" && t != "tv" && t != "game" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "only movie, tv or game types are supported"})
 			return
 		}
 		userId := c.MustGet("userId").(uint)

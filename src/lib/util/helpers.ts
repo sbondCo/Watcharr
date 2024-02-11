@@ -57,14 +57,56 @@ export function isTouch() {
 // Not passing wList from #each loop caused it not to have reactivity.
 // Passing it through must allow it to recognize it as a dependency?
 export function getWatchedDependedProps(wid: number, wtype: MediaType, list: Watched[]) {
-  const wel = list.find((wl) => wl.content.tmdbId === wid && wl.content.type === wtype);
+  const wel = list.find((wl) => wl.content?.tmdbId === wid && wl.content?.type === wtype);
   if (!wel) return {};
-  console.log(wid, wtype, wel?.content.title, wel?.status, wel?.rating);
+  console.log(wid, wtype, wel?.content?.title, wel?.status, wel?.rating);
   return {
     id: wel.id,
     status: wel.status,
     rating: wel.rating
   };
+}
+
+export function getPlayedDependedProps(wid: number, list: Watched[]) {
+  const wel = list.find((wl) => wl.game?.igdbId === wid);
+  if (!wel) return {};
+  return {
+    id: wel.id,
+    status: wel.status,
+    rating: wel.rating
+  };
+}
+
+/**
+ * Turn a watched status into understandable text
+ * depending on if the status is for a game or not.
+ */
+/**
+ * Turns a WatchedStatus into readable and context aware text.
+ * Watched statuses can be used normally for movies/tv, but
+ * for games, we want to transform the status to make more sense.
+ * ex: 'finished' would become 'played' for games, but remain
+ *     unmodified for series/movies.
+ *
+ * This is only for use when displaying a status in ui for a user
+ * to read, should **never** be involved in logic (comparing
+ * statuses for example).
+ *
+ * @param s The watched status.
+ * @param isForGame If this status is being displayed for a game or not.
+ */
+export function toUnderstandableStatus(s: WatchedStatus, isForGame: boolean) {
+  if (isForGame) {
+    if (s === "FINISHED") {
+      return "played";
+    } else if (s === "WATCHING") {
+      return "playing";
+    }
+  }
+  if (s === "HOLD") {
+    return "on hold";
+  }
+  return s?.toLowerCase();
 }
 
 /**

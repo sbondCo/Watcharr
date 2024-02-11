@@ -36,7 +36,7 @@
   let jellyfinUrl: string | undefined;
 
   $: wListItem = $watchedList.find(
-    (w) => w.content.type === "tv" && w.content.tmdbId === data.tvId
+    (w) => w.content?.type === "tv" && w.content?.tmdbId === data.tvId
   );
 
   let showId: number | undefined;
@@ -121,7 +121,7 @@
           <Title
             title={show.name}
             homepage={show.homepage}
-            releaseDate={show.first_air_date}
+            releaseYear={new Date(Date.parse(show.first_air_date)).getFullYear()}
             voteAverage={show.vote_average}
             voteCount={show.vote_count}
           />
@@ -190,7 +190,7 @@
       </div>
 
       {#if showId}
-        <FollowedThoughts mediaType="tv" tmdbId={showId} />
+        <FollowedThoughts mediaType="tv" mediaId={showId} />
       {/if}
 
       {#await getTvCredits()}
