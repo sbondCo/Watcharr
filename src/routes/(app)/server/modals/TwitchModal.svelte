@@ -59,8 +59,12 @@
   {#if error}
     <span class="error">{error}!</span>
   {/if}
-  <!-- TODO add link to a guide for setting this up -->
+
   <SettingsList>
+    <a href="https://watcharr.app/docs/server_config/game-support-igdb" target="_blank">
+      Learn how to configure this options at Watcharr Docs.
+    </a>
+
     <Setting title="Client ID" desc="Twitch application Client ID.">
       <input
         type="text"
@@ -84,6 +88,15 @@
 </Modal>
 
 <style lang="scss">
+  a {
+    text-decoration: underline;
+    transition: opacity 100ms ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
   .btns {
     display: flex;
     flex-flow: row;
