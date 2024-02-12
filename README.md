@@ -9,7 +9,9 @@
   <a href="/LICENSE"><img src="https://img.shields.io/github/license/sbondCo/Watcharr?style=for-the-badge" /></a>
 </p>
 
-I'm your new easily self-hosted content watched list. The place you store your watched (or watching, planned, etc) movies and tv shows, rate them and track their status.
+I'm your new easily self-hosted content watched list. The place you store your watched (or watching, planned, etc) **movies** and **tv shows** (and **anime**), rate them and track their status.
+
+With [some extra configuration](https://watcharr.app/docs/server_config/game-support-igdb) I can also track your **video games**.
 
 I am built with Go and Svelte(Kit).
 
