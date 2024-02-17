@@ -10,6 +10,10 @@
     groupedActivities = getGroupedActivity(activity);
   }
 
+  function seasonAndEpToReadable(season: number, episode: number) {
+    return `S${season ? String(season)?.padStart(2, "0") : "(unknown)"}E${episode ? String(episode)?.padStart(2, "0") : "(unknown)"}`;
+  }
+
   function getMsg(a: Activity) {
     switch (a?.type) {
       case "ADDED_WATCHED":
@@ -72,6 +76,30 @@
         if (a.data) {
           const data = JSON.parse(a.data);
           return `season ${data.season} status removed`;
+        }
+        return "season removed";
+      case "EPISODE_ADDED":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `${seasonAndEpToReadable(data.season, data.episode)} added ${data.status ? `as ${data.status?.toLowerCase()}` : data.rating ? `with rating ${data.rating}` : ""}`;
+        }
+        return "episode added";
+      case "EPISODE_RATING_CHANGED":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `${seasonAndEpToReadable(data.season, data.episode)} rating changed to ${data.rating}`;
+        }
+        return "episode rating changed";
+      case "EPISODE_STATUS_CHANGED":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `${seasonAndEpToReadable(data.season, data.episode)} status changed to ${data.status?.toLowerCase()}`;
+        }
+        return "episode status changed";
+      case "EPISODE_REMOVED":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `${seasonAndEpToReadable(data.season, data.episode)} removed`;
         }
         return "season removed";
       default:

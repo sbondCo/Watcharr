@@ -74,6 +74,7 @@ func main() {
 		&Content{},
 		&Watched{},
 		&WatchedSeason{},
+		&WatchedEpisode{},
 		&Activity{},
 		&Token{},
 		&Follow{},
