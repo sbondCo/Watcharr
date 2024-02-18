@@ -144,8 +144,7 @@
         }
       }
     }
-    const season =
-      biggestSeasonWatching !== undefined ? biggestSeasonWatching : biggestSeasonWatched;
+    const season = biggestSeasonWatching >= 0 ? biggestSeasonWatching : biggestSeasonWatched;
 
     // Look for biggest watched/watching episode in season if any.
     // Does same thing as above.
