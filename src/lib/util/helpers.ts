@@ -230,3 +230,11 @@ export function userHasPermission(perms: UserPermission, reqPerm: UserPermission
   }
   return (perms & reqPerm) == reqPerm;
 }
+
+/**
+ * Takes season and episode number to make a quickly understandable
+ * string in this format S01E01.
+ */
+export function seasonAndEpToReadable(season: number, episode: number) {
+  return `S${season ? String(season)?.padStart(2, "0") : "(unknown)"}E${episode ? String(episode)?.padStart(2, "0") : "(unknown)"}`;
+}

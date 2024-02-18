@@ -27,16 +27,17 @@ const (
 
 type Watched struct {
 	GormModel
-	Status         WatchedStatus   `json:"status"`
-	Rating         int8            `json:"rating"`
-	Thoughts       string          `json:"thoughts"`
-	UserID         uint            `json:"-" gorm:"uniqueIndex:usernctnidx;uniqueIndex:userngamidx"`
-	ContentID      *int            `json:"-" gorm:"uniqueIndex:usernctnidx"`
-	Content        *Content        `json:"content,omitempty"`
-	GameID         *int            `json:"-" gorm:"uniqueIndex:userngamidx"`
-	Game           *Game           `json:"game,omitempty"`
-	Activity       []Activity      `json:"activity"`
-	WatchedSeasons []WatchedSeason `json:"watchedSeasons,omitempty"` // For shows
+	Status          WatchedStatus    `json:"status"`
+	Rating          int8             `json:"rating"`
+	Thoughts        string           `json:"thoughts"`
+	UserID          uint             `json:"-" gorm:"uniqueIndex:usernctnidx;uniqueIndex:userngamidx"`
+	ContentID       *int             `json:"-" gorm:"uniqueIndex:usernctnidx"`
+	Content         *Content         `json:"content,omitempty"`
+	GameID          *int             `json:"-" gorm:"uniqueIndex:userngamidx"`
+	Game            *Game            `json:"game,omitempty"`
+	Activity        []Activity       `json:"activity"`
+	WatchedSeasons  []WatchedSeason  `json:"watchedSeasons,omitempty"`  // For shows
+	WatchedEpisodes []WatchedEpisode `json:"watchedEpisodes,omitempty"` // For shows
 }
 
 type WatchedAddRequest struct {
@@ -67,7 +68,7 @@ type WatchedRemoveResponse struct {
 
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
-	res := db.Model(&Watched{}).Preload("Content").Preload("Game").Preload("Game.Poster").Preload("Activity").Preload("WatchedSeasons").Where("user_id = ?", userId).Find(&watched)
+	res := db.Model(&Watched{}).Preload("Content").Preload("Game").Preload("Game.Poster").Preload("Activity").Preload("WatchedSeasons").Preload("WatchedEpisodes").Where("user_id = ?", userId).Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}

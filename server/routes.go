@@ -406,7 +406,7 @@ func (b *BaseRouter) addWatchedRoutes() {
 		var ar WatchedSeasonAddRequest
 		err := c.ShouldBindJSON(&ar)
 		if err == nil {
-			response, err := addWatchedSeason(b.db, userId, ar, ADDED_WATCHED)
+			response, err := addWatchedSeason(b.db, userId, ar)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
@@ -425,6 +425,37 @@ func (b *BaseRouter) addWatchedRoutes() {
 		}
 		userId := c.MustGet("userId").(uint)
 		response, err := rmWatchedSeason(b.db, userId, uint(id))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	watched.POST("/episode", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ar WatchedEpisodeAddRequest
+		err := c.ShouldBindJSON(&ar)
+		if err == nil {
+			response, err := addWatchedEpisodes(b.db, userId, ar)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	watched.DELETE("/episode/:id", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.Status(400)
+			return
+		}
+		userId := c.MustGet("userId").(uint)
+		response, err := rmWatchedEpisode(b.db, userId, uint(id))
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return

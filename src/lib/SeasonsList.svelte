@@ -173,7 +173,7 @@
       {#if season?.episodes?.length > 0}
         <ul>
           {#each season.episodes as ep}
-            <SeasonsListEpisode {ep} />
+            <SeasonsListEpisode {ep} {watchedItem} />
           {/each}
         </ul>
       {:else}

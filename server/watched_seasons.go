@@ -33,7 +33,7 @@ type WatchedSeasonAddResponse struct {
 }
 
 // Add/edit a watched season.
-func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest, at ActivityType) (WatchedSeasonAddResponse, error) {
+func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest) (WatchedSeasonAddResponse, error) {
 	slog.Debug("Adding watched season item", "userId", userId, "watchedID", ar.WatchedID, "season", ar.SeasonNumber)
 	// 1. Make sure watched item exists and it is the correct type (TV)
 	var w Watched

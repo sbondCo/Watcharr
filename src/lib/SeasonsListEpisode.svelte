@@ -1,16 +1,118 @@
 <script lang="ts">
-  import type { TMDBSeasonDetailsEpisode } from "@/types";
+  import type {
+    TMDBSeasonDetailsEpisode,
+    WatchedStatus,
+    WatchedEpisodeAddResponse,
+    Watched
+  } from "@/types";
   import Icon from "./Icon.svelte";
   import { userSettings } from "@/store";
+  import PosterRating from "./poster/PosterRating.svelte";
+  import PosterStatus from "./poster/PosterStatus.svelte";
+  import axios from "axios";
+  import { notify } from "./util/notify";
+  import { get } from "svelte/store";
+  import { watchedList } from "@/store";
 
   $: settings = $userSettings;
 
   export let ep: TMDBSeasonDetailsEpisode;
+  export let watchedItem: Watched;
 
   let isHidden = false;
 
   $: {
     if (settings) isHidden = settings.hideSpoilers;
+  }
+
+  function updateWatchedEpisode(status?: WatchedStatus, rating?: number) {
+    const nid = notify({ text: `Saving`, type: "loading" });
+    axios
+      .post<WatchedEpisodeAddResponse>(`/watched/episode`, {
+        watchedId: watchedItem.id,
+        seasonNumber: ep.season_number,
+        episodeNumber: ep.episode_number,
+        status,
+        rating
+      })
+      .then((r) => {
+        const wList = get(watchedList);
+        const wEntry = wList.find((w) => w.id === watchedItem.id);
+        if (!wEntry) {
+          notify({
+            id: nid,
+            text: `Request succeeded, but failed to find local data. Please refresh.`,
+            type: "error"
+          });
+          return;
+        }
+        if (r.status === 200) {
+          wEntry.watchedEpisodes = r.data.watchedEpisodes;
+          if (wEntry.activity?.length > 0) {
+            wEntry.activity.push(r.data.addedActivity);
+          } else {
+            wEntry.activity = [r.data.addedActivity];
+          }
+          watchedList.update((w) => w);
+          notify({ id: nid, text: `Saved!`, type: "success" });
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        notify({ id: nid, text: "Failed To Update!", type: "error" });
+      });
+  }
+
+  function handleStatusClick(type: WatchedStatus | "DELETE") {
+    if (type === "DELETE") {
+      const ws = watchedItem.watchedEpisodes?.find(
+        (s) => s.seasonNumber === ep.season_number && s.episodeNumber === ep.episode_number
+      );
+      if (!ws) {
+        notify({
+          text: "Failed to find watched episode id. Please try refreshing.",
+          type: "error"
+        });
+        return;
+      }
+      const nid = notify({ text: `Saving`, type: "loading" });
+      axios
+        .delete(`/watched/episode/${ws.id}`)
+        .then((r) => {
+          const wList = get(watchedList);
+          const wEntry = wList.find((w) => w.id === watchedItem.id);
+          if (!wEntry) {
+            notify({
+              id: nid,
+              text: `Request succeeded, but failed to find local data. Please refresh.`,
+              type: "error"
+            });
+            return;
+          }
+          if (r.status === 200) {
+            wEntry.watchedEpisodes = wEntry.watchedEpisodes?.filter((s) => s.id !== ws.id);
+            if (r.data) {
+              if (wEntry.activity?.length > 0) {
+                wEntry.activity.push(r.data);
+              } else {
+                wEntry.activity = [r.data];
+              }
+            }
+            watchedList.update((w) => w);
+            notify({ id: nid, text: `Removed!`, type: "success" });
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          notify({ id: nid, text: "Failed To Remove!", type: "error" });
+        });
+      return;
+    }
+    updateWatchedEpisode(type);
+  }
+
+  function handleStarClick(rating: number) {
+    updateWatchedEpisode(undefined, rating);
   }
 </script>
 
@@ -41,6 +143,33 @@
     </div>
     <span class="overview">{ep.overview}</span>
   </div>
+  {#if watchedItem}
+    {@const we = watchedItem.watchedEpisodes?.find(
+      (s) => s.seasonNumber === ep.season_number && s.episodeNumber === ep.episode_number
+    )}
+    <div class="status-rating-ctr">
+      <div class="rating" style={"width: 45px"}>
+        <PosterRating
+          rating={we?.rating}
+          btnTooltip={`Episode ${ep.episode_number} Rating`}
+          handleStarClick={(r) => handleStarClick(r)}
+          minimal={true}
+          direction="bot"
+          hideStarWhenRated
+        />
+      </div>
+      <div class="status">
+        <PosterStatus
+          status={we?.status}
+          btnTooltip={`Episode ${ep.episode_number} Status`}
+          handleStatusClick={(t) => handleStatusClick(t)}
+          direction="bot"
+          width="100%"
+          small
+        />
+      </div>
+    </div>
+  {/if}
   {#if isHidden}
     <button class="plain spoiler-text" on:click={() => (isHidden = false)}>
       <Icon i="eye-closed" wh={34} />
@@ -118,6 +247,36 @@
       }
     }
 
+    .status-rating-ctr {
+      display: flex;
+      align-items: center;
+      flex-flow: column-reverse;
+      gap: 10px;
+      margin-bottom: auto;
+      min-height: 40px;
+      margin-left: auto;
+
+      div {
+        transition: width 100ms ease;
+
+        &:first-of-type {
+          margin-left: auto;
+        }
+
+        &.rating {
+          height: 40px;
+          min-height: 40px;
+        }
+
+        &.status {
+          width: 45px;
+          min-height: 40px;
+          height: 40px;
+          overflow: visible;
+        }
+      }
+    }
+
     span {
       padding: 3px 5px;
 
@@ -185,6 +344,12 @@
       flex-flow: column;
       width: 100%;
       height: 100%;
+
+      .status-rating-ctr {
+        flex-flow: row;
+        justify-content: center;
+        margin-left: unset;
+      }
     }
 
     .rating {

@@ -7,6 +7,7 @@
   export let minimal = false;
   export let direction: "top" | "bot" = "top";
   export let btnTooltip: string = "";
+  export let hideStarWhenRated = false;
 
   let ratingsShown = false;
 </script>
@@ -27,7 +28,7 @@
   }}
   use:tooltip={{ text: btnTooltip, pos: "top", condition: !!btnTooltip && !ratingsShown }}
 >
-  <span>*</span>
+  <span style={hideStarWhenRated && rating ? "display: none" : ""}>*</span>
   {#if !minimal}
     <span class={!rating && disableInteraction ? "unrated-text" : ""}>
       {rating ? rating : disableInteraction ? "Unrated" : "Rate"}
