@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Activity } from "@/types";
-  import { getOrdinalSuffix, months } from "./util/helpers";
+  import { getOrdinalSuffix, months, seasonAndEpToReadable } from "./util/helpers";
 
   export let activity: Activity[] | undefined;
 
@@ -8,10 +8,6 @@
 
   $: {
     groupedActivities = getGroupedActivity(activity);
-  }
-
-  function seasonAndEpToReadable(season: number, episode: number) {
-    return `S${season ? String(season)?.padStart(2, "0") : "(unknown)"}E${episode ? String(episode)?.padStart(2, "0") : "(unknown)"}`;
   }
 
   function getMsg(a: Activity) {
