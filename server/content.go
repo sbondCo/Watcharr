@@ -242,7 +242,7 @@ func tvCredits(id string) (TMDBContentCredits, error) {
 	resp := new(TMDBContentCredits)
 	err := tmdbRequest("/tv/"+id+"/credits", map[string]string{}, &resp)
 	if err != nil {
-		slog.Error("Failed to complete tv cast request!", err.Error())
+		slog.Error("Failed to complete tv cast request!", "error", err.Error())
 		return TMDBContentCredits{}, errors.New("failed to complete tv cast request")
 	}
 	return *resp, nil

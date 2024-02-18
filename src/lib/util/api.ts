@@ -10,7 +10,8 @@ import {
   type WatchedUpdateResponse,
   type UserSettings,
   type Follow,
-  type PlayedAddRequest
+  type PlayedAddRequest,
+  type ActivityUpdateRequest
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
@@ -164,6 +165,47 @@ export function updatePlayed(
       console.error(err);
       notify({ id: nid, text: "Failed To Add!", type: "error" });
     });
+}
+
+export function updateActivity(watchedId: number, activityId: number, date: Date) {
+  const nid = notify({text: "Updating", type: "loading"});
+  axios
+    .put("/activity/" + activityId, {
+      customDate: date.toISOString()
+    } as ActivityUpdateRequest)
+    .then(resp => {
+      console.log("Updated activity timestamp:", resp.status)
+      const wList = get(watchedList);
+      const activity = wList.find(w => w.id === watchedId)?.activity.find(a => a.id === activityId)
+      if (activity) {
+        activity.customDate = date.toISOString()
+        watchedList.update(() => wList)
+      }
+      notify({ id: nid, text: "Updated!", type: "success"})
+    })
+    .catch(err => {
+      console.error(err)
+      notify({ id: nid, text: "Failed to Update!", type: "error"})
+    });
+}
+
+export function removeActivity(watchedId: number, activityId: number) {
+  const nid = notify({text: "Deleting", type: "loading"});
+  axios
+  .delete("/activity/" + activityId)
+  .then(resp => {
+    const wList = get(watchedList);
+    const wListItem = wList.find(w => w.id === watchedId)
+    if (wListItem) {
+      wListItem.activity = wListItem.activity.filter(i => i.id !== activityId)
+      watchedList.update(() => wList)
+    }
+    notify({ id: nid, text: "Deleted!", type: "success" });
+  })
+  .catch(err => {
+    console.error(err)
+    notify({ id: nid, text: "Failed to Delete!", type: "error"})
+  });
 }
 
 export async function contentExistsOnJellyfin(

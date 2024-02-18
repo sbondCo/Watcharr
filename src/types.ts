@@ -44,6 +44,7 @@ export enum UserType {
 }
 
 interface dbModel {
+  id:        number;
   createdAt: string;
   updatedAt: string;
   deletedAt: string;
@@ -85,7 +86,6 @@ export interface WatchedEpisode {
 }
 
 export interface Watched extends dbModel {
-  id: number;
   watched: boolean;
   rating?: number;
   content?: Content;
@@ -119,6 +119,10 @@ export interface WatchedUpdateRequest {
 
 export interface WatchedUpdateResponse {
   newActivity: Activity;
+}
+
+export interface ActivityUpdateRequest {
+  customDate: string;
 }
 
 export interface WatchedSeasonAddResponse {

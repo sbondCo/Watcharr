@@ -229,7 +229,7 @@
       <SimilarContent type="movie" similar={movie.similar} />
 
       {#if wListItem}
-        <Activity activity={wListItem?.activity} />
+        <Activity wListId={wListItem.id} activity={wListItem.activity} />
       {/if}
     </div>
   </div>

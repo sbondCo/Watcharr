@@ -497,6 +497,39 @@ func (b *BaseRouter) addActivityRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	activity.PUT(":id", func(context *gin.Context) {
+		id, err := strconv.ParseUint(context.Param("id"), 10, 32)
+		if err != nil {
+			context.Status(400)
+			return
+		}
+		var activityUpdateRequest ActivityUpdateRequest
+		err = context.ShouldBindJSON(&activityUpdateRequest)
+		if err == nil {
+			err = updateActivity(b.db, uint(id), activityUpdateRequest)
+			if err != nil {
+				context.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			context.Status(http.StatusOK)
+			return
+		}
+	})
+
+	activity.DELETE(":id", func(context *gin.Context) {
+		id, err := strconv.ParseUint(context.Param("id"), 10, 32)
+		if err != nil {
+			context.Status(400)
+			return
+		}
+		err = deleteActivity(b.db, uint(id))
+		if err != nil {
+			context.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		context.Status(http.StatusOK)
+	})
 }
 
 func (b *BaseRouter) addAuthRoutes() {
