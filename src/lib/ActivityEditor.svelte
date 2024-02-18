@@ -3,9 +3,9 @@
   import Modal from "./Modal.svelte";
   import type { Activity } from "@/types";
 
-  export let watchedId : number;
+  export let watchedId: number;
   export let activity: Activity;
-  export let activityMessage : string;
+  export let activityMessage: string;
   export let onClose: () => void;
 
   let isDateTimeChanged: boolean;
@@ -20,20 +20,20 @@
       currentDateString != selectedDateString || currentTimeString != selectedTimeString;
   }
 
-  function dateToInputDateString(date: Date){
+  function dateToInputDateString(date: Date) {
     const year = date.getFullYear();
-    const month = (date.getMonth()+1).toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const day = date.getDate().toString().padStart(2, "0");
-    return `${year}-${month}-${day}`
+    return `${year}-${month}-${day}`;
   }
 
-  function dateToInputTimeString(date: Date){
-    const hours = date.getHours().toString().padStart(2, "0")
-    const minutes = date.getMinutes().toString().padStart(2, "0")
-    return `${hours}:${minutes}`
+  function dateToInputTimeString(date: Date) {
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
   }
 
-  function update(date: string, time: string){
+  function update(date: string, time: string) {
     const epochMillis = Date.parse(`${date} ${time}`);
     const dateObj = new Date(epochMillis);
     updateActivity(watchedId, activity.id, dateObj);
@@ -45,19 +45,23 @@
     onClose();
   }
 </script>
-  <Modal title="Edit Activity" desc={activityMessage} maxWidth="400px" {onClose}>
-    <div class="centered">
-      <h3>Date</h3>
-      <input id="activity-date" type="date" bind:value={selectedDateString} />
-      <h3>Time</h3>
-      <input id="activity-time" type="time" bind:value={selectedTimeString} />
 
-      <div class="button-row">
-        <button class="delete" on:click={remove}>Delete</button>
-        <button on:click={() => update(selectedDateString, selectedTimeString)} disabled={!isDateTimeChanged}>Update</button>
-      </div>
+<Modal title="Edit Activity" desc={activityMessage} maxWidth="400px" {onClose}>
+  <div class="centered">
+    <h3>Date</h3>
+    <input id="activity-date" type="date" bind:value={selectedDateString} />
+    <h3>Time</h3>
+    <input id="activity-time" type="time" bind:value={selectedTimeString} />
+
+    <div class="button-row">
+      <button class="delete" on:click={remove}>Delete</button>
+      <button
+        on:click={() => update(selectedDateString, selectedTimeString)}
+        disabled={!isDateTimeChanged}>Update</button
+      >
     </div>
-  </Modal>
+  </div>
+</Modal>
 
 <style lang="scss">
   .centered {

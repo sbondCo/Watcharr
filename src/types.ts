@@ -44,7 +44,7 @@ export enum UserType {
 }
 
 interface dbModel {
-  id:        number;
+  id: number;
   createdAt: string;
   updatedAt: string;
   deletedAt: string;

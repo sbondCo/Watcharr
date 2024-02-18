@@ -6,9 +6,9 @@
   export let activity: Activity[] | undefined;
   export let wListId: number;
 
-  let clickedActivity : Activity;
+  let clickedActivity: Activity;
   let groupedActivities: { [index: string]: any };
-  let isActivityEditorVisible : boolean;
+  let isActivityEditorVisible: boolean;
 
   $: {
     groupedActivities = getGroupedActivity(activity);
@@ -107,8 +107,11 @@
     }
   }
 
-  function toFullTitleCase(text: string){
-    return text.split(" ").map(l => l[0].toUpperCase() + l.substring(1).toLowerCase()).join(" ");
+  function toFullTitleCase(text: string) {
+    return text
+      .split(" ")
+      .map((l) => l[0].toUpperCase() + l.substring(1).toLowerCase())
+      .join(" ");
   }
 
   function toDayTime(d: Date) {
@@ -145,12 +148,17 @@
   function openEditor(a: Activity) {
     clickedActivity = a;
     isActivityEditorVisible = true;
-    return
+    return;
   }
 </script>
 
 {#if isActivityEditorVisible}
-<ActivityEditor watchedId={wListId} activity={clickedActivity} activityMessage={getMsg(clickedActivity)} onClose={() => (isActivityEditorVisible = false)} />
+  <ActivityEditor
+    watchedId={wListId}
+    activity={clickedActivity}
+    activityMessage={getMsg(clickedActivity)}
+    onClose={() => (isActivityEditorVisible = false)}
+  />
 {/if}
 
 <div class="activity">
