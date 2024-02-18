@@ -280,7 +280,7 @@ func personCredits(id string) (TMDBPersonCombinedCredits, error) {
 
 func discoverMovies() (TMDBDiscoverMovies, error) {
 	resp := new(TMDBDiscoverMovies)
-	err := tmdbRequest("/discover/movie/", map[string]string{"page": "1"}, &resp)
+	err := tmdbRequest("/discover/movie", map[string]string{"page": "1"}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete discover movies request!", "error", err.Error())
 		return TMDBDiscoverMovies{}, errors.New("failed to complete discover movies request")
@@ -290,7 +290,7 @@ func discoverMovies() (TMDBDiscoverMovies, error) {
 
 func discoverTv() (TMDBDiscoverShows, error) {
 	resp := new(TMDBDiscoverShows)
-	err := tmdbRequest("/discover/tv/", map[string]string{"page": "1"}, &resp)
+	err := tmdbRequest("/discover/tv", map[string]string{"page": "1"}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete discover tv request!", "error", err.Error())
 		return TMDBDiscoverShows{}, errors.New("failed to complete discover tv request")
