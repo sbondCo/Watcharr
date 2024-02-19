@@ -498,41 +498,41 @@ func (b *BaseRouter) addActivityRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
-	activity.PUT(":id", func(context *gin.Context) {
-		userId := context.MustGet("userId").(uint)
-		id, err := strconv.ParseUint(context.Param("id"), 10, 32)
+	activity.PUT(":id", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 		if err != nil {
-			context.Status(400)
+			c.Status(400)
 			return
 		}
 		var activityUpdateRequest ActivityUpdateRequest
-		err = context.ShouldBindJSON(&activityUpdateRequest)
+		err = c.ShouldBindJSON(&activityUpdateRequest)
 		if err == nil {
 			err = updateActivity(b.db, userId, uint(id), activityUpdateRequest)
 			if err != nil {
-				context.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
 			}
-			context.Status(http.StatusOK)
+			c.Status(http.StatusOK)
 			return
 		}
-		context.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
-	activity.DELETE(":id", func(context *gin.Context) {
-		userId := context.MustGet("userId").(uint)
-		id, err := strconv.ParseUint(context.Param("id"), 10, 32)
+	activity.DELETE(":id", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 		if err != nil {
-			context.Status(400)
-			slog.Error("Could not process activity id when attempting a deletion", "error", err.Error(), "id", context.Param("id"))
+			c.Status(400)
+			slog.Error("Could not process activity id when attempting a deletion", "error", err.Error(), "id", c.Param("id"))
 			return
 		}
 		err = deleteActivity(b.db, userId, uint(id))
 		if err != nil {
-			context.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return
 		}
-		context.Status(http.StatusOK)
+		c.Status(http.StatusOK)
 	})
 }
 
