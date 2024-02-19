@@ -107,11 +107,14 @@
     }
   }
 
-  function toFullTitleCase(text: string) {
-    return text
-      .split(" ")
-      .map((l) => l[0].toUpperCase() + l.substring(1).toLowerCase())
-      .join(" ");
+  function toFullTitleCase(text: string | undefined) {
+    if (text) {
+      return text
+        .split(" ")
+        .map((l) => l[0].toUpperCase() + l.substring(1).toLowerCase())
+        .join(" ");
+    }
+    return "Unknown";
   }
 
   function toDayTime(d: Date) {
@@ -221,6 +224,7 @@
           gap: 8px;
           width: max-content;
           max-width: 100%;
+          cursor: pointer;
         }
 
         span {

@@ -516,6 +516,7 @@ func (b *BaseRouter) addActivityRoutes() {
 			context.Status(http.StatusOK)
 			return
 		}
+		context.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
 	activity.DELETE(":id", func(context *gin.Context) {
@@ -523,6 +524,7 @@ func (b *BaseRouter) addActivityRoutes() {
 		id, err := strconv.ParseUint(context.Param("id"), 10, 32)
 		if err != nil {
 			context.Status(400)
+			slog.Error("Could not process activity id when attempting a deletion", "error", err.Error(), "id", context.Param("id"))
 			return
 		}
 		err = deleteActivity(b.db, userId, uint(id))

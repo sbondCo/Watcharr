@@ -54,7 +54,7 @@
     <input id="activity-time" type="time" bind:value={selectedTimeString} />
 
     <div class="button-row">
-      <button class="delete" on:click={remove}>Delete</button>
+      <button class="danger" on:click={remove}>Delete</button>
       <button
         on:click={() => update(selectedDateString, selectedTimeString)}
         disabled={!isDateTimeChanged}>Update</button
@@ -88,10 +88,6 @@
       button {
         margin-top: auto;
         width: max-content;
-      }
-
-      .delete {
-        background-color: $delete-color;
       }
     }
   }

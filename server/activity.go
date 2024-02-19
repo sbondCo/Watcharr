@@ -93,6 +93,10 @@ func updateActivity(db *gorm.DB, userId uint, id uint, activityUpdateRequest Act
 		slog.Error("Error updating activity in database", "error", res.Error.Error())
 		return errors.New("failed updating activity in database")
 	}
+	if res.RowsAffected < 1 {
+		slog.Error("No activities were updated. This may be because the activity doesn't exist or is not owned by the calling user.")
+		return errors.New("failed updating activity in database")
+	}
 	slog.Debug("Updating activity", "updated_activity", id)
 	return nil
 }
@@ -105,6 +109,10 @@ func deleteActivity(db *gorm.DB, userId uint, id uint) error {
 	if res.Error != nil {
 		slog.Error("Error deleting activity in database", "error", res.Error.Error())
 		return errors.New("failed deleting activity in database")
+	}
+	if res.RowsAffected < 1 {
+		slog.Error("No activities were deleted. This may be because the activity doesn't exist or is not owned by the calling user.")
+		return errors.New("failed deleting activity from database")
 	}
 	return nil
 }

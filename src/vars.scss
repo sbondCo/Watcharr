@@ -9,7 +9,6 @@
   --rating-color: black;
   --placeholder-color: #8e8e8e;
   --poster-rating-color: gold;
-  --delete-color: red;
 }
 
 :root.theme-dark {
@@ -37,7 +36,6 @@ $nav-color: var(--nav-color);
 $nav-height: 71px; // How tall the nav is naturally, usefull in some places.
 $poster-rating-color: var(--poster-rating-color);
 $poster-extra-detail-bg-color: rgba(46, 46, 46, 0.5);
-$delete-color: var(--delete-color);
 $error: #f3555a;
 $success: #28a745;
 
