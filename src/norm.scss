@@ -62,6 +62,10 @@
   width: 100%;
 }
 
+:global(input.invalid) {
+  border: 3px solid $error;
+}
+
 :global(textarea) {
   padding: 5px;
   max-width: 100%;

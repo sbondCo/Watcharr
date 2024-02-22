@@ -9,6 +9,7 @@
   export let onClose: () => void;
 
   let isDateTimeChanged: boolean;
+  let isDateTimeValid = true;
   let currentDateObject = new Date(Date.parse(activity.customDate ?? activity.createdAt));
   let currentDateString = dateToInputDateString(currentDateObject);
   let currentTimeString = dateToInputTimeString(currentDateObject);
@@ -33,10 +34,22 @@
     return `${hours}:${minutes}`;
   }
 
-  function update(date: string, time: string) {
-    const epochMillis = Date.parse(`${date} ${time}`);
+  function validateNewDate() {
+    const epochMillis = Date.parse(`${selectedDateString} ${selectedTimeString}`);
     const dateObj = new Date(epochMillis);
-    updateActivity(watchedId, activity.id, dateObj);
+    if (dateObj.getFullYear() > 1970 && dateObj.getFullYear() < 2100) {
+      isDateTimeValid = true;
+    } else {
+      isDateTimeValid = false;
+    }
+    return dateObj;
+  }
+
+  function update() {
+    const dateObj = validateNewDate();
+    if (isDateTimeValid && isDateTimeChanged) {
+      updateActivity(watchedId, activity.id, dateObj);
+    }
     onClose();
   }
 
@@ -49,16 +62,26 @@
 <Modal title="Edit Activity" desc={activityMessage} maxWidth="400px" {onClose}>
   <div class="centered">
     <h3>Date</h3>
-    <input id="activity-date" type="date" bind:value={selectedDateString} />
+    <input
+      id="activity-date"
+      type="date"
+      bind:value={selectedDateString}
+      on:change={validateNewDate}
+      class:invalid={!isDateTimeValid}
+    />
     <h3>Time</h3>
-    <input id="activity-time" type="time" bind:value={selectedTimeString} />
+    <input
+      id="activity-time"
+      type="time"
+      bind:value={selectedTimeString}
+      on:change={validateNewDate}
+    />
 
     <div class="button-row">
       <button class="danger" on:click={remove}>Delete</button>
-      <button
-        on:click={() => update(selectedDateString, selectedTimeString)}
-        disabled={!isDateTimeChanged}>Update</button
-      >
+      <div>
+        <button on:click={update} disabled={!(isDateTimeChanged && isDateTimeValid)}>Update</button>
+      </div>
     </div>
   </div>
 </Modal>
