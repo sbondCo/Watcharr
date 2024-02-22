@@ -169,7 +169,7 @@ export function updatePlayed(
 
 export function updateActivity(watchedId: number, activityId: number, date: Date) {
   const nid = notify({ text: "Updating", type: "loading" });
-  console.log("updateac", date);
+  console.debug("updateActivity called", watchedId, activityId, date);
   try {
     axios
       .put("/activity/" + activityId, {
