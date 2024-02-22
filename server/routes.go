@@ -497,6 +497,43 @@ func (b *BaseRouter) addActivityRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	activity.PUT(":id", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+		if err != nil {
+			c.Status(400)
+			return
+		}
+		var activityUpdateRequest ActivityUpdateRequest
+		err = c.ShouldBindJSON(&activityUpdateRequest)
+		if err == nil {
+			err = updateActivity(b.db, userId, uint(id), activityUpdateRequest)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	activity.DELETE(":id", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+		if err != nil {
+			c.Status(400)
+			slog.Error("Could not process activity id when attempting a deletion", "error", err.Error(), "id", c.Param("id"))
+			return
+		}
+		err = deleteActivity(b.db, userId, uint(id))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
 }
 
 func (b *BaseRouter) addAuthRoutes() {

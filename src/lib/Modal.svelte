@@ -4,11 +4,12 @@
   export let title: string;
   export let desc: string | undefined = undefined;
   export let onClose: (() => void) | undefined = undefined;
+  export let maxWidth = "1000px";
 </script>
 
 <div class="backdrop"></div>
 <div class="modal">
-  <div>
+  <div style="max-width:{maxWidth};">
     {#if typeof onClose !== "undefined"}
       <button class="close" on:click={onClose}><Icon i="close" wh="20" /></button>
     {/if}
@@ -50,7 +51,6 @@
       flex-flow: column;
       min-width: 300px;
       width: 100%;
-      max-width: 1000px;
       max-height: calc(100% - 20px);
       background-color: $bg-color;
       border-radius: 10px;

@@ -53,6 +53,10 @@ type ActivityAddRequest struct {
 	CustomDate *time.Time   `json:"customDate,omitempty"`
 }
 
+type ActivityUpdateRequest struct {
+	CustomDate time.Time `json:"customDate" binding:"required"`
+}
+
 func getActivity(db *gorm.DB, userId uint, watchedId uint) ([]Activity, error) {
 	activity := new([]Activity)
 	res := db.Model(&Activity{}).Where("user_id = ? AND watched_id = ?", userId, watchedId).Find(&activity)
@@ -75,4 +79,40 @@ func addActivity(db *gorm.DB, userId uint, ar ActivityAddRequest) (Activity, err
 	}
 	slog.Debug("Adding activity", "added_activity", activity)
 	return activity, nil
+}
+
+func updateActivity(db *gorm.DB, userId uint, id uint, activityUpdateRequest ActivityUpdateRequest) error {
+	if id == 0 {
+		return errors.New("id must be set to update an activity")
+	}
+	if activityUpdateRequest.CustomDate.IsZero() {
+		return errors.New("customDate must be set to update an activity")
+	}
+	res := db.Model(&Activity{}).Where("user_id = ? AND id = ?", userId, id).Update("custom_date", activityUpdateRequest.CustomDate)
+	if res.Error != nil {
+		slog.Error("Error updating activity in database", "error", res.Error.Error())
+		return errors.New("failed updating activity in database")
+	}
+	if res.RowsAffected < 1 {
+		slog.Error("No activities were updated. This may be because the activity doesn't exist or is not owned by the calling user.")
+		return errors.New("failed updating activity in database")
+	}
+	slog.Debug("Updating activity", "updated_activity", id)
+	return nil
+}
+
+func deleteActivity(db *gorm.DB, userId uint, id uint) error {
+	if id == 0 {
+		return errors.New("an id must be provided to delete an activity")
+	}
+	res := db.Where("user_id = ?", userId).Delete(&Activity{}, id)
+	if res.Error != nil {
+		slog.Error("Error deleting activity in database", "error", res.Error.Error())
+		return errors.New("failed deleting activity in database")
+	}
+	if res.RowsAffected < 1 {
+		slog.Error("No activities were deleted. This may be because the activity doesn't exist or is not owned by the calling user.")
+		return errors.New("failed deleting activity from database")
+	}
+	return nil
 }

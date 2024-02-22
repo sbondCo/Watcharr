@@ -1,10 +1,14 @@
 <script lang="ts">
   import type { Activity } from "@/types";
   import { getOrdinalSuffix, months, seasonAndEpToReadable } from "./util/helpers";
+  import ActivityEditor from "./ActivityEditor.svelte";
 
   export let activity: Activity[] | undefined;
+  export let wListId: number;
 
+  let clickedActivity: Activity;
   let groupedActivities: { [index: string]: any };
+  let isActivityEditorVisible: boolean;
 
   $: {
     groupedActivities = getGroupedActivity(activity);
@@ -15,92 +19,102 @@
       case "ADDED_WATCHED":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `added to watched list${data?.status ? ` as ${data.status?.toLowerCase()}` : ""}${
-            data?.rating ? ` with ${data.rating} stars` : ""
+          return `Added to Watched List${data?.status ? ` as ${toFullTitleCase(data.status)}` : ""}${
+            data?.rating ? ` with ${data.rating} Stars` : ""
           }`;
         }
-        return "added to watched list";
+        return "Added to Watched List";
       case "REMOVED_WATCHED":
-        return "removed from watched list";
+        return "Removed from Watched List";
       case "RATING_CHANGED":
         if (a.data) {
-          return `rating changed to ${a.data}`;
+          return `Rating Changed to ${a.data}`;
         }
-        return "rating changed";
+        return "Rating Changed";
       case "STATUS_CHANGED":
         if (a.data) {
-          return `status changed to ${a.data?.toLowerCase()}`;
+          return `Status Changed to ${toFullTitleCase(a.data)}`;
         }
-        return "status changed";
+        return "Status Changed";
       case "THOUGHTS_CHANGED":
-        return "thoughts changed";
+        return "Thoughts Changed";
       case "THOUGHTS_REMOVED":
-        return "thoughts removed";
+        return "Thoughts Removed";
       case "IMPORTED_WATCHED":
-        return "imported";
+        return "Imported";
       case "IMPORTED_RATING":
         if (a.data) {
           const data = JSON.parse(a.data);
           if (data.rating) {
-            return `rating changed to ${data.rating}`;
+            return `Rating Changed to ${data.rating}`;
           } else {
-            return "added to watchlist with no rating";
+            return "Added to Watchlist with No Rating";
           }
         }
-        return "imported rating";
+        return "Imported Rating";
       case "IMPORTED_ADDED_WATCHED":
         return "Imported Watch Date";
       case "SEASON_ADDED":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `season ${data.season} added as ${data.status?.toLowerCase()}`;
+          return `Season ${data.season} Added as ${toFullTitleCase(data.status)}`;
         }
-        return "season added";
+        return "Season Added";
       case "SEASON_RATING_CHANGED":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `changed season ${data.season} rating to ${data.rating}`;
+          return `Changed Season ${data.season} Rating to ${data.rating}`;
         }
-        return "season rating changed";
+        return "Season Rating Changed";
       case "SEASON_STATUS_CHANGED":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `changed season ${data.season} status to ${data.status?.toLowerCase()}`;
+          return `Changed Season ${data.season} Status to ${toFullTitleCase(data.status)}`;
         }
-        return "season status changed";
+        return "Season Status Changed";
       case "SEASON_REMOVED":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `season ${data.season} status removed`;
+          return `Season ${data.season} Status Removed`;
         }
-        return "season removed";
+        return "Season Removed";
       case "EPISODE_ADDED":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `${seasonAndEpToReadable(data.season, data.episode)} added ${data.status ? `as ${data.status?.toLowerCase()}` : data.rating ? `with rating ${data.rating}` : ""}`;
+          return `${seasonAndEpToReadable(data.season, data.episode)} Added ${data.status ? `as ${toFullTitleCase(data.status)}` : data.rating ? `with Rating ${data.rating}` : ""}`;
         }
-        return "episode added";
+        return "Episode Added";
       case "EPISODE_RATING_CHANGED":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `${seasonAndEpToReadable(data.season, data.episode)} rating changed to ${data.rating}`;
+          return `${seasonAndEpToReadable(data.season, data.episode)} Rating Changed to ${data.rating}`;
         }
-        return "episode rating changed";
+        return "Episode Rating Changed";
       case "EPISODE_STATUS_CHANGED":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `${seasonAndEpToReadable(data.season, data.episode)} status changed to ${data.status?.toLowerCase()}`;
+          return `${seasonAndEpToReadable(data.season, data.episode)} Status Changed to ${toFullTitleCase(data.status)}`;
         }
-        return "episode status changed";
+        return "Episode Status Changed";
       case "EPISODE_REMOVED":
         if (a.data) {
           const data = JSON.parse(a.data);
-          return `${seasonAndEpToReadable(data.season, data.episode)} removed`;
+          return `${seasonAndEpToReadable(data.season, data.episode)} Removed`;
         }
-        return "season removed";
+        return "Episode Removed";
       default:
         return a.type;
     }
+  }
+
+  function toFullTitleCase(text: string | undefined) {
+    if (text) {
+      return text
+        .split(" ")
+        .map((l) => l[0].toUpperCase() + l.substring(1).toLowerCase())
+        .join(" ");
+    }
+    return "Unknown";
   }
 
   function toDayTime(d: Date) {
@@ -133,7 +147,22 @@
     }
     return grouped;
   }
+
+  function openEditor(a: Activity) {
+    clickedActivity = a;
+    isActivityEditorVisible = true;
+    return;
+  }
 </script>
+
+{#if isActivityEditorVisible}
+  <ActivityEditor
+    watchedId={wListId}
+    activity={clickedActivity}
+    activityMessage={getMsg(clickedActivity)}
+    onClose={() => (isActivityEditorVisible = false)}
+  />
+{/if}
 
 <div class="activity">
   <h2>Activity</h2>
@@ -145,10 +174,10 @@
         {#each groupedActivities[k] as a}
           {@const d = new Date(getCreatedAtVis(a))}
           <li>
-            <span title={d.toDateString()}>
-              {toDayTime(d)}
-            </span>
-            <span>{getMsg(a)}</span>
+            <button class="unset" on:click={() => openEditor(a)}>
+              <span title={d.toDateString()}>{toDayTime(d)}</span>
+              <span>{getMsg(a)}</span>
+            </button>
           </li>
         {/each}
       {/each}
@@ -187,12 +216,16 @@
       }
 
       li {
-        display: flex;
-        flex-flow: row;
-        align-items: center;
-        gap: 8px;
-        width: max-content;
-        max-width: 100%;
+        button {
+          all: unset;
+          display: flex;
+          flex-flow: row;
+          align-items: center;
+          gap: 8px;
+          width: max-content;
+          max-width: 100%;
+          cursor: pointer;
+        }
 
         span {
           width: max-content;
@@ -204,7 +237,6 @@
 
           &:last-child {
             background-color: $accent-color;
-            text-transform: capitalize;
             color: $text-color;
             border-radius: 8px;
             padding: 10px 12px;

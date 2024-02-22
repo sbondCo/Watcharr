@@ -22,7 +22,6 @@
   export let data;
 
   let trailer: string | undefined;
-  let requestModalShown = false;
   let trailerShown = false;
 
   $: wList = $watchedList;
@@ -203,7 +202,7 @@
       {/if}
 
       {#if wListItem}
-        <Activity activity={wListItem?.activity} />
+        <Activity wListId={wListItem.id} activity={wListItem.activity} />
       {/if}
     </div>
   </div>

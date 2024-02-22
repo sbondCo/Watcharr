@@ -227,7 +227,7 @@
       <SimilarContent type="tv" similar={show.similar} />
 
       {#if wListItem}
-        <Activity activity={wListItem?.activity} />
+        <Activity wListId={wListItem.id} activity={wListItem.activity} />
       {/if}
       <SeasonsList tvId={data.tvId} seasons={show.seasons} watchedItem={wListItem} />
     </div>
