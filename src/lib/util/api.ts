@@ -169,26 +169,32 @@ export function updatePlayed(
 
 export function updateActivity(watchedId: number, activityId: number, date: Date) {
   const nid = notify({ text: "Updating", type: "loading" });
-  axios
-    .put("/activity/" + activityId, {
-      customDate: date.toISOString()
-    } as ActivityUpdateRequest)
-    .then((resp) => {
-      console.log("Updated activity timestamp:", resp.status);
-      const wList = get(watchedList);
-      const activity = wList
-        .find((w) => w.id === watchedId)
-        ?.activity.find((a) => a.id === activityId);
-      if (activity) {
-        activity.customDate = date.toISOString();
-        watchedList.update(() => wList);
-      }
-      notify({ id: nid, text: "Updated!", type: "success" });
-    })
-    .catch((err) => {
-      console.error(err);
-      notify({ id: nid, text: "Failed to Update!", type: "error" });
-    });
+  console.debug("updateActivity called", watchedId, activityId, date);
+  try {
+    axios
+      .put("/activity/" + activityId, {
+        customDate: date.toISOString()
+      } as ActivityUpdateRequest)
+      .then((resp) => {
+        console.log("Updated activity timestamp:", resp.status);
+        const wList = get(watchedList);
+        const activity = wList
+          .find((w) => w.id === watchedId)
+          ?.activity.find((a) => a.id === activityId);
+        if (activity) {
+          activity.customDate = date.toISOString();
+          watchedList.update(() => wList);
+        }
+        notify({ id: nid, text: "Updated!", type: "success" });
+      })
+      .catch((err) => {
+        console.error(err);
+        notify({ id: nid, text: "Failed to Update!", type: "error" });
+      });
+  } catch (err) {
+    console.error("updateActivity failed!", err);
+    notify({ id: nid, text: "Failed!", type: "error" });
+  }
 }
 
 export function removeActivity(watchedId: number, activityId: number) {

@@ -2,6 +2,7 @@
   import { updateActivity, removeActivity } from "@/lib/util/api";
   import Modal from "./Modal.svelte";
   import type { Activity } from "@/types";
+  import { notify } from "./util/notify";
 
   export let watchedId: number;
   export let activity: Activity;
@@ -35,22 +36,35 @@
   }
 
   function validateNewDate() {
-    const epochMillis = Date.parse(`${selectedDateString} ${selectedTimeString}`);
-    const dateObj = new Date(epochMillis);
-    if (dateObj.getFullYear() > 1970 && dateObj.getFullYear() < 2100) {
+    try {
+      const epochMillis = Date.parse(`${selectedDateString} ${selectedTimeString}`);
+      const dateObj = new Date(epochMillis);
+      if (isNaN(dateObj.getTime())) {
+        isDateTimeValid = false;
+        return;
+      }
       isDateTimeValid = true;
-    } else {
+      return dateObj;
+    } catch (err) {
+      console.error("ActivityEditor: validateNewDate failed!", err);
       isDateTimeValid = false;
     }
-    return dateObj;
   }
 
   function update() {
     const dateObj = validateNewDate();
-    if (isDateTimeValid && isDateTimeChanged) {
+    if (dateObj && isDateTimeValid && isDateTimeChanged) {
       updateActivity(watchedId, activity.id, dateObj);
+      onClose();
+      return;
     }
-    onClose();
+    notify({ text: "Unable to try updating!", type: "error" });
+    console.error(
+      "ActivityEditor: Can't try updating, data missing/invalid:",
+      dateObj,
+      isDateTimeValid,
+      isDateTimeChanged
+    );
   }
 
   function remove() {
