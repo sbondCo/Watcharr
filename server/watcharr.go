@@ -80,6 +80,7 @@ func main() {
 		&Follow{},
 		&Image{},
 		&Game{},
+		&ApiKey{},
 	)
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
@@ -138,6 +139,7 @@ func main() {
 	br.addFeatureRoutes()
 	br.addSonarrRoutes()
 	br.addRadarrRoutes()
+	br.addAPIKeyRoutes()
 	br.rg.Static("/img", path.Join(DataPath, "img"))
 
 	go setupTasks(db)

@@ -325,7 +325,7 @@ func (b *BaseRouter) addGameRoutes() {
 func (b *BaseRouter) addWatchedRoutes() {
 	watched := b.rg.Group("/watched").Use(AuthRequired(nil))
 
-	watched.GET("", func(c *gin.Context) {
+	b.rg.Use(APIKeyMiddlewareWrapper(b.db, AuthRequired(nil))).GET("/watched", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		c.JSON(http.StatusOK, getWatched(b.db, userId))
 	})
