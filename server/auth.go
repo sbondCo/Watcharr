@@ -155,6 +155,14 @@ type UserPasswordUpdateRequest struct {
 // If db is passed, extra user info from the database will be fetched.
 func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		// using the API key middleware if x-api-key header is passed
+		key := c.GetHeader("x-api-key")
+		if key != "" && c.Request.Method == "GET" && c.Request.URL.Path == "/api/watched" {
+			APIKeyMiddleware(db, key, c)
+			return
+		}
+
 		slog.Debug("AuthRequired middleware hit")
 		atoken := c.GetHeader("Authorization")
 		// Make sure auth header isn't empty

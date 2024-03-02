@@ -323,9 +323,9 @@ func (b *BaseRouter) addGameRoutes() {
 }
 
 func (b *BaseRouter) addWatchedRoutes() {
-	watched := b.rg.Group("/watched").Use(AuthRequired(nil))
+	watched := b.rg.Group("/watched").Use(AuthRequired(b.db))
 
-	b.rg.Use(APIKeyMiddlewareWrapper(b.db, AuthRequired(nil))).GET("/watched", func(c *gin.Context) {
+	watched.GET("", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		c.JSON(http.StatusOK, getWatched(b.db, userId))
 	})
@@ -1107,5 +1107,70 @@ func (b *BaseRouter) addRadarrRoutes() {
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
+
+func (b *BaseRouter) addAPIKeyRoutes() {
+	apiKeyGrp := b.rg.Group("/api_keys").Use(AuthRequired(nil))
+
+	apiKeyGrp.POST("", func(ctx *gin.Context) {
+		var req ApiKeyRequest
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
+				Error: err.Error(),
+			})
+			return
+		}
+
+		userId := ctx.MustGet("userId").(uint)
+		apiKey, err := createAPIKey(b.db, userId, req.Note)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, ErrorResponse{
+				Error: err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, apiKey)
+	})
+
+	apiKeyGrp.GET("", func(ctx *gin.Context) {
+		userId := ctx.MustGet("userId").(uint)
+
+		apiKeys, err := getAllAPIKeys(b.db, userId)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, apiKeys)
+	})
+
+	apiKeyGrp.GET("/:id", func(ctx *gin.Context) {
+		userId := ctx.MustGet("userId").(uint)
+
+		apiKey, err := getAPIKey(b.db, userId, ctx.Params.ByName("id"))
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				ctx.AbortWithStatus(http.StatusNotFound)
+				return
+			}
+
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, apiKey)
+	})
+
+	apiKeyGrp.DELETE("/:id", func(ctx *gin.Context) {
+		userId := ctx.MustGet("userId").(uint)
+
+		if err := deleteAPIKey(b.db, userId, ctx.Params.ByName("id")); err != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+
+		ctx.Status(http.StatusNoContent)
 	})
 }
