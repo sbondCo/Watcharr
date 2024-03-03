@@ -234,6 +234,67 @@
     }
   }
 
+  async function processWatcharrFile(files?: FileList | null) {
+    try {
+      console.log("processWatcharrFile", files);
+      if (!files || files?.length <= 0) {
+        console.error("processWatcharrFile", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
+        });
+        isDragOver = false;
+        return;
+      }
+      isLoading = true;
+      if (files.length > 1) {
+        notify({
+          type: "error",
+          text: "Only one file at a time is supported. Continuing with the first.",
+          time: 6000
+        });
+      }
+      // Currently only support for importing one file at a time
+      const file = files[0];
+      if (file.type !== "application/json") {
+        notify({
+          type: "error",
+          text: "Must be a Watcharr JSON export file"
+        });
+        isLoading = false;
+        isDragOver = false;
+        return;
+      }
+      // Build toImport array
+      const toImport: ImportedList[] = [];
+      const fileText = await readFile(new FileReader(), file);
+      const jsonData = JSON.parse(fileText);
+      for (const view of jsonData) {
+        const t: ImportedList = {
+          tmdbId: view.content.tmdbId,
+          name: view.content.title,
+          year: new Date(view.content.release_date).getFullYear().toString(),
+          type: view.content.type,
+          rating: view.rating,
+          status: view.content.status,
+          thoughts: view.thoughts
+        };
+        toImport.push(t);
+      }
+      console.log("toImport:", toImport);
+      importedList.set({
+        data: JSON.stringify(toImport),
+        type: "watcharr"
+      });
+      goto("/import/process");
+    } catch (err) {
+      isLoading = false;
+      notify({ type: "error", text: "Failed to read file!" });
+      console.error("import: Failed to read file!", err);
+    }
+  }
+
   onMount(() => {
     if (!localStorage.getItem("token")) {
       goto("/login");
@@ -265,6 +326,8 @@
           filesSelected={(f) => processFilesMovary(f)}
           allowSelectMultipleFiles
         />
+
+        <DropFileButton text="Watcharr Exports" filesSelected={(f) => processWatcharrFile(f)} />
       {/if}
     </div>
   </div>
