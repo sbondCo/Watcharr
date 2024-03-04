@@ -48,16 +48,19 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest) (Wat
 	if w.Content.Type != SHOW {
 		return WatchedSeasonAddResponse{}, errors.New("can't add watched season for non show content")
 	}
-	var found bool
+	found := false
+	updated := false
 	for i, ws := range w.WatchedSeasons {
 		if ws.SeasonNumber == ar.SeasonNumber {
 			slog.Debug("Existing watched season item found, updating existing")
 			found = true
-			if ar.Status != "" {
+			if ar.Status != "" && ar.Status != w.WatchedSeasons[i].Status {
 				w.WatchedSeasons[i].Status = ar.Status
+				updated = true
 			}
-			if ar.Rating != 0 {
+			if ar.Rating != 0 && ar.Rating != w.WatchedSeasons[i].Rating {
 				w.WatchedSeasons[i].Rating = ar.Rating
+				updated = true
 			}
 			break
 		}
@@ -79,13 +82,17 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest) (Wat
 	}
 	// Add activity
 	if found {
-		if ar.Status != "" {
-			json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status})
-			addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: SEASON_STATUS_CHANGED, Data: string(json)})
-		}
-		if ar.Rating != 0 {
-			json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "rating": ar.Rating})
-			addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: SEASON_RATING_CHANGED, Data: string(json)})
+		// Only add change activity if we actually updated a value
+		// (changing value to same value doesn't count).
+		if updated {
+			if ar.Status != "" {
+				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status})
+				addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: SEASON_STATUS_CHANGED, Data: string(json)})
+			}
+			if ar.Rating != 0 {
+				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "rating": ar.Rating})
+				addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: SEASON_RATING_CHANGED, Data: string(json)})
+			}
 		}
 	} else {
 		json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status, "rating": ar.Rating})
