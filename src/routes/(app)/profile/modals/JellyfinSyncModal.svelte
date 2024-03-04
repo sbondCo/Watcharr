@@ -40,6 +40,7 @@
       return;
     }
     console.log("startJobWatcher: Starting..");
+    let seqfailedJobReqs = 0;
     while (step === "job-running") {
       try {
         const r = await axios.get<GetJobResponse>(`/job/${jobId}`);
@@ -51,17 +52,36 @@
         } else if (r.data?.status === JobStatus.CANCELLED) {
           step = "errored";
         }
-        await new Promise((r) => setTimeout(r, 1000));
+        // If we get here without erroring, we can reset it to 0.
+        seqfailedJobReqs = 0;
       } catch (err) {
-        console.error("jobWatcher: Get job request failed!", err);
+        console.error("jobWatcher: Get job request failed!", seqfailedJobReqs, err);
+        seqfailedJobReqs++;
       }
+      if (seqfailedJobReqs >= 10) {
+        console.error("jobWatcher: Failed 10 times in a row!");
+        notify({
+          text: "Status checker has failed 10 times in a row!",
+          type: "error",
+          time: 30000
+        });
+        step = "errored";
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 1000));
     }
     if (step !== "modal-closing") {
       // Update our watched list
-      notify({ text: "Fetching updated watched list." });
-      const w = await axios.get("/watched");
-      if (w?.data?.length > 0) {
-        watchedList.update((wl) => (wl = w.data));
+      const nid = notify({ text: "Fetching updated watched list.", type: "loading" });
+      try {
+        const w = await axios.get("/watched");
+        if (w?.data?.length > 0) {
+          watchedList.update((wl) => (wl = w.data));
+          notify({ id: nid, text: "Fetched updated watched list.", type: "success" });
+        }
+      } catch (err) {
+        console.error("jobWatcher: Getting updated watched list failed!", err);
+        notify({ id: nid, text: "Getting updated watched list failed!", type: "error" });
       }
     }
   }
