@@ -15,8 +15,8 @@ type JobStatus string
 var (
 	JOB_CREATED   JobStatus = "CREATED"
 	JOB_RUNNING   JobStatus = "RUNNING"
-	JOB_COMPLETED JobStatus = "COMPLETED"
-	JOB_FAILED    JobStatus = "FAILED"
+	JOB_DONE      JobStatus = "DONE"
+	JOB_CANCELLED JobStatus = "CANCELLED"
 )
 
 type Job struct {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"strconv"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -85,6 +86,8 @@ func startJellyfinSync(
 					continue
 				}
 
+				updateJobCurrentTask(jobId, userId, "syncing "+v.Name)
+
 				// 2. Imported watched movie
 				w, err := addWatched(db, userId, WatchedAddRequest{
 					Status:      FINISHED,
@@ -95,9 +98,10 @@ func startJellyfinSync(
 				if err != nil {
 					if err.Error() == "content already on watched list" {
 						slog.Error("jellyfinSyncWatched: Unique constraint hit.. content must already be on watch list.", "movie_name", v.Name, "movie_ids", v.ProviderIds, "user_id", userId)
+					} else {
+						slog.Error("jellyfinSyncWatched: Movie failed to import.", "movie_name", v.Name, "movie_ids", v.ProviderIds, "user_id", userId)
+						addJobError(jobId, userId, "movie could not be imported (failed when adding to watched list): "+v.Name)
 					}
-					slog.Error("jellyfinSyncWatched: Movie failed to import.", "movie_name", v.Name, "movie_ids", v.ProviderIds, "user_id", userId)
-					addJobError(jobId, userId, "movie could not be imported (failed when adding to watched list): "+v.Name)
 				}
 
 				// 3. Add IMPORTED_ADDED_WATCHED activity
@@ -265,6 +269,8 @@ func startJellyfinSync(
 			}
 		}
 	}
+
+	updateJobStatus(jobId, userId, JOB_DONE)
 }
 
 func jellyfinSyncWatched(
