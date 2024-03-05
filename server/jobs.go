@@ -8,6 +8,7 @@ package main
 import (
 	"errors"
 	"log/slog"
+	"time"
 )
 
 type JobStatus string
@@ -55,6 +56,17 @@ func addJob(name string, userId uint) (string, error) {
 	return idk, nil
 }
 
+func rmJob(id string, userId uint) {
+	slog.Debug("rmJob: Removing a job.", "id", id)
+	v, ok := activeJobs[id]
+	if ok && v.UserId == userId {
+		delete(activeJobs, id)
+		slog.Debug("rmJob: Removed a job.", "id", id)
+		return
+	}
+	slog.Debug("rmJob: Job to remove does not exist (or not owned by this user).", "id", id, "user_id", userId)
+}
+
 // Get a job.
 // Returns job if found, otherwise errors if job does not exist.
 func getJob(id string, userId uint) (*Job, error) {
@@ -78,6 +90,15 @@ func updateJobStatus(id string, userId uint, status JobStatus) error {
 		return err
 	}
 	j.Status = status
+	// If job is set to done, remove it after 1 minute.
+	if status == JOB_DONE {
+		slog.Debug("updateJobStatus: Job set to done. Will be removed after 1m.", "id", id)
+		go func() {
+			time.Sleep(1 * time.Minute)
+			slog.Debug("updateJobStatus: Job done. waited 1m.. removing job now.", "id", id)
+			rmJob(id, userId)
+		}()
+	}
 	return nil
 }
 
