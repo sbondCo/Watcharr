@@ -979,3 +979,21 @@ export enum GameWebsiteCategory {
   Steam = 13,
   Reddit = 14
 }
+
+export interface JellyfinSyncResponse {
+  jobId: string;
+}
+
+export enum JobStatus {
+  CREATED = "CREATED",
+  RUNNING = "RUNNING",
+  DONE = "DONE",
+  CANCELLED = "CANCELLED"
+}
+
+export interface GetJobResponse {
+  name: string;
+  status: JobStatus;
+  currentTask?: string;
+  errors: string[];
+}

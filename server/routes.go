@@ -663,7 +663,7 @@ func (b *BaseRouter) addProfileRoutes() {
 }
 
 func (b *BaseRouter) addJellyfinRoutes() {
-	jf := b.rg.Group("/jellyfin").Use(AuthRequired(b.db))
+	jf := b.rg.Group("/jellyfin").Use(AuthRequired(b.db), JellyfinAccessRequired())
 
 	// Check if jf has item
 	jf.GET("/:type/:name/:tmdbId", func(c *gin.Context) {
@@ -673,6 +673,21 @@ func (b *BaseRouter) addJellyfinRoutes() {
 		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
 		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
 		response, err := jellyfinContentFind(userId, userType, username, userThirdPartyId, userThirdPartyAuth, c.Param("type"), c.Param("name"), c.Param("tmdbId"))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Sync users jellyfin watched items to watchlist
+	jf.GET("/sync", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		userType := c.MustGet("userType").(UserType)
+		username := c.MustGet("username").(string)
+		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
+		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
+		response, err := jellyfinSyncWatched(b.db, userId, userType, username, userThirdPartyId, userThirdPartyAuth)
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return
@@ -1107,5 +1122,19 @@ func (b *BaseRouter) addRadarrRoutes() {
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
+
+func (b *BaseRouter) addJobRoutes() {
+	job := b.rg.Group("/job").Use(AuthRequired(nil))
+
+	job.GET("/:id", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		response, err := getJob(c.Param("id"), userId)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, *response)
 	})
 }

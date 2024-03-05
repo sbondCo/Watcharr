@@ -31,6 +31,7 @@ type WatchedEpisodeAddRequest struct {
 	EpisodeNumber int           `json:"episodeNumber"`
 	Status        WatchedStatus `json:"status"`
 	Rating        int8          `json:"rating"`
+	addActivity   ActivityType  `json:"-"`
 }
 
 type WatchedEpisodeAddResponse struct {
@@ -54,16 +55,19 @@ func addWatchedEpisodes(db *gorm.DB, userId uint, ar WatchedEpisodeAddRequest) (
 	if w.Content.Type != SHOW {
 		return WatchedEpisodeAddResponse{}, errors.New("can't add watched episode for non show content")
 	}
-	var found bool
+	found := false
+	updated := false
 	for i, we := range w.WatchedEpisodes {
 		if we.SeasonNumber == ar.SeasonNumber && we.EpisodeNumber == ar.EpisodeNumber {
 			slog.Debug("Existing watched episode item found, updating existing")
 			found = true
-			if ar.Status != "" {
+			if ar.Status != "" && ar.Status != w.WatchedEpisodes[i].Status {
 				w.WatchedEpisodes[i].Status = ar.Status
+				updated = true
 			}
-			if ar.Rating != 0 {
+			if ar.Rating != 0 && ar.Rating != w.WatchedEpisodes[i].Rating {
 				w.WatchedEpisodes[i].Rating = ar.Rating
+				updated = true
 			}
 			break
 		}
@@ -86,17 +90,25 @@ func addWatchedEpisodes(db *gorm.DB, userId uint, ar WatchedEpisodeAddRequest) (
 	}
 	// Add activity
 	if found {
-		if ar.Status != "" {
-			json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "status": ar.Status})
-			addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: EPISODE_STATUS_CHANGED, Data: string(json)})
-		}
-		if ar.Rating != 0 {
-			json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "rating": ar.Rating})
-			addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: EPISODE_RATING_CHANGED, Data: string(json)})
+		// Only add change activity if we actually updated a value
+		// (changing value to same value doesn't count).
+		if updated {
+			if ar.Status != "" {
+				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "status": ar.Status})
+				addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: EPISODE_STATUS_CHANGED, Data: string(json)})
+			}
+			if ar.Rating != 0 {
+				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "rating": ar.Rating})
+				addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: EPISODE_RATING_CHANGED, Data: string(json)})
+			}
 		}
 	} else {
+		at := EPISODE_ADDED
+		if ar.addActivity != "" {
+			at = ar.addActivity
+		}
 		json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "status": ar.Status, "rating": ar.Rating})
-		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: EPISODE_ADDED, Data: string(json)})
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: at, Data: string(json)})
 	}
 	return WatchedEpisodeAddResponse{
 		WatchedEpisodes: w.WatchedEpisodes,
