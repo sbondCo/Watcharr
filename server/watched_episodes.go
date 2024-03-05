@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -26,12 +27,13 @@ type WatchedEpisode struct {
 }
 
 type WatchedEpisodeAddRequest struct {
-	WatchedID     uint          `json:"watchedId"`
-	SeasonNumber  int           `json:"seasonNumber"`
-	EpisodeNumber int           `json:"episodeNumber"`
-	Status        WatchedStatus `json:"status"`
-	Rating        int8          `json:"rating"`
-	addActivity   ActivityType  `json:"-"`
+	WatchedID       uint          `json:"watchedId"`
+	SeasonNumber    int           `json:"seasonNumber"`
+	EpisodeNumber   int           `json:"episodeNumber"`
+	Status          WatchedStatus `json:"status"`
+	Rating          int8          `json:"rating"`
+	addActivity     ActivityType  `json:"-"`
+	addActivityDate time.Time     `json:"-"`
 }
 
 type WatchedEpisodeAddResponse struct {
@@ -103,12 +105,15 @@ func addWatchedEpisodes(db *gorm.DB, userId uint, ar WatchedEpisodeAddRequest) (
 			}
 		}
 	} else {
-		at := EPISODE_ADDED
-		if ar.addActivity != "" {
-			at = ar.addActivity
-		}
 		json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "status": ar.Status, "rating": ar.Rating})
-		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: at, Data: string(json)})
+		act := ActivityAddRequest{WatchedID: w.ID, Type: EPISODE_ADDED, Data: string(json)}
+		if ar.addActivity != "" {
+			act.Type = ar.addActivity
+		}
+		if !ar.addActivityDate.IsZero() {
+			act.CustomDate = &ar.addActivityDate
+		}
+		addedActivity, _ = addActivity(db, userId, act)
 	}
 	return WatchedEpisodeAddResponse{
 		WatchedEpisodes: w.WatchedEpisodes,

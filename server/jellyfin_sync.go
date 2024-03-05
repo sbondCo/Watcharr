@@ -219,10 +219,11 @@ func startJellyfinSync(
 						}
 						updateJobCurrentTask(jobId, userId, "syncing "+v.Name+" season "+strconv.Itoa(vs.IndexNumber))
 						_, err = addWatchedSeason(db, userId, WatchedSeasonAddRequest{
-							WatchedID:    w.ID,
-							SeasonNumber: vs.IndexNumber,
-							Status:       FINISHED,
-							addActivity:  SEASON_ADDED_JF,
+							WatchedID:       w.ID,
+							SeasonNumber:    vs.IndexNumber,
+							Status:          FINISHED,
+							addActivity:     SEASON_ADDED_JF,
+							addActivityDate: vs.UserData.LastPlayedDate,
 						})
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to fetch series seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
@@ -259,11 +260,12 @@ func startJellyfinSync(
 						}
 						updateJobCurrentTask(jobId, userId, "syncing "+v.Name+" season "+strconv.Itoa(vs.ParentIndexNumber)+" episode "+strconv.Itoa(vs.IndexNumber))
 						_, err = addWatchedEpisodes(db, userId, WatchedEpisodeAddRequest{
-							WatchedID:     w.ID,
-							SeasonNumber:  vs.ParentIndexNumber,
-							EpisodeNumber: vs.IndexNumber,
-							Status:        FINISHED,
-							addActivity:   EPISODE_ADDED_JF,
+							WatchedID:       w.ID,
+							SeasonNumber:    vs.ParentIndexNumber,
+							EpisodeNumber:   vs.IndexNumber,
+							Status:          FINISHED,
+							addActivity:     EPISODE_ADDED_JF,
+							addActivityDate: vs.UserData.LastPlayedDate,
 						})
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to import series episode.", "series_name", v.Name, "season_num", vs.ParentIndexNumber, "episode_num", vs.IndexNumber, "user_id", userId)
