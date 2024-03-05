@@ -213,6 +213,7 @@ func startJellyfinSync(
 					slog.Info("jellyfinSyncWatched: Series has no seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
 				} else {
 					for _, vs := range seriesSeasons.Items {
+						slog.Debug("jellyfinSyncWatched: Processing a season.", "full_item", v, "user_id", userId)
 						if !vs.UserData.Played {
 							slog.Debug("jellyfinSyncWatched: Skipping import of unplayed season.", "series_name", v.Name, "season_num", vs.IndexNumber, "user_id", userId)
 							continue
@@ -254,6 +255,7 @@ func startJellyfinSync(
 					slog.Info("jellyfinSyncWatched: Series has no episodes.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
 				} else {
 					for _, vs := range seriesEpisodes.Items {
+						slog.Debug("jellyfinSyncWatched: Processing an episode.", "full_item", v, "user_id", userId)
 						if !vs.UserData.Played {
 							slog.Debug("jellyfinSyncWatched: Skipping import of unplayed episode.", "series_name", v.Name, "season_num", vs.ParentIndexNumber, "episode_num", vs.IndexNumber, "user_id", userId)
 							continue
