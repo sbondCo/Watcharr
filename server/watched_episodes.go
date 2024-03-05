@@ -31,6 +31,7 @@ type WatchedEpisodeAddRequest struct {
 	EpisodeNumber int           `json:"episodeNumber"`
 	Status        WatchedStatus `json:"status"`
 	Rating        int8          `json:"rating"`
+	addActivity   ActivityType  `json:"-"`
 }
 
 type WatchedEpisodeAddResponse struct {
@@ -102,8 +103,12 @@ func addWatchedEpisodes(db *gorm.DB, userId uint, ar WatchedEpisodeAddRequest) (
 			}
 		}
 	} else {
+		at := EPISODE_ADDED
+		if ar.addActivity != "" {
+			at = ar.addActivity
+		}
 		json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "status": ar.Status, "rating": ar.Rating})
-		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: EPISODE_ADDED, Data: string(json)})
+		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: at, Data: string(json)})
 	}
 	return WatchedEpisodeAddResponse{
 		WatchedEpisodes: w.WatchedEpisodes,

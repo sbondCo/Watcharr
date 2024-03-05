@@ -93,7 +93,7 @@ func startJellyfinSync(
 					ContentID:   tmdbId,
 					ContentType: MOVIE,
 					WatchedDate: v.UserData.LastPlayedDate,
-				}, IMPORTED_WATCHED)
+				}, IMPORTED_WATCHED_JF)
 				if err != nil {
 					if err.Error() == "content already on watched list" {
 						slog.Error("jellyfinSyncWatched: Unique constraint hit.. content must already be on watch list.", "movie_name", v.Name, "movie_ids", v.ProviderIds, "user_id", userId)
@@ -102,9 +102,9 @@ func startJellyfinSync(
 						addJobError(jobId, userId, "movie could not be imported (failed when adding to watched list): "+v.Name)
 					}
 				} else {
-					// 3. Add IMPORTED_ADDED_WATCHED activity
+					// 3. Add IMPORTED_ADDED_WATCHED_JF activity
 					if !v.UserData.LastPlayedDate.IsZero() {
-						_, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_ADDED_WATCHED, CustomDate: &v.UserData.LastPlayedDate})
+						_, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_ADDED_WATCHED_JF, CustomDate: &v.UserData.LastPlayedDate})
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to add dateswatched activity.", "movie_name", v.Name,
 								"movie_ids", v.ProviderIds, "user_id", userId, "date", v.UserData.LastPlayedDate, "error", err)
@@ -171,7 +171,7 @@ func startJellyfinSync(
 					ContentID:   tmdbId,
 					ContentType: SHOW,
 					WatchedDate: v.UserData.LastPlayedDate,
-				}, IMPORTED_WATCHED)
+				}, IMPORTED_WATCHED_JF)
 				if err != nil {
 					if err.Error() == "content already on watched list" {
 						slog.Info("jellyfinSyncWatched: Unique constraint hit.. content must already be on watch list.",
@@ -183,7 +183,7 @@ func startJellyfinSync(
 				} else {
 					// 3. Add IMPORTED_ADDED_WATCHED activity (only if no err above, show also must not have already been on our list)
 					if !v.UserData.LastPlayedDate.IsZero() {
-						_, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_ADDED_WATCHED, CustomDate: &v.UserData.LastPlayedDate})
+						_, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_ADDED_WATCHED_JF, CustomDate: &v.UserData.LastPlayedDate})
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to add dateswatched activity.", "series_name", v.Name,
 								"series_ids", v.ProviderIds, "user_id", userId, "date", v.UserData.LastPlayedDate, "error", err)
@@ -218,7 +218,12 @@ func startJellyfinSync(
 							continue
 						}
 						updateJobCurrentTask(jobId, userId, "syncing "+v.Name+" season "+strconv.Itoa(vs.IndexNumber))
-						_, err = addWatchedSeason(db, userId, WatchedSeasonAddRequest{WatchedID: w.ID, SeasonNumber: vs.IndexNumber, Status: FINISHED})
+						_, err = addWatchedSeason(db, userId, WatchedSeasonAddRequest{
+							WatchedID:    w.ID,
+							SeasonNumber: vs.IndexNumber,
+							Status:       FINISHED,
+							addActivity:  SEASON_ADDED_JF,
+						})
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to fetch series seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
 							addJobError(jobId, userId, "series season could not be imported (addWatchedSeason request failed): "+v.Name+" season "+strconv.Itoa(vs.IndexNumber))
@@ -258,6 +263,7 @@ func startJellyfinSync(
 							SeasonNumber:  vs.ParentIndexNumber,
 							EpisodeNumber: vs.IndexNumber,
 							Status:        FINISHED,
+							addActivity:   EPISODE_ADDED_JF,
 						})
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to import series episode.", "series_name", v.Name, "season_num", vs.ParentIndexNumber, "episode_num", vs.IndexNumber, "user_id", userId)

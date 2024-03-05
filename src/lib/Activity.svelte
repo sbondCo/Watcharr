@@ -41,6 +41,7 @@
       case "THOUGHTS_REMOVED":
         return "Thoughts Removed";
       case "IMPORTED_WATCHED":
+      case "IMPORTED_WATCHED_JF":
         return "Imported";
       case "IMPORTED_RATING":
         if (a.data) {
@@ -53,8 +54,10 @@
         }
         return "Imported Rating";
       case "IMPORTED_ADDED_WATCHED":
+      case "IMPORTED_ADDED_WATCHED_JF":
         return "Imported Watch Date";
       case "SEASON_ADDED":
+      case "SEASON_ADDED_JF":
         if (a.data) {
           const data = JSON.parse(a.data);
           return `Season ${data.season} Added as ${toFullTitleCase(data.status)}`;
@@ -79,6 +82,7 @@
         }
         return "Season Removed";
       case "EPISODE_ADDED":
+      case "EPISODE_ADDED_JF":
         if (a.data) {
           const data = JSON.parse(a.data);
           return `${seasonAndEpToReadable(data.season, data.episode)} Added ${data.status ? `as ${toFullTitleCase(data.status)}` : data.rating ? `with Rating ${data.rating}` : ""}`;
