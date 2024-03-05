@@ -101,14 +101,14 @@ func startJellyfinSync(
 						slog.Error("jellyfinSyncWatched: Movie failed to import.", "movie_name", v.Name, "movie_ids", v.ProviderIds, "user_id", userId)
 						addJobError(jobId, userId, "movie could not be imported (failed when adding to watched list): "+v.Name)
 					}
-				}
-
-				// 3. Add IMPORTED_ADDED_WATCHED activity
-				if !v.UserData.LastPlayedDate.IsZero() {
-					_, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_ADDED_WATCHED, CustomDate: &v.UserData.LastPlayedDate})
-					if err != nil {
-						slog.Error("jellyfinSyncWatched: Failed to add dateswatched activity.", "movie_name", v.Name,
-							"movie_ids", v.ProviderIds, "user_id", userId, "date", v.UserData.LastPlayedDate, "error", err)
+				} else {
+					// 3. Add IMPORTED_ADDED_WATCHED activity
+					if !v.UserData.LastPlayedDate.IsZero() {
+						_, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: IMPORTED_ADDED_WATCHED, CustomDate: &v.UserData.LastPlayedDate})
+						if err != nil {
+							slog.Error("jellyfinSyncWatched: Failed to add dateswatched activity.", "movie_name", v.Name,
+								"movie_ids", v.ProviderIds, "user_id", userId, "date", v.UserData.LastPlayedDate, "error", err)
+						}
 					}
 				}
 			}

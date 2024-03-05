@@ -5,7 +5,7 @@
   import { notify } from "@/lib/util/notify";
   import { JobStatus, type GetJobResponse, type JellyfinSyncResponse } from "@/types";
   import axios from "axios";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { watchedList } from "@/store";
 
   export let onClose: () => void;
@@ -13,7 +13,7 @@
   let step: "starting" | "errored" | "job-running" | "done" | "modal-closing" = "starting";
   let jobId: string | undefined;
   let currentTask: string | undefined;
-  let latestJobStatus: GetJobResponse;
+  let latestJobStatus: GetJobResponse | undefined;
 
   async function startJellyfinSync() {
     try {
@@ -100,6 +100,13 @@
   onMount(() => {
     startJellyfinSync();
   });
+
+  onDestroy(() => {
+    step = "starting";
+    jobId = undefined;
+    currentTask = undefined;
+    latestJobStatus = undefined;
+  });
 </script>
 
 <Modal title="Jellyfin Sync" maxWidth="700px" onClose={modalClose}>
@@ -121,19 +128,19 @@
           <span>{currentTask}</span>
         {/if}
       {:else if step === "done"}
-        {#if !latestJobStatus.errors || latestJobStatus.errors?.length <= 0}
+        {#if !latestJobStatus?.errors || latestJobStatus?.errors?.length <= 0}
           <h4 class="norm">Finished</h4>
           <span>We have finished syncing. Looks like there were no errors!</span>
         {:else}
           <h4 class="norm">
-            Finished With {latestJobStatus.errors?.length} Error{latestJobStatus.errors?.length ===
-            1
+            Finished With {latestJobStatus?.errors?.length} Error{latestJobStatus?.errors
+              ?.length === 1
               ? ""
               : "s"}
           </h4>
           <span>Syncing has finished, but with errors:</span>
           <ul>
-            {#each latestJobStatus.errors as e}
+            {#each latestJobStatus?.errors as e}
               <li>{e}</li>
             {/each}
           </ul>
