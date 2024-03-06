@@ -25,7 +25,7 @@ type ServerConfig struct {
 
 	// Enable/disable signup functionality.
 	// Set to `false` to disable registering an account.
-	SIGNUP_ENABLED bool `json:",omitempty"`
+	SIGNUP_ENABLED bool
 
 	// Optional: Provide your own TMDB API Key.
 	// If unprovided, the default Watcharr API key will be used.
