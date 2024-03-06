@@ -40,6 +40,7 @@ vite.config.ts.timestamp-*
 
 # Docker dev volume
 container_data/
+data/
 
 # Build artifacts
 server/ui
