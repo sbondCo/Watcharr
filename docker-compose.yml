@@ -2,9 +2,13 @@ version: "3"
 
 services:
   watcharr:
+    # The :latest tag is used for simplicity, it is recommended
+    # to use an actual version, then when updating check the releases for changelogs.
     image: ghcr.io/sbondco/watcharr:latest
     container_name: watcharr
     ports:
-      - 3080:3080
+      - 30810:3080
     volumes:
-      - ./container_data:/data
+      # Contains all of watcharr data (database & cache)
+      - ./data:/data
+    restart: unless-stopped

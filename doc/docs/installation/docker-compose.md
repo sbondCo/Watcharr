@@ -22,6 +22,7 @@ services:
     volumes:
       # Contains all of watcharr data (database & cache)
       - ./data:/data
+    restart: unless-stopped
 ```
 
 :::danger first account
