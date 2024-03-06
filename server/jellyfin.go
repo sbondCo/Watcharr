@@ -8,6 +8,9 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type JellyfinItemSearchResponse struct {
@@ -15,17 +18,59 @@ type JellyfinItemSearchResponse struct {
 }
 
 type JellyfinItems struct {
+	Name        string `json:"Name"`
 	Type        string `json:"Type"`
 	ServerID    string `json:"ServerId"`
 	Id          string `json:"Id"`
 	ProviderIds struct {
 		Tmdb string `json:"Tmdb"`
 	} `json:"ProviderIds"`
+	UserData struct {
+		Rating                float64   `json:"Rating"`
+		PlayedPercentage      float64   `json:"PlayedPercentage"`
+		UnplayedItemCount     int64     `json:"UnplayedItemCount"`
+		PlaybackPositionTicks int64     `json:"PlaybackPositionTicks"`
+		PlayCount             int64     `json:"PlayCount"`
+		IsFavorite            bool      `json:"IsFavorite"`
+		Likes                 bool      `json:"Likes"`
+		LastPlayedDate        time.Time `json:"LastPlayedDate"`
+		Played                bool      `json:"Played"`
+		Key                   string    `json:"Key"`
+		ItemId                string    `json:"ItemId"`
+	} `json:"UserData"`
+	RecursiveItemCount int64 `json:"RecursiveItemCount"`
 }
 
 type JFContentFindResponse struct {
 	HasContent bool   `json:"hasContent"`
 	Url        string `json:"url"`
+}
+
+// Jellyfin access middleware, ensures user is a jellyfin user.
+// To be ran after AuthRequired middleware with extra data.
+func JellyfinAccessRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		slog.Debug("JellyfinAccessRequired middleware hit", "user_id", userId)
+		userType := c.MustGet("userType").(UserType)
+		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
+		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
+		if Config.JELLYFIN_HOST == "" {
+			slog.Error("JellyfinAccessRequired: Request made to login via Jellyfin, but JELLYFIN_HOST has not been configured.")
+			c.AbortWithStatus(401)
+			return
+		}
+		if userType != JELLYFIN_USER || userThirdPartyId == "" {
+			slog.Error("JellyfinAccessRequired: User is not a jellyfin user..", "user_type", userType, "user_third_party_id", userThirdPartyId)
+			c.AbortWithStatus(401)
+			return
+		}
+		if userThirdPartyAuth == "" {
+			slog.Error("JellyfinAccessRequired: User has no thirdPartyAuth token..")
+			c.AbortWithStatus(401)
+			return
+		}
+	}
 }
 
 func jellyfinAPIRequest(method string, ep string, p map[string]string, username string, userToken string, resp interface{}) error {
@@ -97,18 +142,6 @@ func jellyfinContentFind(
 	contentName string,
 	contentTmdbId string,
 ) (JFContentFindResponse, error) {
-	if Config.JELLYFIN_HOST == "" {
-		slog.Error("Request made to login via Jellyfin, but JELLYFIN_HOST has not been configured.")
-		return JFContentFindResponse{}, errors.New("jellyfin login not enabled")
-	}
-	if userType != JELLYFIN_USER || userThirdPartyId == "" {
-		slog.Error("User is not a jellyfin user..", "user_type", userType, "user_third_party_id", userThirdPartyId)
-		return JFContentFindResponse{}, errors.New("not jellyfin user")
-	}
-	if userThirdPartyAuth == "" {
-		slog.Error("User has no thirdPartyAuth token..")
-		return JFContentFindResponse{}, errors.New("user has no jellyfin auth token")
-	}
 	if contentType == "" || contentName == "" {
 		slog.Error("Bad request", "content_type", contentType, "content_name", contentName)
 		return JFContentFindResponse{}, errors.New("content type or name not provided")

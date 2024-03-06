@@ -9,11 +9,12 @@
   import { updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
   import { appTheme, userInfo, userSettings } from "@/store";
-  import type { Image, Profile } from "@/types";
+  import { UserType, type Image, type Profile } from "@/types";
   import axios from "axios";
   import { notify } from "@/lib/util/notify";
   import UserAvatar from "@/lib/img/UserAvatar.svelte";
   import PwChangeModal from "@/routes/(app)/profile/modals/PwChangeModal.svelte";
+  import JellyfinSyncModal from "./modals/JellyfinSyncModal.svelte";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -26,6 +27,7 @@
   let includePreviouslyWatchedDisabled = false;
   let pwChangeModalOpen = false;
   let getProfilePromise = getProfile();
+  let jellyfinSyncModalOpen = false;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -261,11 +263,18 @@
       <div class="row btns">
         <button on:click={() => goto("/import")}>Import</button>
         <button on:click={() => downloadWatchedList()} disabled={exportDisabled}>Export</button>
-        <button
-          on:click={() => {
-            pwChangeModalOpen = true;
-          }}>Change Password</button
-        >
+        {#if user?.type !== UserType?.Jellyfin}
+          <button
+            on:click={() => {
+              pwChangeModalOpen = true;
+            }}>Change Password</button
+          >
+        {/if}
+        {#if user?.type === UserType?.Jellyfin}
+          <button on:click={() => (jellyfinSyncModalOpen = true)} disabled={exportDisabled}>
+            Sync With Jellyfin
+          </button>
+        {/if}
       </div>
       {#if pwChangeModalOpen}
         <PwChangeModal
@@ -274,6 +283,9 @@
             pwChangeModalOpen = false;
           }}
         ></PwChangeModal>
+      {/if}
+      {#if jellyfinSyncModalOpen}
+        <JellyfinSyncModal onClose={() => (jellyfinSyncModalOpen = false)} />
       {/if}
     </div>
   </div>

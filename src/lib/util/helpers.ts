@@ -233,8 +233,8 @@ export function userHasPermission(perms: UserPermission, reqPerm: UserPermission
 
 /**
  * Takes season and episode number to make a quickly understandable
- * string in this format S01E01.
+ * string in this format S1E1.
  */
-export function seasonAndEpToReadable(season: number, episode: number) {
-  return `S${season ? String(season)?.padStart(2, "0") : "(unknown)"}E${episode ? String(episode)?.padStart(2, "0") : "(unknown)"}`;
+export function seasonAndEpToReadable(season: number | undefined, episode: number | undefined) {
+  return `S${typeof season === "number" ? String(season) : "(unknown)"}E${typeof episode === "number" ? String(episode) : "(unknown)"}`;
 }

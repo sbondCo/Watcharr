@@ -163,6 +163,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 	}
 	// If custom WatchedDate passed, set CreatedAt and UpdatedAt fields to it.
 	if !ar.WatchedDate.IsZero() {
+		slog.Debug("Adding watched item: The provided WatchedDate is valid.", "watched_date", ar.WatchedDate, "userId", userId, "contentType", ar.ContentType, "contentId", ar.ContentID)
 		watched.CreatedAt = ar.WatchedDate
 		watched.UpdatedAt = ar.WatchedDate
 	}
@@ -174,7 +175,7 @@ func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType)
 				return Watched{}, errors.New("content already on watched list. errored checking for soft deleted record")
 			}
 			if watched.DeletedAt.Time.IsZero() {
-				return Watched{}, errors.New("content already on watched list")
+				return watched, errors.New("content already on watched list")
 			} else {
 				slog.Info("addWatched: Watched list item for this content exists as soft deleted record.. attempting to restore")
 				res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Updates(map[string]interface{}{"status": ar.Status, "rating": ar.Rating, "deleted_at": nil})

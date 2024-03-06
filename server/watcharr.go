@@ -140,6 +140,7 @@ func main() {
 	br.addSonarrRoutes()
 	br.addRadarrRoutes()
 	br.addAPIKeyRoutes()
+	br.addJobRoutes()
 	br.rg.Static("/img", path.Join(DataPath, "img"))
 
 	go setupTasks(db)
