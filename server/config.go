@@ -64,11 +64,8 @@ func (c *ServerConfig) GetSafe() ServerConfig {
 }
 
 var (
-	// Our server config.. set defaults here, then `readConfig`
-	// will overwrite if provided in watcharr.json cfg file.
-	Config = ServerConfig{
-		SIGNUP_ENABLED: true,
-	}
+	// Our server config.. `readConfig` will overwrite from watcharr.json cfg file.
+	Config = ServerConfig{}
 )
 
 // Read config file
@@ -102,19 +99,22 @@ func initFromConfig() error {
 }
 
 // Generate new barebones watcharr.json config file.
-// Currently only JWT_SECRET is required, so this method
-// generates a secret.
+// Generates a JWT_SECRET and set default config.
 func generateConfig() error {
 	key, err := generateString(64)
 	if err != nil {
 		return err
 	}
-	cfg := ServerConfig{JWT_SECRET: key}
+	cfg := ServerConfig{
+		JWT_SECRET: key,
+		// Other defaults..
+		SIGNUP_ENABLED: true,
+	}
 	barej, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
 		return err
 	}
-	Config.JWT_SECRET = cfg.JWT_SECRET
+	Config = cfg
 	return os.WriteFile("./data/watcharr.json", barej, 0755)
 }
 
