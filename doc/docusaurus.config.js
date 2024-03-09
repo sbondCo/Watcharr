@@ -81,6 +81,11 @@ const config = {
             type: "docsVersionDropdown"
           },
           {
+            href: "https://beta.watcharr.app",
+            label: "Demo",
+            position: "right"
+          },
+          {
             href: "https://github.com/sbondCo/Watcharr",
             label: "GitHub",
             position: "right"
