@@ -141,6 +141,32 @@
   }
 }
 
+:global(button.plex) {
+  border: 2px solid $plex;
+  color: $plex;
+
+  &:not(:disabled) {
+    &:hover,
+    &:focus-visible {
+      background-color: $plex;
+      color: white;
+    }
+  }
+}
+
+:global(button.jellyfin) {
+  border: 2px solid $jellyfin;
+  color: $jellyfin;
+
+  &:not(:disabled) {
+    &:hover,
+    &:focus-visible {
+      background-color: $jellyfin;
+      color: white;
+    }
+  }
+}
+
 :global(button.plain),
 :global(a.plain-btn) {
   background-color: transparent;

@@ -11,6 +11,7 @@ export type Icon =
   | "play"
   | "pause"
   | "jellyfin"
+  | "plex"
   | "trash"
   | "close"
   | "filter"
@@ -40,7 +41,8 @@ export type ExtraDetailsGame = { dateAdded: string; dateModified: string };
 
 export enum UserType {
   // Assume watcharr user if none of these...
-  Jellyfin = 1
+  Jellyfin = 1,
+  Plex = 2
 }
 
 interface dbModel {
@@ -194,6 +196,7 @@ export interface AvailableAuthProviders {
   available: string[];
   signupEnabled: boolean;
   isInSetup: boolean;
+  plexOauthId: string;
 }
 
 export interface TokenClaims {
@@ -756,6 +759,7 @@ export interface ServerConfig {
   JELLYFIN_HOST: string;
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;
+  PLEX_OAUTH_ID: string;
   SONARR: SonarrSettings[];
   RADARR: RadarrSettings[];
   TWITCH: TwitchSettings;

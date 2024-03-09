@@ -29,6 +29,7 @@
   let debugDisabled = false;
   let jfDisabled = false;
   let tmdbkDisabled = false;
+  let plexDisabled = false;
 
   async function getServerConfig() {
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
@@ -145,6 +146,24 @@
               });
             }}
             disabled={tmdbkDisabled}
+          />
+        </Setting>
+        <Setting title="Plex OAuth" desc="Allow logging in via Plex" row>
+          <Checkbox
+            name="PLEX_OAUTH_ID"
+            disabled={plexDisabled}
+            value={serverConfig.PLEX_OAUTH_ID !== undefined &&
+              serverConfig.PLEX_OAUTH_ID.length > 0}
+            toggled={(on) => {
+              plexDisabled = true;
+              let id = "";
+              if (on) {
+                id = crypto.randomUUID();
+              }
+              updateServerConfig("PLEX_OAUTH_ID", id, () => {
+                plexDisabled = false;
+              });
+            }}
           />
         </Setting>
         <Setting title="Signup" desc="Allow signing up with web ui" row>

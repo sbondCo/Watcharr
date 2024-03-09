@@ -28,6 +28,7 @@ type UserType uint8
 var (
 	// Assume watcharr user if none of these...
 	JELLYFIN_USER UserType = 1
+	PLEX_USER     UserType = 2
 )
 
 // User Perms
@@ -90,8 +91,25 @@ type UserSettings struct {
 // and possible accidents where we allow a user to pass in a
 // property from the main User struct that shouldn't be allowed.
 type UserRegisterRequest struct {
+	Username       string `json:"username" binding:"required"`
+	Password       string `json:"password" binding:"required"`
+	Type           UserType
+	ThirdPartyAuth string
+}
+
+type PlexUserRequest struct {
+	AuthToken string `json:"authtoken" binding:"required"`
+}
+
+type PlexUser struct {
+	Id       uint32 `json:"id" binding:"required"`
+	Uuid     string `json:"uuid" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+}
+
+type PlexUserResponse struct {
+	Plexuser PlexUser `json:"user" binding:"required"`
 }
 
 type UseAdminTokenRequest struct {
@@ -119,6 +137,7 @@ type AvailableAuthProvidersResponse struct {
 	AvailableAuthProviders []string `json:"available"`
 	SignupEnabled          bool     `json:"signupEnabled"`
 	IsInSetup              bool     `json:"isInSetup"`
+	PlexOauthId            string   `json:"plexOauthId"`
 }
 
 type ArgonParams struct {
@@ -231,7 +250,7 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 		slog.Warn("Register called, but signing up is disabled.")
 		return AuthResponse{}, errors.New("registering is disabled")
 	}
-	var user User = User{Username: ur.Username, Password: ur.Password}
+	var user User = User{Username: ur.Username, Password: ur.Password, Type: ur.Type, ThirdPartyAuth: ur.ThirdPartyAuth}
 	slog.Info("A user is registering", "username", user.Username)
 	hash, err := hashPassword(user.Password, GetPassArgonParams())
 	if err != nil {
@@ -398,6 +417,78 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 	token, err := signJWT(dbUser)
 	if err != nil {
 		slog.Error("Failed to sign new (jellyfin login) jwt", "error", err)
+		return AuthResponse{}, errors.New("failed to get auth token")
+	}
+	return AuthResponse{Token: token}, nil
+}
+
+func fetchPlexUsernameFromToken(token string) (string, error) {
+	httpClient := &http.Client{}
+	req, err := http.NewRequest("GET", "https://plex.tv/users/account.json", nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("X-Plex-Token", token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	slog.Info(string(body))
+	defer resp.Body.Close()
+	var plexUserResponse PlexUserResponse
+	err = json.Unmarshal(body, &plexUserResponse)
+	if err != nil {
+		return "", err
+	}
+	return plexUserResponse.Plexuser.Username, nil
+}
+
+func registerPlex(plexUserRequest *PlexUserRequest, db *gorm.DB) (AuthResponse, error) {
+	if Config.PLEX_OAUTH_ID == "" {
+		slog.Error("Request made to regester via Plex, but Plex authentication is disabled")
+		return AuthResponse{}, errors.New("plex login not enabled")
+	}
+	slog.Debug("A Plex User Is Registering", "authtoken", plexUserRequest.AuthToken)
+	username, err := fetchPlexUsernameFromToken(plexUserRequest.AuthToken)
+	if err != nil {
+		slog.Error("Could not fetch Plex information", "error", err)
+		return AuthResponse{}, errors.New("could not fetch plex metadata")
+	}
+	user := UserRegisterRequest{Username: username, Type: PLEX_USER, ThirdPartyAuth: plexUserRequest.AuthToken}
+	response, err := register(&user, PERM_NONE, db)
+	if err != nil {
+		slog.Error("Could not register new Plex user", "error", err)
+		return AuthResponse{}, errors.New("could not register plex user")
+	}
+	return response, nil
+}
+
+func loginPlex(plexUserRequest *PlexUserRequest, db *gorm.DB) (AuthResponse, error) {
+	if Config.PLEX_OAUTH_ID == "" {
+		slog.Error("Request made to login via Plex, but Plex authentication is disabled")
+		return AuthResponse{}, errors.New("plex login not enabled")
+	}
+	slog.Debug("A Plex User Is Logging In", "authtoken", plexUserRequest.AuthToken)
+	username, err := fetchPlexUsernameFromToken(plexUserRequest.AuthToken)
+	if err != nil {
+		slog.Error("loginPlex: Could not fetch Plex username", "error", err)
+		return AuthResponse{}, errors.New("could not fetch plex username")
+	}
+	dbUser := new(User)
+	res := db.Where("username = ? AND (type IS NULL OR type = ?)", username, PLEX_USER).Take(&dbUser)
+	if res.Error != nil {
+		slog.Error("Failed to select user from database for login", "error", res.Error)
+		return AuthResponse{}, errors.New("User does not exist")
+	}
+	token, err := signJWT(dbUser)
+	if err != nil {
+		slog.Error("Failed to sign new jwt", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
