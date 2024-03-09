@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import styles from "./styles.module.css";
 import clsx from "clsx";
 import Viewer from "viewerjs";
-import "@site/node_modules/viewerjs/dist/viewer.min.css";
 
 function TwoColFeat({ title, description, imgSrc }) {
   return (
@@ -12,7 +11,7 @@ function TwoColFeat({ title, description, imgSrc }) {
         <p>{description}</p>
       </div>
       <div>
-        <img src={imgSrc} alt="" />
+        <img src={imgSrc} alt="" loading="lazy" />
       </div>
     </div>
   );

@@ -54,7 +54,10 @@ const config = {
           editUrl: "https://github.com/sbondCo/Watcharr/tree/dev/doc"
         },
         theme: {
-          customCss: require.resolve("./src/css/custom.css")
+          customCss: [
+            "./node_modules/viewerjs/dist/viewer.css",
+            require.resolve("./src/css/custom.css")
+          ]
         }
       })
     ]
