@@ -263,7 +263,7 @@
       <div class="row btns">
         <button on:click={() => goto("/import")}>Import</button>
         <button on:click={() => downloadWatchedList()} disabled={exportDisabled}>Export</button>
-        {#if user?.type !== UserType?.Jellyfin}
+        {#if user?.type !== UserType.Plex && user?.type !== UserType.Jellyfin}
           <button
             on:click={() => {
               pwChangeModalOpen = true;
