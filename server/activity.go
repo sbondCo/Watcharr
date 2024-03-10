@@ -19,6 +19,7 @@ var (
 	THOUGHTS_REMOVED          ActivityType = "THOUGHTS_REMOVED"
 	IMPORTED_WATCHED          ActivityType = "IMPORTED_WATCHED"
 	IMPORTED_WATCHED_JF       ActivityType = "IMPORTED_WATCHED_JF"
+	IMPORTED_WATCHED_PLEX     ActivityType = "IMPORTED_WATCHED_PLEX"
 	IMPORTED_RATING           ActivityType = "IMPORTED_RATING"        // Imported rating, but with no rating acts as original import of content to old platform (where they are importing from) activity
 	IMPORTED_ADDED_WATCHED    ActivityType = "IMPORTED_ADDED_WATCHED" // Imported watched date, so we can save the original watch dates of content from users old platform (where they are importing from).
 	IMPORTED_ADDED_WATCHED_JF ActivityType = "IMPORTED_ADDED_WATCHED_JF"

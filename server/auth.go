@@ -439,7 +439,6 @@ func fetchPlexUsernameFromToken(token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	slog.Info(string(body))
 	defer resp.Body.Close()
 	var plexUserResponse PlexUserResponse
 	err = json.Unmarshal(body, &plexUserResponse)
@@ -481,10 +480,14 @@ func loginPlex(plexUserRequest *PlexUserRequest, db *gorm.DB) (AuthResponse, err
 		return AuthResponse{}, errors.New("could not fetch plex username")
 	}
 	dbUser := new(User)
-	res := db.Where("username = ? AND (type IS NULL OR type = ?)", username, PLEX_USER).Take(&dbUser)
+	res := db.Where("username = ? AND type = ?", username, PLEX_USER).Take(&dbUser)
 	if res.Error != nil {
 		slog.Error("Failed to select user from database for login", "error", res.Error)
 		return AuthResponse{}, errors.New("User does not exist")
+	}
+	res = db.Model(&dbUser).Where("username = ? AND type = ?", username, PLEX_USER).Update("third_party_auth", plexUserRequest.AuthToken)
+	if res.Error != nil {
+		slog.Error("Failed to update the user's Plex token, syncs may fail if the token has expired", "username", username, "error", res.Error)
 	}
 	token, err := signJWT(dbUser)
 	if err != nil {

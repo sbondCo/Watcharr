@@ -204,6 +204,26 @@ func searchContent(query string) (TMDBSearchMultiResponse, error) {
 	return *resp, nil
 }
 
+func searchMovie(query string, year string) (TMDBSearchMultiResponse, error) {
+	resp := new(TMDBSearchMultiResponse)
+	err := tmdbRequest("/search/movie", map[string]string{"query": query, "page": "1", "year": year}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete movie search request!", "error", err.Error())
+		return TMDBSearchMultiResponse{}, errors.New("failed to complete movie search request")
+	}
+	return *resp, nil
+}
+
+func searchTvShow(query string, year string) (TMDBSearchMultiResponse, error) {
+	resp := new(TMDBSearchMultiResponse)
+	err := tmdbRequest("/search/tv", map[string]string{"query": query, "page": "1", "year": year}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete tv search request!", "error", err.Error())
+		return TMDBSearchMultiResponse{}, errors.New("failed to complete tv search request")
+	}
+	return *resp, nil
+}
+
 func movieDetails(db *gorm.DB, id string, country string, rParams map[string]string) (TMDBMovieDetails, error) {
 	resp := new(TMDBMovieDetails)
 	err := tmdbRequest("/movie/"+id, rParams, &resp)

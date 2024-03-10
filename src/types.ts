@@ -760,6 +760,7 @@ export interface ServerConfig {
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;
   PLEX_OAUTH_ID: string;
+  PLEX_HOST: string;
   SONARR: SonarrSettings[];
   RADARR: RadarrSettings[];
   TWITCH: TwitchSettings;
@@ -984,7 +985,7 @@ export enum GameWebsiteCategory {
   Reddit = 14
 }
 
-export interface JellyfinSyncResponse {
+export interface SyncResponse {
   jobId: string;
 }
 

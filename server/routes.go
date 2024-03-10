@@ -717,13 +717,51 @@ func (b *BaseRouter) addJellyfinRoutes() {
 	})
 
 	// Sync users jellyfin watched items to watchlist
-	jf.GET("/sync", func(c *gin.Context) {
+	jf.POST("/sync", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		userType := c.MustGet("userType").(UserType)
 		username := c.MustGet("username").(string)
 		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
 		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
 		response, err := jellyfinSyncWatched(b.db, userId, userType, username, userThirdPartyId, userThirdPartyAuth)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+}
+
+func (b *BaseRouter) addPlexRoutes() {
+	plex := b.rg.Group("/plex")
+	plex.Use(AuthRequired(b.db), PlexAccessRequired())
+
+	plex.POST("/sync", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
+		response, err := startPlexSync(b.db, userId, userThirdPartyAuth)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	library := plex.Group("/library/sections")
+
+	library.GET("/", func(c *gin.Context) {
+		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
+		response, err := plexGetLibraries(userThirdPartyAuth)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	library.GET("/:library", func(c *gin.Context) {
+		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
+		response, err := plexGetLibraryItems(userThirdPartyAuth, c.Param("library"))
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return

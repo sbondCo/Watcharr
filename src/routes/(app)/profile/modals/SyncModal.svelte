@@ -3,32 +3,34 @@
   import Modal from "@/lib/Modal.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
-  import { JobStatus, type GetJobResponse, type JellyfinSyncResponse } from "@/types";
+  import { JobStatus, type GetJobResponse, type SyncResponse } from "@/types";
   import axios from "axios";
   import { onDestroy, onMount } from "svelte";
   import { watchedList } from "@/store";
 
   export let onClose: () => void;
+  export let title: string;
+  export let endpoint: string;
 
   let step: "starting" | "errored" | "job-running" | "done" | "modal-closing" = "starting";
   let jobId: string | undefined;
   let currentTask: string | undefined;
   let latestJobStatus: GetJobResponse | undefined;
 
-  async function startJellyfinSync() {
+  async function startSync() {
     try {
-      const r = await axios.get<JellyfinSyncResponse>("/jellyfin/sync");
-      console.log("startJellyfinSync: Response:", r.data);
+      const r = await axios.post<SyncResponse>(endpoint);
+      console.log("startSync: Response:", r.data);
       if (!r.data.jobId) {
         step = "errored";
-        console.error("startJellyfinSync: No jobId returned!");
+        console.error("startSync: No jobId returned!");
         return;
       }
       jobId = r.data.jobId;
       step = "job-running";
       startJobWatcher();
     } catch (err) {
-      console.error("startJellyfinSync failed!", err);
+      console.error("startSync failed!", err);
       step = "errored";
     }
   }
@@ -98,7 +100,7 @@
   }
 
   onMount(() => {
-    startJellyfinSync();
+    startSync();
   });
 
   onDestroy(() => {
@@ -109,7 +111,7 @@
   });
 </script>
 
-<Modal title="Jellyfin Sync" maxWidth="700px" onClose={modalClose}>
+<Modal {title} maxWidth="700px" onClose={modalClose}>
   <div class="ctr">
     {#if step === "done"}
       <Icon i="check" wh={60} />

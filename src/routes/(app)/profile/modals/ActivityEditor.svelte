@@ -1,8 +1,8 @@
 <script lang="ts">
   import { updateActivity, removeActivity } from "@/lib/util/api";
-  import Modal from "./Modal.svelte";
+  import Modal from "@/lib/Modal.svelte";
   import type { Activity } from "@/types";
-  import { notify } from "./util/notify";
+  import { notify } from "@/lib/util/notify";
 
   export let watchedId: number;
   export let activity: Activity;

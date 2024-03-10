@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Activity } from "@/types";
   import { getOrdinalSuffix, months, seasonAndEpToReadable } from "./util/helpers";
-  import ActivityEditor from "./ActivityEditor.svelte";
+  import ActivityEditor from "../routes/(app)/profile/modals/ActivityEditor.svelte";
 
   export let activity: Activity[] | undefined;
   export let wListId: number;
