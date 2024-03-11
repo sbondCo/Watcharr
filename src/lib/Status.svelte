@@ -62,6 +62,7 @@
 
     button {
       font-size: 10px;
+      padding: 5px 10px;
     }
   }
 </style>

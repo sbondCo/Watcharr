@@ -18,6 +18,10 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+type ValueRequest struct {
+	Value any `json:"value"`
+}
+
 type KeyValueRequest struct {
 	Key   string `json:"key"`
 	Value any    `json:"value"`
@@ -571,7 +575,7 @@ func (b *BaseRouter) addAuthRoutes() {
 
 	// Plex login
 	auth.POST("/plex", func(c *gin.Context) {
-		var plexRequest PlexUserRequest
+		var plexRequest PlexLoginRequest
 		if c.ShouldBindJSON(&plexRequest) == nil {
 			response, err := loginPlex(&plexRequest, b.db)
 			if err != nil {
@@ -584,28 +588,11 @@ func (b *BaseRouter) addAuthRoutes() {
 		c.Status(400)
 	})
 
-	reg := auth.Group("/register")
-
 	// Register
-	reg.POST("/", func(c *gin.Context) {
+	auth.POST("/register", func(c *gin.Context) {
 		var user UserRegisterRequest
 		if c.ShouldBindJSON(&user) == nil {
 			response, err := register(&user, PERM_NONE, b.db)
-			if err != nil {
-				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
-				return
-			}
-			c.JSON(http.StatusOK, response)
-			return
-		}
-		c.Status(400)
-	})
-
-	// Register Plex
-	reg.POST("/plex", func(c *gin.Context) {
-		var plexRequest PlexUserRequest
-		if c.ShouldBindJSON(&plexRequest) == nil {
-			response, err := registerPlex(&plexRequest, b.db)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
@@ -622,14 +609,13 @@ func (b *BaseRouter) addAuthRoutes() {
 		if Config.JELLYFIN_HOST != "" {
 			availableAuthProviders = append(availableAuthProviders, "jellyfin")
 		}
-		if Config.PLEX_OAUTH_ID != "" {
+		if Config.PLEX_HOST != "" && Config.PLEX_MACHINE_ID != "" {
 			availableAuthProviders = append(availableAuthProviders, "plex")
 		}
 		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
 			AvailableAuthProviders: availableAuthProviders,
 			SignupEnabled:          Config.SIGNUP_ENABLED,
 			IsInSetup:              ServerInSetup,
-			PlexOauthId:            Config.PLEX_OAUTH_ID,
 		})
 	})
 
@@ -934,6 +920,22 @@ func (b *BaseRouter) addServerRoutes() {
 				return
 			}
 			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	// Update plex host config
+	server.POST("/config/plex_host", func(c *gin.Context) {
+		var ur ValueRequest
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			resp, err := updateConfigPlexHost(ur.Value.(string))
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, resp)
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
