@@ -759,7 +759,8 @@ export interface ServerConfig {
   JELLYFIN_HOST: string;
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;
-  PLEX_OAUTH_ID: string;
+  PLEX_HOST: string;
+  PLEX_MACHINE_ID: string;
   SONARR: SonarrSettings[];
   RADARR: RadarrSettings[];
   TWITCH: TwitchSettings;

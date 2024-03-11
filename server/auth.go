@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -91,25 +92,8 @@ type UserSettings struct {
 // and possible accidents where we allow a user to pass in a
 // property from the main User struct that shouldn't be allowed.
 type UserRegisterRequest struct {
-	Username       string `json:"username" binding:"required"`
-	Password       string `json:"password" binding:"required"`
-	Type           UserType
-	ThirdPartyAuth string
-}
-
-type PlexUserRequest struct {
-	AuthToken string `json:"authtoken" binding:"required"`
-}
-
-type PlexUser struct {
-	Id       uint32 `json:"id" binding:"required"`
-	Uuid     string `json:"uuid" binding:"required"`
-	Email    string `json:"email" binding:"required"`
 	Username string `json:"username" binding:"required"`
-}
-
-type PlexUserResponse struct {
-	Plexuser PlexUser `json:"user" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type UseAdminTokenRequest struct {
@@ -137,7 +121,6 @@ type AvailableAuthProvidersResponse struct {
 	AvailableAuthProviders []string `json:"available"`
 	SignupEnabled          bool     `json:"signupEnabled"`
 	IsInSetup              bool     `json:"isInSetup"`
-	PlexOauthId            string   `json:"plexOauthId"`
 }
 
 type ArgonParams struct {
@@ -250,7 +233,7 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 		slog.Warn("Register called, but signing up is disabled.")
 		return AuthResponse{}, errors.New("registering is disabled")
 	}
-	var user User = User{Username: ur.Username, Password: ur.Password, Type: ur.Type, ThirdPartyAuth: ur.ThirdPartyAuth}
+	var user User = User{Username: ur.Username, Password: ur.Password}
 	slog.Info("A user is registering", "username", user.Username)
 	hash, err := hashPassword(user.Password, GetPassArgonParams())
 	if err != nil {
@@ -388,7 +371,7 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 	}
 
 	dbUser := new(User)
-	dbRes := db.Where("third_party_id = ?", resp.User.ID).Take(&dbUser)
+	dbRes := db.Where("third_party_id = ? AND type = ?", resp.User.ID, JELLYFIN_USER).Take(&dbUser)
 	if dbRes.Error != nil {
 		if errors.Is(dbRes.Error, gorm.ErrRecordNotFound) {
 			// Record not found, so we should create the user
@@ -422,73 +405,51 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 	return AuthResponse{Token: token}, nil
 }
 
-func fetchPlexUsernameFromToken(token string) (string, error) {
-	httpClient := &http.Client{}
-	req, err := http.NewRequest("GET", "https://plex.tv/users/account.json", nil)
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("X-Plex-Token", token)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	slog.Info(string(body))
-	defer resp.Body.Close()
-	var plexUserResponse PlexUserResponse
-	err = json.Unmarshal(body, &plexUserResponse)
-	if err != nil {
-		return "", err
-	}
-	return plexUserResponse.Plexuser.Username, nil
-}
-
-func registerPlex(plexUserRequest *PlexUserRequest, db *gorm.DB) (AuthResponse, error) {
-	if Config.PLEX_OAUTH_ID == "" {
-		slog.Error("Request made to regester via Plex, but Plex authentication is disabled")
-		return AuthResponse{}, errors.New("plex login not enabled")
-	}
-	slog.Debug("A Plex User Is Registering", "authtoken", plexUserRequest.AuthToken)
-	username, err := fetchPlexUsernameFromToken(plexUserRequest.AuthToken)
-	if err != nil {
-		slog.Error("Could not fetch Plex information", "error", err)
-		return AuthResponse{}, errors.New("could not fetch plex metadata")
-	}
-	user := UserRegisterRequest{Username: username, Type: PLEX_USER, ThirdPartyAuth: plexUserRequest.AuthToken}
-	response, err := register(&user, PERM_NONE, db)
-	if err != nil {
-		slog.Error("Could not register new Plex user", "error", err)
-		return AuthResponse{}, errors.New("could not register plex user")
-	}
-	return response, nil
-}
-
-func loginPlex(plexUserRequest *PlexUserRequest, db *gorm.DB) (AuthResponse, error) {
-	if Config.PLEX_OAUTH_ID == "" {
+// Login via Plex.
+func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
+	if Config.PLEX_HOST == "" || Config.PLEX_MACHINE_ID == "" {
 		slog.Error("Request made to login via Plex, but Plex authentication is disabled")
 		return AuthResponse{}, errors.New("plex login not enabled")
 	}
-	slog.Debug("A Plex User Is Logging In", "authtoken", plexUserRequest.AuthToken)
-	username, err := fetchPlexUsernameFromToken(plexUserRequest.AuthToken)
+	slog.Debug("A Plex User Is Logging In", "authtoken", lr.AuthToken)
+	account, err := fetchPlexAccountFromToken(lr.AuthToken)
 	if err != nil {
-		slog.Error("loginPlex: Could not fetch Plex username", "error", err)
-		return AuthResponse{}, errors.New("could not fetch plex username")
+		slog.Error("loginPlex: Could not fetch Plex account", "error", err)
+		return AuthResponse{}, errors.New("could not fetch plex acount")
+	}
+	if account.Username == "" || account.Id == 0 {
+		slog.Error("loginPlex: Username or id missing from account response:", "username", account.Username, "id", account.Id)
+		return AuthResponse{}, errors.New("data is missing from the plex account response")
 	}
 	dbUser := new(User)
-	res := db.Where("username = ? AND (type IS NULL OR type = ?)", username, PLEX_USER).Take(&dbUser)
-	if res.Error != nil {
-		slog.Error("Failed to select user from database for login", "error", res.Error)
-		return AuthResponse{}, errors.New("User does not exist")
+	dbRes := db.Where("third_party_id = ? AND type = ?", account.Id, PLEX_USER).Take(&dbUser)
+	if dbRes.Error != nil {
+		if errors.Is(dbRes.Error, gorm.ErrRecordNotFound) {
+			slog.Debug("loginPlex: New plex user attempted login.. creating Watcharr account now.")
+			if err := plexUserHasAccessToPlexHost(lr.AuthToken); err != nil {
+				slog.Error("loginPlex: Cannot register Plex user. Failed to verify they have access to our home plex server.", "error", err)
+				return AuthResponse{}, errors.New("failed to verify plex access")
+			}
+			// Record not found, so we should create the user
+			// dbUser will be empty, so we can just reuse it for this purpose.
+			dbUser.ThirdPartyID = strconv.FormatUint(account.Id, 10)
+			dbUser.ThirdPartyAuth = lr.AuthToken
+			dbUser.Username = account.Username
+			dbUser.Type = PLEX_USER
+
+			dbRes = db.Create(&dbUser)
+			if dbRes.Error != nil {
+				slog.Error("loginPlex: Failed to create new user in db from plex response", "error", dbRes.Error)
+				return AuthResponse{}, errors.New("failed to create new user from plex")
+			}
+		} else {
+			slog.Error("loginPlex: Failed to select user from database for login", "error", dbRes.Error)
+			return AuthResponse{}, errors.New("failed to locate user")
+		}
 	}
 	token, err := signJWT(dbUser)
 	if err != nil {
-		slog.Error("Failed to sign new jwt", "error", err)
+		slog.Error("loginPlex: Failed to sign new jwt", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil

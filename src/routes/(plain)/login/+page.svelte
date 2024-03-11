@@ -6,14 +6,11 @@
   import { noAuthAxios } from "@/lib/util/api";
   import { onMount, afterUpdate } from "svelte";
   import { notify, unNotify } from "@/lib/util/notify";
-  import { PlexOauth, type IPlexClientDetails } from "plex-oauth";
 
   let error: string;
   let login = true;
   let availableProviders: string[] = [];
   let signupEnabled = true;
-  let plexPin: number;
-  let plexOauthClient: PlexOauth;
 
   onMount(() => {
     if (localStorage.getItem("token")) {
@@ -28,15 +25,6 @@
         }
         availableProviders = r.data.available;
         signupEnabled = r.data.signupEnabled;
-        if (r.data.plexOauthId.length > 0) {
-          let clientInformation: IPlexClientDetails = {
-            clientIdentifier: r.data.plexOauthId,
-            product: "Watcharr",
-            device: "Watcharr",
-            version: __WATCHARR_VERSION__
-          };
-          plexOauthClient = new PlexOauth(clientInformation);
-        }
       }
     });
   });
@@ -48,11 +36,6 @@
   });
 
   function handleLogin(ev: SubmitEvent) {
-    if ((ev.submitter as HTMLButtonElement)?.name === "plex") {
-      showPlexOAuthWindow();
-      return;
-    }
-
     const fd = new FormData(ev.target! as HTMLFormElement);
     const user = fd.get("username");
     const pass = fd.get("password");
@@ -91,41 +74,21 @@
       });
   }
 
-  function showPlexOAuthWindow() {
-    plexOauthClient
-      .requestHostedLoginURL()
-      .then((data) => {
-        let [hostedUILink, pinId] = data;
-
-        plexPin = pinId;
-
-        let oAuthWindow = window.open(hostedUILink, "plex login", "poput,width=600,height=800");
-        oAuthWindow?.focus();
-
-        let pollTimer = window.setInterval(function () {
-          if (oAuthWindow?.closed !== false) {
-            window.clearInterval(pollTimer);
-            getPlexToken();
-          }
-        }, 250);
-      })
-      .catch((err) => {
-        throw err;
-      });
-  }
-
-  function getPlexToken() {
-    plexOauthClient
-      .checkForAuthToken(plexPin)
-      .then((authToken) => {
-        if (authToken == null) {
+  async function plexLogin() {
+    try {
+      const { preparePlexAuth, doPlexLogin, plexPinPoll } = await import("@/lib/util/plex");
+      const p = preparePlexAuth();
+      const pin = await doPlexLogin(p);
+      plexPinPoll(pin, p, (err, token) => {
+        if (err) {
+          error = "Plex Auth Failed";
+          console.error("Plex auth failed!", err);
           return;
         }
         const nid = notify({ text: "Logging in", type: "loading" });
-        const endpoint = login ? "/auth/plex" : "/auth/register/plex";
         noAuthAxios
-          .post(endpoint, {
-            authtoken: authToken
+          .post("/auth/plex", {
+            token
           })
           .then((resp) => {
             if (resp.data?.token) {
@@ -136,17 +99,19 @@
             }
           })
           .catch((err) => {
+            console.error("plexLogin: Fail", err);
             if (err.response) {
               error = err.response.data.error;
             } else {
               error = err.message;
             }
-            unNotify(nid);
+            notify({ id: nid, text: `Failed!`, type: "error" });
           });
-      })
-      .catch((err) => {
-        throw err;
       });
+    } catch (err) {
+      console.error("plexLogin: failed!", err);
+      error = "Plex login failed";
+    }
   }
 </script>
 
@@ -175,23 +140,30 @@
         <span class="login-with" style="font-weight: bold">Login With</span>
         <div class="login-btns">
           <button type="submit"><span class="watcharr">W</span>Watcharr</button>
-          {#if availableProviders.findIndex((provider) => provider == "jellyfin") > -1}
-            <button type="submit" name="jellyfin" class="jellyfin other">
-              <Icon i="jellyfin" wh={18} />Jellyfin
-            </button>
+          {#if availableProviders?.length > 0}
+            {#each availableProviders.filter((ap) => ap !== "plex") as p}
+              <button type="submit" name={p} class="other"><Icon i={p} wh={18} />{p}</button>
+            {/each}
           {/if}
         </div>
+        {#if availableProviders?.findIndex((provider) => provider == "plex") > -1}
+          <p style="font-weight: bold; font-size: 14px;">or</p>
+          <div class="login-btns">
+            <button
+              type="button"
+              on:click={() => {
+                plexLogin();
+              }}
+              name="plex"
+              class="plex other"
+            >
+              <Icon i="plex" wh={18} />Continue with Plex
+            </button>
+          </div>
+        {/if}
       {:else}
         <div class="login-btns">
           <button type="submit">Sign Up</button>
-        </div>
-      {/if}
-      {#if availableProviders.findIndex((provider) => provider == "plex") > -1}
-        <p>or</p>
-        <div class="login-btns">
-          <button type="submit" name="plex" class="plex other">
-            <Icon i="plex" wh={18} />Plex
-          </button>
         </div>
       {/if}
     </form>
@@ -252,11 +224,12 @@
       display: flex;
       flex-flow: row;
       gap: 10px;
+      text-transform: capitalize;
 
       .watcharr {
         font-family: "Rampart One";
-        font-size: 18px;
-        line-height: 18px;
+        font-size: 19px;
+        line-height: 19px;
       }
 
       &.other {
