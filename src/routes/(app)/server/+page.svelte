@@ -29,6 +29,7 @@
   let debugDisabled = false;
   let jfDisabled = false;
   let tmdbkDisabled = false;
+  let plexHostDisabled = false;
 
   async function getServerConfig() {
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
@@ -37,19 +38,23 @@
   export function updateServerConfig<K extends keyof ServerConfig>(
     name: K,
     value: ServerConfig[K],
-    done?: () => void
+    done?: (respData?: any) => void
   ) {
     console.log("Updating server setting", name, "to", value);
     const originalValue = serverConfig[name];
     const nid = notify({ type: "loading", text: "Updating" });
+    let ep = "/server/config";
+    if (name === "PLEX_HOST") {
+      ep = "/server/config/plex_host";
+    }
     axios
-      .post("/server/config", { key: name, value: value })
+      .post(ep, { key: name, value: value })
       .then((r) => {
         if (r.status === 200) {
           serverConfig[name] = value;
           serverConfig = serverConfig;
           notify({ id: nid, type: "success", text: "Updated" });
-          if (typeof done !== "undefined") done();
+          if (typeof done !== "undefined") done(r?.data);
         }
       })
       .catch((err) => {
@@ -132,6 +137,28 @@
             }}
             disabled={jfDisabled}
           />
+        </Setting>
+        <Setting
+          title="Plex Host"
+          desc="Point to your Plex server to enable related features. Don't change server after
+        already using another."
+        >
+          <input
+            type="text"
+            placeholder="https://plex.example.com"
+            bind:value={serverConfig.PLEX_HOST}
+            on:blur={() => {
+              plexHostDisabled = true;
+              updateServerConfig("PLEX_HOST", serverConfig.PLEX_HOST, (rData) => {
+                plexHostDisabled = false;
+                serverConfig.PLEX_MACHINE_ID = rData?.PLEX_MACHINE_ID;
+              });
+            }}
+            disabled={plexHostDisabled}
+          />
+          {#if serverConfig.PLEX_MACHINE_ID}
+            <span style="font-size: 10px">Machine Id: {serverConfig.PLEX_MACHINE_ID}</span>
+          {/if}
         </Setting>
         <Setting title="TMDB Key" desc="Provide your own TMDB API Key">
           <input

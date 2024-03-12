@@ -18,6 +18,10 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+type ValueRequest struct {
+	Value any `json:"value"`
+}
+
 type KeyValueRequest struct {
 	Key   string `json:"key"`
 	Value any    `json:"value"`
@@ -569,6 +573,21 @@ func (b *BaseRouter) addAuthRoutes() {
 		c.Status(400)
 	})
 
+	// Plex login
+	auth.POST("/plex", func(c *gin.Context) {
+		var plexRequest PlexLoginRequest
+		if c.ShouldBindJSON(&plexRequest) == nil {
+			response, err := loginPlex(&plexRequest, b.db)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.Status(400)
+	})
+
 	// Register
 	auth.POST("/register", func(c *gin.Context) {
 		var user UserRegisterRequest
@@ -589,6 +608,9 @@ func (b *BaseRouter) addAuthRoutes() {
 		availableAuthProviders := []string{}
 		if Config.JELLYFIN_HOST != "" {
 			availableAuthProviders = append(availableAuthProviders, "jellyfin")
+		}
+		if Config.PLEX_HOST != "" && Config.PLEX_MACHINE_ID != "" {
+			availableAuthProviders = append(availableAuthProviders, "plex")
 		}
 		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
 			AvailableAuthProviders: availableAuthProviders,
@@ -663,7 +685,7 @@ func (b *BaseRouter) addProfileRoutes() {
 }
 
 func (b *BaseRouter) addJellyfinRoutes() {
-	jf := b.rg.Group("/jellyfin").Use(AuthRequired(b.db))
+	jf := b.rg.Group("/jellyfin").Use(AuthRequired(b.db), JellyfinAccessRequired())
 
 	// Check if jf has item
 	jf.GET("/:type/:name/:tmdbId", func(c *gin.Context) {
@@ -673,6 +695,21 @@ func (b *BaseRouter) addJellyfinRoutes() {
 		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
 		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
 		response, err := jellyfinContentFind(userId, userType, username, userThirdPartyId, userThirdPartyAuth, c.Param("type"), c.Param("name"), c.Param("tmdbId"))
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Sync users jellyfin watched items to watchlist
+	jf.GET("/sync", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		userType := c.MustGet("userType").(UserType)
+		username := c.MustGet("username").(string)
+		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
+		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
+		response, err := jellyfinSyncWatched(b.db, userId, userType, username, userThirdPartyId, userThirdPartyAuth)
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return
@@ -883,6 +920,22 @@ func (b *BaseRouter) addServerRoutes() {
 				return
 			}
 			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	// Update plex host config
+	server.POST("/config/plex_host", func(c *gin.Context) {
+		var ur ValueRequest
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			resp, err := updateConfigPlexHost(ur.Value.(string))
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, resp)
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -1107,5 +1160,19 @@ func (b *BaseRouter) addRadarrRoutes() {
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
+
+func (b *BaseRouter) addJobRoutes() {
+	job := b.rg.Group("/job").Use(AuthRequired(nil))
+
+	job.GET("/:id", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		response, err := getJob(c.Param("id"), userId)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, *response)
 	})
 }

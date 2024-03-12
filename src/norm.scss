@@ -56,7 +56,7 @@
 }
 
 :global(input, textarea) {
-  padding: 5px 10px;
+  padding: 7px 10px;
   border: 2px solid black;
   border-radius: 5px;
   width: 100%;
@@ -83,7 +83,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 10px;
+  padding: 7px 10px;
   border: 2px solid $text-color;
   border-radius: 5px;
   background-color: $bg-color;

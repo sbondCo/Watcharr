@@ -28,3 +28,17 @@
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+.twoColViewer .viewer-close {
+  right: 10px;
+  top: 10px;
+  width: 50px;
+  height: 50px;
+}
+
+/* Stupid poopin fix for viewerjs because whatever is bundling the css
+isn't keeping the order of this correctly. All this time wasted and it
+was just opaque ;( BUT ONLY IN THE BUILD AAAAAAAAAAAAAAAAAAAAAA */
+.viewer-in {
+  opacity: 1 !important;
+}

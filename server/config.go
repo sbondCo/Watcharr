@@ -25,11 +25,20 @@ type ServerConfig struct {
 
 	// Enable/disable signup functionality.
 	// Set to `false` to disable registering an account.
-	SIGNUP_ENABLED bool `json:",omitempty"`
+	SIGNUP_ENABLED bool
 
 	// Optional: Provide your own TMDB API Key.
 	// If unprovided, the default Watcharr API key will be used.
 	TMDB_KEY string `json:",omitempty"`
+
+	// Optional: Point to Plex install to enable plex features.
+	PLEX_HOST string `json:",omitempty"`
+
+	// Optional: Machine identifier of your Plex server.
+	// This is used to ensure only users of your Plex server
+	// can use this Watcharr instance.
+	// Will be fetched automatically when PLEX_HOST is provided via web ui.
+	PLEX_MACHINE_ID string `json:",omitempty"`
 
 	SONARR []SonarrSettings `json:",omitempty"`
 	RADARR []RadarrSettings `json:",omitempty"`
@@ -50,12 +59,14 @@ type ServerConfig struct {
 // not editable on frontend, so not needed).
 func (c *ServerConfig) GetSafe() ServerConfig {
 	return ServerConfig{
-		SIGNUP_ENABLED: c.SIGNUP_ENABLED,
-		JELLYFIN_HOST:  c.JELLYFIN_HOST,
-		TMDB_KEY:       c.TMDB_KEY,
-		DEBUG:          c.DEBUG,
-		SONARR:         c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
-		RADARR:         c.RADARR, // Dont act safe, this contains radarr api key, needed for config
+		SIGNUP_ENABLED:  c.SIGNUP_ENABLED,
+		JELLYFIN_HOST:   c.JELLYFIN_HOST,
+		TMDB_KEY:        c.TMDB_KEY,
+		PLEX_HOST:       c.PLEX_HOST,
+		PLEX_MACHINE_ID: c.PLEX_MACHINE_ID,
+		DEBUG:           c.DEBUG,
+		SONARR:          c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
+		RADARR:          c.RADARR, // Dont act safe, this contains radarr api key, needed for config
 		TWITCH: game.IGDB{
 			ClientID:     c.TWITCH.ClientID,
 			ClientSecret: c.TWITCH.ClientSecret,
@@ -64,11 +75,8 @@ func (c *ServerConfig) GetSafe() ServerConfig {
 }
 
 var (
-	// Our server config.. set defaults here, then `readConfig`
-	// will overwrite if provided in watcharr.json cfg file.
-	Config = ServerConfig{
-		SIGNUP_ENABLED: true,
-	}
+	// Our server config.. `readConfig` will overwrite from watcharr.json cfg file.
+	Config = ServerConfig{}
 )
 
 // Read config file
@@ -102,19 +110,22 @@ func initFromConfig() error {
 }
 
 // Generate new barebones watcharr.json config file.
-// Currently only JWT_SECRET is required, so this method
-// generates a secret.
+// Generates a JWT_SECRET and set default config.
 func generateConfig() error {
 	key, err := generateString(64)
 	if err != nil {
 		return err
 	}
-	cfg := ServerConfig{JWT_SECRET: key}
+	cfg := ServerConfig{
+		JWT_SECRET: key,
+		// Other defaults..
+		SIGNUP_ENABLED: true,
+	}
 	barej, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
 		return err
 	}
-	Config.JWT_SECRET = cfg.JWT_SECRET
+	Config = cfg
 	return os.WriteFile("./data/watcharr.json", barej, 0755)
 }
 

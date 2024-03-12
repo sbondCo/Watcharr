@@ -7,6 +7,7 @@ import LogoCol from "@site/static/img/logo-col.png";
 
 import styles from "./index.module.css";
 import clsx from "clsx";
+import { HomepageTwoColFeats } from "../components/TwoColFeat";
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
@@ -45,6 +46,7 @@ export default function Home() {
       <HomepageHeader />
       <main>
         <HomepageFeatures />
+        <HomepageTwoColFeats />
       </main>
     </Layout>
   );

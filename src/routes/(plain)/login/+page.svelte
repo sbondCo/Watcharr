@@ -19,12 +19,12 @@
 
     noAuthAxios.get<AvailableAuthProviders>("/auth/available").then((r) => {
       if (r?.data) {
-        if (r?.data?.isInSetup) {
+        if (r.data.isInSetup) {
           console.log("Server is in setup.. navigating to web setup page.");
           goto("/setup");
         }
-        availableProviders = r?.data?.available;
-        signupEnabled = r?.data?.signupEnabled;
+        availableProviders = r.data.available;
+        signupEnabled = r.data.signupEnabled;
       }
     });
   });
@@ -73,6 +73,46 @@
         unNotify(nid);
       });
   }
+
+  async function plexLogin() {
+    try {
+      const { preparePlexAuth, doPlexLogin, plexPinPoll } = await import("@/lib/util/plex");
+      const p = preparePlexAuth();
+      const pin = await doPlexLogin(p);
+      plexPinPoll(pin, p, (err, token) => {
+        if (err) {
+          error = "Plex Auth Failed";
+          console.error("Plex auth failed!", err);
+          return;
+        }
+        const nid = notify({ text: "Logging in", type: "loading" });
+        noAuthAxios
+          .post("/auth/plex", {
+            token
+          })
+          .then((resp) => {
+            if (resp.data?.token) {
+              console.log("Received token... logging in.");
+              localStorage.setItem("token", resp.data.token);
+              goto("/");
+              notify({ id: nid, text: `Welcome!`, type: "success" });
+            }
+          })
+          .catch((err) => {
+            console.error("plexLogin: Fail", err);
+            if (err.response) {
+              error = err.response.data.error;
+            } else {
+              error = err.message;
+            }
+            notify({ id: nid, text: `Failed!`, type: "error" });
+          });
+      });
+    } catch (err) {
+      console.error("plexLogin: failed!", err);
+      error = "Plex login failed";
+    }
+  }
 </script>
 
 <div>
@@ -100,12 +140,27 @@
         <span class="login-with" style="font-weight: bold">Login With</span>
         <div class="login-btns">
           <button type="submit"><span class="watcharr">W</span>Watcharr</button>
-          {#if availableProviders}
-            {#each availableProviders as p}
-              <button type="submit" name="jellyfin" class="other"><Icon i={p} wh={18} />{p}</button>
+          {#if availableProviders?.length > 0}
+            {#each availableProviders.filter((ap) => ap !== "plex") as p}
+              <button type="submit" name={p} class="other"><Icon i={p} wh={18} />{p}</button>
             {/each}
           {/if}
         </div>
+        {#if availableProviders?.findIndex((provider) => provider == "plex") > -1}
+          <p style="font-weight: bold; font-size: 14px;">or</p>
+          <div class="login-btns">
+            <button
+              type="button"
+              on:click={() => {
+                plexLogin();
+              }}
+              name="plex"
+              class="plex other"
+            >
+              <Icon i="plex" wh={18} />Continue with Plex
+            </button>
+          </div>
+        {/if}
       {:else}
         <div class="login-btns">
           <button type="submit">Sign Up</button>
@@ -169,11 +224,12 @@
       display: flex;
       flex-flow: row;
       gap: 10px;
+      text-transform: capitalize;
 
       .watcharr {
         font-family: "Rampart One";
-        font-size: 18px;
-        line-height: 18px;
+        font-size: 19px;
+        line-height: 19px;
       }
 
       &.other {
