@@ -186,7 +186,10 @@ func startPlexSync(
 							continue
 						}
 						updateJobCurrentTask(jobId, userId, "syncing "+show.Title+" season "+strconv.Itoa(vs.Index))
-						seasonLastViewedAt := time.Unix(vs.LastViewedAt, 0)
+						var seasonLastViewedAt time.Time
+						if vs.LastViewedAt != 0 {
+							seasonLastViewedAt = time.Unix(vs.LastViewedAt, 0)
+						}
 						_, err = addWatchedSeason(db, userId, WatchedSeasonAddRequest{
 							WatchedID:       w.ID,
 							SeasonNumber:    vs.Index,
@@ -216,7 +219,10 @@ func startPlexSync(
 							continue
 						}
 						updateJobCurrentTask(jobId, userId, "syncing "+show.Title+" season "+strconv.Itoa(vs.ParentIndex)+" episode "+strconv.Itoa(vs.Index))
-						episodeLastViewedAt := time.Unix(vs.LastViewedAt, 0)
+						var episodeLastViewedAt time.Time
+						if vs.LastViewedAt != 0 {
+							episodeLastViewedAt = time.Unix(vs.LastViewedAt, 0)
+						}
 						_, err = addWatchedEpisodes(db, userId, WatchedEpisodeAddRequest{
 							WatchedID:       w.ID,
 							SeasonNumber:    vs.ParentIndex,
