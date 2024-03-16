@@ -14,7 +14,7 @@
   import { notify } from "@/lib/util/notify";
   import UserAvatar from "@/lib/img/UserAvatar.svelte";
   import PwChangeModal from "@/routes/(app)/profile/modals/PwChangeModal.svelte";
-  import JellyfinSyncModal from "./modals/JellyfinSyncModal.svelte";
+  import SyncModal from "./modals/SyncModal.svelte";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -28,6 +28,7 @@
   let pwChangeModalOpen = false;
   let getProfilePromise = getProfile();
   let jellyfinSyncModalOpen = false;
+  let plexSyncModalOpen = false;
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -275,6 +276,11 @@
             Sync With Jellyfin
           </button>
         {/if}
+        {#if user?.type === UserType?.Plex}
+          <button on:click={() => (plexSyncModalOpen = true)} disabled={exportDisabled}>
+            Sync With Plex
+          </button>
+        {/if}
       </div>
       {#if pwChangeModalOpen}
         <PwChangeModal
@@ -285,7 +291,10 @@
         ></PwChangeModal>
       {/if}
       {#if jellyfinSyncModalOpen}
-        <JellyfinSyncModal onClose={() => (jellyfinSyncModalOpen = false)} />
+        <SyncModal onClose={() => (jellyfinSyncModalOpen = false)} />
+      {/if}
+      {#if plexSyncModalOpen}
+        <SyncModal type="plex" onClose={() => (plexSyncModalOpen = false)} />
       {/if}
     </div>
   </div>

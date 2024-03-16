@@ -43,6 +43,7 @@
       case "IMPORTED_WATCHED":
         return "Imported";
       case "IMPORTED_WATCHED_JF":
+      case "IMPORTED_WATCHED_PLEX":
         return "Synced";
       case "IMPORTED_RATING":
         if (a.data) {
@@ -56,6 +57,7 @@
         return "Imported Rating";
       case "IMPORTED_ADDED_WATCHED":
       case "IMPORTED_ADDED_WATCHED_JF":
+      case "IMPORTED_ADDED_WATCHED_PLEX":
         return "Imported Watch Date";
       case "SEASON_ADDED":
         if (a.data) {

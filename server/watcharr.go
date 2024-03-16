@@ -131,6 +131,7 @@ func main() {
 	br.addActivityRoutes()
 	br.addProfileRoutes()
 	br.addJellyfinRoutes()
+	br.addPlexRoutes()
 	br.addUserRoutes()
 	br.addFollowRoutes()
 	br.addImportRoutes()

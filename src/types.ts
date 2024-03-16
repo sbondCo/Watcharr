@@ -985,7 +985,8 @@ export enum GameWebsiteCategory {
   Reddit = 14
 }
 
-export interface JellyfinSyncResponse {
+// General interface for all requests that return a job that was started.
+export interface JobCreatedResponse {
   jobId: string;
 }
 

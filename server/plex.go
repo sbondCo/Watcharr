@@ -7,6 +7,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type PlexLoginRequest struct {
@@ -76,6 +78,164 @@ type PlexUsersResponse struct {
 			Pending           string `xml:"pending,attr"`
 		} `xml:"Server"`
 	} `xml:"User"`
+}
+
+// Plex get libraries response
+// /library/sections
+type PlexLibrariesResponse struct {
+	MediaContainer struct {
+		Size      int    `json:"size"`
+		AllowSync bool   `json:"allowSync"`
+		Title1    string `json:"title1"`
+		Directory []struct {
+			AllowSync        bool   `json:"allowSync"`
+			Art              string `json:"art"`
+			Composite        string `json:"composite"`
+			Filters          bool   `json:"filters"`
+			Refreshing       bool   `json:"refreshing"`
+			Thumb            string `json:"thumb"`
+			Key              string `json:"key"`
+			Type             string `json:"type"`
+			Title            string `json:"title"`
+			Agent            string `json:"agent"`
+			Scanner          string `json:"scanner"`
+			Language         string `json:"language"`
+			UUID             string `json:"uuid"`
+			UpdatedAt        int    `json:"updatedAt"`
+			CreatedAt        int    `json:"createdAt"`
+			ScannedAt        int    `json:"scannedAt"`
+			Content          bool   `json:"content"`
+			Directory        bool   `json:"directory"`
+			ContentChangedAt int64  `json:"contentChangedAt"`
+			Hidden           int    `json:"hidden"`
+			Location         []struct {
+				ID   int    `json:"id"`
+				Path string `json:"path"`
+			} `json:"Location"`
+		} `json:"Directory"`
+	} `json:"MediaContainer"`
+}
+
+// Plex get all library items response (with includeGuids parameter)
+// /library/sections/{sectionId}/all
+type PlexLibraryItemsResponse struct {
+	MediaContainer struct {
+		Size                int    `json:"size"`
+		AllowSync           bool   `json:"allowSync"`
+		Art                 string `json:"art"`
+		Identifier          string `json:"identifier"`
+		LibrarySectionID    int    `json:"librarySectionID"`
+		LibrarySectionTitle string `json:"librarySectionTitle"`
+		LibrarySectionUUID  string `json:"librarySectionUUID"`
+		MediaTagPrefix      string `json:"mediaTagPrefix"`
+		MediaTagVersion     int    `json:"mediaTagVersion"`
+		Thumb               string `json:"thumb"`
+		Title1              string `json:"title1"`
+		Title2              string `json:"title2"`
+		ViewGroup           string `json:"viewGroup"`
+		ViewMode            int    `json:"viewMode"`
+		Metadata            []struct {
+			RatingKey              string  `json:"ratingKey"`
+			Key                    string  `json:"key"`
+			GUID                   string  `json:"guid"` // Plex guid
+			Slug                   string  `json:"slug"`
+			Studio                 string  `json:"studio"`
+			Type                   string  `json:"type"`
+			Title                  string  `json:"title"`
+			ContentRating          string  `json:"contentRating"`
+			Summary                string  `json:"summary"`
+			Rating                 float64 `json:"rating"`
+			UserRating             float64 `json:"userRating"`
+			AudienceRating         float64 `json:"audienceRating"`
+			ViewCount              int     `json:"viewCount,omitempty"`
+			LastViewedAt           int64   `json:"lastViewedAt,omitempty"`
+			Year                   int     `json:"year"`
+			Tagline                string  `json:"tagline"`
+			Thumb                  string  `json:"thumb"`
+			Art                    string  `json:"art"`
+			Duration               int     `json:"duration"`
+			OriginallyAvailableAt  string  `json:"originallyAvailableAt"`
+			AddedAt                int     `json:"addedAt"`
+			UpdatedAt              int     `json:"updatedAt"`
+			AudienceRatingImage    string  `json:"audienceRatingImage"`
+			HasPremiumPrimaryExtra string  `json:"hasPremiumPrimaryExtra"`
+			RatingImage            string  `json:"ratingImage"`
+			LeafCount              int     `json:"leafCount,omitempty"`
+			ViewedLeafCount        int     `json:"viewedLeafCount,omitempty"`
+			Media                  []struct {
+				ID              int     `json:"id"`
+				Duration        int     `json:"duration"`
+				Bitrate         int     `json:"bitrate"`
+				Width           int     `json:"width"`
+				Height          int     `json:"height"`
+				AspectRatio     float64 `json:"aspectRatio"`
+				AudioChannels   int     `json:"audioChannels"`
+				AudioCodec      string  `json:"audioCodec"`
+				VideoCodec      string  `json:"videoCodec"`
+				VideoResolution string  `json:"videoResolution"`
+				Container       string  `json:"container"`
+				VideoFrameRate  string  `json:"videoFrameRate"`
+				VideoProfile    string  `json:"videoProfile"`
+				Part            []struct {
+					ID           int    `json:"id"`
+					Key          string `json:"key"`
+					Duration     int    `json:"duration"`
+					File         string `json:"file"`
+					Size         int64  `json:"size"`
+					Container    string `json:"container"`
+					HasThumbnail string `json:"hasThumbnail"`
+					VideoProfile string `json:"videoProfile"`
+				} `json:"Part"`
+			} `json:"Media"`
+			// External ids
+			Guid []struct {
+				ID string `json:"id"`
+			} `json:"Guid"`
+			Genre []struct {
+				Tag string `json:"tag"`
+			} `json:"Genre"`
+			Country []struct {
+				Tag string `json:"tag"`
+			} `json:"Country"`
+			Director []struct {
+				Tag string `json:"tag"`
+			} `json:"Director"`
+			Writer []struct {
+				Tag string `json:"tag"`
+			} `json:"Writer"`
+			Role []struct {
+				Tag string `json:"tag"`
+			} `json:"Role"`
+			ChapterSource string `json:"chapterSource,omitempty"`
+		} `json:"Metadata"`
+	} `json:"MediaContainer"`
+}
+
+// Plex access middleware, ensures user is a Plex user.
+// To be ran after AuthRequired middleware with extra data.
+func PlexAccessRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		slog.Debug("PlexAccessRequired middleware hit", "user_id", userId)
+		userType := c.MustGet("userType").(UserType)
+		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
+		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
+		if Config.PLEX_HOST == "" || Config.PLEX_MACHINE_ID == "" {
+			slog.Error("PlexAccessRequired: Plex has not been configured.", "user_id", userId)
+			c.AbortWithStatus(401)
+			return
+		}
+		if userType != PLEX_USER || userThirdPartyId == "" {
+			slog.Error("PlexAccessRequired: User is not a Plex user..", "user_id", userId, "user_type", userType, "user_third_party_id", userThirdPartyId)
+			c.AbortWithStatus(401)
+			return
+		}
+		if userThirdPartyAuth == "" {
+			slog.Error("PlexAccessRequired: User has no thirdPartyAuth token..", "user_id", userId)
+			c.AbortWithStatus(401)
+			return
+		}
+	}
 }
 
 func getPlexIdentity(host string) (PlexIdentity, error) {
@@ -199,4 +359,54 @@ userLoop:
 		return nil
 	}
 	return errors.New("user does not have access to home plex server")
+}
+
+func getPlexLibraries(userThirdPartyAuth string) (PlexLibrariesResponse, error) {
+	httpClient := &http.Client{}
+	req, err := http.NewRequest("GET", Config.PLEX_HOST+"/library/sections", nil)
+	if err != nil {
+		return PlexLibrariesResponse{}, err
+	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("X-Plex-Token", userThirdPartyAuth)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return PlexLibrariesResponse{}, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return PlexLibrariesResponse{}, err
+	}
+	defer resp.Body.Close()
+	var pl PlexLibrariesResponse
+	err = json.Unmarshal(body, &pl)
+	if err != nil {
+		return PlexLibrariesResponse{}, err
+	}
+	return pl, nil
+}
+
+func getPlexLibraryItems(userThirdPartyAuth string, libraryKey string) (PlexLibraryItemsResponse, error) {
+	httpClient := &http.Client{}
+	req, err := http.NewRequest("GET", Config.PLEX_HOST+"/library/sections/"+libraryKey+"/all?includeGuids=1", nil)
+	if err != nil {
+		return PlexLibraryItemsResponse{}, err
+	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("X-Plex-Token", userThirdPartyAuth)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return PlexLibraryItemsResponse{}, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return PlexLibraryItemsResponse{}, err
+	}
+	defer resp.Body.Close()
+	var pl PlexLibraryItemsResponse
+	err = json.Unmarshal(body, &pl)
+	if err != nil {
+		return PlexLibraryItemsResponse{}, err
+	}
+	return pl, nil
 }
