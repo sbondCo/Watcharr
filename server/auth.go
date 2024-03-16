@@ -447,6 +447,12 @@ func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
 			return AuthResponse{}, errors.New("failed to locate user")
 		}
 	}
+	// If user exists.. update their access token in db
+	if lr.AuthToken != "" {
+		slog.Debug("plex user login - updating user with new access token")
+		dbUser.ThirdPartyAuth = lr.AuthToken
+		db.Save(&dbUser)
+	}
 	token, err := signJWT(dbUser)
 	if err != nil {
 		slog.Error("loginPlex: Failed to sign new jwt", "error", err)
