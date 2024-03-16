@@ -207,7 +207,7 @@ func startJellyfinSync(
 					&seriesSeasons,
 				)
 				if err != nil {
-					slog.Error("jellyfinSyncWatched: Failed to fetch series seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
+					slog.Error("jellyfinSyncWatched: Failed to fetch series seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId, "error", err)
 					addJobError(jobId, userId, "series seasons could not be imported (request failed): "+v.Name)
 				} else if len(seriesSeasons.Items) <= 0 {
 					slog.Info("jellyfinSyncWatched: Series has no seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
@@ -227,7 +227,7 @@ func startJellyfinSync(
 							addActivityDate: vs.UserData.LastPlayedDate,
 						})
 						if err != nil {
-							slog.Error("jellyfinSyncWatched: Failed to fetch series seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
+							slog.Error("jellyfinSyncWatched: Failed to fetch series seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId, "error", err)
 							addJobError(jobId, userId, "series season could not be imported (addWatchedSeason request failed): "+v.Name+" season "+strconv.Itoa(vs.IndexNumber))
 						}
 					}
@@ -249,7 +249,7 @@ func startJellyfinSync(
 					&seriesEpisodes,
 				)
 				if err != nil {
-					slog.Error("jellyfinSyncWatched: Failed to fetch series episodes.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
+					slog.Error("jellyfinSyncWatched: Failed to fetch series episodes.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId, "error", err)
 					addJobError(jobId, userId, "series episodes could not be imported (request failed): "+v.Name)
 				} else if len(seriesEpisodes.Items) <= 0 {
 					slog.Info("jellyfinSyncWatched: Series has no episodes.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
@@ -270,7 +270,7 @@ func startJellyfinSync(
 							addActivityDate: vs.UserData.LastPlayedDate,
 						})
 						if err != nil {
-							slog.Error("jellyfinSyncWatched: Failed to import series episode.", "series_name", v.Name, "season_num", vs.ParentIndexNumber, "episode_num", vs.IndexNumber, "user_id", userId)
+							slog.Error("jellyfinSyncWatched: Failed to import series episode.", "series_name", v.Name, "season_num", vs.ParentIndexNumber, "episode_num", vs.IndexNumber, "user_id", userId, "error", err)
 							addJobError(jobId, userId, "series episode could not be imported (addWatchedEpisode request failed): "+v.Name+" "+vs.Name)
 						}
 					}

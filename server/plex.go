@@ -211,6 +211,135 @@ type PlexLibraryItemsResponse struct {
 	} `json:"MediaContainer"`
 }
 
+// Plex get all children (seasons) for a serie.
+// /library/metadata/{ratingKey}/children
+type PlexLibraryItemSeasonsResponse struct {
+	MediaContainer struct {
+		Size                int    `json:"size"`
+		AllowSync           bool   `json:"allowSync"`
+		Art                 string `json:"art"`
+		Identifier          string `json:"identifier"`
+		Key                 string `json:"key"`
+		LibrarySectionID    int    `json:"librarySectionID"`
+		LibrarySectionTitle string `json:"librarySectionTitle"`
+		LibrarySectionUUID  string `json:"librarySectionUUID"`
+		MediaTagPrefix      string `json:"mediaTagPrefix"`
+		MediaTagVersion     int    `json:"mediaTagVersion"`
+		Nocache             bool   `json:"nocache"`
+		ParentIndex         int    `json:"parentIndex"`
+		ParentTitle         string `json:"parentTitle"`
+		ParentYear          int    `json:"parentYear"`
+		Summary             string `json:"summary"`
+		Theme               string `json:"theme"`
+		Thumb               string `json:"thumb"`
+		Title1              string `json:"title1"`
+		Title2              string `json:"title2"`
+		ViewGroup           string `json:"viewGroup"`
+		ViewMode            int    `json:"viewMode"`
+		Directory           []struct {
+			LeafCount       int    `json:"leafCount"`
+			Thumb           string `json:"thumb"`
+			ViewedLeafCount int    `json:"viewedLeafCount"`
+			Key             string `json:"key"`
+			Title           string `json:"title"`
+		} `json:"Directory"`
+		Metadata []struct {
+			RatingKey       string  `json:"ratingKey"`
+			Key             string  `json:"key"`
+			ParentRatingKey string  `json:"parentRatingKey"`
+			GUID            string  `json:"guid"`
+			ParentGUID      string  `json:"parentGuid"`
+			ParentSlug      string  `json:"parentSlug"`
+			ParentStudio    string  `json:"parentStudio"`
+			Type            string  `json:"type"`
+			Title           string  `json:"title"`
+			ParentKey       string  `json:"parentKey"`
+			ParentTitle     string  `json:"parentTitle"`
+			Summary         string  `json:"summary"`
+			Index           int     `json:"index"`
+			ParentIndex     int     `json:"parentIndex"`
+			UserRating      float64 `json:"userRating,omitempty"`
+			LastRatedAt     int64   `json:"lastRatedAt,omitempty"`
+			ParentYear      int     `json:"parentYear"`
+			Thumb           string  `json:"thumb"`
+			Art             string  `json:"art"`
+			ParentThumb     string  `json:"parentThumb"`
+			ParentTheme     string  `json:"parentTheme"`
+			LeafCount       int     `json:"leafCount"`
+			ViewedLeafCount int     `json:"viewedLeafCount"`
+			AddedAt         int     `json:"addedAt"`
+			UpdatedAt       int     `json:"updatedAt"`
+			ViewCount       int     `json:"viewCount,omitempty"`
+			LastViewedAt    int64   `json:"lastViewedAt,omitempty"`
+		} `json:"Metadata"`
+	} `json:"MediaContainer"`
+}
+
+// Plex get all children (episodes) for a season.
+// /library/metadata/{ratingKey}/allLeaves
+type PlexLibraryItemEpisodesResponse struct {
+	MediaContainer struct {
+		Size                int    `json:"size"`
+		AllowSync           bool   `json:"allowSync"`
+		Art                 string `json:"art"`
+		Identifier          string `json:"identifier"`
+		Key                 string `json:"key"`
+		LibrarySectionID    int    `json:"librarySectionID"`
+		LibrarySectionTitle string `json:"librarySectionTitle"`
+		LibrarySectionUUID  string `json:"librarySectionUUID"`
+		MediaTagPrefix      string `json:"mediaTagPrefix"`
+		MediaTagVersion     int    `json:"mediaTagVersion"`
+		MixedParents        bool   `json:"mixedParents"`
+		Nocache             bool   `json:"nocache"`
+		ParentIndex         int    `json:"parentIndex"`
+		ParentTitle         string `json:"parentTitle"`
+		ParentYear          int    `json:"parentYear"`
+		Theme               string `json:"theme"`
+		Title1              string `json:"title1"`
+		Title2              string `json:"title2"`
+		ViewGroup           string `json:"viewGroup"`
+		ViewMode            int    `json:"viewMode"`
+		Metadata            []struct {
+			RatingKey             string  `json:"ratingKey"`
+			Key                   string  `json:"key"`
+			ParentRatingKey       string  `json:"parentRatingKey"`
+			GrandparentRatingKey  string  `json:"grandparentRatingKey"`
+			GUID                  string  `json:"guid"`
+			GrandparentSlug       string  `json:"grandparentSlug"`
+			Studio                string  `json:"studio"`
+			Type                  string  `json:"type"`
+			Title                 string  `json:"title"`
+			GrandparentKey        string  `json:"grandparentKey"`
+			ParentKey             string  `json:"parentKey"`
+			GrandparentTitle      string  `json:"grandparentTitle"`
+			ParentTitle           string  `json:"parentTitle"`
+			ContentRating         string  `json:"contentRating"`
+			Summary               string  `json:"summary"`
+			Index                 int     `json:"index"`
+			ParentIndex           int     `json:"parentIndex"`
+			AudienceRating        float64 `json:"audienceRating"`
+			Year                  int     `json:"year"`
+			Thumb                 string  `json:"thumb"`
+			Art                   string  `json:"art"`
+			ParentThumb           string  `json:"parentThumb"`
+			GrandparentThumb      string  `json:"grandparentThumb"`
+			GrandparentArt        string  `json:"grandparentArt"`
+			GrandparentTheme      string  `json:"grandparentTheme"`
+			Duration              int     `json:"duration"`
+			OriginallyAvailableAt string  `json:"originallyAvailableAt"`
+			AddedAt               int     `json:"addedAt"`
+			UpdatedAt             int     `json:"updatedAt"`
+			AudienceRatingImage   string  `json:"audienceRatingImage"`
+			ChapterSource         string  `json:"chapterSource"`
+			TitleSort             string  `json:"titleSort,omitempty"`
+			UserRating            float64 `json:"userRating,omitempty"`
+			ViewCount             int     `json:"viewCount,omitempty"`
+			LastViewedAt          int64   `json:"lastViewedAt,omitempty"`
+			LastRatedAt           int64   `json:"lastRatedAt,omitempty"`
+		} `json:"Metadata"`
+	} `json:"MediaContainer"`
+}
+
 // Plex access middleware, ensures user is a Plex user.
 // To be ran after AuthRequired middleware with extra data.
 func PlexAccessRequired() gin.HandlerFunc {
@@ -407,6 +536,56 @@ func getPlexLibraryItems(userThirdPartyAuth string, libraryKey string) (PlexLibr
 	err = json.Unmarshal(body, &pl)
 	if err != nil {
 		return PlexLibraryItemsResponse{}, err
+	}
+	return pl, nil
+}
+
+func getPlexLibraryItemSeasons(userThirdPartyAuth string, ratingKey string) (PlexLibraryItemSeasonsResponse, error) {
+	httpClient := &http.Client{}
+	req, err := http.NewRequest("GET", Config.PLEX_HOST+"/library/metadata/"+ratingKey+"/children", nil)
+	if err != nil {
+		return PlexLibraryItemSeasonsResponse{}, err
+	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("X-Plex-Token", userThirdPartyAuth)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return PlexLibraryItemSeasonsResponse{}, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return PlexLibraryItemSeasonsResponse{}, err
+	}
+	defer resp.Body.Close()
+	var pl PlexLibraryItemSeasonsResponse
+	err = json.Unmarshal(body, &pl)
+	if err != nil {
+		return PlexLibraryItemSeasonsResponse{}, err
+	}
+	return pl, nil
+}
+
+func getPlexLibraryItemEpisodes(userThirdPartyAuth string, ratingKey string) (PlexLibraryItemEpisodesResponse, error) {
+	httpClient := &http.Client{}
+	req, err := http.NewRequest("GET", Config.PLEX_HOST+"/library/metadata/"+ratingKey+"/allLeaves", nil)
+	if err != nil {
+		return PlexLibraryItemEpisodesResponse{}, err
+	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("X-Plex-Token", userThirdPartyAuth)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return PlexLibraryItemEpisodesResponse{}, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return PlexLibraryItemEpisodesResponse{}, err
+	}
+	defer resp.Body.Close()
+	var pl PlexLibraryItemEpisodesResponse
+	err = json.Unmarshal(body, &pl)
+	if err != nil {
+		return PlexLibraryItemEpisodesResponse{}, err
 	}
 	return pl, nil
 }

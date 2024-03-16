@@ -151,11 +151,11 @@ func startPlexSync(
 				}, IMPORTED_WATCHED_PLEX)
 				if err != nil {
 					if err.Error() == "content already on watched list" {
-						slog.Error("plexSyncWatched: unique constraint hit. show must already be on watch list", "error", err)
-						continue
+						slog.Info("plexSyncWatched: unique constraint hit. show must already be on watch list", "error", err)
+					} else {
+						slog.Error("plexSyncWatched: Failed to add show as watched", "error", err)
+						addJobError(jobId, userId, "failed to add show "+show.Title)
 					}
-					slog.Error("plexSyncWatched: Failed to add show as watched", "error", err)
-					addJobError(jobId, userId, "failed to add show "+show.Title)
 				} else {
 					// 3. Add IMPORTED_ADDED_WATCHED_PLEX activity
 					if !lastViewedAt.IsZero() {
@@ -167,6 +167,67 @@ func startPlexSync(
 						if err != nil {
 							slog.Error("plexSyncWatched: Failed to add dateswatched activity.", "movie_name", show.Title,
 								"movie_id", show.GUID, "user_id", userId, "date", lastViewedAt, "unparsed_date", show.LastViewedAt, "error", err)
+						}
+					}
+				}
+
+				// Import watched seasons for this serie
+				seriesSeasons, err := getPlexLibraryItemSeasons(userThirdPartyAuth, show.RatingKey)
+				if err != nil {
+					slog.Error("plexSyncWatched: Failed to fetch series seasons.", "series_name", show.Title, "series_id", show.GUID, "user_id", userId, "error", err)
+					addJobError(jobId, userId, "series seasons could not be imported (request failed): "+show.Title)
+				} else if len(seriesSeasons.MediaContainer.Metadata) <= 0 {
+					slog.Info("plexSyncWatched: Series has no seasons.", "series_name", show.Title, "serie_ids", show.GUID, "user_id", userId)
+				} else {
+					for _, vs := range seriesSeasons.MediaContainer.Metadata {
+						slog.Debug("plexSyncWatched: Processing a season.", "full_item", vs, "user_id", userId)
+						if vs.ViewedLeafCount != vs.LeafCount {
+							slog.Debug("plexSyncWatched: Skipping import of unplayed season.", "series_name", show.Title, "season_num", vs.Index, "user_id", userId)
+							continue
+						}
+						updateJobCurrentTask(jobId, userId, "syncing "+show.Title+" season "+strconv.Itoa(vs.Index))
+						seasonLastViewedAt := time.Unix(vs.LastViewedAt, 0)
+						_, err = addWatchedSeason(db, userId, WatchedSeasonAddRequest{
+							WatchedID:       w.ID,
+							SeasonNumber:    vs.Index,
+							Status:          FINISHED,
+							addActivity:     SEASON_ADDED_PLEX,
+							addActivityDate: seasonLastViewedAt,
+						})
+						if err != nil {
+							slog.Error("plexSyncWatched: Failed to fetch series seasons.", "series_name", show.Title, "series_id", show.GUID, "user_id", userId, "error", err)
+							addJobError(jobId, userId, "series season could not be imported (addWatchedSeason request failed): "+show.Title+" season "+strconv.Itoa(vs.Index))
+						}
+					}
+				}
+
+				// Import watched episodes for this serie
+				seriesEpisodes, err := getPlexLibraryItemEpisodes(userThirdPartyAuth, show.RatingKey)
+				if err != nil {
+					slog.Error("plexSyncWatched: Failed to fetch series episodes.", "series_name", show.Title, "series_id", show.GUID, "user_id", userId, "error", err)
+					addJobError(jobId, userId, "series episodes could not be imported (request failed): "+show.Title)
+				} else if len(seriesEpisodes.MediaContainer.Metadata) <= 0 {
+					slog.Info("plexSyncWatched: Series has no episodes.", "series_name", show.Title, "series_id", show.GUID, "user_id", userId)
+				} else {
+					for _, vs := range seriesEpisodes.MediaContainer.Metadata {
+						slog.Debug("plexSyncWatched: Processing an episode.", "full_item", vs, "user_id", userId)
+						if vs.ViewCount <= 0 {
+							slog.Debug("plexSyncWatched: Skipping import of unplayed episode.", "series_name", show.Title, "season_num", vs.ParentIndex, "episode_num", vs.Index, "user_id", userId)
+							continue
+						}
+						updateJobCurrentTask(jobId, userId, "syncing "+show.Title+" season "+strconv.Itoa(vs.ParentIndex)+" episode "+strconv.Itoa(vs.Index))
+						episodeLastViewedAt := time.Unix(vs.LastViewedAt, 0)
+						_, err = addWatchedEpisodes(db, userId, WatchedEpisodeAddRequest{
+							WatchedID:       w.ID,
+							SeasonNumber:    vs.ParentIndex,
+							EpisodeNumber:   vs.Index,
+							Status:          FINISHED,
+							addActivity:     EPISODE_ADDED_PLEX,
+							addActivityDate: episodeLastViewedAt,
+						})
+						if err != nil {
+							slog.Error("plexSyncWatched: Failed to import series episode.", "series_name", show.Title, "season_num", vs.ParentIndex, "episode_num", vs.Index, "user_id", userId, "error", err)
+							addJobError(jobId, userId, "series episode could not be imported (addWatchedEpisode request failed): "+show.Title+" "+vs.Title)
 						}
 					}
 				}

@@ -66,6 +66,7 @@
         }
         return "Season Added";
       case "SEASON_ADDED_JF":
+      case "SEASON_ADDED_PLEX":
         if (a.data) {
           const data = JSON.parse(a.data);
           return `Season ${data.season} Synced as ${toFullTitleCase(data.status)}`;
@@ -96,6 +97,7 @@
         }
         return "Episode Added";
       case "EPISODE_ADDED_JF":
+      case "EPISODE_ADDED_PLEX":
         if (a.data) {
           const data = JSON.parse(a.data);
           return `${seasonAndEpToReadable(data.season, data.episode)} Synced ${data.status ? `as ${toFullTitleCase(data.status)}` : data.rating ? `with Rating ${data.rating}` : ""}`;
