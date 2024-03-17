@@ -7,12 +7,15 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type PlexLoginRequest struct {
-	AuthToken string `json:"token" binding:"required"`
+	AuthToken        string `json:"token" binding:"required"`
+	ClientIdentifier string `json:"clientIdentifier" binding:"required"`
 }
 
 type PlexUser struct {
@@ -340,30 +343,73 @@ type PlexLibraryItemEpisodesResponse struct {
 	} `json:"MediaContainer"`
 }
 
+// Response from clients.plex.tv/api/v2/resources
+// Used to get users auth token for home plex server.
+type PlexClientResources []struct {
+	Name                   string      `json:"name"`
+	Product                string      `json:"product"`
+	ProductVersion         string      `json:"productVersion"`
+	Platform               string      `json:"platform"`
+	PlatformVersion        string      `json:"platformVersion"`
+	Device                 string      `json:"device"`
+	ClientIdentifier       string      `json:"clientIdentifier"`
+	CreatedAt              time.Time   `json:"createdAt"`
+	LastSeenAt             time.Time   `json:"lastSeenAt"`
+	Provides               string      `json:"provides"`
+	OwnerID                interface{} `json:"ownerId"`
+	SourceTitle            interface{} `json:"sourceTitle"`
+	PublicAddress          string      `json:"publicAddress"`
+	AccessToken            string      `json:"accessToken"`
+	Owned                  bool        `json:"owned"`
+	Home                   bool        `json:"home"`
+	Synced                 bool        `json:"synced"`
+	Relay                  bool        `json:"relay"`
+	Presence               bool        `json:"presence"`
+	HTTPSRequired          bool        `json:"httpsRequired"`
+	PublicAddressMatches   bool        `json:"publicAddressMatches"`
+	DNSRebindingProtection bool        `json:"dnsRebindingProtection"`
+	NatLoopbackSupported   bool        `json:"natLoopbackSupported"`
+	Connections            []struct {
+		Protocol string `json:"protocol"`
+		Address  string `json:"address"`
+		Port     int    `json:"port"`
+		URI      string `json:"uri"`
+		Local    bool   `json:"local"`
+		Relay    bool   `json:"relay"`
+		IPv6     bool   `json:"IPv6"`
+	} `json:"connections"`
+}
+
 // Plex access middleware, ensures user is a Plex user.
 // To be ran after AuthRequired middleware with extra data.
-func PlexAccessRequired() gin.HandlerFunc {
+func PlexAccessRequired(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		slog.Debug("PlexAccessRequired middleware hit", "user_id", userId)
 		userType := c.MustGet("userType").(UserType)
-		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
-		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
 		if Config.PLEX_HOST == "" || Config.PLEX_MACHINE_ID == "" {
 			slog.Error("PlexAccessRequired: Plex has not been configured.", "user_id", userId)
 			c.AbortWithStatus(401)
 			return
 		}
-		if userType != PLEX_USER || userThirdPartyId == "" {
-			slog.Error("PlexAccessRequired: User is not a Plex user..", "user_id", userId, "user_type", userType, "user_third_party_id", userThirdPartyId)
+		if userType != PLEX_USER {
+			slog.Error("PlexAccessRequired: User is not a Plex user..", "user_id", userId, "user_type", userType)
 			c.AbortWithStatus(401)
 			return
 		}
-		if userThirdPartyAuth == "" {
-			slog.Error("PlexAccessRequired: User has no thirdPartyAuth token..", "user_id", userId)
+		userPlexService := new(UserServices)
+		if res := db.Where("user_id = ? AND name = ?", userId, "plex").Take(&userPlexService); res.Error != nil {
+			slog.Error("PlexAccessRequired: Failed when attempting to get users plex service integration..", "user_id", userId, "user_type", userType)
 			c.AbortWithStatus(401)
 			return
 		}
+		if userPlexService.ClientID == "" || userPlexService.AuthToken == "" || userPlexService.AuthToken2 == "" {
+			slog.Error("PlexAccessRequired: User has missing details from service (clientId, authToken or authToken2)..", "user_id", userId, "client_id", userPlexService.ClientID)
+			c.AbortWithStatus(401)
+			return
+		}
+		c.Set("plexAuthToken", userPlexService.AuthToken)
+		c.Set("plexLocalAuthToken", userPlexService.AuthToken2)
 	}
 }
 
@@ -490,14 +536,14 @@ userLoop:
 	return errors.New("user does not have access to home plex server")
 }
 
-func getPlexLibraries(userThirdPartyAuth string) (PlexLibrariesResponse, error) {
+func getPlexLibraries(plexAuth string) (PlexLibrariesResponse, error) {
 	httpClient := &http.Client{}
 	req, err := http.NewRequest("GET", Config.PLEX_HOST+"/library/sections", nil)
 	if err != nil {
 		return PlexLibrariesResponse{}, err
 	}
 	req.Header.Add("Accept", "application/json")
-	req.Header.Set("X-Plex-Token", userThirdPartyAuth)
+	req.Header.Set("X-Plex-Token", plexAuth)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return PlexLibrariesResponse{}, err
@@ -515,14 +561,14 @@ func getPlexLibraries(userThirdPartyAuth string) (PlexLibrariesResponse, error) 
 	return pl, nil
 }
 
-func getPlexLibraryItems(userThirdPartyAuth string, libraryKey string) (PlexLibraryItemsResponse, error) {
+func getPlexLibraryItems(plexAuth string, libraryKey string) (PlexLibraryItemsResponse, error) {
 	httpClient := &http.Client{}
 	req, err := http.NewRequest("GET", Config.PLEX_HOST+"/library/sections/"+libraryKey+"/all?includeGuids=1", nil)
 	if err != nil {
 		return PlexLibraryItemsResponse{}, err
 	}
 	req.Header.Add("Accept", "application/json")
-	req.Header.Set("X-Plex-Token", userThirdPartyAuth)
+	req.Header.Set("X-Plex-Token", plexAuth)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return PlexLibraryItemsResponse{}, err
@@ -540,14 +586,14 @@ func getPlexLibraryItems(userThirdPartyAuth string, libraryKey string) (PlexLibr
 	return pl, nil
 }
 
-func getPlexLibraryItemSeasons(userThirdPartyAuth string, ratingKey string) (PlexLibraryItemSeasonsResponse, error) {
+func getPlexLibraryItemSeasons(plexAuth string, ratingKey string) (PlexLibraryItemSeasonsResponse, error) {
 	httpClient := &http.Client{}
 	req, err := http.NewRequest("GET", Config.PLEX_HOST+"/library/metadata/"+ratingKey+"/children", nil)
 	if err != nil {
 		return PlexLibraryItemSeasonsResponse{}, err
 	}
 	req.Header.Add("Accept", "application/json")
-	req.Header.Set("X-Plex-Token", userThirdPartyAuth)
+	req.Header.Set("X-Plex-Token", plexAuth)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return PlexLibraryItemSeasonsResponse{}, err
@@ -565,14 +611,14 @@ func getPlexLibraryItemSeasons(userThirdPartyAuth string, ratingKey string) (Ple
 	return pl, nil
 }
 
-func getPlexLibraryItemEpisodes(userThirdPartyAuth string, ratingKey string) (PlexLibraryItemEpisodesResponse, error) {
+func getPlexLibraryItemEpisodes(plexAuth string, ratingKey string) (PlexLibraryItemEpisodesResponse, error) {
 	httpClient := &http.Client{}
 	req, err := http.NewRequest("GET", Config.PLEX_HOST+"/library/metadata/"+ratingKey+"/allLeaves", nil)
 	if err != nil {
 		return PlexLibraryItemEpisodesResponse{}, err
 	}
 	req.Header.Add("Accept", "application/json")
-	req.Header.Set("X-Plex-Token", userThirdPartyAuth)
+	req.Header.Set("X-Plex-Token", plexAuth)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return PlexLibraryItemEpisodesResponse{}, err
@@ -588,4 +634,43 @@ func getPlexLibraryItemEpisodes(userThirdPartyAuth string, ratingKey string) (Pl
 		return PlexLibraryItemEpisodesResponse{}, err
 	}
 	return pl, nil
+}
+
+// Gets users auth token for local plex server,
+// so they can authenticate against it for api requests.
+func getPlexHomeServerAuthToken(plexAuth string, userClientId string) (string, error) {
+	httpClient := &http.Client{}
+	req, err := http.NewRequest("GET", "https://clients.plex.tv/api/v2/resources", nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("X-Plex-Token", plexAuth)
+	req.Header.Set("X-Plex-Client-Identifier", userClientId)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	var pl PlexClientResources
+	err = json.Unmarshal(body, &pl)
+	if err != nil {
+		return "", err
+	}
+	authToken := ""
+	for _, v := range pl {
+		if v.ClientIdentifier == Config.PLEX_MACHINE_ID {
+			slog.Debug("getPlexHomeServerAuthToken: Found entry with clientIdentifier matching home server machine id.")
+			if v.AccessToken == "" {
+				slog.Warn("getPlexHomeServerAuthToken: Matching entry has no AccessToken!")
+				continue
+			}
+			authToken = v.AccessToken
+		}
+	}
+	return authToken, nil
 }

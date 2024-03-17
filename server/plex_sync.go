@@ -20,10 +20,10 @@ func startPlexSync(
 	db *gorm.DB,
 	jobId string,
 	userId uint,
-	userThirdPartyAuth string,
+	userPlexLocalAuth string,
 ) {
 	updateJobCurrentTask(jobId, userId, "fetching libraries")
-	libraries, err := getPlexLibraries(userThirdPartyAuth)
+	libraries, err := getPlexLibraries(userPlexLocalAuth)
 	if err != nil {
 		slog.Error("plexSyncWatched: Failed to fetch libraries", "user_id", userId, "error", err)
 		addJobError(jobId, userId, "failed to get plex libraries")
@@ -34,7 +34,7 @@ func startPlexSync(
 		slog.Debug("plexSyncWatched: Processing a library", "library_title", library.Title, "library_type", library.Type, "user_id", userId)
 		if library.Type == "movie" {
 			updateJobCurrentTask(jobId, userId, "importing movies from "+library.Title)
-			movies, err := getPlexLibraryItems(userThirdPartyAuth, library.Key)
+			movies, err := getPlexLibraryItems(userPlexLocalAuth, library.Key)
 			if err != nil {
 				slog.Error("plexSyncWatched: Failed to fetch movies from library", "library", library.Key, "user_id", userId, "error", err)
 				addJobError(jobId, userId, "failed to fetch movies from library "+library.Key)
@@ -106,7 +106,7 @@ func startPlexSync(
 			}
 		} else if library.Type == "show" {
 			updateJobCurrentTask(jobId, userId, "importing tv shows from "+library.Title)
-			shows, err := getPlexLibraryItems(userThirdPartyAuth, library.Key)
+			shows, err := getPlexLibraryItems(userPlexLocalAuth, library.Key)
 			if err != nil {
 				slog.Error("plexSyncWatched: Failed to fetch shows from library", "library", library.Key, "error", err)
 				addJobError(jobId, userId, "failed to fetch shows from library "+library.Key)
@@ -172,7 +172,7 @@ func startPlexSync(
 				}
 
 				// Import watched seasons for this serie
-				seriesSeasons, err := getPlexLibraryItemSeasons(userThirdPartyAuth, show.RatingKey)
+				seriesSeasons, err := getPlexLibraryItemSeasons(userPlexLocalAuth, show.RatingKey)
 				if err != nil {
 					slog.Error("plexSyncWatched: Failed to fetch series seasons.", "series_name", show.Title, "series_id", show.GUID, "user_id", userId, "error", err)
 					addJobError(jobId, userId, "series seasons could not be imported (request failed): "+show.Title)
@@ -205,7 +205,7 @@ func startPlexSync(
 				}
 
 				// Import watched episodes for this serie
-				seriesEpisodes, err := getPlexLibraryItemEpisodes(userThirdPartyAuth, show.RatingKey)
+				seriesEpisodes, err := getPlexLibraryItemEpisodes(userPlexLocalAuth, show.RatingKey)
 				if err != nil {
 					slog.Error("plexSyncWatched: Failed to fetch series episodes.", "series_name", show.Title, "series_id", show.GUID, "user_id", userId, "error", err)
 					addJobError(jobId, userId, "series episodes could not be imported (request failed): "+show.Title)
@@ -246,7 +246,7 @@ func startPlexSync(
 func plexSyncWatched(
 	db *gorm.DB,
 	userId uint,
-	userThirdPartyAuth string,
+	userPlexLocalAuth string,
 ) (PlexSyncResponse, error) {
 	jobId, err := addJob("plex_sync", userId)
 	if err != nil {
@@ -260,7 +260,7 @@ func plexSyncWatched(
 		db,
 		jobId,
 		userId,
-		userThirdPartyAuth,
+		userPlexLocalAuth,
 	)
 
 	return PlexSyncResponse{JobId: jobId}, nil

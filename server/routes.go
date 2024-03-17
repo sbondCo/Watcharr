@@ -719,13 +719,13 @@ func (b *BaseRouter) addJellyfinRoutes() {
 }
 
 func (b *BaseRouter) addPlexRoutes() {
-	plex := b.rg.Group("/plex").Use(AuthRequired(b.db), PlexAccessRequired())
+	plex := b.rg.Group("/plex").Use(AuthRequired(b.db), PlexAccessRequired(b.db))
 
 	// Sync users plex watched items to watchlist
 	plex.GET("/sync", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
-		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
-		response, err := plexSyncWatched(b.db, userId, userThirdPartyAuth)
+		userPlexLocalAuth := c.MustGet("plexLocalAuthToken").(string)
+		response, err := plexSyncWatched(b.db, userId, userPlexLocalAuth)
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return

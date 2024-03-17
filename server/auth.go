@@ -58,8 +58,10 @@ type User struct {
 	ThirdPartyID string `json:"-"`
 	// Auth token from third party (jellyfin)
 	ThirdPartyAuth string `json:"-"`
-	Watched        []Watched
-	Permissions    int `gorm:"default:1" json:"-"`
+	// Users third party integrations (minus jellyfin for now)
+	UserServices []UserServices `json:"-"`
+	Watched      []Watched
+	Permissions  int `gorm:"default:1" json:"-"`
 	// All user settings cols, in another struct for reusability
 	UserSettings
 }
@@ -86,6 +88,30 @@ type UserSettings struct {
 	// even if the watched item state has since been changed.
 	// Also if user wants to show in watched stats.
 	IncludePreviouslyWatched *bool `gorm:"default:false" json:"includePreviouslyWatched"`
+}
+
+// Holds third party service auth tokens for users.
+// Each service may use the fields in their own way.
+// Unique index applied between service name and clientID
+// to ensure no duplicates (no need to apply it against
+// user_id, no accounts should share an integration).
+//
+// Plex:
+//   - AuthToken  : Used for requests against plex.tv
+//   - AuthToken2 : Used for requests against home plex server.
+type UserServices struct {
+	ID        uint      `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	// Service/integration name
+	Name string `gorm:"uniqueIndex:svc_name_to_cltid;not null;" json:"-"`
+	// The users id on the third party service
+	ClientID  string `gorm:"uniqueIndex:svc_name_to_cltid;not null;" json:"-"`
+	AuthToken string `gorm:"not null;" json:"-"`
+	// Second auth token, generic name so future services can use it without extra confusion.
+	// Ex: We require a second auth token for use with our local server for Plex.
+	AuthToken2 string `json:"-"`
+	UserID     uint   `gorm:"not null;" json:"-"`
 }
 
 // We use a separate struct for registration to avoid confusion
@@ -411,7 +437,7 @@ func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
 		slog.Error("Request made to login via Plex, but Plex authentication is disabled")
 		return AuthResponse{}, errors.New("plex login not enabled")
 	}
-	slog.Debug("A Plex User Is Logging In", "authtoken", lr.AuthToken)
+	slog.Debug("A Plex User Is Logging In")
 	account, err := fetchPlexAccountFromToken(lr.AuthToken)
 	if err != nil {
 		slog.Error("loginPlex: Could not fetch Plex account", "error", err)
@@ -422,7 +448,8 @@ func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
 		return AuthResponse{}, errors.New("data is missing from the plex account response")
 	}
 	dbUser := new(User)
-	dbRes := db.Where("third_party_id = ? AND type = ?", account.Id, PLEX_USER).Take(&dbUser)
+	userIdQ := db.Select("user_id").Where("name = ? AND client_id = ?", "plex", account.Id).Table("user_services")
+	dbRes := db.Where("type = ?", PLEX_USER).Where("id = (?)", userIdQ).Preload("UserServices").Take(&dbUser)
 	if dbRes.Error != nil {
 		if errors.Is(dbRes.Error, gorm.ErrRecordNotFound) {
 			slog.Debug("loginPlex: New plex user attempted login.. creating Watcharr account now.")
@@ -430,13 +457,18 @@ func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
 				slog.Error("loginPlex: Cannot register Plex user. Failed to verify they have access to our home plex server.", "error", err)
 				return AuthResponse{}, errors.New("failed to verify plex access")
 			}
-			// Record not found, so we should create the user
-			// dbUser will be empty, so we can just reuse it for this purpose.
-			dbUser.ThirdPartyID = strconv.FormatUint(account.Id, 10)
-			dbUser.ThirdPartyAuth = lr.AuthToken
 			dbUser.Username = account.Username
 			dbUser.Type = PLEX_USER
-
+			homeAuthToken, err := getPlexHomeServerAuthToken(lr.AuthToken, lr.ClientIdentifier)
+			if err != nil {
+				slog.Error("loginPlex: Failed to get home server auth token for the new user! User will still be created, a re-login may fix this issue.", "error", err)
+			}
+			dbUser.UserServices = append(dbUser.UserServices, UserServices{
+				Name:       "plex",
+				ClientID:   strconv.FormatUint(account.Id, 10),
+				AuthToken:  lr.AuthToken,
+				AuthToken2: homeAuthToken,
+			})
 			dbRes = db.Create(&dbUser)
 			if dbRes.Error != nil {
 				slog.Error("loginPlex: Failed to create new user in db from plex response", "error", dbRes.Error)
@@ -446,12 +478,23 @@ func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
 			slog.Error("loginPlex: Failed to select user from database for login", "error", dbRes.Error)
 			return AuthResponse{}, errors.New("failed to locate user")
 		}
-	}
-	// If user exists.. update their access token in db
-	if lr.AuthToken != "" {
-		slog.Debug("plex user login - updating user with new access token")
-		dbUser.ThirdPartyAuth = lr.AuthToken
-		db.Save(&dbUser)
+	} else {
+		// If user exists.. update their access tokens in db
+		homeAuthToken, err := getPlexHomeServerAuthToken(lr.AuthToken, lr.ClientIdentifier)
+		if err != nil {
+			slog.Error("loginPlex: Failed to get home server auth token!", "error", err)
+		}
+		for i, v := range dbUser.UserServices {
+			if v.Name == "plex" {
+				slog.Info("loginPlex: Found plex user service.. attemping to update")
+				dbUser.UserServices[i].AuthToken = lr.AuthToken
+				if homeAuthToken != "" {
+					dbUser.UserServices[i].AuthToken2 = homeAuthToken
+				}
+				break
+			}
+		}
+		db.Save(&dbUser.UserServices)
 	}
 	token, err := signJWT(dbUser)
 	if err != nil {

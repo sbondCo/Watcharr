@@ -71,6 +71,7 @@ func main() {
 
 	err = db.AutoMigrate(
 		&User{},
+		&UserServices{},
 		&Content{},
 		&Watched{},
 		&WatchedSeason{},
