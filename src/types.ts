@@ -196,7 +196,6 @@ export interface AvailableAuthProviders {
   available: string[];
   signupEnabled: boolean;
   isInSetup: boolean;
-  plexOauthId: string;
 }
 
 export interface TokenClaims {
