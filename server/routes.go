@@ -1182,9 +1182,12 @@ func (b *BaseRouter) addRadarrRoutes() {
 func (b *BaseRouter) addJobRoutes() {
 	job := b.rg.Group("/job").Use(AuthRequired(nil))
 
-	job.GET("/:id", func(c *gin.Context) {
+	// Uses wildcard so it still works in cases where the job id includes a /.
+	// (yes i changed this instead of not allowing a / when we generate a job id becuz easier)
+	job.GET("/*id", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
-		response, err := getJob(c.Param("id"), userId)
+		// When we get id param, don't include first letter, which will be the beginning '/'.
+		response, err := getJob(c.Param("id")[1:], userId)
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return
