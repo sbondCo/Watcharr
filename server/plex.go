@@ -454,7 +454,6 @@ func fetchPlexAccountFromToken(token string) (PlexUser, error) {
 	if err != nil {
 		return PlexUser{}, err
 	}
-	slog.Info(string(body))
 	defer resp.Body.Close()
 	var pa PlexAccountResponse
 	err = json.Unmarshal(body, &pa)
