@@ -43,6 +43,7 @@
       case "IMPORTED_WATCHED":
         return "Imported";
       case "IMPORTED_WATCHED_JF":
+      case "IMPORTED_WATCHED_PLEX":
         return "Synced";
       case "IMPORTED_RATING":
         if (a.data) {
@@ -56,6 +57,7 @@
         return "Imported Rating";
       case "IMPORTED_ADDED_WATCHED":
       case "IMPORTED_ADDED_WATCHED_JF":
+      case "IMPORTED_ADDED_WATCHED_PLEX":
         return "Imported Watch Date";
       case "SEASON_ADDED":
         if (a.data) {
@@ -64,6 +66,7 @@
         }
         return "Season Added";
       case "SEASON_ADDED_JF":
+      case "SEASON_ADDED_PLEX":
         if (a.data) {
           const data = JSON.parse(a.data);
           return `Season ${data.season} Synced as ${toFullTitleCase(data.status)}`;
@@ -94,6 +97,7 @@
         }
         return "Episode Added";
       case "EPISODE_ADDED_JF":
+      case "EPISODE_ADDED_PLEX":
         if (a.data) {
           const data = JSON.parse(a.data);
           return `${seasonAndEpToReadable(data.season, data.episode)} Synced ${data.status ? `as ${toFullTitleCase(data.status)}` : data.rating ? `with Rating ${data.rating}` : ""}`;

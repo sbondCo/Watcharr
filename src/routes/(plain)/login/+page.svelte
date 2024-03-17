@@ -88,7 +88,8 @@
         const nid = notify({ text: "Logging in", type: "loading" });
         noAuthAxios
           .post("/auth/plex", {
-            token
+            token,
+            clientIdentifier: p.clientId
           })
           .then((resp) => {
             if (resp.data?.token) {

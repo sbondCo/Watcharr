@@ -71,6 +71,7 @@ func main() {
 
 	err = db.AutoMigrate(
 		&User{},
+		&UserServices{},
 		&Content{},
 		&Watched{},
 		&WatchedSeason{},
@@ -131,6 +132,7 @@ func main() {
 	br.addActivityRoutes()
 	br.addProfileRoutes()
 	br.addJellyfinRoutes()
+	br.addPlexRoutes()
 	br.addUserRoutes()
 	br.addFollowRoutes()
 	br.addImportRoutes()
