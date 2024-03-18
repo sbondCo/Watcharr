@@ -447,22 +447,21 @@ func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
 		slog.Error("loginPlex: Username or id missing from account response:", "username", account.Username, "id", account.Id)
 		return AuthResponse{}, errors.New("data is missing from the plex account response")
 	}
+	// Get users auth token against our home plex server.
+	// If no auth token, assume they don't have access to our plex server.
+	homeAuthToken, err := getPlexHomeServerAuthToken(lr.AuthToken, lr.ClientIdentifier)
+	if err != nil || homeAuthToken == "" {
+		slog.Error("loginPlex: Failed to get home server auth token for user! If not because the request failed, then ensure the user has access to our home servers library.", "error", err)
+		return AuthResponse{}, errors.New("failed to verify plex access")
+	}
 	dbUser := new(User)
 	userIdQ := db.Select("user_id").Where("name = ? AND client_id = ?", "plex", account.Id).Table("user_services")
 	dbRes := db.Where("type = ?", PLEX_USER).Where("id = (?)", userIdQ).Preload("UserServices").Take(&dbUser)
 	if dbRes.Error != nil {
 		if errors.Is(dbRes.Error, gorm.ErrRecordNotFound) {
 			slog.Debug("loginPlex: New plex user attempted login.. creating Watcharr account now.")
-			if err := plexUserHasAccessToPlexHost(lr.AuthToken); err != nil {
-				slog.Error("loginPlex: Cannot register Plex user. Failed to verify they have access to our home plex server.", "error", err)
-				return AuthResponse{}, errors.New("failed to verify plex access")
-			}
 			dbUser.Username = account.Username
 			dbUser.Type = PLEX_USER
-			homeAuthToken, err := getPlexHomeServerAuthToken(lr.AuthToken, lr.ClientIdentifier)
-			if err != nil {
-				slog.Error("loginPlex: Failed to get home server auth token for the new user! User will still be created, a re-login may fix this issue.", "error", err)
-			}
 			dbUser.UserServices = append(dbUser.UserServices, UserServices{
 				Name:       "plex",
 				ClientID:   strconv.FormatUint(account.Id, 10),
@@ -480,10 +479,6 @@ func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
 		}
 	} else {
 		// If user exists.. update their access tokens in db
-		homeAuthToken, err := getPlexHomeServerAuthToken(lr.AuthToken, lr.ClientIdentifier)
-		if err != nil {
-			slog.Error("loginPlex: Failed to get home server auth token!", "error", err)
-		}
 		for i, v := range dbUser.UserServices {
 			if v.Name == "plex" {
 				slog.Info("loginPlex: Found plex user service.. attemping to update")

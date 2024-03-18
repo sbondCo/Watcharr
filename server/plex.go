@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"errors"
 	"io"
 	"log/slog"
@@ -37,50 +36,6 @@ type PlexIdentity struct {
 
 type PlexHostConfigUpdateResponse struct {
 	PLEX_MACHINE_ID string
-}
-
-type PlexUsersResponse struct {
-	XMLName           xml.Name `xml:"MediaContainer"`
-	Text              string   `xml:",chardata"`
-	FriendlyName      string   `xml:"friendlyName,attr"`
-	Identifier        string   `xml:"identifier,attr"`
-	MachineIdentifier string   `xml:"machineIdentifier,attr"`
-	TotalSize         string   `xml:"totalSize,attr"`
-	Size              string   `xml:"size,attr"`
-	User              []struct {
-		Text                      string `xml:",chardata"`
-		ID                        string `xml:"id,attr"`
-		Title                     string `xml:"title,attr"`
-		Username                  string `xml:"username,attr"`
-		Email                     string `xml:"email,attr"`
-		RecommendationsPlaylistId string `xml:"recommendationsPlaylistId,attr"`
-		Thumb                     string `xml:"thumb,attr"`
-		Protected                 string `xml:"protected,attr"`
-		Home                      string `xml:"home,attr"`
-		AllowTuners               string `xml:"allowTuners,attr"`
-		AllowSync                 string `xml:"allowSync,attr"`
-		AllowCameraUpload         string `xml:"allowCameraUpload,attr"`
-		AllowChannels             string `xml:"allowChannels,attr"`
-		AllowSubtitleAdmin        string `xml:"allowSubtitleAdmin,attr"`
-		FilterAll                 string `xml:"filterAll,attr"`
-		FilterMovies              string `xml:"filterMovies,attr"`
-		FilterMusic               string `xml:"filterMusic,attr"`
-		FilterPhotos              string `xml:"filterPhotos,attr"`
-		FilterTelevision          string `xml:"filterTelevision,attr"`
-		Restricted                string `xml:"restricted,attr"`
-		Server                    []struct {
-			Text              string `xml:",chardata"`
-			ID                string `xml:"id,attr"`
-			ServerId          string `xml:"serverId,attr"`
-			MachineIdentifier string `xml:"machineIdentifier,attr"`
-			Name              string `xml:"name,attr"`
-			LastSeenAt        string `xml:"lastSeenAt,attr"`
-			NumLibraries      string `xml:"numLibraries,attr"`
-			AllLibraries      string `xml:"allLibraries,attr"`
-			Owned             string `xml:"owned,attr"`
-			Pending           string `xml:"pending,attr"`
-		} `xml:"Server"`
-	} `xml:"User"`
 }
 
 // Plex get libraries response
@@ -487,54 +442,6 @@ func updateConfigPlexHost(v string) (PlexHostConfigUpdateResponse, error) {
 	return PlexHostConfigUpdateResponse{PLEX_MACHINE_ID: Config.PLEX_MACHINE_ID}, nil
 }
 
-// If a plex user has access to our home plex server (PLEX_HOST).
-func plexUserHasAccessToPlexHost(token string) error {
-	httpClient := &http.Client{}
-	req, err := http.NewRequest("GET", "https://plex.tv/api/users", nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("X-Plex-Token", token)
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	var pa PlexUsersResponse
-	err = xml.Unmarshal(body, &pa)
-	if err != nil {
-		return err
-	}
-
-	if len(pa.User) <= 0 {
-		return errors.New("found no users in response")
-	}
-
-	// Now check if any of the users servers include our home server machine id
-	homeServerFound := false
-userLoop:
-	for _, user := range pa.User {
-		for _, server := range user.Server {
-			if server.MachineIdentifier == Config.PLEX_MACHINE_ID {
-				slog.Debug("plexUserHasAccessToPlexHost: Processing a server.", "server", server.MachineIdentifier)
-				homeServerFound = true
-				break userLoop
-			}
-		}
-		if homeServerFound {
-			break
-		}
-	}
-	if homeServerFound {
-		return nil
-	}
-	return errors.New("user does not have access to home plex server")
-}
-
 func getPlexLibraries(plexAuth string) (PlexLibrariesResponse, error) {
 	httpClient := &http.Client{}
 	req, err := http.NewRequest("GET", Config.PLEX_HOST+"/library/sections", nil)
@@ -637,6 +544,7 @@ func getPlexLibraryItemEpisodes(plexAuth string, ratingKey string) (PlexLibraryI
 
 // Gets users auth token for local plex server,
 // so they can authenticate against it for api requests.
+// If no auth token is returned or errored, assume user doesn't have access to home plex server library.
 func getPlexHomeServerAuthToken(plexAuth string, userClientId string) (string, error) {
 	httpClient := &http.Client{}
 	req, err := http.NewRequest("GET", "https://clients.plex.tv/api/v2/resources", nil)
@@ -665,11 +573,14 @@ func getPlexHomeServerAuthToken(plexAuth string, userClientId string) (string, e
 		if v.ClientIdentifier == Config.PLEX_MACHINE_ID {
 			slog.Debug("getPlexHomeServerAuthToken: Found entry with clientIdentifier matching home server machine id.")
 			if v.AccessToken == "" {
-				slog.Warn("getPlexHomeServerAuthToken: Matching entry has no AccessToken!")
+				slog.Error("getPlexHomeServerAuthToken: Matching entry has no AccessToken!")
 				continue
 			}
 			authToken = v.AccessToken
 		}
+	}
+	if authToken == "" {
+		slog.Error("getPlexHomeServerAuthToken: No authToken retrieved!")
 	}
 	return authToken, nil
 }
