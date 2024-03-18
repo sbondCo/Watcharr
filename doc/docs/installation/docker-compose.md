@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+description: Install and setup with Docker Compose.
 ---
 
 # Docker Compose

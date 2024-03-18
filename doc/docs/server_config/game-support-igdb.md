@@ -1,10 +1,9 @@
 ---
 sidebar_position: 1
+description: Setting up video game support.
 ---
 
 # Games Support (via IGDB/Twitch)
-
-## Overview
 
 Game support in Watcharr, currently, must be enabled by you.
 
@@ -12,7 +11,7 @@ This involves setting up a Twitch developer account (phone number needed for 2FA
 
 P.S. These steps are stolen from [igdb api docs](https://api-docs.igdb.com/#account-creation), I've tried to make it easier to follow with screenshots.
 
-## Steps
+## Setup Steps
 
 ### Setup On Twitch
 

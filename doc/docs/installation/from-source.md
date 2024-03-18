@@ -1,5 +1,6 @@
 ---
 sidebar_position: 10
+description: Building and installing from source.
 ---
 
 # From Source
