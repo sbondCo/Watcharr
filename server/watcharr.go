@@ -52,7 +52,7 @@ func main() {
 	setLoggingLevel()
 
 	// Ensure data dir exists
-	err = ensureDirExists("./data")
+	err = ensureDirExists(DataPath)
 	if err != nil {
 		log.Fatal("Failed to create data dir:", err)
 	}
@@ -64,7 +64,7 @@ func main() {
 		isProd = false
 	}
 
-	db, err := gorm.Open(sqlite.Open("./data/watcharr.db"), &gorm.Config{TranslateError: true})
+	db, err := gorm.Open(sqlite.Open(path.Join(DataPath, "watcharr.db")), &gorm.Config{TranslateError: true})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -152,7 +152,7 @@ func main() {
 func setupLogging() io.Writer {
 	// logLevel = new(slog.LevelVar)
 	multiw := io.MultiWriter(&lumberjack.Logger{
-		Filename:   "./data/watcharr.log",
+		Filename:   path.Join(DataPath, "watcharr.log"),
 		MaxSize:    1, // megabytes
 		MaxBackups: 3,
 		MaxAge:     28, // days
