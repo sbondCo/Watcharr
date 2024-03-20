@@ -13,11 +13,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var DataPath = func()(string) {
-  path := os.Getenv("WATCHAR_DATA")
+var DataPath = func() string {
+	path := os.Getenv("WATCHARR_DATA")
 	if path == "" {
-    path = "./data"
-  }
+		path = "./data"
+	}
 	return path
 }()
 
