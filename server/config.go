@@ -6,13 +6,20 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"path"
 	"time"
 
 	"github.com/sbondCo/Watcharr/game"
 	"gorm.io/gorm"
 )
 
-var DataPath = "./data"
+var DataPath = func()(string) {
+  path := os.Getenv("WATCHAR_DATA")
+	if path == "" {
+    path = "./data"
+  }
+	return path
+}()
 
 type ServerConfig struct {
 	// Used to sign JWT tokens. Make sure to make
@@ -82,7 +89,7 @@ var (
 // Read config file
 // Calls generateConfig if file doesn't exist
 func readConfig() error {
-	cfg, err := os.Open("./data/watcharr.json")
+	cfg, err := os.Open(path.Join(DataPath, "watcharr.json"))
 	if err != nil {
 		if os.IsNotExist(err) {
 			slog.Info("Config file doesn't exist... generating.")
@@ -126,7 +133,7 @@ func generateConfig() error {
 		return err
 	}
 	Config = cfg
-	return os.WriteFile("./data/watcharr.json", barej, 0755)
+	return os.WriteFile(path.Join(DataPath, "watcharr.json"), barej, 0755)
 }
 
 // Update server config property
@@ -156,7 +163,7 @@ func writeConfig() error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile("./data/watcharr.json", barej, 0755)
+	return os.WriteFile(path.Join(DataPath, "watcharr.json"), barej, 0755)
 }
 
 type ServerFeatures struct {
