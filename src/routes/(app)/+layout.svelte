@@ -170,11 +170,17 @@
    * on how big the main search bar is.
    */
   function decideOnNavSplit() {
+    // If window smaller than [...px], always split nav.
+    // (to ensure it doesn't become unsplit when we remove gap below this width).
+    if (window.innerWidth <= 390) {
+      document.body.classList.add("split-nav");
+      return;
+    }
     const bigInput = navEl?.querySelector("input:not(.small)");
     if (bigInput) {
       const b = bigInput.getBoundingClientRect();
       console.debug("decideOnNavSplit: bigInput bounds:", b);
-      if (b.width <= 80) {
+      if (b.width <= 45) {
         document.body.classList.add("split-nav");
       } else {
         document.body.classList.remove("split-nav");
@@ -217,13 +223,16 @@
       <span class="large">Watcharr</span>
       <span class="small">W</span>
     </a>
-    <input
-      bind:this={mainSearchEl}
-      type="text"
-      placeholder="Search"
-      bind:value={$searchQuery}
-      on:keydown={handleSearch}
-    />
+    <div class="search">
+      <input
+        bind:this={mainSearchEl}
+        type="text"
+        placeholder="Search"
+        bind:value={$searchQuery}
+        on:keydown={handleSearch}
+      />
+      <Icon i="search" wh={19} />
+    </div>
     <div class="btns">
       <!-- Detailed posters only supported on own watched list currently -->
       {#if $page.url?.pathname === "/"}
@@ -364,8 +373,15 @@
       justify-content: space-between;
       align-items: center;
 
+      @media screen and (max-width: 425px) {
+        gap: 15px;
+      }
+
       @media screen and (max-width: 380px) {
         gap: 0;
+
+        .btns {
+        }
       }
     }
 
@@ -409,8 +425,63 @@
       }
     }
 
+    .search {
+      width: 100%;
+      position: relative;
+
+      :global(svg) {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        user-select: none;
+      }
+
+      input:focus-within + :global(svg),
+      input:not(:placeholder-shown) + :global(svg) {
+        display: none;
+      }
+
+      @media screen and (min-width: 666px) {
+        max-width: 250px;
+      }
+
+      @media screen and (max-width: 666px) {
+        & input:not(.small) {
+          width: 100%;
+        }
+
+        &:focus-within + .btns button:not(.face) {
+          display: none;
+        }
+      }
+
+      @media screen and (max-width: 415px) {
+        :global(svg) {
+          display: block;
+        }
+
+        input::placeholder {
+          color: transparent;
+        }
+      }
+    }
+
+    body.split-nav & {
+      .search {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      input.small {
+        display: block;
+      }
+    }
+
     input {
-      width: 250px;
+      width: 100%;
       font-weight: bold;
       text-align: center;
       box-shadow: 4px 4px 0px 0px $text-color;
@@ -424,30 +495,9 @@
         margin-right: auto;
       }
 
-      body.split-nav & {
-        &:not(.small) {
-          opacity: 0;
-          visibility: hidden;
-        }
-
-        &.small {
-          display: block;
-        }
-      }
-
       &:hover,
       &:focus {
         box-shadow: 2px 2px 0px 0px $text-color;
-      }
-
-      @media screen and (max-width: 666px) {
-        &:not(.small) {
-          width: 100%;
-
-          &:focus + .btns button:not(.face) {
-            display: none;
-          }
-        }
       }
 
       @media screen and (max-width: 290px) {
