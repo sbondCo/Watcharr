@@ -439,6 +439,9 @@
       width: 100%;
       position: relative;
 
+      // Make the box look a little more centered, inline with the rest of the nav items.
+      margin-bottom: 4px;
+
       :global(svg) {
         display: none;
         position: absolute;
