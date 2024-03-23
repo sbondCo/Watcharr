@@ -196,18 +196,6 @@
     cursor: pointer;
   }
 
-  li {
-    @media screen and (max-width: 390px) {
-      flex: 48.5%;
-    }
-    @media screen and (max-width: 355px) {
-      flex: 38.5%;
-    }
-    @media screen and (max-width: 333px) {
-      flex: unset;
-    }
-  }
-
   .container {
     display: flex;
     flex-flow: column;
@@ -216,16 +204,11 @@
     flex: 1 1;
     border-radius: 5px;
     width: 100%;
+    min-width: 170px;
     height: 100%;
     position: relative;
     aspect-ratio: 170000/256367;
-
     transition: transform 150ms ease;
-
-    @media screen and (width < 333px), screen and (width > 390px) {
-      width: 170px;
-      min-height: 256.367px;
-    }
 
     img {
       width: 100%;
