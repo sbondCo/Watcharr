@@ -170,12 +170,6 @@
    * on how big the main search bar is.
    */
   function decideOnNavSplit() {
-    // If window smaller than [...px], always split nav.
-    // (to ensure it doesn't become unsplit when we remove gap below this width).
-    if (window.innerWidth <= 390) {
-      document.body.classList.add("split-nav");
-      return;
-    }
     const bigInput = navEl?.querySelector("input:not(.small)");
     if (bigInput) {
       const b = bigInput.getBoundingClientRect();
@@ -373,15 +367,26 @@
       justify-content: space-between;
       align-items: center;
 
+      /* Slowly decrease the gap to ensure the main search bar doesn't get big enough again and pop back up in the nav. */
+
       @media screen and (max-width: 425px) {
         gap: 15px;
       }
 
       @media screen and (max-width: 380px) {
-        gap: 0;
+        gap: 10px;
+      }
 
-        .btns {
-        }
+      @media screen and (max-width: 375px) {
+        gap: 8px;
+      }
+
+      @media screen and (max-width: 370px) {
+        gap: 5px;
+      }
+
+      @media screen and (max-width: 350px) {
+        gap: 0;
       }
     }
 
