@@ -961,6 +961,16 @@ func (b *BaseRouter) addServerRoutes() {
 	server.GET("/stats", cache.CachePage(b.ms, time.Minute*5, func(c *gin.Context) {
 		c.JSON(http.StatusOK, getServerStats(b.db))
 	}))
+
+	// Get all server users (for manage users page)
+	server.GET("/users", func(c *gin.Context) {
+		resp, err := getAllUsers(b.db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	})
 }
 
 func (b *BaseRouter) addFeatureRoutes() {

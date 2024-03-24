@@ -414,83 +414,7 @@
   }
 
   table {
-    margin-top: 20px;
-    width: 100%;
-    border-spacing: 0px;
-    border: 1px solid $accent-color;
-    border-radius: 10px;
-    font-size: 16px;
-
-    th {
-      padding: 12px 15px;
-      text-align: left;
-      transition: padding 100ms ease;
-
-      &:first-of-type {
-        border-top-left-radius: 10px;
-      }
-
-      &:last-of-type {
-        border-top-right-radius: 10px;
-      }
-
-      &.loading-col {
-        width: 28px;
-        padding: 0;
-      }
-    }
-
-    tr {
-      th {
-        background-color: $accent-color;
-      }
-
-      &:last-child {
-        td:first-of-type {
-          border-bottom-left-radius: 10px;
-        }
-
-        td:last-of-type {
-          border-bottom-right-radius: 10px;
-        }
-      }
-
-      &:nth-child(odd) td {
-        background-color: $accent-color;
-      }
-    }
-
-    &.is-importing {
-      th {
-        padding-left: 3px;
-      }
-
-      td {
-        padding-left: 3px;
-
-        input {
-          padding: 7px 0;
-
-          &:focus {
-            padding: 7px 5px;
-            padding-left: 3px;
-          }
-        }
-      }
-    }
-
     td {
-      padding: 5px;
-
-      &.icon-cell {
-        padding-right: 3px;
-
-        & > div {
-          display: flex;
-          padding-left: 4px;
-        }
-      }
-
       &.year {
         width: 70px;
       }
@@ -498,36 +422,23 @@
       &.type {
         width: 120px;
       }
+    }
+  }
+
+  table.is-importing {
+    th {
+      padding-left: 3px;
+    }
+
+    td {
+      padding-left: 3px;
 
       input {
-        background: transparent;
-        color: $text-color;
-        border: 0;
-        font-size: 16px;
-        padding: 0;
-        padding: 7px 10px;
-        transition: padding 100ms ease;
+        padding: 7px 0;
 
-        &[type="number"] {
-          appearance: textfield;
-
-          &::-webkit-outer-spin-button,
-          &::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-          }
-        }
-      }
-
-      button {
-        &.delete {
-          display: flex;
-          justify-content: center;
-          color: $placeholder-color;
-
-          &:hover {
-            color: $error;
-          }
+        &:focus {
+          padding: 7px 5px;
+          padding-left: 3px;
         }
       }
     }
