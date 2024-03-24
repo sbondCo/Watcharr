@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { afterNavigate, goto } from "$app/navigation";
   import { page } from "$app/stores";
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
@@ -23,12 +23,12 @@
     userSettings,
     watchedList
   } from "@/store";
-  import { type Filters, UserPermission } from "@/types";
+  import { UserPermission } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
-  import { get } from "svelte/store";
 
   let navEl: HTMLElement;
+  let mainSearchEl: HTMLInputElement;
   let searchTimeout: NodeJS.Timeout;
   let subMenuShown = false;
   let filterMenuShown = false;
@@ -72,7 +72,13 @@
           // https://github.com/sbondCo/Watcharr/issues/169
           target.autofocus = true;
           goto(`/search/${query}`).then(() => {
-            target?.focus();
+            // Use mainSearchEl if nav not split, otherwise use ev target.
+            if (!document.body.classList.contains("split-nav")) {
+              mainSearchEl?.focus();
+              mainSearchEl.autofocus = false;
+            } else {
+              target?.focus();
+            }
             target.autofocus = false;
           });
         }
@@ -159,8 +165,38 @@
     if (except !== "detailed") detailedMenuShown = false;
   }
 
+  /**
+   * Adds or removed `split-nav` tag to body depending
+   * on how big the main search bar is.
+   */
+  function decideOnNavSplit() {
+    if (window.innerWidth <= 260) {
+      document.body.classList.add("split-nav");
+      return;
+    }
+    const bigInput = navEl?.querySelector("input:not(.small)");
+    if (bigInput) {
+      const b = bigInput.getBoundingClientRect();
+      console.debug("decideOnNavSplit: bigInput bounds:", b);
+      if (b.width <= 45) {
+        document.body.classList.add("split-nav");
+      } else {
+        document.body.classList.remove("split-nav");
+      }
+    } else {
+      console.warn("decideOnNavSplit: bigInput not found!", bigInput);
+    }
+  }
+
+  afterNavigate(() => {
+    decideOnNavSplit();
+  });
+
   onMount(() => {
     if (navEl) {
+      decideOnNavSplit();
+      window.addEventListener("resize", decideOnNavSplit);
+
       let scroll = window.scrollY;
       window.document.addEventListener("scroll", (ev: Event) => {
         if (scroll > window.scrollY) {
@@ -180,108 +216,126 @@
 </script>
 
 <nav bind:this={navEl}>
-  <a href="/">
-    <span class="large">Watcharr</span>
-    <span class="small">W</span>
-  </a>
-  <input type="text" placeholder="Search" bind:value={$searchQuery} on:keydown={handleSearch} />
-  <div class="btns">
-    <!-- Detailed posters only supported on own watched list currently -->
-    {#if $page.url?.pathname === "/"}
-      <button
-        class="plain other detailedView"
-        on:click={() => {
-          closeAllSubMenus("detailed");
-          detailedMenuShown = !detailedMenuShown;
-        }}
-        use:tooltip={{ text: "Detailed View", pos: "bot", condition: !detailedMenuShown }}
-      >
-        <Icon i="eye" />
-        {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
-          <div class="indicator"></div>
-        {/if}
-      </button>
-      {#if detailedMenuShown}
-        <DetailedMenu />
-      {/if}
-    {/if}
-    <!-- Show on watched list and shared/followed watched lists -->
-    {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/")}
-      <button
-        class="plain other filter"
-        on:click={() => {
-          closeAllSubMenus("filter");
-          filterMenuShown = !filterMenuShown;
-        }}
-        use:tooltip={{ text: "Filter", pos: "bot", condition: !filterMenuShown }}
-      >
-        <Icon i="filter" />
-        {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
-          <div class="indicator"></div>
-        {/if}
-      </button>
-      <button
-        class="plain other sort"
-        on:click={() => {
-          closeAllSubMenus("sort");
-          sortMenuShown = !sortMenuShown;
-        }}
-        use:tooltip={{ text: "Sort", pos: "bot", condition: !sortMenuShown }}
-      >
-        <Icon i="sort" />
-        <!-- Show indicator if not equal to default and second item in array is not falsy -->
-        {#if $activeSort?.length === 2 && $activeSort[1] && JSON.stringify($activeSort) !== JSON.stringify(defaultSort)}
-          <div class="indicator"></div>
-        {/if}
-      </button>
-      {#if sortMenuShown}
-        <SortMenu />
-      {/if}
-      {#if filterMenuShown}
-        <FilterMenu />
-      {/if}
-    {/if}
-    <button
-      class="plain other discover"
-      on:click={() => goto("/discover")}
-      use:tooltip={{ text: "Discover", pos: "bot" }}
-    >
-      <Icon i="compass" wh={26} />
-    </button>
-    <button
-      class="plain other following"
-      on:click={() => {
-        closeAllSubMenus("following");
-        followingMenuShown = !followingMenuShown;
-      }}
-      use:tooltip={{ text: "Following", pos: "bot", condition: !followingMenuShown }}
-    >
-      <Icon i="people" wh={26} />
-    </button>
-    {#if followingMenuShown}
-      <FollowingMenu close={() => (followingMenuShown = false)} />
-    {/if}
-    <button class="plain face" on:click={handleProfileClick}>:)</button>
-    {#if subMenuShown}
-      <div class="menu face-menu">
-        <div>
-          {#if user?.username}
-            <h5 title={user.username}>Hi {user.username}!</h5>
+  <div class="wrapper">
+    <a href="/">
+      <span class="large">Watcharr</span>
+      <span class="small">W</span>
+    </a>
+    <div class="search">
+      <input
+        bind:this={mainSearchEl}
+        type="text"
+        placeholder="Search"
+        bind:value={$searchQuery}
+        on:keydown={handleSearch}
+      />
+      <Icon i="search" wh={19} />
+    </div>
+    <div class="btns">
+      <!-- Detailed posters only supported on own watched list currently -->
+      {#if $page.url?.pathname === "/"}
+        <button
+          class="plain other detailedView"
+          on:click={() => {
+            closeAllSubMenus("detailed");
+            detailedMenuShown = !detailedMenuShown;
+          }}
+          use:tooltip={{ text: "Detailed View", pos: "bot", condition: !detailedMenuShown }}
+        >
+          <Icon i="eye" />
+          {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
+            <div class="indicator"></div>
           {/if}
-          <button class="plain" on:click={() => profile()}>Profile</button>
-          {#if !settings?.private}
-            <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+        </button>
+        {#if detailedMenuShown}
+          <DetailedMenu />
+        {/if}
+      {/if}
+      <!-- Show on watched list and shared/followed watched lists -->
+      {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/")}
+        <button
+          class="plain other filter"
+          on:click={() => {
+            closeAllSubMenus("filter");
+            filterMenuShown = !filterMenuShown;
+          }}
+          use:tooltip={{ text: "Filter", pos: "bot", condition: !filterMenuShown }}
+        >
+          <Icon i="filter" />
+          {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
+            <div class="indicator"></div>
           {/if}
-          {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
-            <button class="plain" on:click={() => serverSettings()}>Settings</button>
+        </button>
+        <button
+          class="plain other sort"
+          on:click={() => {
+            closeAllSubMenus("sort");
+            sortMenuShown = !sortMenuShown;
+          }}
+          use:tooltip={{ text: "Sort", pos: "bot", condition: !sortMenuShown }}
+        >
+          <Icon i="sort" />
+          <!-- Show indicator if not equal to default and second item in array is not falsy -->
+          {#if $activeSort?.length === 2 && $activeSort[1] && JSON.stringify($activeSort) !== JSON.stringify(defaultSort)}
+            <div class="indicator"></div>
           {/if}
-          <button class="plain" on:click={() => logout()}>Logout</button>
-          <!-- svelte-ignore missing-declaration -->
-          <span>v{__WATCHARR_VERSION__}</span>
+        </button>
+        {#if sortMenuShown}
+          <SortMenu />
+        {/if}
+        {#if filterMenuShown}
+          <FilterMenu />
+        {/if}
+      {/if}
+      <button
+        class="plain other discover"
+        on:click={() => goto("/discover")}
+        use:tooltip={{ text: "Discover", pos: "bot" }}
+      >
+        <Icon i="compass" wh={26} />
+      </button>
+      <button
+        class="plain other following"
+        on:click={() => {
+          closeAllSubMenus("following");
+          followingMenuShown = !followingMenuShown;
+        }}
+        use:tooltip={{ text: "Following", pos: "bot", condition: !followingMenuShown }}
+      >
+        <Icon i="people" wh={26} />
+      </button>
+      {#if followingMenuShown}
+        <FollowingMenu close={() => (followingMenuShown = false)} />
+      {/if}
+      <button class="plain face" on:click={handleProfileClick}>:)</button>
+      {#if subMenuShown}
+        <div class="menu face-menu">
+          <div>
+            {#if user?.username}
+              <h5 title={user.username}>Hi {user.username}!</h5>
+            {/if}
+            <button class="plain" on:click={() => profile()}>Profile</button>
+            {#if !settings?.private}
+              <button class="plain" on:click={() => shareWatchedList()}>Share List</button>
+            {/if}
+            {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
+              <button class="plain" on:click={() => serverSettings()}>Settings</button>
+            {/if}
+            <button class="plain" on:click={() => logout()}>Logout</button>
+            <!-- svelte-ignore missing-declaration -->
+            <span>v{__WATCHARR_VERSION__}</span>
+          </div>
         </div>
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
+  <input
+    class="small"
+    type="text"
+    placeholder="Search"
+    bind:value={$searchQuery}
+    on:keydown={handleSearch}
+  />
 </nav>
 
 {#await getInitialData()}
@@ -295,20 +349,50 @@
 <style lang="scss">
   nav {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-flow: column;
     margin-bottom: 20px;
     padding: 10px 20px;
     position: sticky;
     top: 0;
-    gap: 20px;
+    gap: 3px;
     z-index: 99990;
     backdrop-filter: blur(2.5px) saturate(120%);
     background-color: $nav-color;
     transition: top 200ms ease-in-out;
 
     &:global(.scrolled-down) {
-      top: -71px;
+      top: -110px;
+    }
+
+    .wrapper {
+      display: flex;
+      flex-flow: row;
+      gap: 20px;
+      justify-content: space-between;
+      align-items: center;
+
+      @media screen and (max-width: 425px) {
+        gap: 15px;
+      }
+
+      /* Slowly decrease the gap to ensure the main search bar doesn't get big enough again and pop back up in the nav. */
+      body.split-nav & {
+        @media screen and (max-width: 380px) {
+          gap: 10px;
+        }
+
+        @media screen and (max-width: 375px) {
+          gap: 8px;
+        }
+
+        @media screen and (max-width: 370px) {
+          gap: 5px;
+        }
+
+        @media screen and (max-width: 350px) {
+          gap: 0;
+        }
+      }
     }
 
     a {
@@ -351,18 +435,89 @@
       }
     }
 
+    .search {
+      width: 100%;
+      position: relative;
+
+      // Make the box look a little more centered, inline with the rest of the nav items.
+      margin-bottom: 2px;
+
+      :global(svg) {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        user-select: none;
+      }
+
+      input:focus-within + :global(svg),
+      input:not(:placeholder-shown) + :global(svg) {
+        display: none;
+      }
+
+      @media screen and (min-width: 666px) {
+        max-width: 250px;
+      }
+
+      @media screen and (max-width: 666px) {
+        & input:not(.small) {
+          width: 100%;
+        }
+
+        &:focus-within + .btns button:not(.face) {
+          display: none;
+        }
+      }
+
+      @media screen and (max-width: 415px) {
+        :global(svg) {
+          display: block;
+        }
+
+        input::placeholder {
+          color: transparent;
+        }
+      }
+    }
+
+    body.split-nav & {
+      .search {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      input.small {
+        display: block;
+      }
+    }
+
     input {
-      width: 250px;
+      width: 100%;
       font-weight: bold;
       text-align: center;
       box-shadow: 4px 4px 0px 0px $text-color;
+      text-overflow: ellipsis;
       transition:
         width 150ms ease,
         box-shadow 150ms ease;
 
+      &.small {
+        display: none;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
       &:hover,
       &:focus {
         box-shadow: 2px 2px 0px 0px $text-color;
+      }
+
+      @media screen and (max-width: 290px) {
+        &.small {
+          width: 100%;
+        }
       }
     }
 
@@ -466,16 +621,6 @@
       div.face-menu {
         &:before {
           right: 10px;
-        }
-      }
-    }
-
-    @media screen and (max-width: 666px) {
-      input {
-        width: 100%;
-
-        &:focus + .btns button:not(.face) {
-          display: none;
         }
       }
     }

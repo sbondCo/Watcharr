@@ -203,11 +203,11 @@
     overflow: hidden;
     flex: 1 1;
     border-radius: 5px;
-    width: 170px;
+    width: 100%;
+    min-width: 170px;
     height: 100%;
-    min-height: 256.367px;
     position: relative;
-    // aspect-ratio: 2/3;
+    aspect-ratio: 170000/256367;
     transition: transform 150ms ease;
 
     img {
