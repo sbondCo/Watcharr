@@ -215,7 +215,7 @@
       flex-flow: column;
       gap: 8px;
       margin-top: 8px;
-      margin-left: calc(30px + 8px);
+      margin-left: 30px;
       list-style: none;
       max-height: 250px;
       overflow-y: auto;
@@ -274,7 +274,7 @@
 
   h2 {
     font-family:
-      sans-serif,
+      "Shrikhand",
       system-ui,
       -apple-system,
       BlinkMacSystemFont;

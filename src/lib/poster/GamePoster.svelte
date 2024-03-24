@@ -217,7 +217,7 @@
     border-radius: 5px;
     width: 170px;
     height: 100%;
-    min-height: 256.367px;
+    max-height: 255px;
     position: relative;
     // aspect-ratio: 2/3;
     transition: transform 150ms ease;

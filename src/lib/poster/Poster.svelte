@@ -206,6 +206,7 @@
     width: 100%;
     min-width: 170px;
     height: 100%;
+    max-height: 255px;
     position: relative;
     aspect-ratio: 170000/256367;
     transition: transform 150ms ease;
