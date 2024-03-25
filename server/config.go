@@ -180,16 +180,13 @@ func getEnabledFeatures(userPerms int) ServerFeatures {
 	if Config.TWITCH.ClientID != nil && Config.TWITCH.ClientSecret != nil {
 		f.Games = true
 	}
-	// https://github.com/sbondCo/Watcharr/issues/211
-	// Currently requesting permissions have not been setup, only admins for now.
-	if !hasPermission(userPerms, PERM_ADMIN) {
-		return f
-	}
-	if len(Config.SONARR) > 0 {
-		f.Sonarr = true
-	}
-	if len(Config.RADARR) > 0 {
-		f.Radarr = true
+	if hasPermission(userPerms, PERM_REQUEST_CONTENT) {
+		if len(Config.SONARR) > 0 {
+			f.Sonarr = true
+		}
+		if len(Config.RADARR) > 0 {
+			f.Radarr = true
+		}
 	}
 	return f
 }
