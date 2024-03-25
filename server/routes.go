@@ -961,6 +961,38 @@ func (b *BaseRouter) addServerRoutes() {
 	server.GET("/stats", cache.CachePage(b.ms, time.Minute*5, func(c *gin.Context) {
 		c.JSON(http.StatusOK, getServerStats(b.db))
 	}))
+
+	// Get all server users (for manage users page)
+	server.GET("/users", func(c *gin.Context) {
+		resp, err := getAllUsers(b.db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+
+	// Edit a user (for manage users page)
+	server.POST("/users/:id", func(c *gin.Context) {
+		userId, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		if err != nil {
+			slog.Error("/users/:id failed to parse id as a uint", "error", err)
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "failed to parse id"})
+			return
+		}
+		var ur UpdateUserRequest
+		err = c.ShouldBindJSON(&ur)
+		if err == nil {
+			err := manageUser(b.db, uint(userId), ur)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
 }
 
 func (b *BaseRouter) addFeatureRoutes() {
@@ -973,10 +1005,12 @@ func (b *BaseRouter) addFeatureRoutes() {
 }
 
 func (b *BaseRouter) addSonarrRoutes() {
-	s := b.rg.Group("/arr/son").Use(AuthRequired(b.db), AdminRequired())
+	s := b.rg.Group("/arr/son").Use(AuthRequired(b.db))
+
+	// Routes are manually given AdminRequired or PermRequired middleware.
 
 	// Test configuration
-	s.POST("/test", func(c *gin.Context) {
+	s.POST("/test", AdminRequired(), func(c *gin.Context) {
 		var ur ArrTestParams
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
@@ -992,7 +1026,7 @@ func (b *BaseRouter) addSonarrRoutes() {
 	})
 
 	// Used to get config for specific server (quality profile, root folder, etc)
-	s.GET("/config/:name", func(c *gin.Context) {
+	s.GET("/config/:name", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		server, err := getSonarr(c.Param("name"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -1007,7 +1041,7 @@ func (b *BaseRouter) addSonarrRoutes() {
 	})
 
 	// Add sonarr server into config
-	s.POST("/add", func(c *gin.Context) {
+	s.POST("/add", AdminRequired(), func(c *gin.Context) {
 		var ur SonarrSettings
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
@@ -1023,7 +1057,7 @@ func (b *BaseRouter) addSonarrRoutes() {
 	})
 
 	// Edit sonarr servers config
-	s.POST("/edit", func(c *gin.Context) {
+	s.POST("/edit", AdminRequired(), func(c *gin.Context) {
 		var ur SonarrSettings
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
@@ -1039,7 +1073,7 @@ func (b *BaseRouter) addSonarrRoutes() {
 	})
 
 	// Remove sonarr server
-	s.POST("/rm/:name", func(c *gin.Context) {
+	s.POST("/rm/:name", AdminRequired(), func(c *gin.Context) {
 		err := rmSonarr(c.Param("name"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -1049,13 +1083,13 @@ func (b *BaseRouter) addSonarrRoutes() {
 	})
 
 	// Get safe config for all sonarr servers
-	s.GET("", func(c *gin.Context) {
+	s.GET("", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		response := getSonarrsSafe()
 		c.JSON(http.StatusOK, response)
 	})
 
 	// Request a show
-	s.POST("/request", func(c *gin.Context) {
+	s.POST("/request", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		var ur arr.SonarrRequest
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
@@ -1079,10 +1113,12 @@ func (b *BaseRouter) addSonarrRoutes() {
 }
 
 func (b *BaseRouter) addRadarrRoutes() {
-	s := b.rg.Group("/arr/rad").Use(AuthRequired(b.db), AdminRequired())
+	s := b.rg.Group("/arr/rad").Use(AuthRequired(b.db))
+
+	// Routes are manually given AdminRequired or PermRequired middleware.
 
 	// Test configuration
-	s.POST("/test", func(c *gin.Context) {
+	s.POST("/test", AdminRequired(), func(c *gin.Context) {
 		var ur ArrTestParams
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
@@ -1098,7 +1134,7 @@ func (b *BaseRouter) addRadarrRoutes() {
 	})
 
 	// Get config for specific server
-	s.GET("/config/:name", func(c *gin.Context) {
+	s.GET("/config/:name", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		server, err := getRadarr(c.Param("name"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -1112,7 +1148,7 @@ func (b *BaseRouter) addRadarrRoutes() {
 		c.JSON(http.StatusOK, resp)
 	})
 
-	s.POST("/add", func(c *gin.Context) {
+	s.POST("/add", AdminRequired(), func(c *gin.Context) {
 		var ur RadarrSettings
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
@@ -1127,7 +1163,7 @@ func (b *BaseRouter) addRadarrRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
-	s.POST("/edit", func(c *gin.Context) {
+	s.POST("/edit", AdminRequired(), func(c *gin.Context) {
 		var ur RadarrSettings
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
@@ -1142,7 +1178,7 @@ func (b *BaseRouter) addRadarrRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
-	s.POST("/rm/:name", func(c *gin.Context) {
+	s.POST("/rm/:name", AdminRequired(), func(c *gin.Context) {
 		err := rmRadarr(c.Param("name"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -1151,12 +1187,12 @@ func (b *BaseRouter) addRadarrRoutes() {
 		c.Status(http.StatusOK)
 	})
 
-	s.GET("", func(c *gin.Context) {
+	s.GET("", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		response := getRadarrsSafe()
 		c.JSON(http.StatusOK, response)
 	})
 
-	s.POST("/request", func(c *gin.Context) {
+	s.POST("/request", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		var ur arr.RadarrRequest
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {

@@ -254,6 +254,21 @@ func AdminRequired() gin.HandlerFunc {
 	}
 }
 
+// Specific perm only middleware (use after AuthRequired with extra info!)
+func PermRequired(perm int) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId := c.GetUint("userId")
+		perms := c.GetInt("userPermissions")
+		if hasPermission(perms, perm) {
+			slog.Debug("PermRequired: User has permission to access perm only route", "user_id", userId, "required_perm", perm)
+			c.Next()
+			return
+		}
+		slog.Info("PermRequired: User denied permission to access perm only route", "user_id", userId, "required_perm", perm)
+		c.AbortWithStatus(401)
+	}
+}
+
 func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthResponse, error) {
 	if !Config.SIGNUP_ENABLED {
 		slog.Warn("Register called, but signing up is disabled.")

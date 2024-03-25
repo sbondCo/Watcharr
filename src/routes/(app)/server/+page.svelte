@@ -91,7 +91,7 @@
         {#await getServerStats()}
           <Spinner />
         {:then stats}
-          <Stat name="Users" value={stats.users} large />
+          <Stat name="Users" value={stats.users} href="/manage_users" large />
           <Stat name="Private Users" value={stats.privateUsers} large />
           <Stat name="Watched Movies" value={stats.watchedMovies} large />
           <Stat name="Watched Shows" value={stats.watchedShows} large />

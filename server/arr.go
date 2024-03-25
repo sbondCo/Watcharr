@@ -56,6 +56,7 @@ type RadarrTestResponse struct {
 	LanguageProfiles []arr.LanguageProfile `json:"languageProfiles"`
 }
 
+// Response given to users with PERM_REQUEST_CONTENT - should never include sensitive info
 func testSonarr(p ArrTestParams) (SonarrTestResponse, error) {
 	sonarr := arr.New(arr.SONARR, &p.Host, &p.Key)
 	qps, err := sonarr.GetQualityProfiles()
@@ -76,6 +77,7 @@ func testSonarr(p ArrTestParams) (SonarrTestResponse, error) {
 	return SonarrTestResponse{QualityProfiles: qps, RootFolders: rfs, LanguageProfiles: lps}, nil
 }
 
+// Response given to users with PERM_REQUEST_CONTENT - should never include sensitive info
 func testRadarr(p ArrTestParams) (RadarrTestResponse, error) {
 	radarr := arr.New(arr.RADARR, &p.Host, &p.Key)
 	qps, err := radarr.GetQualityProfiles()

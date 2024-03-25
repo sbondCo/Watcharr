@@ -62,7 +62,7 @@
 
   <SettingsList>
     <a href="https://watcharr.app/docs/server_config/game-support-igdb" target="_blank">
-      Learn how to configure this options at Watcharr Docs.
+      Learn how to configure this option at Watcharr Docs.
     </a>
 
     <Setting title="Client ID" desc="Twitch application Client ID.">

@@ -754,6 +754,15 @@ export interface Filters {
   status: string[];
 }
 
+export interface ManagedUser {
+  id: number;
+  createdAt: Date;
+  username: string;
+  type: UserType;
+  permissions: number;
+  private: boolean;
+}
+
 export interface ServerConfig {
   JELLYFIN_HOST: string;
   SIGNUP_ENABLED: boolean;
