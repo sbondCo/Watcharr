@@ -5,8 +5,8 @@
   import Spinner from "@/lib/Spinner.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
-  import { getOrdinalSuffix, monthsShort } from "@/lib/util/helpers";
-  import type { ManagedUser } from "@/types";
+  import { getOrdinalSuffix, monthsShort, userHasPermission } from "@/lib/util/helpers";
+  import { UserPermission, type ManagedUser } from "@/types";
   import axios from "axios";
   import EditUserModal from "./modals/EditUserModal.svelte";
 
@@ -51,6 +51,9 @@
                   </span>
                 {/if}
                 {u.username}
+                {#if userHasPermission(u.permissions, UserPermission.PERM_ADMIN)}
+                  <span class="tag">Admin</span>
+                {/if}
               </div>
             </td>
             <td>{u.private === true ? "Yes" : "No"}</td>
@@ -92,6 +95,14 @@
 
         &.type-1 :global(svg) {
           fill: $text-color;
+        }
+
+        .tag {
+          font-size: 10px;
+          padding: 2px 4px;
+          background-color: $accent-color;
+          outline: 1px solid $bg-color;
+          border-radius: 5px;
         }
       }
 

@@ -43,7 +43,7 @@ func manageUser(db *gorm.DB, userId uint, ur UpdateUserRequest) error {
 		if *ur.Permissions == 0 {
 			// If removing all perms, set to default of 1 (PERM_NONE).
 			// Will avoid confusion and possibly bugs later on, though I doubt
-			// we'd ever be checking a user to ensure they have no perms.
+			// we'd ever be (directly) checking a user to ensure they have no perms.
 			toUpdate["permissions"] = PERM_NONE
 		} else {
 			toUpdate["permissions"] = *ur.Permissions
