@@ -748,6 +748,7 @@ export interface ImportedList {
   status?: WatchedStatus;
   thoughts?: string;
   datesWatched?: Date[];
+  activity?: Activity[];
 }
 
 export interface Filters {

@@ -13,7 +13,13 @@
   import { importedList } from "@/store";
   import { onMount } from "svelte";
   import papa from "papaparse";
-  import type { ImportedList, MovaryHistory, MovaryRatings, MovaryWatchlist } from "@/types";
+  import type {
+    ImportedList,
+    MovaryHistory,
+    MovaryRatings,
+    MovaryWatchlist,
+    Watched
+  } from "@/types";
   import { json } from "@sveltejs/kit";
 
   let isDragOver = false;
@@ -269,16 +275,29 @@
       // Build toImport array
       const toImport: ImportedList[] = [];
       const fileText = await readFile(new FileReader(), file);
-      const jsonData = JSON.parse(fileText);
-      for (const view of jsonData) {
+      const jsonData = JSON.parse(fileText) as Watched[];
+      for (const v of jsonData) {
+        if (!v.content || !v.content.title) {
+          notify({
+            type: "error",
+            text: "Item in export has no content or a missing title! Look in console for more details."
+          });
+          console.error(
+            "Can't add export item to import table! It has no content or a missing content.title! Item:",
+            v
+          );
+          continue;
+        }
         const t: ImportedList = {
-          tmdbId: view.content.tmdbId,
-          name: view.content.title,
-          year: new Date(view.content.release_date).getFullYear().toString(),
-          type: view.content.type,
-          rating: view.rating,
-          status: view.content.status,
-          thoughts: view.thoughts
+          tmdbId: v.content.tmdbId,
+          name: v.content.title,
+          year: new Date(v.content.release_date)?.getFullYear()?.toString(),
+          type: v.content.type,
+          rating: v.rating,
+          status: v.status,
+          thoughts: v.thoughts,
+          // datesWatched: [new Date(v.createdAt)], // Shouldn't need this, all activity will be imported, including ADDED_WATCHED activity
+          activity: v.activity
         };
         toImport.push(t);
       }
@@ -338,7 +357,7 @@
     display: flex;
     width: 100%;
     justify-content: center;
-    padding: 0 30px 0 30px;
+    padding: 0 30px 30px 30px;
 
     .inner {
       display: flex;
