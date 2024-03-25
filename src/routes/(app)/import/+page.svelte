@@ -13,7 +13,13 @@
   import { importedList } from "@/store";
   import { onMount } from "svelte";
   import papa from "papaparse";
-  import type { ImportedList, MovaryHistory, MovaryRatings, MovaryWatchlist } from "@/types";
+  import type {
+    ImportedList,
+    MovaryHistory,
+    MovaryRatings,
+    MovaryWatchlist,
+    Watched
+  } from "@/types";
   import { json } from "@sveltejs/kit";
 
   let isDragOver = false;
@@ -234,6 +240,80 @@
     }
   }
 
+  async function processWatcharrFile(files?: FileList | null) {
+    try {
+      console.log("processWatcharrFile", files);
+      if (!files || files?.length <= 0) {
+        console.error("processWatcharrFile", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
+        });
+        isDragOver = false;
+        return;
+      }
+      isLoading = true;
+      if (files.length > 1) {
+        notify({
+          type: "error",
+          text: "Only one file at a time is supported. Continuing with the first.",
+          time: 6000
+        });
+      }
+      // Currently only support for importing one file at a time
+      const file = files[0];
+      if (file.type !== "application/json") {
+        notify({
+          type: "error",
+          text: "Must be a Watcharr JSON export file"
+        });
+        isLoading = false;
+        isDragOver = false;
+        return;
+      }
+      // Build toImport array
+      const toImport: ImportedList[] = [];
+      const fileText = await readFile(new FileReader(), file);
+      const jsonData = JSON.parse(fileText) as Watched[];
+      for (const v of jsonData) {
+        if (!v.content || !v.content.title) {
+          notify({
+            type: "error",
+            text: "Item in export has no content or a missing title! Look in console for more details."
+          });
+          console.error(
+            "Can't add export item to import table! It has no content or a missing content.title! Item:",
+            v
+          );
+          continue;
+        }
+        const t: ImportedList = {
+          tmdbId: v.content.tmdbId,
+          name: v.content.title,
+          year: new Date(v.content.release_date)?.getFullYear()?.toString(),
+          type: v.content.type,
+          rating: v.rating,
+          status: v.status,
+          thoughts: v.thoughts,
+          // datesWatched: [new Date(v.createdAt)], // Shouldn't need this, all activity will be imported, including ADDED_WATCHED activity
+          activity: v.activity
+        };
+        toImport.push(t);
+      }
+      console.log("toImport:", toImport);
+      importedList.set({
+        data: JSON.stringify(toImport),
+        type: "watcharr"
+      });
+      goto("/import/process");
+    } catch (err) {
+      isLoading = false;
+      notify({ type: "error", text: "Failed to read file!" });
+      console.error("import: Failed to read file!", err);
+    }
+  }
+
   onMount(() => {
     if (!localStorage.getItem("token")) {
       goto("/login");
@@ -265,6 +345,8 @@
           filesSelected={(f) => processFilesMovary(f)}
           allowSelectMultipleFiles
         />
+
+        <DropFileButton text="Watcharr Exports" filesSelected={(f) => processWatcharrFile(f)} />
       {/if}
     </div>
   </div>
@@ -275,7 +357,7 @@
     display: flex;
     width: 100%;
     justify-content: center;
-    padding: 0 30px 0 30px;
+    padding: 0 30px 30px 30px;
 
     .inner {
       display: flex;

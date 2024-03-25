@@ -35,6 +35,7 @@ type ImportRequest struct {
 	Status           WatchedStatus `json:"status"`
 	Thoughts         string        `json:"thoughts"`
 	DatesWatched     []time.Time   `json:"datesWatched"`
+	Activity         []Activity    `json:"activity"`
 }
 
 type ImportResponse struct {
@@ -167,6 +168,23 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 				w.Activity = append(w.Activity, addedActivity)
 			} else {
 				slog.Error("successfulImport: Failed to add dateswatched activity.", "date", v, "error", err)
+			}
+		}
+	}
+	// Add all activity passed in.
+	// Probably was is a Watcharr export being imported, so it'll have all it's activity too.
+	if len(ar.Activity) > 0 {
+		slog.Debug("successfulImport: Importing activity")
+		for _, v := range ar.Activity {
+			activityDate := v.CustomDate
+			if activityDate == nil || activityDate.IsZero() {
+				activityDate = &v.CreatedAt
+			}
+			addedActivity, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: v.Type, Data: v.Data, CustomDate: activityDate})
+			if err == nil {
+				w.Activity = append(w.Activity, addedActivity)
+			} else {
+				slog.Error("successfulImport: Failed to add imported activity.", "full_object", v, "error", err)
 			}
 		}
 	}

@@ -129,6 +129,19 @@
           text: "Processing failed!. Please report this issue if it persists."
         });
       }
+    } else if (list?.type === "watcharr") {
+      importText = "Watcharr";
+      try {
+        const s = JSON.parse(list.data);
+        // Builds imported list in previous step for ease.
+        rList = s;
+      } catch (err) {
+        console.error("Watcharr import processing failed!", err);
+        notify({
+          type: "error",
+          text: "Processing failed!. Please report this issue if it persists."
+        });
+      }
     }
     // TODO: remove duplicate names in list
     return list;
