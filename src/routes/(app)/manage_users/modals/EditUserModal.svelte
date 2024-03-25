@@ -96,15 +96,6 @@
     margin-bottom: 10px;
   }
 
-  a {
-    text-decoration: underline;
-    transition: opacity 100ms ease;
-
-    &:hover {
-      opacity: 0.8;
-    }
-  }
-
   .btns {
     display: flex;
     flex-flow: row;
