@@ -1,12 +1,18 @@
 <script lang="ts">
   import Icon from "@/lib/Icon.svelte";
+  import Modal from "@/lib/Modal.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
+  import Setting from "@/lib/settings/Setting.svelte";
+  import SettingsList from "@/lib/settings/SettingsList.svelte";
   import { getOrdinalSuffix, monthsShort } from "@/lib/util/helpers";
   import type { ManagedUser } from "@/types";
   import axios from "axios";
+  import EditUserModal from "./modals/EditUserModal.svelte";
 
   const currentYear = new Date(Date.now()).getFullYear();
+
+  let editingUser: ManagedUser | undefined;
 
   async function getUsers() {
     return (await axios.get(`/server/users`)).data as ManagedUser[];
@@ -16,6 +22,7 @@
 <div class="content">
   <div class="inner">
     <h2>User Management</h2>
+    <h5 class="norm">Take control and manage all the users using your server.</h5>
 
     {#await getUsers()}
       <Spinner />
@@ -55,11 +62,17 @@
                 : `'${String(joinDate.getFullYear()).substring(2, 4)}`}</td
             >
             <td>
-              <button class="plain"><Icon i="chevron" facing="right" wh={24} /></button>
+              <button class="plain" on:click={() => (editingUser = u)}>
+                <Icon i="chevron" facing="right" wh={24} />
+              </button>
             </td>
           </tr>
         {/each}
       </table>
+
+      {#if editingUser}
+        <EditUserModal user={editingUser} onClose={() => (editingUser = undefined)} />
+      {/if}
     {:catch err}
       <PageError error={err} pretty="Failed to fetch users!" />
     {/await}

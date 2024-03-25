@@ -971,6 +971,28 @@ func (b *BaseRouter) addServerRoutes() {
 		}
 		c.JSON(http.StatusOK, resp)
 	})
+
+	// Edit a user (for manage users page)
+	server.POST("/users/:id", func(c *gin.Context) {
+		userId, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		if err != nil {
+			slog.Error("/users/:id failed to parse id as a uint", "error", err)
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "failed to parse id"})
+			return
+		}
+		var ur UpdateUserRequest
+		err = c.ShouldBindJSON(&ur)
+		if err == nil {
+			err := manageUser(b.db, uint(userId), ur)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
 }
 
 func (b *BaseRouter) addFeatureRoutes() {
