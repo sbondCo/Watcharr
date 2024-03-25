@@ -69,7 +69,7 @@
       <Checkbox
         name="USER_PERM_ADMIN"
         value={userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
-        toggled={(on) => {
+        toggled={() => {
           userTogglePermission(UserPermission.PERM_ADMIN);
         }}
       />
@@ -79,17 +79,8 @@
       <Checkbox
         name="USER_PERM_REQUEST_CONTENT"
         value={userHasPermission(user.permissions, UserPermission.PERM_REQUEST_CONTENT)}
-        toggled={(on) => {
+        toggled={() => {
           userTogglePermission(UserPermission.PERM_REQUEST_CONTENT);
-
-          console.log(
-            "hadAdmin?",
-            userHasPermission(user.permissions, UserPermission.PERM_ADMIN),
-            "hasRequest?",
-            userHasPermission(user.permissions, UserPermission.PERM_REQUEST_CONTENT),
-            "perm:",
-            user.permissions
-          );
         }}
       />
     </Setting>

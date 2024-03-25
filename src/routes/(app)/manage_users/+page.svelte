@@ -1,10 +1,7 @@
 <script lang="ts">
   import Icon from "@/lib/Icon.svelte";
-  import Modal from "@/lib/Modal.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import Setting from "@/lib/settings/Setting.svelte";
-  import SettingsList from "@/lib/settings/SettingsList.svelte";
   import { getOrdinalSuffix, monthsShort, userHasPermission } from "@/lib/util/helpers";
   import { UserPermission, type ManagedUser } from "@/types";
   import axios from "axios";
@@ -12,10 +9,11 @@
 
   const currentYear = new Date(Date.now()).getFullYear();
 
+  let allUsers: ManagedUser[];
   let editingUser: ManagedUser | undefined;
 
   async function getUsers() {
-    return (await axios.get(`/server/users`)).data as ManagedUser[];
+    allUsers = (await axios.get(`/server/users`)).data as ManagedUser[];
   }
 </script>
 
@@ -26,7 +24,7 @@
 
     {#await getUsers()}
       <Spinner />
-    {:then users}
+    {:then}
       <table>
         <tr>
           <th>Name</th>
@@ -34,7 +32,7 @@
           <th>Joined</th>
           <th></th>
         </tr>
-        {#each users as u}
+        {#each allUsers as u}
           {@const joinDate = new Date(u.createdAt)}
           <tr>
             <td class="username">
@@ -74,7 +72,13 @@
       </table>
 
       {#if editingUser}
-        <EditUserModal user={editingUser} onClose={() => (editingUser = undefined)} />
+        <EditUserModal
+          user={editingUser}
+          onClose={() => {
+            editingUser = undefined;
+            getUsers(); // lazyness, but also scientifically doesn't matter
+          }}
+        />
       {/if}
     {:catch err}
       <PageError error={err} pretty="Failed to fetch users!" />
