@@ -65,7 +65,7 @@
     border-radius: 5px;
     width: 170px;
     height: 100%;
-    min-height: 256.367px;
+    max-height: 255px;
     position: relative;
     transition:
       transform 150ms ease,
@@ -132,12 +132,12 @@
 
       h2 {
         margin-top: auto;
-        text-shadow: 1px 1px 3px black;
+        text-shadow: 1px 1px 5px black;
       }
 
       h3 {
         font-size: 12px;
-        text-shadow: 0px 1px 1px black;
+        text-shadow: 1px 1px 5px black;
       }
     }
 

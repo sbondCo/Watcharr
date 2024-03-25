@@ -243,13 +243,13 @@
       display: flex;
       flex-flow: row;
       gap: 35px;
-      max-width: 1100px;
+      max-width: 1200px;
       padding: 40px 80px;
       margin-left: auto;
       margin-right: auto;
 
       img.poster {
-        width: 235px;
+        width: 170px;
         height: 100%;
         box-shadow: 0px 0px 14px -4px #9c8080;
         border-radius: 12px;

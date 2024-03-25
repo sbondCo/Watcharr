@@ -215,6 +215,7 @@
     position: sticky;
     top: 0px;
     transition: top 200ms ease-in-out;
+    margin-left: 30px;
 
     button {
       display: flex;
