@@ -90,6 +90,7 @@
   table {
     td {
       padding: 12px 15px;
+      word-wrap: anywhere;
 
       &.username > div {
         display: flex;
