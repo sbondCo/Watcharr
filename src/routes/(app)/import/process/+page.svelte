@@ -142,6 +142,92 @@
           text: "Processing failed!. Please report this issue if it persists."
         });
       }
+    } else if (list?.type === "myanimelist") {
+      importText = "MyAnimeList";
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(list.data.trim(), "application/xml");
+        const errorNode = doc.querySelector("parsererror");
+        if (errorNode) {
+          console.error("MyAnimeList parse error:", errorNode);
+          notify({
+            type: "error",
+            text: "An error occurred while parsing your MyAnimeList export!"
+          });
+          return;
+        }
+        console.log(doc.documentElement.querySelectorAll("anime"));
+        const animeNodes = doc.documentElement.querySelectorAll("anime");
+        if (animeNodes?.length <= 0) {
+          console.error("MyAnimeList: Found no anime nodes:", animeNodes);
+          notify({
+            type: "error",
+            text: "We found no Anime entries in your export file!"
+          });
+          return;
+        }
+        for (let i = 0; i < animeNodes.length; i++) {
+          const animeNode = animeNodes[i];
+          const titleNode = animeNode.querySelector("series_title");
+          console.debug("Processing anime:", titleNode?.textContent);
+          if (!titleNode?.textContent) {
+            console.error("No title found for an anime!", animeNode, titleNode);
+            notify({
+              type: "error",
+              text: "An anime failed to import, a title was not found! Check console for more details."
+            });
+            continue;
+          }
+          const l: ImportedList = { name: titleNode.textContent };
+          const scoreNode = animeNode.querySelector("my_score");
+          if (scoreNode?.textContent) {
+            l.rating = Number(scoreNode.textContent);
+          }
+          const statusNode = animeNode.querySelector("my_status");
+          if (statusNode?.textContent) {
+            let malStatus = statusNode.textContent?.toLowerCase();
+            if (malStatus === "on-hold") {
+              l.status = "HOLD";
+            } else if (malStatus === "dropped") {
+              l.status = "DROPPED";
+            } else if (malStatus === "plan to watch") {
+              l.status = "PLANNED";
+            } else if (malStatus === "watching") {
+              l.status = "WATCHING";
+            } else if (malStatus === "completed") {
+              l.status = "FINISHED";
+            } else {
+              console.warn(
+                "Anime has no status or an unrecognized status:",
+                malStatus,
+                "anime_title:",
+                titleNode.textContent
+              );
+            }
+          }
+          const typeNode = animeNode.querySelector("series_type");
+          if (typeNode?.textContent) {
+            const malSeriesType = typeNode.textContent?.toLowerCase();
+            if (malSeriesType === "tv" || malSeriesType === "movie") {
+              l.type = malSeriesType;
+            } else {
+              console.warn(
+                "Anime has no type or an unrecognized type:",
+                malSeriesType,
+                "anime_title:",
+                titleNode.textContent
+              );
+            }
+          }
+          rList.push(l);
+        }
+      } catch (err) {
+        console.error("MyAnimeList import failed!", err);
+        notify({
+          type: "error",
+          text: "Failed to process import data!"
+        });
+      }
     }
     // TODO: remove duplicate names in list
     return list;

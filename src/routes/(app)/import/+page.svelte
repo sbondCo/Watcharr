@@ -20,7 +20,6 @@
     MovaryWatchlist,
     Watched
   } from "@/types";
-  import { json } from "@sveltejs/kit";
 
   let isDragOver = false;
   let isLoading = false;
@@ -314,6 +313,60 @@
     }
   }
 
+  function processFilesMyAnimeList(files?: FileList | null) {
+    try {
+      console.log("processFilesMyAnimeList", files);
+      if (!files || files?.length <= 0) {
+        console.error("processFilesMyAnimeList", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
+        });
+        isDragOver = false;
+        return;
+      }
+      isLoading = true;
+      if (files.length > 1) {
+        notify({
+          type: "error",
+          text: "Only one file at a time is supported. Continuing with the first.",
+          time: 6000
+        });
+      }
+      // Currently only support for importing one file at a time
+      const file = files[0];
+      if (file.type !== "text/xml") {
+        notify({
+          type: "error",
+          text: "Your MyAnimeList export should be a xml file."
+        });
+        isLoading = false;
+        isDragOver = false;
+        return;
+      }
+      const r = new FileReader();
+      r.addEventListener(
+        "load",
+        () => {
+          if (r.result) {
+            importedList.set({
+              data: r.result.toString(),
+              type: "myanimelist"
+            });
+            goto("/import/process");
+          }
+        },
+        false
+      );
+      r.readAsText(file);
+    } catch (err) {
+      isLoading = false;
+      notify({ type: "error", text: "Failed to read file!" });
+      console.error("import: Failed to read file!", err);
+    }
+  }
+
   onMount(() => {
     if (!localStorage.getItem("token")) {
       goto("/login");
@@ -346,7 +399,12 @@
           allowSelectMultipleFiles
         />
 
-        <DropFileButton text="Watcharr Exports" filesSelected={(f) => processWatcharrFile(f)} />
+        <DropFileButton text="Watcharr Export" filesSelected={(f) => processWatcharrFile(f)} />
+
+        <DropFileButton
+          text="MyAnimeList Export"
+          filesSelected={(f) => processFilesMyAnimeList(f)}
+        />
       {/if}
     </div>
   </div>

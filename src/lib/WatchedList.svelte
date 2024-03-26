@@ -216,6 +216,7 @@
             dateAdded: w.createdAt,
             dateModified: w.updatedAt
           }}
+          fluidSize={true}
         />
       {:else if w.content}
         <Poster
@@ -237,6 +238,7 @@
             dateModified: w.updatedAt,
             lastWatched: getLatestWatchedInTv(w.watchedSeasons, w.watchedEpisodes)
           }}
+          fluidSize={true}
         />
       {/if}
     {/each}
