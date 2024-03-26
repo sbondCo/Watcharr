@@ -106,6 +106,7 @@
             onRatingChanged={(r) => updateWatched(c.id, c.media_type, undefined, r)}
             onDeleteClicked={() => removeWatched(c.id)}
             {...getWatchedDependedProps(c.id, c.media_type, wList)}
+            fluidSize
           />
         {/each}
       </PosterList>

@@ -36,6 +36,7 @@
   export let disableInteraction = false;
   export let hideButtons = false;
   export let extraDetails: ExtraDetails | undefined = undefined;
+  export let fluidSize = false;
   // When provided, default click handlers will instead run this callback.
   export let onClick: (() => void) | undefined = undefined;
 
@@ -99,8 +100,13 @@
   }
 
   onMount(() => {
-    if (small && containerEl) {
-      containerEl.classList.add("small");
+    if (containerEl) {
+      if (small) {
+        containerEl.classList.add("small");
+      }
+      if (fluidSize) {
+        containerEl.classList.add("fluid-size");
+      }
     }
   });
 </script>
@@ -203,12 +209,16 @@
     overflow: hidden;
     flex: 1 1;
     border-radius: 5px;
-    width: 100%;
     min-width: 170px;
-    height: 100%;
+    width: 170px;
     position: relative;
     aspect-ratio: 170000/256367;
     transition: transform 150ms ease;
+
+    &.fluid-size {
+      height: 100%;
+      width: 100%;
+    }
 
     img {
       width: 100%;

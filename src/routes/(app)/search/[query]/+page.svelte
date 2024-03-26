@@ -138,9 +138,14 @@
                     firstReleaseDate: w.first_release_date
                   }}
                   {...getPlayedDependedProps(w.id, wList)}
+                  fluidSize
                 />
               {:else}
-                <Poster media={w} {...getWatchedDependedProps(w.id, w.media_type, wList)} />
+                <Poster
+                  media={w}
+                  {...getWatchedDependedProps(w.id, w.media_type, wList)}
+                  fluidSize
+                />
               {/if}
             {/each}
           {:else}
@@ -150,44 +155,6 @@
       {:catch err}
         <Error pretty="Failed to load results!" error={err} />
       {/await}
-
-      <!-- {#await searchGames(data.slug)}
-        <Spinner />
-      {:then results}
-        <h2>Results</h2>
-        <PosterList>
-          {#if results?.length > 0}
-            {#each results as w (w.id)}
-              <GamePoster media={w} />
-            {/each}
-          {:else}
-            No Search Results!
-          {/if}
-        </PosterList>
-      {:catch err}
-        <Error pretty="Failed to load results!" error={err} />
-      {/await} -->
-
-      <!-- {#await search(data.slug)}
-        <Spinner />
-      {:then results}
-        <h2>Results</h2>
-        <PosterList>
-          {#if results?.results?.length > 0}
-            {#each results.results as w (w.id)}
-              {#if w.media_type === "person"}
-                <PersonPoster id={w.id} name={w.name} path={w.profile_path} />
-              {:else}
-                <Poster media={w} {...getWatchedDependedProps(w.id, w.media_type, wList)} />
-              {/if}
-            {/each}
-          {:else}
-            No Search Results!
-          {/if}
-        </PosterList>
-      {:catch err}
-        <Error pretty="Failed to load results!" error={err} />
-      {/await} -->
     {:else}
       <h2>No Search Query!</h2>
     {/if}

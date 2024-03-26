@@ -182,7 +182,7 @@
     const bigInput = navEl?.querySelector("input:not(.small)");
     if (bigInput) {
       const b = bigInput.getBoundingClientRect();
-      console.debug("decideOnNavSplit: bigInput bounds:", b);
+      // console.debug("decideOnNavSplit: bigInput bounds:", b);
       if (b.width <= 45) {
         document.body.classList.add("split-nav");
       } else {
