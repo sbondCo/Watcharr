@@ -219,6 +219,31 @@
               );
             }
           }
+          try {
+            const startDateNode = animeNode.querySelector("my_start_date");
+            const finishDateNode = animeNode.querySelector("my_finish_date");
+            if (startDateNode?.textContent) {
+              // For start date, we can simply add the activity manually.
+              l.activity = [
+                // We don't need all the data when importing activity.
+                // customDate must be a date object.
+                {
+                  type: "STATUS_CHANGED",
+                  data: "WATCHING",
+                  customDate: new Date(startDateNode.textContent)
+                }
+              ] as any[];
+            }
+            if (finishDateNode?.textContent) {
+              l.datesWatched = [new Date(finishDateNode.textContent)];
+            }
+          } catch (err) {
+            console.error("Processing start/finish times for anime failed!", err);
+            notify({
+              type: "error",
+              text: "Failed to process start/finish times for an anime! Check console for more details."
+            });
+          }
           rList.push(l);
         }
       } catch (err) {
