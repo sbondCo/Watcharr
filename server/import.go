@@ -27,15 +27,17 @@ var (
 )
 
 type ImportRequest struct {
-	Name             string        `json:"name"`
-	TmdbID           int           `json:"tmdbId"`
-	Type             ContentType   `json:"type"`
-	Rating           int8          `json:"rating"`
-	RatingCustomDate *time.Time    `json:"ratingCustomDate"`
-	Status           WatchedStatus `json:"status"`
-	Thoughts         string        `json:"thoughts"`
-	DatesWatched     []time.Time   `json:"datesWatched"`
-	Activity         []Activity    `json:"activity"`
+	Name             string           `json:"name"`
+	TmdbID           int              `json:"tmdbId"`
+	Type             ContentType      `json:"type"`
+	Rating           int8             `json:"rating"`
+	RatingCustomDate *time.Time       `json:"ratingCustomDate"`
+	Status           WatchedStatus    `json:"status"`
+	Thoughts         string           `json:"thoughts"`
+	DatesWatched     []time.Time      `json:"datesWatched"`
+	Activity         []Activity       `json:"activity"`
+	WatchedEpisodes  []WatchedEpisode `json:"watchedEpisodes"`
+	WatchedSeason    []WatchedSeason  `json:"watchedSeasons"`
 }
 
 type ImportResponse struct {
@@ -186,6 +188,43 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 			} else {
 				slog.Error("successfulImport: Failed to add imported activity.", "full_object", v, "error", err)
 			}
+		}
+	}
+	// Import watched seasons, if any
+	if len(ar.WatchedSeason) > 0 {
+		slog.Debug("successfulImport: Importing watched seasons")
+		for _, v := range ar.WatchedSeason {
+			ws, err := addWatchedSeason(db, userId, WatchedSeasonAddRequest{
+				WatchedID:       w.ID,
+				SeasonNumber:    v.SeasonNumber,
+				Status:          v.Status,
+				Rating:          v.Rating,
+				addActivityDate: v.CreatedAt,
+			})
+			if err != nil {
+				slog.Error("successfulImport: Failed to add watched season.", "error", err)
+				continue
+			}
+			w.WatchedSeasons = ws.WatchedSeasons
+		}
+	}
+	// Import watched episodes, if any
+	if len(ar.WatchedEpisodes) > 0 {
+		slog.Debug("successfulImport: Importing watched episodes")
+		for _, v := range ar.WatchedEpisodes {
+			ws, err := addWatchedEpisodes(db, userId, WatchedEpisodeAddRequest{
+				WatchedID:       w.ID,
+				SeasonNumber:    v.SeasonNumber,
+				EpisodeNumber:   v.EpisodeNumber,
+				Status:          v.Status,
+				Rating:          v.Rating,
+				addActivityDate: v.CreatedAt,
+			})
+			if err != nil {
+				slog.Error("successfulImport: Failed to add watched episodes.", "error", err)
+				continue
+			}
+			w.WatchedEpisodes = ws.WatchedEpisodes
 		}
 	}
 	return ImportResponse{Type: IMPORT_SUCCESS, WatchedEntry: w}, nil

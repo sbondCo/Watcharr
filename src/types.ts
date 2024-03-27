@@ -748,6 +748,8 @@ export interface ImportedList {
   thoughts?: string;
   datesWatched?: Date[];
   activity?: Activity[];
+  watchedEpisodes?: WatchedEpisode[];
+  watchedSeasons?: WatchedSeason[];
 }
 
 export interface Filters {

@@ -296,7 +296,9 @@
           status: v.status,
           thoughts: v.thoughts,
           // datesWatched: [new Date(v.createdAt)], // Shouldn't need this, all activity will be imported, including ADDED_WATCHED activity
-          activity: v.activity
+          activity: v.activity,
+          watchedEpisodes: v.watchedEpisodes,
+          watchedSeasons: v.watchedSeasons
         };
         toImport.push(t);
       }
