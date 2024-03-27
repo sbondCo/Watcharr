@@ -425,6 +425,10 @@
       min-width: 400px;
       max-width: 400px;
       overflow: hidden;
+
+      @media screen and (max-width: 420px) {
+        min-width: 100%;
+      }
     }
 
     .big-btns {

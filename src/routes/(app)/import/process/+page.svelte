@@ -534,6 +534,10 @@
       min-width: 400px;
       max-width: 600px;
       overflow: hidden;
+
+      @media screen and (max-width: 410px) {
+        min-width: 100%;
+      }
     }
   }
 
