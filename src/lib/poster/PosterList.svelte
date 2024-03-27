@@ -44,12 +44,12 @@
 
     &:global(.wrapped li) {
       @media screen and (max-width: 390px) {
-        flex: 48.5%;
+        flex: 0 48.5%;
       }
-      @media screen and (max-width: 355px) {
-        flex: 38.5%;
+      @media screen and (max-width: 352px) {
+        flex: 0 48%;
       }
-      @media screen and (width <= 335px) {
+      @media screen and (width <= 349px) {
         flex: unset;
       }
     }
@@ -57,7 +57,7 @@
     &:global(.wrapped .container) {
       min-width: 150px !important;
 
-      @media screen and (width <= 335px), screen and (width > 390px) {
+      @media screen and (width <= 349px), screen and (width > 390px) {
         width: 170px !important;
         min-height: 256.367px !important;
       }
