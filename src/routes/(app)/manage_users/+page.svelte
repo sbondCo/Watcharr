@@ -108,6 +108,11 @@
           background-color: $accent-color;
           outline: 1px solid $bg-color;
           border-radius: 5px;
+          word-wrap: normal;
+        }
+
+        @media screen and (max-width: 500px) {
+          flex-flow: column;
         }
       }
 
