@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  image: ghcr.io/sbondco/watcharr
+  image: sbondco/watcharr
 
 jobs:
   release-dev-image:
@@ -47,5 +47,9 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ env.image }}:dev
-          labels: ${{ env.image }}:${{ github.sha }}
+          tags: |
+            ${{ env.image }}:dev
+            ghcr.io/${{ env.image }}:dev
+          labels: |
+            ${{ env.image }}:${{ github.sha }}
+            ghcr.io/${{ env.image }}:${{ github.sha }}
