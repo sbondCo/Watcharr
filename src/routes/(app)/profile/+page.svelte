@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import Checkbox from "@/lib/Checkbox.svelte";
+  import DropDown from "@/lib/DropDown.svelte";
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
@@ -9,7 +10,7 @@
   import { updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
   import { appTheme, userInfo, userSettings } from "@/store";
-  import { UserType, type Image, type Profile } from "@/types";
+  import { UserType, type Image, type Profile, DropDownItem } from "@/types";
   import axios from "axios";
   import { notify } from "@/lib/util/notify";
   import UserAvatar from "@/lib/img/UserAvatar.svelte";
@@ -29,6 +30,8 @@
   let getProfilePromise = getProfile();
   let jellyfinSyncModalOpen = false;
   let plexSyncModalOpen = false;
+
+  let countries: DropDownItem[] = ["Italy", "United States"];
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -193,6 +196,13 @@
           </button>
         </div>
       </div>
+
+      <Setting title="Country" desc="The country is used to show on what streaming provider you can watch content.">
+        <DropDown
+          placeholder={settings?.country}
+          options={countries}
+        />
+      </Setting>
 
       <Setting title="Private" desc="Hide your profile from others?" row>
         <Checkbox

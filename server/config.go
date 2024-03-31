@@ -26,6 +26,10 @@ type ServerConfig struct {
 	// it strong, just like a very long, complicated password.
 	JWT_SECRET string `json:",omitempty"`
 
+	// Default country for new users. This is used to set the default
+	// region to get correct content streaming providers.
+	DEFAULT_COUNTRY string `json:",omitempty"`
+
 	// Optional: Point to your Jellyfin install
 	// to enable it as an auth provider.
 	JELLYFIN_HOST string `json:",omitempty"`
@@ -67,6 +71,7 @@ type ServerConfig struct {
 func (c *ServerConfig) GetSafe() ServerConfig {
 	return ServerConfig{
 		SIGNUP_ENABLED:  c.SIGNUP_ENABLED,
+		DEFAULT_COUNTRY: c.DEFAULT_COUNTRY,
 		JELLYFIN_HOST:   c.JELLYFIN_HOST,
 		TMDB_KEY:        c.TMDB_KEY,
 		PLEX_HOST:       c.PLEX_HOST,
@@ -126,7 +131,8 @@ func generateConfig() error {
 	cfg := ServerConfig{
 		JWT_SECRET: key,
 		// Other defaults..
-		SIGNUP_ENABLED: true,
+		DEFAULT_COUNTRY: "US",
+		SIGNUP_ENABLED:  true,
 	}
 	barej, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
@@ -151,6 +157,8 @@ func updateConfig(k string, v any) error {
 	} else if k == "DEBUG" {
 		Config.DEBUG = v.(bool)
 		setLoggingLevel()
+	} else if k == "DEFAULT_COUNTRY" {
+		Config.DEFAULT_COUNTRY = v.(string)
 	} else {
 		return errors.New("invalid setting")
 	}

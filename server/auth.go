@@ -88,6 +88,8 @@ type UserSettings struct {
 	// even if the watched item state has since been changed.
 	// Also if user wants to show in watched stats.
 	IncludePreviouslyWatched *bool `gorm:"default:false" json:"includePreviouslyWatched"`
+	// User's country to get correct content streaming providers.
+	Country *string `gorm:"default:'US'" json:"country"`
 }
 
 // Holds third party service auth tokens for users.

@@ -150,6 +150,7 @@ export interface UserSettings {
   privateThoughts: boolean;
   hideSpoilers: boolean;
   includePreviouslyWatched: boolean;
+  country: string;
 }
 
 export interface ChangePasswordForm {
@@ -767,6 +768,7 @@ export interface ManagedUser {
 }
 
 export interface ServerConfig {
+  DEFAULT_COUNTRY: string;
   JELLYFIN_HOST: string;
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;

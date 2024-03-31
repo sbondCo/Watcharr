@@ -1,9 +1,10 @@
 <script lang="ts">
   import Checkbox from "@/lib/Checkbox.svelte";
+  import DropDown from "@/lib/DropDown.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
-  import type { Content, RadarrSettings, ServerConfig, SonarrSettings } from "@/types";
+  import type { Content, RadarrSettings, ServerConfig, SonarrSettings, DropDownItem } from "@/types";
   import axios from "axios";
   import SonarrModal from "./modals/SonarrModal.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
@@ -30,6 +31,8 @@
   let jfDisabled = false;
   let tmdbkDisabled = false;
   let plexHostDisabled = false;
+
+  let countries: DropDownItem[] = ["Italy", "United States"];
 
   async function getServerConfig() {
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
@@ -120,6 +123,13 @@
         <Spinner />
       {:then}
         <h3>General</h3>
+        <Setting title="Default Country" desc="The country is used to show on what streaming provider you can watch content. This setting can also be changed per user.">
+          <DropDown
+            placeholder={serverConfig.DEFAULT_COUNTRY}
+            options={countries}
+            bind:active={serverConfig.DEFAULT_COUNTRY}
+          />
+        </Setting>
         <Setting
           title="Jellyfin Host"
           desc="Point to your Jellyfin server to enable related features. Don't change server after
