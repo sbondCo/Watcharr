@@ -31,7 +31,8 @@ export type Icon =
   | "pencil"
   | "eye"
   | "star"
-  | "movary";
+  | "movary"
+  | "refresh";
 
 export type Theme = "light" | "dark";
 
@@ -866,6 +867,28 @@ export interface SonarrTestResponse {
 export interface RadarrTestResponse {
   qualityProfiles: QualityProfile[];
   rootFolders: RootFolder[];
+}
+
+export interface ArrRequestResponse {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  serverName: string;
+  arrId: number;
+}
+
+export interface ArrDetailsResponse {
+  progress: number;
+  estimatedCompletionTime: string;
+  status: string;
+  trackedDownloadStatus: string;
+  trackedDownloadState: string;
+}
+
+export interface ArrInfoResponse {
+  hasFile: boolean;
+  isAvailable: boolean;
+  added: string;
 }
 
 export interface ServerFeatures {

@@ -80,6 +80,7 @@
         serverName: server.name,
         title: content.name,
         year: new Date(content.first_air_date)?.getFullYear(),
+        tmdbId: content.id,
         tvdbId: content.external_ids.tvdb_id,
         seriesType: content.keywords.results?.find((k) => k.id == animeKeywordId)
           ? "anime"

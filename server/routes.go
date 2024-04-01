@@ -1093,14 +1093,9 @@ func (b *BaseRouter) addSonarrRoutes() {
 		var ur arr.SonarrRequest
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
-			server, err := getSonarr(ur.ServerName)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
-				return
-			}
-			ur.AutomaticSearch = server.AutomaticSearch
-			sonarr := arr.New(arr.SONARR, &server.Host, &server.Key)
-			err = sonarr.AddContent(sonarr.BuildAddShowBody(ur))
+			userId := c.MustGet("userId").(uint)
+			perms := c.GetInt("userPermissions")
+			err := createSonarrRequest(b.db, userId, perms, ur)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 				return
@@ -1196,14 +1191,9 @@ func (b *BaseRouter) addRadarrRoutes() {
 		var ur arr.RadarrRequest
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
-			server, err := getRadarr(ur.ServerName)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
-				return
-			}
-			ur.AutomaticSearch = server.AutomaticSearch
-			radarr := arr.New(arr.RADARR, &server.Host, &server.Key)
-			err = radarr.AddContent(radarr.BuildAddMovieBody(ur))
+			userId := c.MustGet("userId").(uint)
+			perms := c.GetInt("userPermissions")
+			err := createRadarrRequest(b.db, userId, perms, ur)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 				return
@@ -1212,6 +1202,46 @@ func (b *BaseRouter) addRadarrRoutes() {
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	s.GET("/request/:tmdbId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
+		tmdbId, err := strconv.Atoi(c.Param("tmdbId"))
+		if err != nil {
+			slog.Error("Couldn't parse tmdbId")
+			c.Status(400)
+			return
+		}
+		response, err := getArrRequest(b.db, MOVIE, tmdbId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	s.GET("/status/:serverName/:arrId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
+		response, err := getRadarrQueueDetails(c.Param("serverName"), c.Param("arrId"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	s.GET("/info/:serverName/:arrId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
+		server, err := getRadarr(c.Param("serverName"))
+		if err != nil {
+			slog.Error("radarr info: Failed to get server", "error", err)
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "failed to get server"})
+		}
+		radarr := arr.New(arr.RADARR, &server.Host, &server.Key)
+		resp, err := radarr.GetContent(c.Param("arrId"))
+		if err != nil {
+			slog.Error("radarr info: Failed to get info", "error", err)
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "failed to get info"})
+			return
+		}
+		c.JSON(http.StatusOK, resp)
 	})
 }
 

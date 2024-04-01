@@ -40,6 +40,7 @@ const (
 	PERM_NONE int = 1 << iota
 	PERM_ADMIN
 	PERM_REQUEST_CONTENT
+	PERM_REQUEST_CONTENT_AUTO_APPROVE
 )
 
 // uniqueIndex applied between Username and UserType, so same usernames can exist, but only with different types.

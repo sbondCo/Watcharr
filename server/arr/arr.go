@@ -37,6 +37,7 @@ type ArrRequest struct {
 	AutomaticSearch bool   `json:"automaticSearch"`
 	Title           string `json:"title"` // content name
 	Year            int    `json:"year"`  // content year
+	TMDBID          int    `json:"tmdbId"`
 }
 
 type SonarrRequest struct {
@@ -49,7 +50,6 @@ type SonarrRequest struct {
 
 type RadarrRequest struct {
 	ArrRequest
-	TMDBID int `json:"tmdbId"`
 }
 
 type SonarrSeasons struct {
@@ -66,7 +66,7 @@ func New(t ArrType, host *string, key *string) *Arr {
 }
 
 func (a *Arr) GetQualityProfiles() ([]QualityProfile, error) {
-	slog.Info("GetQualityProfiles", "type", a.Type, "host", *a.Host, "key", *a.Key)
+	slog.Debug("GetQualityProfiles", "type", a.Type, "host", *a.Host, "key", *a.Key)
 	var resp []QualityProfile
 	err := request(*a.Host, "/qualityprofile", map[string]string{"apikey": *a.Key}, &resp)
 	if err != nil {
@@ -77,7 +77,7 @@ func (a *Arr) GetQualityProfiles() ([]QualityProfile, error) {
 }
 
 func (a *Arr) GetRootFolders() ([]RootFolder, error) {
-	slog.Info("GetRootFolders", "type", a.Type, "host", *a.Host, "key", *a.Key)
+	slog.Debug("GetRootFolders", "type", a.Type, "host", *a.Host, "key", *a.Key)
 	var resp []RootFolder
 	err := request(*a.Host, "/rootfolder", map[string]string{"apikey": *a.Key}, &resp)
 	if err != nil {
@@ -88,9 +88,10 @@ func (a *Arr) GetRootFolders() ([]RootFolder, error) {
 }
 
 func (a *Arr) GetLangaugeProfiles() ([]LanguageProfile, error) {
-	slog.Info("GetLangaugeProfiles", "type", a.Type, "host", *a.Host, "key", *a.Key)
+	slog.Debug("GetLangaugeProfiles", "type", a.Type, "host", *a.Host, "key", *a.Key)
 	var resp []LanguageProfile
 	// languageprofile supposedly deprecated.. but new language endpoint doesnt seem to work.. note probs to switch soon
+	// TODO languages are handled diffferently in Sonarr now, I think we can remove all language stuff, now controlled per profile.
 	err := request(*a.Host, "/languageprofile", map[string]string{"apikey": *a.Key}, &resp)
 	if err != nil {
 		slog.Error("GetLangaugeProfiles request failed", "service", a.Type, "error", err)
@@ -99,7 +100,52 @@ func (a *Arr) GetLangaugeProfiles() ([]LanguageProfile, error) {
 	return resp, nil
 }
 
-// TODO do title! and year?
+func (a *Arr) RunCommand(name string) (CommandResponse, error) {
+	slog.Debug("RunCommand", "name", name, "type", a.Type, "host", *a.Host, "key", *a.Key)
+	var resp CommandResponse
+	err := requestPost(*a.Host, "/command", *a.Key, map[string]interface{}{"name": name}, &resp)
+	if err != nil {
+		slog.Error("RunCommand request failed", "name", name, "service", a.Type, "error", err)
+		return CommandResponse{}, errors.New("request to service failed")
+	}
+	return resp, nil
+}
+
+// arrId = movieId/seriesId on radarr/sonarr
+func (a *Arr) GetQueueDetails(arrId string, resp interface{}) error {
+	slog.Debug("GetQueueDetails", "arrId", arrId, "type", a.Type, "host", *a.Host, "key", *a.Key)
+	p := map[string]string{"apikey": *a.Key}
+	if a.Type == RADARR {
+		p["movieId"] = arrId
+	} else if a.Type == SONARR {
+		p["seriesId"] = arrId
+	} else {
+		return errors.New("invalid arr type")
+	}
+	err := request(*a.Host, "/queue/details", p, resp)
+	if err != nil {
+		slog.Error("GetQueueDetails request failed", "arrId", arrId, "service", a.Type, "error", err)
+		return errors.New("request to service failed")
+	}
+	return nil
+}
+
+// Get movie/show
+func (a *Arr) GetContent(arrId string) (MovieSerie, error) {
+	slog.Debug("GetContent", "arrId", arrId, "type", a.Type, "host", *a.Host, "key", *a.Key)
+	e := "movie"
+	if a.Type == SONARR {
+		e = "series"
+	}
+	var resp MovieSerie
+	err := request(*a.Host, "/"+e+"/"+arrId, map[string]string{"apikey": *a.Key}, &resp)
+	if err != nil {
+		slog.Error("GetContent request failed", "arrId", arrId, "service", a.Type, "error", err)
+		return MovieSerie{}, errors.New("request to service failed")
+	}
+	return resp, nil
+}
+
 func (a *Arr) BuildAddShowBody(r SonarrRequest) map[string]interface{} {
 	req := map[string]interface{}{
 		"title":             r.Title,
@@ -135,23 +181,24 @@ func (a *Arr) BuildAddMovieBody(r RadarrRequest) map[string]interface{} {
 	return req
 }
 
-func (a *Arr) AddContent(b map[string]interface{}) error {
+func (a *Arr) AddContent(b map[string]interface{}) (map[string]interface{}, error) {
 	ep := "series"
 	if a.Type == RADARR {
 		ep = "movie"
 	}
 	slog.Debug("AddContent", "type", ep, "body", b)
-	var resp interface{}
+	var resp map[string]interface{}
 	err := requestPost(*a.Host, "/"+ep, *a.Key, b, &resp)
 	if err != nil {
 		slog.Error("AddContent request failed", "service", a.Type, "error", err)
-		return errors.New("request to service failed")
+		return map[string]interface{}{}, errors.New("request to service failed")
 	}
-	return nil
+	slog.Debug("AddContent", "type", ep, "created_id", resp["id"])
+	return resp, nil
 }
 
 func request(host string, ep string, p map[string]string, resp interface{}) error {
-	slog.Debug("tmdbAPIRequest", "endpoint", ep, "params", p)
+	slog.Debug("arrAPIRequest", "endpoint", ep, "params", p)
 	base, err := url.Parse(host)
 	if err != nil {
 		return errors.New("failed to parse api uri")

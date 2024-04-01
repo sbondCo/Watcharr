@@ -238,3 +238,11 @@ export function userHasPermission(perms: UserPermission, reqPerm: UserPermission
 export function seasonAndEpToReadable(season: number | undefined, episode: number | undefined) {
   return `S${typeof season === "number" ? String(season) : "(unknown)"}E${typeof episode === "number" ? String(episode) : "(unknown)"}`;
 }
+
+export function msToAmountsOfTime(ms: number) {
+  const seconds = Math.floor((ms / 1000) % 60);
+  const minutes = Math.floor((ms / (1000 * 60)) % 60);
+  const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+  return { days, hours, minutes, seconds };
+}

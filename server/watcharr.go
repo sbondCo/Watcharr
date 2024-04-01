@@ -81,6 +81,7 @@ func main() {
 		&Follow{},
 		&Image{},
 		&Game{},
+		&ArrRequest{},
 	)
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)

@@ -103,45 +103,10 @@ func getPublicWatched(db *gorm.DB, userId uint, username string) ([]Watched, err
 
 func addWatched(db *gorm.DB, userId uint, ar WatchedAddRequest, at ActivityType) (Watched, error) {
 	slog.Debug("Adding watched item", "userId", userId, "contentType", ar.ContentType, "contentId", ar.ContentID)
-
-	var content Content
-	db.Where("type = ? AND tmdb_id = ?", ar.ContentType, ar.ContentID).Find(&content)
-
-	// Create content if not found from our db
-	if content == (Content{}) {
-		slog.Debug("Content not in db, fetching...")
-
-		resp, err := tmdbAPIRequest("/"+string(ar.ContentType)+"/"+strconv.Itoa(ar.ContentID), map[string]string{})
-		if err != nil {
-			slog.Error("addWatched content tmdb api request failed", "error", err)
-			return Watched{}, errors.New("failed to find requested media")
-		}
-
-		if ar.ContentType == "movie" {
-			c := new(TMDBMovieDetails)
-			err := json.Unmarshal([]byte(resp), &c)
-			if err != nil {
-				slog.Error("Failed to unmarshal movie details", "error", err)
-				return Watched{}, errors.New("failed to process movie details response")
-			}
-			content, err = cacheContentMovie(db, *c, false)
-			if err != nil {
-				slog.Error("addWatched failed to cache movie content", "content_id", ar.ContentID, "err", err)
-				return Watched{}, errors.New("failed to cache content")
-			}
-		} else {
-			c := new(TMDBShowDetails)
-			err := json.Unmarshal(resp, &c)
-			if err != nil {
-				slog.Error("Failed to unmarshal tv details", "error", err)
-				return Watched{}, errors.New("failed to process tv details response")
-			}
-			content, err = cacheContentTv(db, *c, false)
-			if err != nil {
-				slog.Error("addWatched failed to cache tv content", "content_id", ar.ContentID, "err", err)
-				return Watched{}, errors.New("failed to cache content")
-			}
-		}
+	// Get content cache (or cache it if we don't have it locally)
+	content, err := getOrCacheContent(db, ar.ContentType, ar.ContentID)
+	if err != nil {
+		return Watched{}, err
 	}
 	// Error if content has no id
 	if content.ID == 0 {

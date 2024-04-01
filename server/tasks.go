@@ -21,6 +21,7 @@ func setupMinutelyTasks(db *gorm.DB) {
 		// Runs funcs that are in the place where we are cleaning.
 		// Bit cleaner and we can keep the related code close to its home.
 		cleanupTokens(db)
+		refreshArrQueues()
 	}
 }
 
