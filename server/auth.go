@@ -292,6 +292,8 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 		user.Permissions = initialPerm
 	}
 
+	user.Country = &Config.DEFAULT_COUNTRY
+
 	res := db.Create(&user)
 	if res.Error != nil {
 		// If error is because unique contraint failed.. user already exists

@@ -123,7 +123,7 @@
         <Spinner />
       {:then}
         <h3>General</h3>
-        <Setting title="Default Country" desc="The country is used to show on what streaming provider you can watch content. This setting can also be changed per user.">
+        <Setting title="Default Country for new users" desc="The country is used to show on what streaming provider you can watch content. This setting can also be changed per user and doesn't affect existing users.">
           <DropDown
             options={countries}
             bind:active={serverConfig.DEFAULT_COUNTRY}
