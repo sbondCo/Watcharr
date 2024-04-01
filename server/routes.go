@@ -1193,12 +1193,12 @@ func (b *BaseRouter) addRadarrRoutes() {
 		if err == nil {
 			userId := c.MustGet("userId").(uint)
 			perms := c.GetInt("userPermissions")
-			err := createRadarrRequest(b.db, userId, perms, ur)
+			response, err := createRadarrRequest(b.db, userId, perms, ur)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 				return
 			}
-			c.Status(http.StatusOK)
+			c.JSON(http.StatusOK, response)
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
@@ -1211,7 +1211,7 @@ func (b *BaseRouter) addRadarrRoutes() {
 			c.Status(400)
 			return
 		}
-		response, err := getArrRequest(b.db, MOVIE, tmdbId)
+		response, err := getArrRequestByTmdbId(b.db, MOVIE, tmdbId)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -1222,26 +1222,33 @@ func (b *BaseRouter) addRadarrRoutes() {
 	s.GET("/status/:serverName/:arrId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		response, err := getRadarrQueueDetails(c.Param("serverName"), c.Param("arrId"))
 		if err != nil {
+			if err.Error() == "no details found" {
+				c.Status(http.StatusNoContent) // Item not found in queue.. missing
+				return
+			}
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, response)
 	})
 
-	s.GET("/info/:serverName/:arrId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
-		server, err := getRadarr(c.Param("serverName"))
+	s.GET("/info/:requestId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
+		requestId, err := strconv.ParseUint(c.Param("requestId"), 10, 64)
 		if err != nil {
-			slog.Error("radarr info: Failed to get server", "error", err)
-			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "failed to get server"})
-		}
-		radarr := arr.New(arr.RADARR, &server.Host, &server.Key)
-		resp, err := radarr.GetContent(c.Param("arrId"))
-		if err != nil {
-			slog.Error("radarr info: Failed to get info", "error", err)
-			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "failed to get info"})
+			slog.Error("/info/:requestId - requestId could not be parsed")
+			c.Status(http.StatusBadRequest)
 			return
 		}
-		c.JSON(http.StatusOK, resp)
+		response, err := getRadarrRequestInfo(b.db, uint(requestId))
+		if err != nil {
+			if err.Error() == "request deleted" {
+				c.JSON(http.StatusNotFound, ErrorResponse{Error: "request deleted"})
+				return
+			}
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
 	})
 }
 

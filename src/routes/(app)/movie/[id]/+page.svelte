@@ -35,6 +35,7 @@
   let requestModalShown = false;
   let trailerShown = false;
   let jellyfinUrl: string | undefined;
+  let arrRequestButtonComp: ArrRequestButton;
 
   $: wListItem = $watchedList.find(
     (w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId
@@ -163,6 +164,7 @@
                 type="movie"
                 tmdbId={data.movieId}
                 openRequestModal={() => (requestModalShown = !requestModalShown)}
+                bind:this={arrRequestButtonComp}
               />
             {/if}
           </div>
@@ -173,7 +175,15 @@
     </div>
 
     {#if requestModalShown}
-      <RequestMovie content={movie} onClose={() => (requestModalShown = false)} />
+      <RequestMovie
+        content={movie}
+        onClose={(reqResp) => {
+          requestModalShown = false;
+          if (reqResp) {
+            arrRequestButtonComp.setExistingRequest(reqResp);
+          }
+        }}
+      />
     {/if}
 
     <div class="page">

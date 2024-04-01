@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 type ArrType string
@@ -68,7 +69,7 @@ func New(t ArrType, host *string, key *string) *Arr {
 func (a *Arr) GetQualityProfiles() ([]QualityProfile, error) {
 	slog.Debug("GetQualityProfiles", "type", a.Type, "host", *a.Host, "key", *a.Key)
 	var resp []QualityProfile
-	err := request(*a.Host, "/qualityprofile", map[string]string{"apikey": *a.Key}, &resp)
+	_, err := request(*a.Host, "/qualityprofile", map[string]string{"apikey": *a.Key}, &resp)
 	if err != nil {
 		slog.Error("GetQualityProfiles request failed", "service", a.Type, "error", err)
 		return []QualityProfile{}, errors.New("request to service failed")
@@ -79,7 +80,7 @@ func (a *Arr) GetQualityProfiles() ([]QualityProfile, error) {
 func (a *Arr) GetRootFolders() ([]RootFolder, error) {
 	slog.Debug("GetRootFolders", "type", a.Type, "host", *a.Host, "key", *a.Key)
 	var resp []RootFolder
-	err := request(*a.Host, "/rootfolder", map[string]string{"apikey": *a.Key}, &resp)
+	_, err := request(*a.Host, "/rootfolder", map[string]string{"apikey": *a.Key}, &resp)
 	if err != nil {
 		slog.Error("GetRootFolders request failed", "service", a.Type, "error", err)
 		return []RootFolder{}, errors.New("request to service failed")
@@ -92,7 +93,7 @@ func (a *Arr) GetLangaugeProfiles() ([]LanguageProfile, error) {
 	var resp []LanguageProfile
 	// languageprofile supposedly deprecated.. but new language endpoint doesnt seem to work.. note probs to switch soon
 	// TODO languages are handled diffferently in Sonarr now, I think we can remove all language stuff, now controlled per profile.
-	err := request(*a.Host, "/languageprofile", map[string]string{"apikey": *a.Key}, &resp)
+	_, err := request(*a.Host, "/languageprofile", map[string]string{"apikey": *a.Key}, &resp)
 	if err != nil {
 		slog.Error("GetLangaugeProfiles request failed", "service", a.Type, "error", err)
 		return []LanguageProfile{}, errors.New("request to service failed")
@@ -122,7 +123,7 @@ func (a *Arr) GetQueueDetails(arrId string, resp interface{}) error {
 	} else {
 		return errors.New("invalid arr type")
 	}
-	err := request(*a.Host, "/queue/details", p, resp)
+	_, err := request(*a.Host, "/queue/details", p, resp)
 	if err != nil {
 		slog.Error("GetQueueDetails request failed", "arrId", arrId, "service", a.Type, "error", err)
 		return errors.New("request to service failed")
@@ -131,17 +132,34 @@ func (a *Arr) GetQueueDetails(arrId string, resp interface{}) error {
 }
 
 // Get movie/show
-func (a *Arr) GetContent(arrId string) (MovieSerie, error) {
+func (a *Arr) GetContent(arrId int) (MovieSerie, int, error) {
 	slog.Debug("GetContent", "arrId", arrId, "type", a.Type, "host", *a.Host, "key", *a.Key)
 	e := "movie"
 	if a.Type == SONARR {
 		e = "series"
 	}
+	arrIdStr := strconv.Itoa(arrId)
 	var resp MovieSerie
-	err := request(*a.Host, "/"+e+"/"+arrId, map[string]string{"apikey": *a.Key}, &resp)
+	respStatusCode, err := request(*a.Host, "/"+e+"/"+arrIdStr, map[string]string{"apikey": *a.Key}, &resp)
 	if err != nil {
 		slog.Error("GetContent request failed", "arrId", arrId, "service", a.Type, "error", err)
-		return MovieSerie{}, errors.New("request to service failed")
+		return MovieSerie{}, respStatusCode, errors.New("request to service failed")
+	}
+	return resp, respStatusCode, nil
+}
+
+func (a *Arr) LookupByTmdbId(tmdbId int) ([]MovieSerie, error) {
+	slog.Debug("LookupByTmdbId", "tmdbId", tmdbId, "type", a.Type, "host", *a.Host, "key", *a.Key)
+	e := "movie"
+	if a.Type == SONARR {
+		e = "series"
+	}
+	var resp []MovieSerie
+	tmdbIdStr := strconv.Itoa(tmdbId)
+	_, err := request(*a.Host, "/"+e+"/lookup", map[string]string{"apikey": *a.Key, "term": "tmdb:" + tmdbIdStr}, &resp)
+	if err != nil {
+		slog.Error("LookupByTmdbId request failed", "tmdbId", tmdbId, "service", a.Type, "error", err)
+		return []MovieSerie{}, errors.New("request to service failed")
 	}
 	return resp, nil
 }
@@ -197,11 +215,11 @@ func (a *Arr) AddContent(b map[string]interface{}) (map[string]interface{}, erro
 	return resp, nil
 }
 
-func request(host string, ep string, p map[string]string, resp interface{}) error {
+func request(host string, ep string, p map[string]string, resp interface{}) (int, error) {
 	slog.Debug("arrAPIRequest", "endpoint", ep, "params", p)
 	base, err := url.Parse(host)
 	if err != nil {
-		return errors.New("failed to parse api uri")
+		return 0, errors.New("failed to parse api uri")
 	}
 
 	// Path params
@@ -219,23 +237,23 @@ func request(host string, ep string, p map[string]string, resp interface{}) erro
 	// Run get request
 	res, err := http.Get(base.String())
 	if err != nil {
-		return err
+		return res.StatusCode, err
 	}
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		return err
+		return res.StatusCode, err
 	}
 	if res.StatusCode != 200 {
 		slog.Error("arr non 200 status code:", "status_code", res.StatusCode)
-		return errors.New(string(body))
+		return res.StatusCode, errors.New(string(body))
 	}
 	// slog.Info("", "body", body)
 	err = json.Unmarshal([]byte(body), &resp)
 	if err != nil {
-		return err
+		return res.StatusCode, err
 	}
-	return nil
+	return res.StatusCode, nil
 }
 
 func requestPost(host string, ep string, key string, p map[string]interface{}, resp interface{}) error {

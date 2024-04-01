@@ -1,14 +1,19 @@
 <script lang="ts">
   import axios from "axios";
   import Modal from "../Modal.svelte";
-  import type { RadarrSettings, RadarrTestResponse, TMDBMovieDetails } from "@/types";
+  import type {
+    ArrRequestResponse,
+    RadarrSettings,
+    RadarrTestResponse,
+    TMDBMovieDetails
+  } from "@/types";
   import { notify } from "../util/notify";
   import DropDown from "../DropDown.svelte";
   import Setting from "../settings/Setting.svelte";
   import Spinner from "../Spinner.svelte";
 
   export let content: TMDBMovieDetails;
-  export let onClose: () => void;
+  export let onClose: (r: ArrRequestResponse | undefined) => void;
 
   let servarrs: RadarrSettings[];
   let selectedServarrIndex: number;
@@ -66,7 +71,7 @@
         notify({ id: nid, text: "No Root Folder Found", type: "error" });
         return;
       }
-      await axios.post("/arr/rad/request", {
+      const resp = await axios.post<ArrRequestResponse>("/arr/rad/request", {
         serverName: server.name,
         title: content.title,
         year: new Date(content.release_date)?.getFullYear(),
@@ -74,9 +79,11 @@
         qualityProfile: server.qualityProfile,
         rootFolder: rootFolder.path
       });
-      notify({ id: nid, text: "Request complete", type: "success" });
       addRequestRunning = false;
-      onClose();
+      if (resp.data) {
+        notify({ id: nid, text: "Request complete", type: "success" });
+        onClose(resp.data);
+      }
     } catch (err) {
       console.error("content request failed!", err);
       addRequestRunning = false;
@@ -98,7 +105,7 @@
   getServers();
 </script>
 
-<Modal title="Request" desc={content.title} {onClose}>
+<Modal title="Request" desc={content.title} onClose={() => onClose(undefined)}>
   <div class="req-ctr">
     {#if servarrs}
       {@const server = servarrs[selectedServarrIndex]}

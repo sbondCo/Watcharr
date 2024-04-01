@@ -132,9 +132,12 @@ type SonarrQueueDetails []struct {
 }
 
 // From `GET /movie/{id}` or `GET /series/{id}`.
-// Not all fields returned, just wanted ones included.
+// Not all fields described here, just the wanted ones.
 type MovieSerie struct {
-	HasFile     bool      `json:"hasFile"`
-	IsAvailable bool      `json:"isAvailable"`
-	Added       time.Time `json:"added"`
+	Title         string    `json:"title"`
+	OriginalTitle string    `json:"originalTitle"`
+	ID            int       `json:"id"`
+	HasFile       bool      `json:"hasFile"`
+	IsAvailable   bool      `json:"isAvailable"`
+	Added         time.Time `json:"added"`
 }

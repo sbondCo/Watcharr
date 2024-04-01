@@ -18,7 +18,7 @@
 
   let existingRequest: ArrRequestResponse | undefined;
   let info: ArrInfoResponse | undefined;
-  let status: ArrDetailsResponse | "available" | undefined;
+  let status: ArrDetailsResponse | "available" | "requested" | undefined;
   let estimatedCompletionIn: string | undefined;
 
   async function getInfo() {
@@ -28,7 +28,7 @@
         return;
       }
       const resp = await axios.get<ArrInfoResponse>(
-        `/arr/${type === "movie" ? "rad" : "son"}/info/${existingRequest.serverName}/${existingRequest.arrId}`
+        `/arr/${type === "movie" ? "rad" : "son"}/info/${existingRequest.id}`
       );
       if (resp?.data) {
         info = resp.data;
@@ -38,7 +38,10 @@
           getStatus();
         }
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.response?.status === 404 && err?.response?.data?.error === "request deleted") {
+        return;
+      }
       console.error("ArrRequestButton: getInfo failed!", err);
       notify({
         text: `Failed when getting info from ${type === "movie" ? "Radarr" : "Sonarr"}`,
@@ -56,7 +59,9 @@
       const statusResp = await axios.get<ArrDetailsResponse>(
         `/arr/${type === "movie" ? "rad" : "son"}/status/${existingRequest.serverName}/${existingRequest.arrId}`
       );
-      if (statusResp?.data) {
+      if (statusResp.status === 204) {
+        status = "requested";
+      } else if (statusResp?.data) {
         status = statusResp.data;
         const estMs =
           new Date(status.estimatedCompletionTime).getTime() - new Date(Date.now()).getTime();
@@ -105,30 +110,53 @@
     }
   }
 
+  // Used by Request modals to set existing request data in this component from their request response.
+  export function setExistingRequest(r: ArrRequestResponse) {
+    if (existingRequest) {
+      console.error(
+        "ArrRequestButton: setExistingRequest: Existing request has already been defined! Not continuing."
+      );
+      return;
+    }
+    if (!r) {
+      console.error("ArrRequestButton: setExistingRequest: No response passed in.", r);
+      return;
+    }
+    console.debug("ArrRequestButton: setExistingRequest: Running..", r);
+    existingRequest = r;
+    getInfo();
+  }
+
   onMount(() => {
     lookForExisting();
   });
 </script>
 
-{#if typeof status === "object"}
+{#if typeof status === "object" || status === "requested"}
   <button
     on:click={getStatus}
     use:tooltip={{
       text:
-        status.status === "downloading"
-          ? estimatedCompletionIn
-            ? `Done in ${estimatedCompletionIn}`
-            : "Estimation Unavailable"
-          : status.status === "paused"
-            ? "Download has been paused"
-            : "",
+        status === "requested"
+          ? "Waiting for approval or download to start"
+          : status.status === "downloading"
+            ? estimatedCompletionIn
+              ? `Done in ${estimatedCompletionIn}`
+              : "Estimation Unavailable"
+            : status.status === "paused"
+              ? "Download has been paused"
+              : "",
       pos: "bot"
     }}
   >
     <div><Icon i="refresh" /></div>
     <span>
-      {status.status}
-      {status.status === "downloading" ? (status?.progress ? `(${status?.progress}%)` : "") : ""}
+      {#if status === "requested"}
+        Requested
+      {:else}
+        {status.status}
+        {status.status === "downloading" ? (status?.progress ? `(${status?.progress}%)` : "") : ""}
+      {/if}
     </span>
   </button>
 {:else if status === "available"}
