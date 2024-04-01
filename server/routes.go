@@ -388,12 +388,8 @@ func (b *BaseRouter) addWatchedRoutes() {
 
 	watched.DELETE(":id", func(c *gin.Context) {
 		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			c.Status(400)
-			return
-		}
-		userId := c.MustGet("userId").(uint)
 		if err == nil {
+			userId := c.MustGet("userId").(uint)
 			response, err := removeWatched(b.db, userId, uint(id))
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
@@ -755,6 +751,10 @@ func (b *BaseRouter) addUserRoutes() {
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
 			response, err := userUpdate(b.db, userId, ur)
+
+			// Flush cache after update, otherwise we will get old data on streaming providers after the users changes country
+			b.ms.Flush()
+
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
