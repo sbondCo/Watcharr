@@ -240,6 +240,16 @@ func (b *BaseRouter) addContentRoutes() {
 		}
 		c.JSON(http.StatusOK, content)
 	}))
+
+	// Available regions for watch providers
+	content.GET("/regions", func(c *gin.Context) {
+		content, err := regions()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	})
 }
 
 func (b *BaseRouter) addGameRoutes() {

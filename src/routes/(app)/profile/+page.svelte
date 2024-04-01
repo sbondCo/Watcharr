@@ -7,7 +7,7 @@
   import Setting from "@/lib/settings/Setting.svelte";
   import Stat from "@/lib/stats/Stat.svelte";
   import Stats from "@/lib/stats/Stats.svelte";
-  import { updateUserSetting } from "@/lib/util/api";
+  import { updateUserSetting, getAvailableRegions } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
   import { appTheme, userInfo, userSettings } from "@/store";
   import { UserType, type Image, type Profile, DropDownItem } from "@/types";
@@ -31,9 +31,10 @@
   let jellyfinSyncModalOpen = false;
   let plexSyncModalOpen = false;
 
-  let countries: DropDownItem[] = ["IT", "US"];
+  let countries: DropDownItem[] = [];
 
   async function getProfile() {
+    countries = [String(await getAvailableRegions()), "test"];
     return (await axios.get(`/profile`)).data as Profile;
   }
 

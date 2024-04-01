@@ -11,7 +11,7 @@
   import Setting from "@/lib/settings/Setting.svelte";
   import SettingButton from "@/lib/settings/SettingButton.svelte";
   import RadarrModal from "./modals/RadarrModal.svelte";
-  import { getServerFeatures } from "@/lib/util/api";
+  import { getServerFeatures, getAvailableRegions } from "@/lib/util/api";
   import Stats from "@/lib/stats/Stats.svelte";
   import Error from "@/lib/Error.svelte";
   import Stat from "@/lib/stats/Stat.svelte";
@@ -32,9 +32,10 @@
   let tmdbkDisabled = false;
   let plexHostDisabled = false;
 
-  let countries: DropDownItem[] = ["IT", "US"];
+  let countries: DropDownItem[] = [];
 
   async function getServerConfig() {
+    countries = [String(await getAvailableRegions()), "test"];
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
   }
 

@@ -337,6 +337,10 @@ export async function unfollowUser(id: number) {
     });
 }
 
+export async function getAvailableRegions() {
+  return axios.get("/content/regions");
+}
+
 /**
  * For use with routes that don't require authentication (eg login/register)
  */
