@@ -94,7 +94,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get movie details (for movie page)
-	content.Use(WhereaboutsRequired()).GET("/movie/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.Use(WhereaboutsRequired(b.db)).GET("/movie/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -122,7 +122,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get tv details (for tv page)
-	content.Use(WhereaboutsRequired()).GET("/tv/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.Use(WhereaboutsRequired(b.db)).GET("/tv/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
