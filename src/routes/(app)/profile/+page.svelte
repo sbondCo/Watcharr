@@ -31,7 +31,7 @@
   let jellyfinSyncModalOpen = false;
   let plexSyncModalOpen = false;
 
-  let countries: DropDownItem[] = ["Italy", "United States"];
+  let countries: DropDownItem[] = ["IT", "US"];
 
   async function getProfile() {
     return (await axios.get(`/profile`)).data as Profile;
@@ -199,8 +199,11 @@
 
       <Setting title="Country" desc="The country is used to show on what streaming provider you can watch content.">
         <DropDown
-          placeholder={settings?.country}
+          bind:active={settings.country}
           options={countries}
+          onChange={() => {
+            updateUserSetting("country", settings?.country);
+          }}
         />
       </Setting>
 

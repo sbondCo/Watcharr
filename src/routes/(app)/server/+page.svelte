@@ -32,7 +32,7 @@
   let tmdbkDisabled = false;
   let plexHostDisabled = false;
 
-  let countries: DropDownItem[] = ["Italy", "United States"];
+  let countries: DropDownItem[] = ["IT", "US"];
 
   async function getServerConfig() {
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
@@ -125,9 +125,11 @@
         <h3>General</h3>
         <Setting title="Default Country" desc="The country is used to show on what streaming provider you can watch content. This setting can also be changed per user.">
           <DropDown
-            placeholder={serverConfig.DEFAULT_COUNTRY}
             options={countries}
             bind:active={serverConfig.DEFAULT_COUNTRY}
+            onChange={() => {
+              updateServerConfig("DEFAULT_COUNTRY", serverConfig.DEFAULT_COUNTRY);
+            }}
           />
         </Setting>
         <Setting
