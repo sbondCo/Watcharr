@@ -35,7 +35,7 @@
   let countries: DropDownItem[] = [];
 
   async function getServerConfig() {
-    countries = [String(await getAvailableRegions()), "test"];
+    countries = await getAvailableRegions();
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
   }
 

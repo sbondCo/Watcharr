@@ -11,7 +11,8 @@ import {
   type UserSettings,
   type Follow,
   type PlayedAddRequest,
-  type ActivityUpdateRequest
+  type ActivityUpdateRequest,
+  type TMDBRegions
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
@@ -338,7 +339,14 @@ export async function unfollowUser(id: number) {
 }
 
 export async function getAvailableRegions() {
-  return axios.get("/content/regions");
+  const regions = (await axios.get(`/content/regions`)).data as TMDBRegions;
+  let regionCodes = [];
+
+  for (let i = 0; i < regions.results.length; i++) {
+    regionCodes.push(regions.results[i].iso_3166_1);
+  }
+
+  return regionCodes;
 }
 
 /**

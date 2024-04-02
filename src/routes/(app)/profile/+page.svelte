@@ -34,7 +34,7 @@
   let countries: DropDownItem[] = [];
 
   async function getProfile() {
-    countries = [String(await getAvailableRegions()), "test"];
+    countries = await getAvailableRegions();
     return (await axios.get(`/profile`)).data as Profile;
   }
 
