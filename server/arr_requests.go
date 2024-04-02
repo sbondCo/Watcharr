@@ -67,33 +67,58 @@ func createArrRequest(db *gorm.DB, userId uint, serverName string, contentType C
 	return &req, nil
 }
 
-func createSonarrRequest(db *gorm.DB, userId uint, userPerms int, ur arr.SonarrRequest) error {
+func createSonarrRequest(db *gorm.DB, userId uint, userPerms int, ur arr.SonarrRequest) (*ArrRequest, error) {
 	server, err := getSonarr(ur.ServerName)
 	if err != nil {
 		slog.Error("createSonarrRequest: Failed to get server", "error", err)
-		return errors.New("failed to get server")
+		return &ArrRequest{}, errors.New("failed to get server")
 	}
 	arrReq, err := createArrRequest(db, userId, ur.ServerName, SHOW, ur.TMDBID)
 	if err != nil {
 		slog.Error("createSonarrRequest: Failed when creating arr request", "error", err)
-		return errors.New("failed when creating request")
+		return &ArrRequest{}, errors.New("failed when creating request")
 	}
+	sonarr := arr.New(arr.SONARR, &server.Host, &server.Key)
+	// 1. Lookup on Sonarr to check if the show has already been added (via method other than watcharr).
+	lookupRes, err := sonarr.LookupByTmdbId(ur.TMDBID)
+	if err == nil && len(lookupRes) == 1 {
+		slog.Debug("createSonarrRequest: Lookup returned results.")
+		found := lookupRes[0] // There should only be one result when looking up by id.
+		// If it has an ID, then it will have already been added to Sonarr.
+		if found.ID != 0 {
+			dbResp := db.Model(&ArrRequest{}).Where("id = ?", arrReq.ID).Update("arr_id", found.ID)
+			if dbResp.Error != nil {
+				slog.Error("createSonarrRequest: Failed to update request in db", "error", err)
+				return &ArrRequest{}, errors.New("content was requested, but we failed to update the db")
+			} else {
+				slog.Debug("createSonarrRequest: Result from lookup had an ID. Request in database has been updated with it.", "arr_id", found.ID)
+				arrReq.ArrID = found.ID
+				return arrReq, nil
+			}
+		}
+	}
+	// 2. If user has auto approve perms, add movie to sonarr.
 	if hasPermission(userPerms, PERM_REQUEST_CONTENT_AUTO_APPROVE) {
 		slog.Debug("createSonarrRequest: User has auto approve permission.. sending request to Sonarr.")
 		ur.AutomaticSearch = server.AutomaticSearch
-		sonarr := arr.New(arr.SONARR, &server.Host, &server.Key)
 		resp, err := sonarr.AddContent(sonarr.BuildAddShowBody(ur))
 		if err != nil {
 			slog.Error("createSonarrRequest: Failed to add content", "error", err)
-			return errors.New("failed to add content")
+			return &ArrRequest{}, errors.New("failed to add content")
 		}
 		dbResp := db.Model(&ArrRequest{}).Where("id = ?", arrReq.ID).Update("arr_id", resp["id"])
 		if dbResp.Error != nil {
 			slog.Error("createSonarrRequest: Failed to update request in db", "error", err)
-			return errors.New("content was requested, but we failed to update the db")
+			return &ArrRequest{}, errors.New("content was requested, but we failed to update the db")
 		}
+		arrId, ok := resp["id"].(float64)
+		if !ok {
+			slog.Error("createSonarrRequest: Failed to cast arr id as an int", "id", resp["id"])
+			return &ArrRequest{}, errors.New("failed to get arr id")
+		}
+		arrReq.ArrID = int(arrId)
 	}
-	return nil
+	return arrReq, nil
 }
 
 func createRadarrRequest(db *gorm.DB, userId uint, userPerms int, ur arr.RadarrRequest) (*ArrRequest, error) {
@@ -167,6 +192,35 @@ func getRadarrRequestInfo(db *gorm.DB, requestId uint) (arr.MovieSerie, error) {
 		slog.Error("radarr info: Failed to get info", "error", err)
 		if respStatusCode == 404 {
 			slog.Error("radarr info: 404 returned.. content must've been removed.. removing request.")
+			err := deleteArrRequest(db, arrRequest.ID)
+			if err != nil {
+				return arr.MovieSerie{}, errors.New("failed to delete request for removed content")
+			} else {
+				return arr.MovieSerie{}, errors.New("request deleted")
+			}
+		}
+		return arr.MovieSerie{}, errors.New("failed to get info")
+	}
+	return resp, nil
+}
+
+func getSonarrRequestInfo(db *gorm.DB, requestId uint) (arr.MovieSerie, error) {
+	arrRequest, err := getArrRequest(db, requestId)
+	if err != nil {
+		slog.Error("sonarr info: Failed to get server", "error", err)
+		return arr.MovieSerie{}, errors.New("failed to get server")
+	}
+	server, err := getSonarr(arrRequest.ServerName)
+	if err != nil {
+		slog.Error("sonarr info: Failed to get server", "error", err)
+		return arr.MovieSerie{}, errors.New("failed to get server")
+	}
+	sonarr := arr.New(arr.SONARR, &server.Host, &server.Key)
+	resp, respStatusCode, err := sonarr.GetContent(arrRequest.ArrID)
+	if err != nil {
+		slog.Error("sonarr info: Failed to get info", "error", err)
+		if respStatusCode == 404 {
+			slog.Error("sonarr info: 404 returned.. content must've been removed.. removing request.")
 			err := deleteArrRequest(db, arrRequest.ID)
 			if err != nil {
 				return arr.MovieSerie{}, errors.New("failed to delete request for removed content")

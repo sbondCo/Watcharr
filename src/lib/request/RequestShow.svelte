@@ -1,7 +1,13 @@
 <script lang="ts">
   import axios from "axios";
   import Modal from "../Modal.svelte";
-  import type { ListBoxItem, SonarrSettings, SonarrTestResponse, TMDBShowDetails } from "@/types";
+  import type {
+    ArrRequestResponse,
+    ListBoxItem,
+    SonarrSettings,
+    SonarrTestResponse,
+    TMDBShowDetails
+  } from "@/types";
   import { notify } from "../util/notify";
   import DropDown from "../DropDown.svelte";
   import Setting from "../settings/Setting.svelte";
@@ -11,7 +17,7 @@
   const animeKeywordId = 210024;
 
   export let content: TMDBShowDetails;
-  export let onClose: () => void;
+  export let onClose: (r: ArrRequestResponse | undefined) => void;
 
   let servarrs: SonarrSettings[];
   let selectedServarrIndex: number;
@@ -76,7 +82,7 @@
         notify({ id: nid, text: "No Root Folder Found", type: "error" });
         return;
       }
-      await axios.post("/arr/son/request", {
+      const resp = await axios.post("/arr/son/request", {
         serverName: server.name,
         title: content.name,
         year: new Date(content.first_air_date)?.getFullYear(),
@@ -95,9 +101,11 @@
           };
         })
       });
-      notify({ id: nid, text: "Request complete", type: "success" });
       addRequestRunning = false;
-      onClose();
+      if (resp?.data) {
+        notify({ id: nid, text: "Request complete", type: "success" });
+        onClose(resp.data);
+      }
     } catch (err) {
       console.error("content request failed!", err);
       addRequestRunning = false;

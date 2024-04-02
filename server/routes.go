@@ -1095,15 +1095,62 @@ func (b *BaseRouter) addSonarrRoutes() {
 		if err == nil {
 			userId := c.MustGet("userId").(uint)
 			perms := c.GetInt("userPermissions")
-			err := createSonarrRequest(b.db, userId, perms, ur)
+			response, err := createSonarrRequest(b.db, userId, perms, ur)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 				return
 			}
-			c.Status(http.StatusOK)
+			c.JSON(http.StatusOK, response)
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	s.GET("/request/:tmdbId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
+		tmdbId, err := strconv.Atoi(c.Param("tmdbId"))
+		if err != nil {
+			slog.Error("Couldn't parse tmdbId", "tmdbId", tmdbId)
+			c.Status(400)
+			return
+		}
+		response, err := getArrRequestByTmdbId(b.db, SHOW, tmdbId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	s.GET("/status/:serverName/:arrId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
+		response, err := getSonarrQueueDetails(c.Param("serverName"), c.Param("arrId"))
+		if err != nil {
+			if err.Error() == "no details found" {
+				c.Status(http.StatusNoContent) // Item not found in queue.. missing
+				return
+			}
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+
+	s.GET("/info/:requestId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
+		requestId, err := strconv.ParseUint(c.Param("requestId"), 10, 64)
+		if err != nil {
+			slog.Error("/info/:requestId - requestId could not be parsed", "requestId", requestId)
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		response, err := getSonarrRequestInfo(b.db, uint(requestId))
+		if err != nil {
+			if err.Error() == "request deleted" {
+				c.JSON(http.StatusNotFound, ErrorResponse{Error: "request deleted"})
+				return
+			}
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
 	})
 }
 
@@ -1207,7 +1254,7 @@ func (b *BaseRouter) addRadarrRoutes() {
 	s.GET("/request/:tmdbId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		tmdbId, err := strconv.Atoi(c.Param("tmdbId"))
 		if err != nil {
-			slog.Error("Couldn't parse tmdbId")
+			slog.Error("Couldn't parse tmdbId", "tmdbId", tmdbId)
 			c.Status(400)
 			return
 		}
@@ -1235,7 +1282,7 @@ func (b *BaseRouter) addRadarrRoutes() {
 	s.GET("/info/:requestId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		requestId, err := strconv.ParseUint(c.Param("requestId"), 10, 64)
 		if err != nil {
-			slog.Error("/info/:requestId - requestId could not be parsed")
+			slog.Error("/info/:requestId - requestId could not be parsed", "requestId", requestId)
 			c.Status(http.StatusBadRequest)
 			return
 		}
