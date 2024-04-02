@@ -20,6 +20,46 @@
       if (v && typeof v !== "string") activeValue = v.value;
     }
   }
+
+  function handleKeyPress(event: KeyboardEvent) {
+    if (!open || disabled) return; // Don't handle if closed or disabled
+
+    const pressedLetter = event.key.toLowerCase();
+
+    // Filter options that start with the pressed letter (ignoring case)
+    const filteredOptions = options.filter(
+      (o) =>
+        typeof o === "string"
+          ? o.toLowerCase().startsWith(pressedLetter)
+          : (o as DropDownItem).value.toLowerCase().startsWith(pressedLetter)
+    );
+
+    // If there are filtered options, select the first one
+    if (filteredOptions.length > 0) {
+      active = typeof filteredOptions[0] === "string" ? filteredOptions[0] : filteredOptions[0].id;
+    }
+
+    // Scroll the view until "active" is in view
+    document.querySelectorAll('button').forEach(button => button.textContent === active && button.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+  }
+
+  let keypressListener: (() => void) | undefined;
+
+  $: {
+    // Add/remove event listener based on open state
+    const unsubscribe = () => {
+      if (keypressListener) {
+        document.removeEventListener("keypress", keypressListener);
+      }
+    };
+
+    unsubscribe();
+
+    if (open) {
+      keypressListener = () => handleKeyPress(event as KeyboardEvent);
+      document.addEventListener("keypress", keypressListener);
+    }
+  }
 </script>
 
 <div
@@ -111,6 +151,8 @@
       border-bottom-right-radius: 5px;
       background-color: $bg-color;
       z-index: 99;
+      max-height: 20vh;
+      overflow-y: auto;
 
       li {
         width: 100%;
