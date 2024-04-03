@@ -12,15 +12,6 @@
   let activeValue: string;
   let open = false;
 
-  $: {
-    if (typeof active === "string") {
-      activeValue = active;
-    } else {
-      const v = options.find((o) => (typeof o !== "string" ? o.id === active : false));
-      if (v && typeof v !== "string") activeValue = v.value;
-    }
-  }
-
   function handleKeyPress(event: KeyboardEvent) {
     if (!open || disabled) return; // Don't handle if closed or disabled
 
@@ -40,25 +31,18 @@
     }
 
     // Scroll the view until "active" is in view
-    document.querySelectorAll('button').forEach(button => button.textContent === active && button.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+    document.querySelectorAll('button').forEach(button => button.textContent === active && button.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   }
 
-  let keypressListener: (() => void) | undefined;
-
   $: {
-    // Add/remove event listener based on open state
-    const unsubscribe = () => {
-      if (keypressListener) {
-        document.removeEventListener("keypress", keypressListener);
-      }
-    };
-
-    unsubscribe();
-
-    if (open) {
-      keypressListener = () => handleKeyPress(event as KeyboardEvent);
-      document.addEventListener("keypress", keypressListener);
+    if (typeof active === "string") {
+      activeValue = active;
+    } else {
+      const v = options.find((o) => (typeof o !== "string" ? o.id === active : false));
+      if (v && typeof v !== "string") activeValue = v.value;
     }
+
+    document.addEventListener("keypress", handleKeyPress);
   }
 </script>
 
