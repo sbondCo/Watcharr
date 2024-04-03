@@ -1299,6 +1299,20 @@ func (b *BaseRouter) addRadarrRoutes() {
 	})
 }
 
+func (b *BaseRouter) addArrRequestRoutes() {
+	s := b.rg.Group("/arr/request").Use(AuthRequired(b.db))
+
+	// Get all requests (for manage_requests view), only for admins.
+	s.GET("/", AdminRequired(), func(c *gin.Context) {
+		response, err := getArrRequests(b.db)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response)
+	})
+}
+
 func (b *BaseRouter) addJobRoutes() {
 	job := b.rg.Group("/job").Use(AuthRequired(nil))
 

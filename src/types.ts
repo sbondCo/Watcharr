@@ -875,6 +875,7 @@ export interface ArrRequestResponse {
   updatedAt: Date;
   serverName: string;
   arrId: number;
+  content: Content;
 }
 
 export interface ArrDetailsResponse {

@@ -32,9 +32,20 @@ func deleteArrRequest(db *gorm.DB, id uint) error {
 	return nil
 }
 
+// Gets all requests.
+func getArrRequests(db *gorm.DB) ([]ArrRequest, error) {
+	var req []ArrRequest
+	resp := db.Preload("Content").Find(&req)
+	if resp.Error != nil {
+		slog.Error("getArrRequests: Failed to search for requests in db", "error", resp.Error)
+		return []ArrRequest{}, errors.New("failed to find requests")
+	}
+	return req, nil
+}
+
 func getArrRequest(db *gorm.DB, requestId uint) (ArrRequest, error) {
 	var req ArrRequest
-	resp := db.Where("id = ?", requestId).Find(&req)
+	resp := db.Where("id = ?", requestId).Take(&req)
 	if resp.Error != nil {
 		slog.Error("getArrRequest: Failed to search for request in db", "error", resp.Error)
 		return ArrRequest{}, errors.New("failed to find request")

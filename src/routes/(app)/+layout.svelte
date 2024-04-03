@@ -108,6 +108,11 @@
     subMenuShown = false;
   }
 
+  function requestManagement() {
+    goto("/arr_requests");
+    subMenuShown = false;
+  }
+
   function shareWatchedList() {
     const nid = notify({ type: "loading", text: "Getting link" });
     const ud = parseTokenPayload();
@@ -326,6 +331,7 @@
             {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
               <button class="plain" on:click={() => serverSettings()}>Settings</button>
               <button class="plain" on:click={() => userManagement()}>Users</button>
+              <button class="plain" on:click={() => requestManagement()}>Requests</button>
             {/if}
             <button class="plain" on:click={() => logout()}>Logout</button>
             <!-- svelte-ignore missing-declaration -->
