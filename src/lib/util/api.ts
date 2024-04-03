@@ -341,12 +341,17 @@ export async function unfollowUser(id: number) {
 export async function getAvailableRegions() {
   const regions = (await axios.get(`/content/regions`)).data as TMDBRegions;
   let regionCodes = [];
+  let regionNames = [];
 
   for (let i = 0; i < regions.results.length; i++) {
     regionCodes.push(regions.results[i].iso_3166_1);
+    regionNames.push(regions.results[i].english_name);
   }
 
-  return regionCodes;
+  return {
+    codes: regionCodes,
+    names: regionNames
+  };
 }
 
 /**

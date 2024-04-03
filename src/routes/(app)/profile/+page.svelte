@@ -30,11 +30,14 @@
   let getProfilePromise = getProfile();
   let jellyfinSyncModalOpen = false;
   let plexSyncModalOpen = false;
-
-  let countries: DropDownItem[] = [];
+  let selectedCountry: string;
+  let countries: any;
+  let countriesDropdown: DropDownItem[] = [];
 
   async function getProfile() {
     countries = await getAvailableRegions();
+    selectedCountry = countries.names[countries.codes.indexOf(settings?.country)];
+    countriesDropdown = countries.names;
     return (await axios.get(`/profile`)).data as Profile;
   }
 
@@ -200,10 +203,10 @@
 
       <Setting title="Country" desc="The country is used to show on what streaming provider you can watch content.">
         <DropDown
-          bind:active={settings.country}
-          options={countries}
+          bind:active={selectedCountry}
+          options={countriesDropdown}
           onChange={() => {
-            updateUserSetting("country", settings?.country);
+            updateUserSetting("country", countries.codes[countries.names.indexOf(selectedCountry)]);
           }}
         />
       </Setting>

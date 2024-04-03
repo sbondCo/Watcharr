@@ -31,12 +31,15 @@
   let jfDisabled = false;
   let tmdbkDisabled = false;
   let plexHostDisabled = false;
-
-  let countries: DropDownItem[] = [];
+  let selectedCountry: string;
+  let countries: any;
+  let countriesDropdown: DropDownItem[] = [];
 
   async function getServerConfig() {
-    countries = await getAvailableRegions();
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
+    countries = await getAvailableRegions();
+    selectedCountry = countries.names[countries.codes.indexOf(serverConfig.DEFAULT_COUNTRY)];
+    countriesDropdown = countries.names;
   }
 
   export function updateServerConfig<K extends keyof ServerConfig>(
@@ -126,10 +129,10 @@
         <h3>General</h3>
         <Setting title="Default Country for new users" desc="The country is used to show on what streaming provider you can watch content. This setting can also be changed per user and doesn't affect existing users.">
           <DropDown
-            options={countries}
-            bind:active={serverConfig.DEFAULT_COUNTRY}
+            options={countriesDropdown}
+            bind:active={selectedCountry}
             onChange={() => {
-              updateServerConfig("DEFAULT_COUNTRY", serverConfig.DEFAULT_COUNTRY);
+              updateServerConfig("DEFAULT_COUNTRY", countries.codes[countries.names.indexOf(selectedCountry)]);
             }}
           />
         </Setting>
