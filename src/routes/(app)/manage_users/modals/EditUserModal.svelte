@@ -85,6 +85,19 @@
       />
     </Setting>
 
+    <Setting title="Auto Approve Content Request" desc="Auto approve user's content requests." row>
+      <Checkbox
+        name="PERM_REQUEST_CONTENT_AUTO_APPROVE"
+        value={userHasPermission(
+          user.permissions,
+          UserPermission.PERM_REQUEST_CONTENT_AUTO_APPROVE
+        )}
+        toggled={() => {
+          userTogglePermission(UserPermission.PERM_REQUEST_CONTENT_AUTO_APPROVE);
+        }}
+      />
+    </Setting>
+
     <div class="btns">
       <button on:click={() => save()}>Save</button>
     </div>

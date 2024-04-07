@@ -179,7 +179,8 @@ export interface PrivateUser {
 export enum UserPermission {
   PERM_NONE = 1,
   PERM_ADMIN = 2,
-  PERM_REQUEST_CONTENT = 4
+  PERM_REQUEST_CONTENT = 4,
+  PERM_REQUEST_CONTENT_AUTO_APPROVE = 8
 }
 
 export interface Image {

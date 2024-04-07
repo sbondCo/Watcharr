@@ -161,6 +161,7 @@ func createSonarrRequest(db *gorm.DB, userId uint, userPerms int, ur arr.SonarrR
 			return &ArrRequest{}, errors.New("failed to get arr id")
 		}
 		arrReq.ArrID = int(arrId)
+		arrReq.Status = ARR_REQUEST_AUTO_APPROVED
 	}
 	return arrReq, nil
 }
@@ -221,6 +222,7 @@ func createRadarrRequest(db *gorm.DB, userId uint, userPerms int, ur arr.RadarrR
 			return &ArrRequest{}, errors.New("failed to get arr id")
 		}
 		arrReq.ArrID = int(arrId)
+		arrReq.Status = ARR_REQUEST_AUTO_APPROVED
 	}
 	return arrReq, nil
 }

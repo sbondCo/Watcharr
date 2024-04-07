@@ -68,10 +68,15 @@
         {#each allRequests as r}
           <div class={`request ${r.content.type}`}>
             <div class="poster">
-              <img src={`${baseURL}/img${r.content?.poster_path}`} alt="" />
+              <img src={`${baseURL}/img${r.content?.poster_path}`} alt="" loading="lazy" />
               <span title={r.serverName}>{r.serverName}</span>
             </div>
-            <img class="backdrop" src={`${baseURL}/img${r.content?.poster_path}`} alt="" />
+            <img
+              class="backdrop"
+              src={`${baseURL}/img${r.content?.poster_path}`}
+              alt=""
+              loading="lazy"
+            />
             <div class="wordsnstuff">
               <h2 class="norm">
                 <span>{r.content.title}</span>
@@ -137,12 +142,12 @@
     margin-top: 20px;
   }
 
-  .request {
+  .content .request {
     display: flex;
     flex-flow: row;
     position: relative;
     gap: 10px;
-    max-height: 333px;
+    max-height: 245px;
     padding: 10px;
     border-radius: 10px;
     background-color: $img-blend-multiply-bg-col;
@@ -164,6 +169,11 @@
         filter: blur(4px) grayscale(80%);
         mix-blend-mode: multiply;
         z-index: -2;
+
+        @media screen and (max-width: 400px) {
+          transform: unset;
+          height: 100%;
+        }
       }
     }
 
@@ -194,6 +204,7 @@
     & > div {
       display: flex;
       flex-flow: column;
+      gap: 5px;
 
       &.wordsnstuff {
         overflow: hidden;
@@ -202,11 +213,17 @@
 
       & > h2 {
         font-size: 22px;
+        white-space: wrap;
+        overflow: visible;
 
         & span:last-of-type {
           font-size: 16px;
           font-weight: 400;
           color: rgba(255, 255, 255, 0.7);
+        }
+
+        @media screen and (max-width: 600px) {
+          text-align: center;
         }
       }
 
@@ -241,6 +258,26 @@
             }
           }
         }
+
+        @media screen and (max-width: 400px) {
+          flex-flow: column;
+          align-items: center;
+          gap: 10px;
+
+          & button:first-of-type {
+            margin-left: unset;
+          }
+        }
+      }
+    }
+
+    @media screen and (max-width: 600px) {
+      flex-flow: column;
+      max-height: unset;
+      align-items: center;
+
+      .wordsnstuff p {
+        display: none;
       }
     }
   }
@@ -258,7 +295,6 @@
 
       h2 {
         overflow: hidden;
-        white-space: nowrap;
         text-overflow: ellipsis;
       }
 
