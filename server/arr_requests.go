@@ -244,7 +244,7 @@ func getRadarrRequestInfo(db *gorm.DB, requestId uint) (arr.MovieSerie, error) {
 	resp, respStatusCode, err := radarr.GetContent(arrRequest.ArrID)
 	if err != nil {
 		slog.Error("radarr info: Failed to get info", "error", err)
-		if respStatusCode == 404 {
+		if (arrRequest.Status == ARR_REQUEST_APPROVED || arrRequest.Status == ARR_REQUEST_AUTO_APPROVED) && respStatusCode == 404 {
 			slog.Error("radarr info: 404 returned.. content must've been removed.. removing request.")
 			err := deleteArrRequest(db, arrRequest.ID)
 			if err != nil {
@@ -277,7 +277,7 @@ func getSonarrRequestInfo(db *gorm.DB, requestId uint) (arr.MovieSerie, error) {
 	resp, respStatusCode, err := sonarr.GetContent(arrRequest.ArrID)
 	if err != nil {
 		slog.Error("sonarr info: Failed to get info", "error", err)
-		if respStatusCode == 404 {
+		if (arrRequest.Status == ARR_REQUEST_APPROVED || arrRequest.Status == ARR_REQUEST_AUTO_APPROVED) && respStatusCode == 404 {
 			slog.Error("sonarr info: 404 returned.. content must've been removed.. removing request.")
 			err := deleteArrRequest(db, arrRequest.ID)
 			if err != nil {
