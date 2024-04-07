@@ -246,3 +246,20 @@ export function msToAmountsOfTime(ms: number) {
   const days = Math.floor(ms / (1000 * 60 * 60 * 24));
   return { days, hours, minutes, seconds };
 }
+
+/** I'm no warden of time, this is as relative as it's getting. */
+export function toRelativeDate(d: Date): string {
+  if (!d) {
+    return "Unknown";
+  }
+  const dn = new Date(Date.now());
+  if (d.getFullYear() === dn.getFullYear()) {
+    if (d.getMonth() === dn.getMonth()) {
+      if (d.getDate() === dn.getDate()) {
+        return "Today";
+      }
+    }
+    return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]}`;
+  }
+  return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]} ${d.getFullYear()}`;
+}

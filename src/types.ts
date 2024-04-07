@@ -873,8 +873,8 @@ export type ArrRequestStatus = "PENDING" | "APPROVED" | "AUTO_APPROVED" | "DENIE
 
 export interface ArrRequestResponse {
   id: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   serverName: string;
   arrId: number;
   content: Content;

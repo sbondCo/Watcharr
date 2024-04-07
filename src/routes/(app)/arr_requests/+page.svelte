@@ -4,6 +4,7 @@
   import RequestMovie from "@/lib/request/RequestMovie.svelte";
   import RequestShow from "@/lib/request/RequestShow.svelte";
   import { baseURL } from "@/lib/util/api";
+  import { toRelativeDate } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import { type ArrRequestResponse, type TMDBMovieDetails, type TMDBShowDetails } from "@/types";
   import axios from "axios";
@@ -20,7 +21,7 @@
         allRequests = allRequests?.sort((a, b) => {
           if (b.status === "PENDING") return 1;
           if (a.status === "PENDING") return -1;
-          return 0;
+          return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
         });
       }
     } catch (err) {
@@ -84,7 +85,7 @@
                   <span
                     style="font-size: 12px; margin-top: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
                   >
-                    By {r.username}
+                    By {r.username} &#160;&#8226;&#160; {toRelativeDate(new Date(r.createdAt))}
                   </span>
                 {/if}
                 {#if r.status === "PENDING"}
