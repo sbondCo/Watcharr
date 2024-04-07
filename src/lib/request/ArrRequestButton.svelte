@@ -29,6 +29,10 @@
         console.warn("getInfo called before existingRequest exists.");
         return;
       }
+      if (existingRequest.status !== "APPROVED" && existingRequest.status !== "AUTO_APPROVED") {
+        console.debug("getInfo: Request is not in an approved state.. not continuing.");
+        return;
+      }
       const resp = await axios.get<ArrInfoResponse>(
         `/arr/${type === "movie" ? "rad" : "son"}/info/${existingRequest.id}`
       );
@@ -132,6 +136,9 @@
     }
     console.debug("ArrRequestButton: setExistingRequest: Running..", r);
     existingRequest = r;
+    if (existingRequest?.status) {
+      status = existingRequest?.status;
+    }
     getInfo();
   }
 
