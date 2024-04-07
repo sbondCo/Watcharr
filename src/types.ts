@@ -869,6 +869,8 @@ export interface RadarrTestResponse {
   rootFolders: RootFolder[];
 }
 
+export type ArrRequestStatus = "PENDING" | "APPROVED" | "AUTO_APPROVED" | "DENIED";
+
 export interface ArrRequestResponse {
   id: number;
   createdAt: Date;
@@ -876,6 +878,9 @@ export interface ArrRequestResponse {
   serverName: string;
   arrId: number;
   content: Content;
+  status: ArrRequestStatus;
+  requestJson: string;
+  username: string;
 }
 
 export interface ArrDetailsResponse {

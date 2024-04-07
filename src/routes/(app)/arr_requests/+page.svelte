@@ -1,17 +1,57 @@
 <script lang="ts">
-  import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
+  import RequestMovie from "@/lib/request/RequestMovie.svelte";
+  import RequestShow from "@/lib/request/RequestShow.svelte";
   import { baseURL } from "@/lib/util/api";
-  import { getOrdinalSuffix, monthsShort, userHasPermission } from "@/lib/util/helpers";
-  import { UserPermission, type ManagedUser, type ArrRequestResponse } from "@/types";
+  import { notify } from "@/lib/util/notify";
+  import { type ArrRequestResponse, type TMDBMovieDetails, type TMDBShowDetails } from "@/types";
   import axios from "axios";
 
   let allRequests: ArrRequestResponse[];
-  let editingUser: ManagedUser | undefined;
+  let showBeingApproved: TMDBShowDetails | undefined;
+  let movieBeingApproved: TMDBMovieDetails | undefined;
+  let beingApprovedOriginalRequest: ArrRequestResponse | undefined;
 
   async function getRequests() {
-    allRequests = (await axios.get(`/arr/request/`)).data as ArrRequestResponse[];
+    try {
+      allRequests = (await axios.get(`/arr/request/`)).data as ArrRequestResponse[];
+      if (allRequests?.length > 0) {
+        allRequests = allRequests?.sort((a, b) => {
+          if (b.status === "PENDING") return 1;
+          if (a.status === "PENDING") return -1;
+          return 0;
+        });
+      }
+    } catch (err) {
+      console.error("Failed to get requests!", err);
+      notify({ type: "error", text: "Failed when getting all requests!" });
+    }
+  }
+
+  async function deny(r: ArrRequestResponse) {
+    try {
+      await axios.post(`/arr/request/deny/${r.id}`);
+      getRequests();
+    } catch (err) {
+      console.error("Failed to deny request!", err);
+      notify({ type: "error", text: "Failed when denying request!" });
+    }
+  }
+
+  async function approve(r: ArrRequestResponse) {
+    console.debug("Approving request:", r);
+    if (r.content.type === "tv") {
+      showBeingApproved = (await axios.get(`/content/tv/${r.content.tmdbId}`))
+        .data as TMDBShowDetails;
+    } else if (r.content.type === "movie") {
+      movieBeingApproved = (await axios.get(`/content/movie/${r.content.tmdbId}`))
+        .data as TMDBMovieDetails;
+    } else {
+      notify({ type: "error", text: "Unknown content type, can't continue approval!" });
+      return;
+    }
+    beingApprovedOriginalRequest = r;
   }
 </script>
 
@@ -25,10 +65,13 @@
     {:then}
       <div class="request-container">
         {#each allRequests as r}
-          <div class="request">
-            <img src={`${baseURL}/img${r.content?.poster_path}`} alt="" />
-            <img src={`${baseURL}/img${r.content?.poster_path}`} alt="" />
-            <div>
+          <div class={`request ${r.content.type}`}>
+            <div class="poster">
+              <img src={`${baseURL}/img${r.content?.poster_path}`} alt="" />
+              <span title={r.serverName}>{r.serverName}</span>
+            </div>
+            <img class="backdrop" src={`${baseURL}/img${r.content?.poster_path}`} alt="" />
+            <div class="wordsnstuff">
               <h2 class="norm">
                 <span>{r.content.title}</span>
                 {#if r.content.release_date}
@@ -37,8 +80,19 @@
               </h2>
               <p>{r.content.overview}</p>
               <div class="btns">
-                <button class="decline">Decline</button>
-                <button class="approve">Approve</button>
+                {#if r.username}
+                  <span
+                    style="font-size: 12px; margin-top: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                  >
+                    By {r.username}
+                  </span>
+                {/if}
+                {#if r.status === "PENDING"}
+                  <button class="decline" on:click={() => deny(r)}>Decline</button>
+                  <button class="approve" on:click={() => approve(r)}>Approve</button>
+                {:else}
+                  <button disabled>{r.status}</button>
+                {/if}
               </div>
             </div>
           </div>
@@ -47,6 +101,30 @@
     {:catch err}
       <PageError error={err} pretty="Failed to fetch requests!" />
     {/await}
+
+    {#if showBeingApproved}
+      <RequestShow
+        content={showBeingApproved}
+        approveMode={true}
+        originalRequest={beingApprovedOriginalRequest}
+        onClose={() => {
+          showBeingApproved = undefined;
+          // HACK
+          getRequests();
+        }}
+      />
+    {:else if movieBeingApproved}
+      <RequestMovie
+        content={movieBeingApproved}
+        approveMode={true}
+        originalRequest={beingApprovedOriginalRequest}
+        onClose={() => {
+          movieBeingApproved = undefined;
+          // HACK
+          getRequests();
+        }}
+      />
+    {/if}
   </div>
 </div>
 
@@ -75,7 +153,7 @@
       height: 225px;
       border-radius: 6px;
 
-      &:first-of-type {
+      &.backdrop {
         position: absolute;
         left: 0;
         top: 0;
@@ -88,9 +166,38 @@
       }
     }
 
+    &.tv {
+      .poster > span {
+        background-color: #35c5f4;
+      }
+    }
+
+    .poster {
+      position: relative;
+
+      > span {
+        position: absolute;
+        bottom: 3px;
+        left: 3px;
+        color: black;
+        background-color: #ffc230;
+        padding: 3px 5px;
+        font-size: 11px;
+        border-radius: 5px;
+        max-width: calc(100% - 6px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
     & > div {
       display: flex;
       flex-flow: column;
+
+      &.wordsnstuff {
+        overflow: hidden;
+        width: 100%;
+      }
 
       & > h2 {
         font-size: 22px;

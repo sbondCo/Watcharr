@@ -1121,6 +1121,27 @@ func (b *BaseRouter) addSonarrRoutes() {
 		c.JSON(http.StatusOK, response)
 	})
 
+	s.POST("/request/approve/:id", PermRequired(PERM_ADMIN), func(c *gin.Context) {
+		var ur arr.SonarrRequest
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			requestId, err := strconv.Atoi(c.Param("id"))
+			if err != nil {
+				slog.Error("Couldn't parse request id", "request_id", requestId)
+				c.Status(400)
+				return
+			}
+			response, err := approveSonarrRequest(b.db, uint(requestId), ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
 	s.GET("/status/:serverName/:arrId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		response, err := getSonarrQueueDetails(c.Param("serverName"), c.Param("arrId"))
 		if err != nil {
@@ -1266,6 +1287,27 @@ func (b *BaseRouter) addRadarrRoutes() {
 		c.JSON(http.StatusOK, response)
 	})
 
+	s.POST("/request/approve/:id", PermRequired(PERM_ADMIN), func(c *gin.Context) {
+		var ur arr.RadarrRequest
+		err := c.ShouldBindJSON(&ur)
+		if err == nil {
+			requestId, err := strconv.Atoi(c.Param("id"))
+			if err != nil {
+				slog.Error("Couldn't parse request id", "request_id", requestId)
+				c.Status(400)
+				return
+			}
+			response, err := approveRadarrRequest(b.db, uint(requestId), ur)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
 	s.GET("/status/:serverName/:arrId", PermRequired(PERM_REQUEST_CONTENT), func(c *gin.Context) {
 		response, err := getRadarrQueueDetails(c.Param("serverName"), c.Param("arrId"))
 		if err != nil {
@@ -1310,6 +1352,22 @@ func (b *BaseRouter) addArrRequestRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, response)
+	})
+
+	// Deny a request (for manage_requests view), only for admins.
+	s.POST("/deny/:id", AdminRequired(), func(c *gin.Context) {
+		requestId, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			slog.Error("Couldn't parse request id", "request_id", requestId)
+			c.Status(400)
+			return
+		}
+		err = denyArrRequest(b.db, uint(requestId))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
 	})
 }
 

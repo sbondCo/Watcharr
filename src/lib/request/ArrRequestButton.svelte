@@ -3,6 +3,7 @@
     ArrDetailsResponse,
     ArrInfoResponse,
     ArrRequestResponse,
+    ArrRequestStatus,
     ContentType
   } from "@/types";
   import axios from "axios";
@@ -18,7 +19,8 @@
 
   let existingRequest: ArrRequestResponse | undefined;
   let info: ArrInfoResponse | undefined;
-  let status: ArrDetailsResponse | "available" | "requested" | undefined;
+  // The status, extra added string types are set in this file.
+  let status: ArrDetailsResponse | "available" | "requested" | ArrRequestStatus | undefined;
   let estimatedCompletionIn: string | undefined;
 
   async function getInfo() {
@@ -100,6 +102,12 @@
       if (existingRequestResp?.data && existingRequestResp?.data?.arrId) {
         existingRequest = existingRequestResp?.data;
         getInfo();
+      } else if (existingRequestResp?.data) {
+        // If no arrId, use status in request (pending, denied, etc)
+        console.log("No arrId in request resp.. using request status for btn status if set.");
+        if (existingRequestResp?.data?.status) {
+          status = existingRequestResp?.data?.status;
+        }
       }
     } catch (err) {
       console.error("ArrRequestButton: lookForExisting failed!", err);
@@ -161,6 +169,14 @@
   </button>
 {:else if status === "available"}
   <button disabled>Available</button>
+{:else if status === "PENDING"}
+  <button disabled>Pending</button>
+{:else if status === "APPROVED"}
+  <button disabled>Approved</button>
+{:else if status === "AUTO_APPROVED"}
+  <button disabled>Auto Approved</button>
+{:else if status === "DENIED"}
+  <button disabled>Denied</button>
 {:else}
   <button on:click={openRequestModal}>Request</button>
 {/if}
