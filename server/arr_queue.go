@@ -70,16 +70,16 @@ func getSonarrQueueDetails(serverName string, arrId string) (*SonarrDetailsRespo
 		slog.Error("getSonarrQueueDetails: Failed to get server", "error", err)
 		return &SonarrDetailsResponse{}, errors.New("failed to get server")
 	}
-	radarr := arr.New(arr.RADARR, &server.Host, &server.Key)
+	sonarr := arr.New(arr.SONARR, &server.Host, &server.Key)
 	// Run refresh downloads, likely won't be refreshed in time before we run GetQueueDetails below,
 	// but if the user calls this again, it should be, which is better than waiting a whole minute for
 	// refresh task to run automatically. This exists until a better solution is thought of.
-	_, err = radarr.RunCommand("RefreshMonitoredDownloads")
+	_, err = sonarr.RunCommand("RefreshMonitoredDownloads")
 	if err != nil {
 		slog.Error("getSonarrQueueDetails: Failed to refresh monitored downloads.", "error", err)
 	}
 	resp := arr.SonarrQueueDetails{}
-	err = radarr.GetQueueDetails(arrId, &resp)
+	err = sonarr.GetQueueDetails(arrId, &resp)
 	if err != nil {
 		slog.Error("getSonarrQueueDetails: Failed to add content", "error", err)
 		return &SonarrDetailsResponse{}, errors.New("failed to add content")
@@ -106,7 +106,13 @@ func getSonarrQueueDetails(serverName string, arrId string) (*SonarrDetailsRespo
 		totalSizeLeft += v.SizeLeft
 	}
 	dr.Progress = int(math.Round((1 - (totalSizeLeft / totalSize)) * 100))
+	// HACK: Statuses are not great, no easy way to get a good status, since there are multiple items to consider.
+	// At some point, we could add extra checks (ex. if all items (episodes) are paused, overall status can be set to paused).
+	// For now, this is good enough.
 	dr.Status = "requested"
+	if dr.Progress > 0 {
+		dr.Status = "downloading"
+	}
 	return &dr, nil
 }
 
