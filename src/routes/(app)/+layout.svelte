@@ -331,7 +331,10 @@
             {#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
               <button class="plain" on:click={() => serverSettings()}>Settings</button>
               <button class="plain" on:click={() => userManagement()}>Users</button>
-              <button class="plain" on:click={() => requestManagement()}>Requests</button>
+              {#if $serverFeatures.sonarr || $serverFeatures.radarr}
+                <!-- At least one (sonarr/radarr) should be enabled for requests menu item to display. -->
+                <button class="plain" on:click={() => requestManagement()}>Requests</button>
+              {/if}
             {/if}
             <button class="plain" on:click={() => logout()}>Logout</button>
             <!-- svelte-ignore missing-declaration -->

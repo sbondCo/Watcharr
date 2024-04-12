@@ -29,7 +29,11 @@
         console.warn("getInfo called before existingRequest exists.");
         return;
       }
-      if (existingRequest.status !== "APPROVED" && existingRequest.status !== "AUTO_APPROVED") {
+      if (
+        existingRequest.status !== "APPROVED" &&
+        existingRequest.status !== "AUTO_APPROVED" &&
+        existingRequest.status !== "FOUND"
+      ) {
         console.debug("getInfo: Request is not in an approved state.. not continuing.");
         return;
       }
@@ -174,7 +178,7 @@
       {/if}
     </span>
   </button>
-{:else if status === "available"}
+{:else if status === "available" || status === "FOUND"}
   <button disabled>Available</button>
 {:else if status === "PENDING"}
   <button disabled>Pending</button>

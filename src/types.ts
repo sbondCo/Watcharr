@@ -870,7 +870,7 @@ export interface RadarrTestResponse {
   rootFolders: RootFolder[];
 }
 
-export type ArrRequestStatus = "PENDING" | "APPROVED" | "AUTO_APPROVED" | "DENIED";
+export type ArrRequestStatus = "PENDING" | "APPROVED" | "AUTO_APPROVED" | "DENIED" | "FOUND";
 
 export interface ArrRequestResponse {
   id: number;

@@ -237,7 +237,10 @@ func request(host string, ep string, p map[string]string, resp interface{}) (int
 	// Run get request
 	res, err := http.Get(base.String())
 	if err != nil {
-		return res.StatusCode, err
+		if res != nil {
+			return res.StatusCode, err
+		}
+		return 0, err
 	}
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
