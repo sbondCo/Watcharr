@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"path"
+	"strconv"
 	"time"
 
 	"gorm.io/gorm"
@@ -168,6 +170,50 @@ func cacheContentMovie(db *gorm.DB, content TMDBMovieDetails, onlyUpdate bool) (
 	}
 
 	return c, nil
+}
+
+// Get content from our cache, or cache it if it doesn't exist.
+func getOrCacheContent(db *gorm.DB, contentType ContentType, tmdbId int) (Content, error) {
+	var content Content
+	// Look in db for content.
+	db.Where("type = ? AND tmdb_id = ?", contentType, tmdbId).Find(&content)
+	// Create content if not found from our db.
+	if content == (Content{}) {
+		slog.Debug("Content not in db, fetching...", "type", contentType, "tmdbId", tmdbId)
+
+		resp, err := tmdbAPIRequest("/"+string(contentType)+"/"+strconv.Itoa(tmdbId), map[string]string{})
+		if err != nil {
+			slog.Error("getOrCacheContent: content tmdb api request failed", "error", err)
+			return Content{}, errors.New("failed to find requested media")
+		}
+
+		if contentType == "movie" {
+			c := new(TMDBMovieDetails)
+			err := json.Unmarshal([]byte(resp), &c)
+			if err != nil {
+				slog.Error("Failed to unmarshal movie details", "error", err)
+				return Content{}, errors.New("failed to process movie details response")
+			}
+			content, err = cacheContentMovie(db, *c, false)
+			if err != nil {
+				slog.Error("getOrCacheContent: failed to cache movie content", "type", contentType, "content_id", tmdbId, "err", err)
+				return Content{}, errors.New("failed to cache content")
+			}
+		} else {
+			c := new(TMDBShowDetails)
+			err := json.Unmarshal(resp, &c)
+			if err != nil {
+				slog.Error("Failed to unmarshal tv details", "error", err)
+				return Content{}, errors.New("failed to process tv details response")
+			}
+			content, err = cacheContentTv(db, *c, false)
+			if err != nil {
+				slog.Error("getOrCacheContent: failed to cache tv content", "type", contentType, "content_id", tmdbId, "err", err)
+				return Content{}, errors.New("failed to cache content")
+			}
+		}
+	}
+	return content, nil
 }
 
 // Getting only region needed from api is not a feature yet

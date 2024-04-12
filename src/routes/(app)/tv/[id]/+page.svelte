@@ -27,6 +27,7 @@
   import { onMount } from "svelte";
   import RequestShow from "@/lib/request/RequestShow.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
+  import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
 
   export let data;
 
@@ -34,6 +35,7 @@
   let trailerShown = false;
   let requestModalShown = false;
   let jellyfinUrl: string | undefined;
+  let arrRequestButtonComp: ArrRequestButton;
 
   $: wListItem = $watchedList.find(
     (w) => w.content?.type === "tv" && w.content?.tmdbId === data.tvId
@@ -153,8 +155,13 @@
                 <Icon i="jellyfin" wh={14} />Play On Jellyfin
               </a>
             {/if}
-            {#if $serverFeatures.sonarr}
-              <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
+            {#if $serverFeatures.sonarr && data.tvId}
+              <ArrRequestButton
+                type="tv"
+                tmdbId={data.tvId}
+                openRequestModal={() => (requestModalShown = !requestModalShown)}
+                bind:this={arrRequestButtonComp}
+              />
             {/if}
           </div>
 
@@ -164,7 +171,15 @@
     </div>
 
     {#if requestModalShown}
-      <RequestShow content={show} onClose={() => (requestModalShown = false)} />
+      <RequestShow
+        content={show}
+        onClose={(reqResp) => {
+          requestModalShown = false;
+          if (reqResp) {
+            arrRequestButtonComp.setExistingRequest(reqResp);
+          }
+        }}
+      />
     {/if}
 
     <div class="page">

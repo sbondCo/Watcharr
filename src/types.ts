@@ -31,7 +31,8 @@ export type Icon =
   | "pencil"
   | "eye"
   | "star"
-  | "movary";
+  | "movary"
+  | "refresh";
 
 export type Theme = "light" | "dark";
 
@@ -178,7 +179,8 @@ export interface PrivateUser {
 export enum UserPermission {
   PERM_NONE = 1,
   PERM_ADMIN = 2,
-  PERM_REQUEST_CONTENT = 4
+  PERM_REQUEST_CONTENT = 4,
+  PERM_REQUEST_CONTENT_AUTO_APPROVE = 8
 }
 
 export interface Image {
@@ -866,6 +868,34 @@ export interface SonarrTestResponse {
 export interface RadarrTestResponse {
   qualityProfiles: QualityProfile[];
   rootFolders: RootFolder[];
+}
+
+export type ArrRequestStatus = "PENDING" | "APPROVED" | "AUTO_APPROVED" | "DENIED" | "FOUND";
+
+export interface ArrRequestResponse {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  serverName: string;
+  arrId: number;
+  content: Content;
+  status: ArrRequestStatus;
+  requestJson: string;
+  username: string;
+}
+
+export interface ArrDetailsResponse {
+  progress: number;
+  estimatedCompletionTime: string;
+  status: string;
+  trackedDownloadStatus: string;
+  trackedDownloadState: string;
+}
+
+export interface ArrInfoResponse {
+  hasFile: boolean;
+  isAvailable: boolean;
+  added: string;
 }
 
 export interface ServerFeatures {

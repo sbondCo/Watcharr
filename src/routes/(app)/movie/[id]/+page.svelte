@@ -8,6 +8,7 @@
   import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
   import { serverFeatures, watchedList } from "@/store";
   import type {
+    ArrDetailsResponse,
     TMDBContentCredits,
     TMDBContentCreditsCrew,
     TMDBMovieDetails,
@@ -26,6 +27,7 @@
   import RequestMovie from "@/lib/request/RequestMovie.svelte";
   import Error from "@/lib/Error.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
+  import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
 
   export let data;
 
@@ -33,6 +35,7 @@
   let requestModalShown = false;
   let trailerShown = false;
   let jellyfinUrl: string | undefined;
+  let arrRequestButtonComp: ArrRequestButton;
 
   $: wListItem = $watchedList.find(
     (w) => w.content?.type === "movie" && w.content?.tmdbId === data.movieId
@@ -41,6 +44,7 @@
   let movieId: number | undefined;
   let movie: TMDBMovieDetails | undefined;
   let pageError: Error | undefined;
+  let arrStatus: ArrDetailsResponse | undefined;
 
   onMount(() => {
     const unsubscribe = page.subscribe((value) => {
@@ -155,8 +159,13 @@
                 <Icon i="jellyfin" wh={14} />Play On Jellyfin
               </a>
             {/if}
-            {#if $serverFeatures.radarr}
-              <button on:click={() => (requestModalShown = !requestModalShown)}>Request</button>
+            {#if $serverFeatures.radarr && data.movieId}
+              <ArrRequestButton
+                type="movie"
+                tmdbId={data.movieId}
+                openRequestModal={() => (requestModalShown = !requestModalShown)}
+                bind:this={arrRequestButtonComp}
+              />
             {/if}
           </div>
 
@@ -166,7 +175,15 @@
     </div>
 
     {#if requestModalShown}
-      <RequestMovie content={movie} onClose={() => (requestModalShown = false)} />
+      <RequestMovie
+        content={movie}
+        onClose={(reqResp) => {
+          requestModalShown = false;
+          if (reqResp) {
+            arrRequestButtonComp.setExistingRequest(reqResp);
+          }
+        }}
+      />
     {/if}
 
     <div class="page">

@@ -7,7 +7,7 @@
 <style lang="scss">
   .loader {
     width: 16px;
-    height: 13px;
+    height: 12px;
     border: 2px solid #000;
     border-bottom-color: transparent;
     border-radius: 50%;

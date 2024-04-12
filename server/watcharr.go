@@ -81,6 +81,7 @@ func main() {
 		&Follow{},
 		&Image{},
 		&Game{},
+		&ArrRequest{},
 	)
 	if err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
@@ -140,6 +141,7 @@ func main() {
 	br.addFeatureRoutes()
 	br.addSonarrRoutes()
 	br.addRadarrRoutes()
+	br.addArrRequestRoutes()
 	br.addJobRoutes()
 	br.rg.Static("/img", path.Join(DataPath, "img"))
 

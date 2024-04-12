@@ -9,6 +9,7 @@
   --rating-color: black;
   --placeholder-color: #8e8e8e;
   --poster-rating-color: gold;
+  --img-blend-multiply-bg-col: rgba(0, 0, 0, 0.85);
 }
 
 :root.theme-dark {
@@ -22,6 +23,7 @@
   --rating-color: gold;
   --placeholder-color: #8e8e8e;
   --poster-rating-color: black;
+  --img-blend-multiply-bg-col: rgba(255, 255, 255, 0.03);
 }
 
 $bg-color: var(--bg-color);
@@ -36,8 +38,11 @@ $nav-color: var(--nav-color);
 $nav-height: 71px; // How tall the nav is naturally, usefull in some places.
 $poster-rating-color: var(--poster-rating-color);
 $poster-extra-detail-bg-color: rgba(46, 46, 46, 0.5);
+// Bg col of elements with image behind with mix-blend-mode: multiply where we want a little of image to come through.
+$img-blend-multiply-bg-col: var(--img-blend-multiply-bg-col);
 $error: #f3555a;
 $success: #28a745;
+$success-hover: #1e7e34;
 
 // For ratings that are on bg-color.
 $rating-color: var(--rating-color);

@@ -13,9 +13,10 @@ export default function tooltip(node: HTMLElement, opts: ToolTipOptions) {
   const tooltip = document.getElementById("tooltip");
 
   const show = () => {
-    if (!condition) return;
+    const trimmedText = text?.trim();
+    if (!condition || !trimmedText) return;
     if (tooltip) {
-      tooltip.innerHTML = text;
+      tooltip.innerHTML = trimmedText;
       const nrect = node.getBoundingClientRect();
       const trect = tooltip.getBoundingClientRect();
       nrect.y += window.scrollY; // Add scrollY to node dom rect so tooltip shows correcting when page is scrolled down
