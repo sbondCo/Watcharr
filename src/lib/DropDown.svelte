@@ -15,6 +15,7 @@
   let activeValue: string;
   let open = false;
   let ulElement: HTMLUListElement;
+  let mainElement: HTMLDivElement;
 
   function handleKeyPress(event: KeyboardEvent) {
     if (!open || disabled) return; // Don't handle if closed or disabled
@@ -55,10 +56,10 @@
   }
 
   onMount(() => {
-    document.addEventListener("keypress", handleKeyPress);
+    mainElement.addEventListener("keypress", handleKeyPress);
 
     return () => {
-      document.removeEventListener("keypress", handleKeyPress);
+      mainElement.removeEventListener("keypress", handleKeyPress);
     };
   });
 </script>
@@ -69,6 +70,7 @@
     typeof active === "undefined" ? "placeholder-shown" : "",
     blendIn ? "blend-in" : ""
   ].join(" ")}
+  bind:this={mainElement}
 >
   <button on:click={() => (open = !open)} {disabled}>
     {activeValue ? activeValue : placeholder}
