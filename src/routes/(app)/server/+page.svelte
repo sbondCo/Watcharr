@@ -4,18 +4,25 @@
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import { notify } from "@/lib/util/notify";
-  import type { Content, RadarrSettings, ServerConfig, SonarrSettings, DropDownItem } from "@/types";
+  import type {
+    Content,
+    RadarrSettings,
+    ServerConfig,
+    SonarrSettings,
+    DropDownItem
+  } from "@/types";
   import axios from "axios";
   import SonarrModal from "./modals/SonarrModal.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
   import SettingButton from "@/lib/settings/SettingButton.svelte";
   import RadarrModal from "./modals/RadarrModal.svelte";
-  import { getServerFeatures, getAvailableRegions } from "@/lib/util/api";
+  import { getServerFeatures } from "@/lib/util/api";
   import Stats from "@/lib/stats/Stats.svelte";
   import Error from "@/lib/Error.svelte";
   import Stat from "@/lib/stats/Stat.svelte";
   import TwitchModal from "./modals/TwitchModal.svelte";
+  import RegionDropDown from "@/lib/RegionDropDown.svelte";
 
   let serverConfig: ServerConfig;
   let sonarrModalOpen = false;
@@ -31,15 +38,13 @@
   let jfDisabled = false;
   let tmdbkDisabled = false;
   let plexHostDisabled = false;
+  let countryDisabled = false;
   let selectedCountry: string;
   let countries: any;
   let countriesDropdown: DropDownItem[] = [];
 
   async function getServerConfig() {
     serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
-    countries = await getAvailableRegions();
-    selectedCountry = countries.names[countries.codes.indexOf(serverConfig.DEFAULT_COUNTRY)];
-    countriesDropdown = countries.names;
   }
 
   export function updateServerConfig<K extends keyof ServerConfig>(
@@ -127,12 +132,18 @@
         <Spinner />
       {:then}
         <h3>General</h3>
-        <Setting title="Default Country for new users" desc="The country is used to show on what streaming provider you can watch content. This setting can also be changed per user and doesn't affect existing users.">
-          <DropDown
-            options={countriesDropdown}
-            bind:active={selectedCountry}
-            onChange={() => {
-              updateServerConfig("DEFAULT_COUNTRY", countries.codes[countries.names.indexOf(selectedCountry)]);
+        <Setting
+          title="Default Country"
+          desc="Default country for new users. This can be changed per user and won't affect existing users."
+        >
+          <RegionDropDown
+            selectedCountry={serverConfig.DEFAULT_COUNTRY}
+            disabled={countryDisabled}
+            onChange={(c) => {
+              countryDisabled = true;
+              updateServerConfig("DEFAULT_COUNTRY", c, () => {
+                countryDisabled = false;
+              });
             }}
           />
         </Setting>

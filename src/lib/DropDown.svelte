@@ -1,8 +1,11 @@
 <script lang="ts">
   import type { DropDownItem } from "@/types";
   import Icon from "./Icon.svelte";
+  import { onMount } from "svelte";
 
   export let options: string[] | DropDownItem[];
+  // If we are using DropDownItems[] as options.
+  export let isDropDownItem = false;
   export let active: string | number | undefined = undefined;
   export let placeholder: string;
   export let blendIn: boolean = false;
@@ -11,39 +14,54 @@
 
   let activeValue: string;
   let open = false;
+  let ulElement: HTMLUListElement;
 
   function handleKeyPress(event: KeyboardEvent) {
+    console.log("handlekyePress");
     if (!open || disabled) return; // Don't handle if closed or disabled
 
     const pressedLetter = event.key.toLowerCase();
 
     // Filter options that start with the pressed letter (ignoring case)
-    const filteredOptions = options.filter(
-      (o) =>
-        typeof o === "string"
-          ? o.toLowerCase().startsWith(pressedLetter)
-          : (o as DropDownItem).value.toLowerCase().startsWith(pressedLetter)
+    const filteredOptions = options.filter((o) =>
+      typeof o === "string"
+        ? o.toLowerCase().startsWith(pressedLetter)
+        : o.value.toLowerCase().startsWith(pressedLetter)
     );
 
     // If there are filtered options, select the first one
+    let f: string | number | undefined;
     if (filteredOptions.length > 0) {
-      active = typeof filteredOptions[0] === "string" ? filteredOptions[0] : filteredOptions[0].id;
+      f = typeof filteredOptions[0] === "string" ? filteredOptions[0] : filteredOptions[0].id;
     }
 
-    // Scroll the view until "active" is in view
-    document.querySelectorAll('button').forEach(button => button.textContent === active && button.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+    // Find first button with text content starting with letter pressed and scroll it into view.
+    const btns = ulElement?.querySelectorAll("button");
+    for (let i = 0; i < btns.length; i++) {
+      const btn = btns[i];
+      if (btn.textContent?.toLowerCase()?.startsWith(pressedLetter)) {
+        btn.scrollIntoView({ behavior: "smooth", block: "start" });
+        break;
+      }
+    }
   }
 
   $: {
-    if (typeof active === "string") {
+    if (typeof active === "string" && !isDropDownItem) {
       activeValue = active;
     } else {
       const v = options.find((o) => (typeof o !== "string" ? o.id === active : false));
       if (v && typeof v !== "string") activeValue = v.value;
     }
-
-    document.addEventListener("keypress", handleKeyPress);
   }
+
+  onMount(() => {
+    document.addEventListener("keypress", handleKeyPress);
+
+    return () => {
+      document.removeEventListener("keypress", handleKeyPress);
+    };
+  });
 </script>
 
 <div
@@ -57,7 +75,7 @@
     {activeValue ? activeValue : placeholder}
     <Icon i="chevron" facing={open ? "up" : "down"} />
   </button>
-  <ul>
+  <ul bind:this={ulElement}>
     {#each options.filter((o) => (typeof o === "string" ? o !== active : o.id !== active)) as o}
       <li>
         <button

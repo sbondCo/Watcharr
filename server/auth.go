@@ -425,6 +425,7 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 			dbUser.ThirdPartyAuth = resp.AccessToken
 			dbUser.Username = resp.User.Name
 			dbUser.Type = JELLYFIN_USER
+			dbUser.Country = &Config.DEFAULT_COUNTRY
 
 			dbRes = db.Create(&dbUser)
 			if dbRes.Error != nil {
@@ -487,6 +488,7 @@ func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
 				AuthToken:  lr.AuthToken,
 				AuthToken2: homeAuthToken,
 			})
+			dbUser.Country = &Config.DEFAULT_COUNTRY
 			dbRes = db.Create(&dbUser)
 			if dbRes.Error != nil {
 				slog.Error("loginPlex: Failed to create new user in db from plex response", "error", dbRes.Error)

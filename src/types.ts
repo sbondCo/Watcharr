@@ -659,11 +659,11 @@ export interface TMDBKeywords {
 }
 
 export interface TMDBRegions {
-	results: {
-		iso_3166_1:    string
-		english_name: string
-		native_name : string
-	}[];
+  results: {
+    iso_3166_1: string;
+    english_name: string;
+    native_name: string;
+  }[];
 }
 
 export interface ContentSearch {
@@ -813,7 +813,7 @@ export interface TwitchSettings {
 }
 
 export interface DropDownItem {
-  id: number;
+  id: number | string;
   value: string;
 }
 

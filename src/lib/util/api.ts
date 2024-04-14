@@ -11,8 +11,7 @@ import {
   type UserSettings,
   type Follow,
   type PlayedAddRequest,
-  type ActivityUpdateRequest,
-  type TMDBRegions
+  type ActivityUpdateRequest
 } from "@/types";
 import axios from "axios";
 import { get } from "svelte/store";
@@ -336,22 +335,6 @@ export async function unfollowUser(id: number) {
       console.error(err);
       notify({ id: nid, text: "Failed To Unfollow!", type: "error" });
     });
-}
-
-export async function getAvailableRegions() {
-  const regions = (await axios.get(`/content/regions`)).data as TMDBRegions;
-  let regionCodes = [];
-  let regionNames = [];
-
-  for (let i = 0; i < regions.results.length; i++) {
-    regionCodes.push(regions.results[i].iso_3166_1);
-    regionNames.push(regions.results[i].english_name);
-  }
-
-  return {
-    codes: regionCodes,
-    names: regionNames
-  };
 }
 
 /**

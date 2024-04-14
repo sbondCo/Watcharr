@@ -4,22 +4,28 @@ import (
 	"log/slog"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 // Location middleware
-func WhereaboutsRequired(db *gorm.DB) gin.HandlerFunc {
+func WhereaboutsRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId := c.MustGet("userId").(uint)
-		settings, err := userGetSettings(db, userId)
-
-		if err != nil {
-			slog.Error("Failed to get user settings", "error", err.Error())
+		region := c.Query("region")
+		slog.Debug("WhereaboutsRequired: middleware hit", "region", region)
+		if region == "" {
+			// If no region is passed, default to server region.
+			if Config.DEFAULT_COUNTRY != "" {
+				slog.Debug("WhereaboutsRequired: Using server default country.", "default_country", Config.DEFAULT_COUNTRY)
+				c.Set("userCountry", Config.DEFAULT_COUNTRY)
+				c.Next()
+				return
+			}
+			// If no server region set, default to US.
+			slog.Debug("WhereaboutsRequired: Using hard coded default (US).")
 			c.Set("userCountry", "US")
+			c.Next()
+			return
 		}
-
-		slog.Debug("WhereaboutsRequired middleware hit", "country", *settings.Country)
-		c.Set("userCountry", *settings.Country)
+		c.Set("userCountry", region)
 		c.Next()
 	}
 }

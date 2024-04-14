@@ -1,21 +1,21 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import Checkbox from "@/lib/Checkbox.svelte";
-  import DropDown from "@/lib/DropDown.svelte";
   import Error from "@/lib/Error.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
   import Stat from "@/lib/stats/Stat.svelte";
   import Stats from "@/lib/stats/Stats.svelte";
-  import { updateUserSetting, getAvailableRegions } from "@/lib/util/api";
+  import { updateUserSetting } from "@/lib/util/api";
   import { getOrdinalSuffix, monthsShort, toggleTheme } from "@/lib/util/helpers";
   import { appTheme, userInfo, userSettings } from "@/store";
-  import { UserType, type Image, type Profile, DropDownItem } from "@/types";
+  import { UserType, type Image, type Profile } from "@/types";
   import axios from "axios";
   import { notify } from "@/lib/util/notify";
   import UserAvatar from "@/lib/img/UserAvatar.svelte";
   import PwChangeModal from "@/routes/(app)/profile/modals/PwChangeModal.svelte";
   import SyncModal from "./modals/SyncModal.svelte";
+  import RegionDropDown from "@/lib/RegionDropDown.svelte";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -25,19 +25,14 @@
   let privateThoughtsDisabled = false;
   let exportDisabled = false;
   let hideSpoilersDisabled = false;
+  let countryDisabled = false;
   let includePreviouslyWatchedDisabled = false;
   let pwChangeModalOpen = false;
   let getProfilePromise = getProfile();
   let jellyfinSyncModalOpen = false;
   let plexSyncModalOpen = false;
-  let selectedCountry: string;
-  let countries: any;
-  let countriesDropdown: DropDownItem[] = [];
 
   async function getProfile() {
-    countries = await getAvailableRegions();
-    selectedCountry = countries.names[countries.codes.indexOf(settings?.country)];
-    countriesDropdown = countries.names;
     return (await axios.get(`/profile`)).data as Profile;
   }
 
@@ -201,12 +196,18 @@
         </div>
       </div>
 
-      <Setting title="Country" desc="The country is used to show on what streaming provider you can watch content.">
-        <DropDown
-          bind:active={selectedCountry}
-          options={countriesDropdown}
-          onChange={() => {
-            updateUserSetting("country", countries.codes[countries.names.indexOf(selectedCountry)]);
+      <Setting
+        title="Country"
+        desc="What country would you like to see available streaming providers for?"
+      >
+        <RegionDropDown
+          selectedCountry={settings?.country}
+          disabled={countryDisabled}
+          onChange={(c) => {
+            countryDisabled = true;
+            updateUserSetting("country", c, () => {
+              countryDisabled = false;
+            });
           }}
         />
       </Setting>
@@ -278,6 +279,7 @@
           }}
         />
       </Setting>
+
       <div class="row btns">
         <button on:click={() => goto("/import")}>Import</button>
         <button on:click={() => downloadWatchedList()} disabled={exportDisabled}>Export</button>

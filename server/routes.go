@@ -94,7 +94,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get movie details (for movie page)
-	content.Use(WhereaboutsRequired(b.db)).GET("/movie/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/movie/:id", WhereaboutsRequired(), cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -122,7 +122,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get tv details (for tv page)
-	content.Use(WhereaboutsRequired(b.db)).GET("/tv/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/tv/:id", WhereaboutsRequired(), cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -243,12 +243,12 @@ func (b *BaseRouter) addContentRoutes() {
 
 	// Available regions for watch providers
 	content.GET("/regions", func(c *gin.Context) {
-		content, err := regions()
+		r, err := regions()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, content)
+		c.JSON(http.StatusOK, r)
 	})
 }
 
@@ -761,10 +761,6 @@ func (b *BaseRouter) addUserRoutes() {
 		err := c.ShouldBindJSON(&ur)
 		if err == nil {
 			response, err := userUpdate(b.db, userId, ur)
-
-			// Flush cache after update, otherwise we will get old data on streaming providers after the users changes country
-			b.ms.Flush()
-
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
