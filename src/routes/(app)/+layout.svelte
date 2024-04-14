@@ -264,19 +264,6 @@
       <!-- Show on watched list and shared/followed watched lists -->
       {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/")}
         <button
-          class="plain other filter"
-          on:click={() => {
-            closeAllSubMenus("filter");
-            filterMenuShown = !filterMenuShown;
-          }}
-          use:tooltip={{ text: "Filter", pos: "bot", condition: !filterMenuShown }}
-        >
-          <Icon i="filter" />
-          {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
-            <div class="indicator"></div>
-          {/if}
-        </button>
-        <button
           class="plain other sort"
           on:click={() => {
             closeAllSubMenus("sort");
@@ -287,6 +274,19 @@
           <Icon i="sort" />
           <!-- Show indicator if not equal to default and second item in array is not falsy -->
           {#if $activeSort?.length === 2 && $activeSort[1] && JSON.stringify($activeSort) !== JSON.stringify(defaultSort)}
+            <div class="indicator"></div>
+          {/if}
+        </button>
+        <button
+          class="plain other filter"
+          on:click={() => {
+            closeAllSubMenus("filter");
+            filterMenuShown = !filterMenuShown;
+          }}
+          use:tooltip={{ text: "Filter", pos: "bot", condition: !filterMenuShown }}
+        >
+          <Icon i="filter" />
+          {#if $activeFilters?.type?.length > 0 || $activeFilters?.status?.length > 0}
             <div class="indicator"></div>
           {/if}
         </button>

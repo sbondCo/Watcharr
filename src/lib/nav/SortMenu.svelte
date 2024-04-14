@@ -63,6 +63,7 @@
 <style lang="scss">
   div {
     width: 180px;
+    right: 53px;
 
     &:before {
       left: 21px;
