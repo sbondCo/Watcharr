@@ -17,7 +17,6 @@
   let ulElement: HTMLUListElement;
 
   function handleKeyPress(event: KeyboardEvent) {
-    console.log("handlekyePress");
     if (!open || disabled) return; // Don't handle if closed or disabled
 
     const pressedLetter = event.key.toLowerCase();
