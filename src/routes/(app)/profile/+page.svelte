@@ -15,6 +15,7 @@
   import UserAvatar from "@/lib/img/UserAvatar.svelte";
   import PwChangeModal from "@/routes/(app)/profile/modals/PwChangeModal.svelte";
   import SyncModal from "./modals/SyncModal.svelte";
+  import RegionDropDown from "@/lib/RegionDropDown.svelte";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -24,6 +25,7 @@
   let privateThoughtsDisabled = false;
   let exportDisabled = false;
   let hideSpoilersDisabled = false;
+  let countryDisabled = false;
   let includePreviouslyWatchedDisabled = false;
   let pwChangeModalOpen = false;
   let getProfilePromise = getProfile();
@@ -194,6 +196,22 @@
         </div>
       </div>
 
+      <Setting
+        title="Country"
+        desc="What country would you like to see available streaming providers for?"
+      >
+        <RegionDropDown
+          selectedCountry={settings?.country}
+          disabled={countryDisabled}
+          onChange={(c) => {
+            countryDisabled = true;
+            updateUserSetting("country", c, () => {
+              countryDisabled = false;
+            });
+          }}
+        />
+      </Setting>
+
       <Setting title="Private" desc="Hide your profile from others?" row>
         <Checkbox
           name="private"
@@ -261,6 +279,7 @@
           }}
         />
       </Setting>
+
       <div class="row btns">
         <button on:click={() => goto("/import")}>Import</button>
         <button on:click={() => downloadWatchedList()} disabled={exportDisabled}>Export</button>

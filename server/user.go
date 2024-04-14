@@ -58,12 +58,16 @@ func userUpdate(db *gorm.DB, userId uint, ur UserSettings) (UserSettings, error)
 	if ur.IncludePreviouslyWatched != nil {
 		user.IncludePreviouslyWatched = ur.IncludePreviouslyWatched
 	}
+	if ur.Country != nil {
+		user.Country = ur.Country
+	}
 	db.Save(&user)
 	return UserSettings{
 		Private:                  user.Private,
 		PrivateThoughts:          user.PrivateThoughts,
 		HideSpoilers:             user.HideSpoilers,
 		IncludePreviouslyWatched: user.IncludePreviouslyWatched,
+		Country:                  user.Country,
 	}, nil
 }
 
@@ -80,6 +84,7 @@ func userGetSettings(db *gorm.DB, userId uint) (UserSettings, error) {
 		PrivateThoughts:          user.PrivateThoughts,
 		HideSpoilers:             user.HideSpoilers,
 		IncludePreviouslyWatched: user.IncludePreviouslyWatched,
+		Country:                  user.Country,
 	}, nil
 }
 

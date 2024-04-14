@@ -6,7 +6,7 @@
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
   import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
-  import { serverFeatures, watchedList } from "@/store";
+  import { serverFeatures, userSettings, watchedList } from "@/store";
   import type {
     ArrDetailsResponse,
     TMDBContentCredits,
@@ -28,6 +28,8 @@
   import Error from "@/lib/Error.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
   import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
+
+  $: settings = $userSettings;
 
   export let data;
 
@@ -66,7 +68,9 @@
         if (!movieId) {
           return;
         }
-        const data = (await axios.get(`/content/movie/${movieId}`)).data as TMDBMovieDetails;
+        const data = (
+          await axios.get(`/content/movie/${movieId}`, { params: { region: settings?.country } })
+        ).data as TMDBMovieDetails;
         if (data.videos?.results?.length > 0) {
           const t = data.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
           if (t?.key) {

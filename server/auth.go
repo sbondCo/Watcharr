@@ -89,6 +89,8 @@ type UserSettings struct {
 	// even if the watched item state has since been changed.
 	// Also if user wants to show in watched stats.
 	IncludePreviouslyWatched *bool `gorm:"default:false" json:"includePreviouslyWatched"`
+	// User's country to get correct content streaming providers.
+	Country *string `gorm:"default:'US'" json:"country"`
 }
 
 // Holds third party service auth tokens for users.
@@ -291,6 +293,8 @@ func register(ur *UserRegisterRequest, initialPerm int, db *gorm.DB) (AuthRespon
 		user.Permissions = initialPerm
 	}
 
+	user.Country = &Config.DEFAULT_COUNTRY
+
 	res := db.Create(&user)
 	if res.Error != nil {
 		// If error is because unique contraint failed.. user already exists
@@ -422,6 +426,7 @@ func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 			dbUser.ThirdPartyAuth = resp.AccessToken
 			dbUser.Username = resp.User.Name
 			dbUser.Type = JELLYFIN_USER
+			dbUser.Country = &Config.DEFAULT_COUNTRY
 
 			dbRes = db.Create(&dbUser)
 			if dbRes.Error != nil {
@@ -484,6 +489,7 @@ func loginPlex(lr *PlexLoginRequest, db *gorm.DB) (AuthResponse, error) {
 				AuthToken:  lr.AuthToken,
 				AuthToken2: homeAuthToken,
 			})
+			dbUser.Country = &Config.DEFAULT_COUNTRY
 			dbRes = db.Create(&dbUser)
 			if dbRes.Error != nil {
 				slog.Error("loginPlex: Failed to create new user in db from plex response", "error", dbRes.Error)

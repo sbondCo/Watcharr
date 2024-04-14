@@ -16,7 +16,7 @@
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
   import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
   import { getTopCrew } from "@/lib/util/helpers.js";
-  import { serverFeatures, watchedList } from "@/store";
+  import { serverFeatures, userSettings, watchedList } from "@/store";
   import type {
     TMDBContentCredits,
     TMDBContentCreditsCrew,
@@ -28,6 +28,8 @@
   import RequestShow from "@/lib/request/RequestShow.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
   import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
+
+  $: settings = $userSettings;
 
   export let data;
 
@@ -64,7 +66,9 @@
         if (!showId) {
           return;
         }
-        const data = (await axios.get(`/content/tv/${showId}`)).data as TMDBShowDetails;
+        const data = (
+          await axios.get(`/content/tv/${showId}`, { params: { region: settings?.country } })
+        ).data as TMDBShowDetails;
         if (data.videos?.results?.length > 0) {
           const t = data.videos.results.find((v) => v.type?.toLowerCase() === "trailer");
           if (t?.key) {

@@ -94,7 +94,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get movie details (for movie page)
-	content.Use(WhereaboutsRequired()).GET("/movie/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/movie/:id", WhereaboutsRequired(), cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -122,7 +122,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get tv details (for tv page)
-	content.Use(WhereaboutsRequired()).GET("/tv/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/tv/:id", WhereaboutsRequired(), cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
 			c.Status(400)
 			return
@@ -240,6 +240,16 @@ func (b *BaseRouter) addContentRoutes() {
 		}
 		c.JSON(http.StatusOK, content)
 	}))
+
+	// Available regions for watch providers
+	content.GET("/regions", func(c *gin.Context) {
+		r, err := regions()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, r)
+	})
 }
 
 func (b *BaseRouter) addGameRoutes() {
@@ -388,12 +398,8 @@ func (b *BaseRouter) addWatchedRoutes() {
 
 	watched.DELETE(":id", func(c *gin.Context) {
 		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			c.Status(400)
-			return
-		}
-		userId := c.MustGet("userId").(uint)
 		if err == nil {
+			userId := c.MustGet("userId").(uint)
 			response, err := removeWatched(b.db, userId, uint(id))
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})

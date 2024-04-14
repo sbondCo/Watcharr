@@ -151,6 +151,7 @@ export interface UserSettings {
   privateThoughts: boolean;
   hideSpoilers: boolean;
   includePreviouslyWatched: boolean;
+  country: string;
 }
 
 export interface ChangePasswordForm {
@@ -659,6 +660,14 @@ export interface TMDBKeywords {
   }[];
 }
 
+export interface TMDBRegions {
+  results: {
+    iso_3166_1: string;
+    english_name: string;
+    native_name: string;
+  }[];
+}
+
 export interface ContentSearch {
   page: number;
   results: (ContentSearchMovie | ContentSearchTv | ContentSearchPerson)[];
@@ -769,6 +778,7 @@ export interface ManagedUser {
 }
 
 export interface ServerConfig {
+  DEFAULT_COUNTRY: string;
   JELLYFIN_HOST: string;
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;
@@ -805,7 +815,7 @@ export interface TwitchSettings {
 }
 
 export interface DropDownItem {
-  id: number;
+  id: number | string;
   value: string;
 }
 

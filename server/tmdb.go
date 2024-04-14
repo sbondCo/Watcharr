@@ -491,6 +491,14 @@ type TMDBKeywords struct {
 	} `json:"results"`
 }
 
+type TMDBRegions struct {
+	Results []struct {
+		ISO3166_1    string `json:"iso_3166_1"`
+		English_Name string `json:"english_name"`
+		Native_Name  string `json:"native_name"`
+	} `json:"results"`
+}
+
 func getTMDBKey() string {
 	if Config.TMDB_KEY != "" {
 		return Config.TMDB_KEY

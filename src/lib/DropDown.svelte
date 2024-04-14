@@ -1,8 +1,11 @@
 <script lang="ts">
   import type { DropDownItem } from "@/types";
   import Icon from "./Icon.svelte";
+  import { onMount } from "svelte";
 
   export let options: string[] | DropDownItem[];
+  // If we are using DropDownItems[] as options.
+  export let isDropDownItem = false;
   export let active: string | number | undefined = undefined;
   export let placeholder: string;
   export let blendIn: boolean = false;
@@ -11,15 +14,54 @@
 
   let activeValue: string;
   let open = false;
+  let ulElement: HTMLUListElement;
+  let mainElement: HTMLDivElement;
+
+  function handleKeyPress(event: KeyboardEvent) {
+    if (!open || disabled) return; // Don't handle if closed or disabled
+
+    const pressedLetter = event.key.toLowerCase();
+
+    // Filter options that start with the pressed letter (ignoring case)
+    const filteredOptions = options.filter((o) =>
+      typeof o === "string"
+        ? o.toLowerCase().startsWith(pressedLetter)
+        : o.value.toLowerCase().startsWith(pressedLetter)
+    );
+
+    // If there are filtered options, select the first one
+    let f: string | number | undefined;
+    if (filteredOptions.length > 0) {
+      f = typeof filteredOptions[0] === "string" ? filteredOptions[0] : filteredOptions[0].id;
+    }
+
+    // Find first button with text content starting with letter pressed and scroll it into view.
+    const btns = ulElement?.querySelectorAll("button");
+    for (let i = 0; i < btns.length; i++) {
+      const btn = btns[i];
+      if (btn.textContent?.toLowerCase()?.startsWith(pressedLetter)) {
+        btn.scrollIntoView({ behavior: "smooth", block: "start" });
+        break;
+      }
+    }
+  }
 
   $: {
-    if (typeof active === "string") {
+    if (typeof active === "string" && !isDropDownItem) {
       activeValue = active;
     } else {
       const v = options.find((o) => (typeof o !== "string" ? o.id === active : false));
       if (v && typeof v !== "string") activeValue = v.value;
     }
   }
+
+  onMount(() => {
+    mainElement.addEventListener("keypress", handleKeyPress);
+
+    return () => {
+      mainElement.removeEventListener("keypress", handleKeyPress);
+    };
+  });
 </script>
 
 <div
@@ -28,12 +70,13 @@
     typeof active === "undefined" ? "placeholder-shown" : "",
     blendIn ? "blend-in" : ""
   ].join(" ")}
+  bind:this={mainElement}
 >
   <button on:click={() => (open = !open)} {disabled}>
     {activeValue ? activeValue : placeholder}
     <Icon i="chevron" facing={open ? "up" : "down"} />
   </button>
-  <ul>
+  <ul bind:this={ulElement}>
     {#each options.filter((o) => (typeof o === "string" ? o !== active : o.id !== active)) as o}
       <li>
         <button
@@ -111,6 +154,8 @@
       border-bottom-right-radius: 5px;
       background-color: $bg-color;
       z-index: 99;
+      max-height: 20vh;
+      overflow-y: auto;
 
       li {
         width: 100%;

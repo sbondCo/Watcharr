@@ -377,3 +377,13 @@ func upcomingTv() (TMDBUpcomingShows, error) {
 	}
 	return *resp, nil
 }
+
+func regions() (TMDBRegions, error) {
+	resp := new(TMDBRegions)
+	err := tmdbRequest("/watch/providers/regions", map[string]string{}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete regions request!", "error", err.Error())
+		return TMDBRegions{}, errors.New("failed to complete regions request")
+	}
+	return *resp, nil
+}
