@@ -177,10 +177,10 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 	// Probably was is a Watcharr export being imported, so it'll have all it's activity too.
 	if len(ar.Activity) > 0 {
 		slog.Debug("successfulImport: Importing activity")
-		for _, v := range ar.Activity {
-			activityDate := v.CustomDate
+		for i, v := range ar.Activity {
+			activityDate := ar.Activity[i].CustomDate
 			if activityDate == nil || activityDate.IsZero() {
-				activityDate = &v.CreatedAt
+				activityDate = &ar.Activity[i].CreatedAt
 			}
 			addedActivity, err := addActivity(db, userId, ActivityAddRequest{WatchedID: w.ID, Type: v.Type, Data: v.Data, CustomDate: activityDate})
 			if err == nil {
