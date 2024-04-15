@@ -14,7 +14,7 @@
   import SimilarContent from "@/lib/content/SimilarContent.svelte";
   import Title from "@/lib/content/Title.svelte";
   import VideoEmbedModal from "@/lib/content/VideoEmbedModal.svelte";
-  import { contentExistsOnJellyfin, updateWatched } from "@/lib/util/api";
+  import { contentExistsOnJellyfin, removeWatched, updateWatched } from "@/lib/util/api";
   import { getTopCrew } from "@/lib/util/helpers.js";
   import { serverFeatures, userSettings, watchedList } from "@/store";
   import type {
@@ -28,6 +28,7 @@
   import RequestShow from "@/lib/request/RequestShow.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
   import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
+  import tooltip from "@/lib/actions/tooltip.js";
 
   $: settings = $userSettings;
 
@@ -166,6 +167,18 @@
                 openRequestModal={() => (requestModalShown = !requestModalShown)}
                 bind:this={arrRequestButtonComp}
               />
+            {/if}
+            {#if wListItem}
+              <button
+                class="delete-btn"
+                on:click={() =>
+                  wListItem
+                    ? removeWatched(wListItem.id)
+                    : console.error("no wlistItem.. can't delete")}
+                use:tooltip={{ text: "Delete", pos: "bot" }}
+              >
+                <Icon i="trash" wh={19} />
+              </button>
             {/if}
           </div>
 
@@ -320,13 +333,14 @@
 
         p {
           font-size: 14px;
+          margin-bottom: 18px;
         }
 
         .btns {
           display: flex;
           flex-flow: row;
           gap: 8px;
-          margin-top: 18px;
+          margin-top: auto;
 
           a.btn,
           button {
@@ -345,6 +359,14 @@
               to {
                 width: 100%;
               }
+            }
+          }
+
+          .delete-btn {
+            margin-left: auto;
+
+            &:hover {
+              color: $error;
             }
           }
         }
