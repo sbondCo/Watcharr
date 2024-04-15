@@ -15,9 +15,11 @@
   import { page } from "$app/stores";
   import Error from "@/lib/Error.svelte";
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
-  import { updatePlayed } from "@/lib/util/api.js";
+  import { removeWatched, updatePlayed } from "@/lib/util/api.js";
   import GamePoster from "@/lib/poster/GamePoster.svelte";
   import { getPlayedDependedProps } from "@/lib/util/helpers";
+  import tooltip from "@/lib/actions/tooltip.js";
+  import Icon from "@/lib/Icon.svelte";
 
   export let data;
 
@@ -151,6 +153,18 @@
                 <VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
               {/if}
             {/if}
+            {#if wListItem}
+              <button
+                class="delete-btn"
+                on:click={() =>
+                  wListItem
+                    ? removeWatched(wListItem.id)
+                    : console.error("no wlistItem.. can't delete")}
+                use:tooltip={{ text: "Delete", pos: "bot" }}
+              >
+                <Icon i="trash" wh={19} />
+              </button>
+            {/if}
           </div>
 
           <!-- <ProvidersList providers={game["watch/providers"]} /> -->
@@ -268,13 +282,14 @@
 
         p {
           font-size: 14px;
+          margin-bottom: 18px;
         }
 
         .btns {
           display: flex;
           flex-flow: row;
           gap: 8px;
-          margin-top: 18px;
+          margin-top: auto;
 
           a.btn,
           button {
@@ -293,6 +308,14 @@
               to {
                 width: 100%;
               }
+            }
+          }
+
+          .delete-btn {
+            margin-left: auto;
+
+            &:hover {
+              color: $error;
             }
           }
         }

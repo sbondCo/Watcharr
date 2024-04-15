@@ -63,7 +63,7 @@
     <path d="M256 70H148l108 186-108 186h108l108-186z" fill="#e5a00d" />
   </svg>
 {:else if i === "trash"}
-  <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={wh} height={wh}>
     <path
       d="M112 112l20 320c.95 18.49 14.4 32 32 32h184c17.67 0 30.87-13.51 32-32l20-320"
       fill="none"
