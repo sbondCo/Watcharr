@@ -46,6 +46,12 @@
       Last Changed
     </button>
     <button
+      class={`plain ${sort[0] == "LASTFIN" ? sort[1].toLowerCase() : ""}`}
+      on:click={() => sortClicked("LASTFIN")}
+    >
+      Last Finished
+    </button>
+    <button
       class={`plain ${sort[0] == "RATING" ? sort[1].toLowerCase() : ""}`}
       on:click={() => sortClicked("RATING")}
     >
