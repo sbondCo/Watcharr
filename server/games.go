@@ -175,7 +175,7 @@ func addPlayed(db *gorm.DB, igdb *game.IGDB, userId uint, ar PlayedAddRequest, a
 	res := db.Create(&watched)
 	if res.Error != nil {
 		if res.Error == gorm.ErrDuplicatedKey {
-			res = db.Model(&Watched{}).Unscoped().Preload("Activity").Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Take(&watched)
+			res = db.Model(&Watched{}).Unscoped().Preload("Activity").Where("user_id = ? AND game_id = ?", userId, watched.GameID).Take(&watched)
 			if res.Error != nil {
 				return Watched{}, errors.New("content already on watched list. errored checking for soft deleted record")
 			}
@@ -183,7 +183,7 @@ func addPlayed(db *gorm.DB, igdb *game.IGDB, userId uint, ar PlayedAddRequest, a
 				return Watched{}, errors.New("content already on watched list")
 			} else {
 				slog.Info("addPlayed: Watched list item for this content exists as soft deleted record.. attempting to restore")
-				res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND content_id = ?", userId, watched.ContentID).Updates(map[string]interface{}{"status": ar.Status, "rating": ar.Rating, "deleted_at": nil})
+				res = db.Model(&Watched{}).Unscoped().Where("user_id = ? AND game_id = ?", userId, watched.GameID).Updates(map[string]interface{}{"status": ar.Status, "rating": ar.Rating, "deleted_at": nil})
 				watched.Status = ar.Status
 				watched.Rating = ar.Rating
 				if res.Error != nil {
