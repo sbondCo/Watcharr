@@ -85,10 +85,9 @@
 <style lang="scss">
   div.menu {
     width: 200px;
-    right: 35px;
 
     &:before {
-      left: 23px;
+      left: 38px;
     }
   }
 

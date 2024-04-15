@@ -72,6 +72,31 @@
       } else if (sort[0] === "LASTCHANGED") {
         if (sort[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
         else if (sort[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
+      } else if (sort[0] === "LASTFIN") {
+        const aLastFinishActivity = a.activity
+          .sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
+          .find(
+            (aa) =>
+              (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
+              (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
+          );
+        const bLastFinishActivity = b.activity
+          .sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
+          .find(
+            (aa) =>
+              (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
+              (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
+          );
+        if (!aLastFinishActivity) return 1;
+        if (!bLastFinishActivity) return -1;
+        if (sort[1] === "UP")
+          return (
+            Date.parse(aLastFinishActivity.updatedAt) - Date.parse(bLastFinishActivity.updatedAt)
+          );
+        else if (sort[1] === "DOWN")
+          return (
+            Date.parse(bLastFinishActivity.updatedAt) - Date.parse(aLastFinishActivity.updatedAt)
+          );
       } else if (sort[0] === "RATING") {
         if (sort[1] === "UP") return (a.rating ?? 0) - (b.rating ?? 0);
         else if (sort[1] === "DOWN") return (b.rating ?? 0) - (a.rating ?? 0);
