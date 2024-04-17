@@ -79,7 +79,13 @@
             />
             <div class="wordsnstuff">
               <h2 class="norm">
-                <span>{r.content.title}</span>
+                <a
+                  data-sveltekit-preload-data="tap"
+                  href={`/${r.content.type}/${r.content.tmdbId}`}
+                  class="plain"
+                >
+                  {r.content.title}
+                </a>
                 {#if r.content.release_date}
                   <span>{new Date(r.content.release_date).getFullYear()}</span>
                 {/if}
@@ -215,6 +221,10 @@
         font-size: 22px;
         white-space: wrap;
         overflow: visible;
+
+        a {
+          color: white;
+        }
 
         & span:last-of-type {
           font-size: 16px;
