@@ -8,6 +8,7 @@
   import GamePoster from "./poster/GamePoster.svelte";
   import { get } from "svelte/store";
   import { seasonAndEpToReadable } from "./util/helpers";
+  import { notify } from "./util/notify";
 
   export let list: Watched[];
   export let isPublicList: boolean = false;
@@ -57,89 +58,94 @@
   $: (watched, filters, sort), filt();
 
   function filt() {
-    // Set watched to list and sort it.
-    watched = list.sort((a, b) => {
-      if (sort[0] === "DATEADDED" && sort[1] === "UP") {
-        return Date.parse(a.createdAt) - Date.parse(b.createdAt);
-      } else if (sort[0] === "ALPHA") {
-        const atitle = a.content ? a.content.title : a.game ? a.game.name : "";
-        const btitle = b.content ? b.content.title : b.game ? b.game.name : "";
-        if (sort[1] === "UP") {
-          return atitle.localeCompare(btitle);
-        } else if (sort[1] === "DOWN") {
-          return btitle.localeCompare(atitle);
+    try {
+      // Set watched to list and sort it.
+      watched = list.sort((a, b) => {
+        if (sort[0] === "DATEADDED" && sort[1] === "UP") {
+          return Date.parse(a.createdAt) - Date.parse(b.createdAt);
+        } else if (sort[0] === "ALPHA") {
+          const atitle = a.content ? a.content.title : a.game ? a.game.name : "";
+          const btitle = b.content ? b.content.title : b.game ? b.game.name : "";
+          if (sort[1] === "UP") {
+            return atitle.localeCompare(btitle);
+          } else if (sort[1] === "DOWN") {
+            return btitle.localeCompare(atitle);
+          }
+        } else if (sort[0] === "LASTCHANGED") {
+          if (sort[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
+          else if (sort[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
+        } else if (sort[0] === "LASTFIN") {
+          const aLastFinishActivity = a.activity
+            ?.sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
+            ?.find(
+              (aa) =>
+                (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
+                (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
+            );
+          const bLastFinishActivity = b.activity
+            ?.sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
+            ?.find(
+              (aa) =>
+                (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
+                (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
+            );
+          if (!aLastFinishActivity) return 1;
+          if (!bLastFinishActivity) return -1;
+          if (sort[1] === "UP")
+            return (
+              Date.parse(aLastFinishActivity.updatedAt) - Date.parse(bLastFinishActivity.updatedAt)
+            );
+          else if (sort[1] === "DOWN")
+            return (
+              Date.parse(bLastFinishActivity.updatedAt) - Date.parse(aLastFinishActivity.updatedAt)
+            );
+        } else if (sort[0] === "RATING") {
+          if (sort[1] === "UP") return (a.rating ?? 0) - (b.rating ?? 0);
+          else if (sort[1] === "DOWN") return (b.rating ?? 0) - (a.rating ?? 0);
         }
-      } else if (sort[0] === "LASTCHANGED") {
-        if (sort[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
-        else if (sort[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
-      } else if (sort[0] === "LASTFIN") {
-        const aLastFinishActivity = a.activity
-          ?.sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
-          ?.find(
-            (aa) =>
-              (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
-              (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
-          );
-        const bLastFinishActivity = b.activity
-          ?.sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
-          ?.find(
-            (aa) =>
-              (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
-              (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
-          );
-        if (!aLastFinishActivity) return 1;
-        if (!bLastFinishActivity) return -1;
-        if (sort[1] === "UP")
-          return (
-            Date.parse(aLastFinishActivity.updatedAt) - Date.parse(bLastFinishActivity.updatedAt)
-          );
-        else if (sort[1] === "DOWN")
-          return (
-            Date.parse(bLastFinishActivity.updatedAt) - Date.parse(aLastFinishActivity.updatedAt)
-          );
-      } else if (sort[0] === "RATING") {
-        if (sort[1] === "UP") return (a.rating ?? 0) - (b.rating ?? 0);
-        else if (sort[1] === "DOWN") return (b.rating ?? 0) - (a.rating ?? 0);
+        // default DATEADDED DOWN
+        return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+      });
+      // If games type filter enabled, but games disabled on server, make sure we remove it from active filters.
+      if (!features.games) {
+        const af = get(activeFilters);
+        af.type = af.type?.filter((a) => a !== "game");
+        filters.type = filters.type.filter((f) => f !== "game");
       }
-      // default DATEADDED DOWN
-      return Date.parse(b.createdAt) - Date.parse(a.createdAt);
-    });
-    // If games type filter enabled, but games disabled on server, make sure we remove it from active filters.
-    if (!features.games) {
-      const af = get(activeFilters);
-      af.type = af.type?.filter((a) => a !== "game");
-      filters.type = filters.type.filter((f) => f !== "game");
-    }
-    // Now apply filters to watch list.
-    if (filters.status.length > 0 && filters.type.length > 0) {
-      // If status and type filters applied, combine both.
-      if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
-        watched = watched.filter(
-          (w) =>
-            (filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)) &&
-            filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
+      // Now apply filters to watch list.
+      if (filters.status.length > 0 && filters.type.length > 0) {
+        // If status and type filters applied, combine both.
+        if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
+          watched = watched.filter(
+            (w) =>
+              (filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)) &&
+              filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
+          );
+        } else {
+          watched = watched.filter(
+            (w) =>
+              filters.status.includes(w.status?.toLowerCase()) &&
+              filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
+          );
+        }
+      } else if (filters.type.length > 0) {
+        // Only filter type
+        watched = watched.filter((w) =>
+          filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
         );
-      } else {
-        watched = watched.filter(
-          (w) =>
-            filters.status.includes(w.status?.toLowerCase()) &&
-            filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
-        );
+      } else if (filters.status.length > 0) {
+        // Only filter status
+        if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
+          watched = watched.filter(
+            (w) => filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)
+          );
+        } else {
+          watched = watched.filter((w) => filters.status.includes(w.status?.toLowerCase()));
+        }
       }
-    } else if (filters.type.length > 0) {
-      // Only filter type
-      watched = watched.filter((w) =>
-        filters.type.includes(w.content ? w.content.type : w.game ? "game" : "")
-      );
-    } else if (filters.status.length > 0) {
-      // Only filter status
-      if (settings?.includePreviouslyWatched && filters.status.includes("finished")) {
-        watched = watched.filter(
-          (w) => filters.status.includes(w.status?.toLowerCase()) || contentWatchedPreviously(w)
-        );
-      } else {
-        watched = watched.filter((w) => filters.status.includes(w.status?.toLowerCase()));
-      }
+    } catch (err) {
+      console.error("filt: Failed to filter/sort current list!", err);
+      notify({ text: "Failed to filter/sort list!", type: "error", time: 6000 });
     }
   }
 
