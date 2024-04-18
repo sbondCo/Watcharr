@@ -74,15 +74,15 @@
         else if (sort[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
       } else if (sort[0] === "LASTFIN") {
         const aLastFinishActivity = a.activity
-          .sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
-          .find(
+          ?.sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
+          ?.find(
             (aa) =>
               (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
               (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
           );
         const bLastFinishActivity = b.activity
-          .sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
-          .find(
+          ?.sort((aa, bb) => Date.parse(bb.updatedAt) - Date.parse(aa.updatedAt))
+          ?.find(
             (aa) =>
               (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
               (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
