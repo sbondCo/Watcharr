@@ -10,8 +10,6 @@ description: Install and setup with Docker Compose.
 Installing Watcharr with a docker compose file is easy. You can copy the example below to get started:
 
 ```yaml title="docker-compose.yml"
-version: "3"
-
 services:
   watcharr:
     # The :latest tag is used for simplicity, it is recommended

@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   watcharr:
     # The :latest tag is used for simplicity, it is recommended
