@@ -2,10 +2,11 @@
   import { onMount } from "svelte";
   import Modal from "../Modal.svelte";
   import Icon from "../Icon.svelte";
+  import { notify } from "../util/notify";
 
   export let contentTitle: string;
   export let thoughts: string;
-  export let onChange: (newThoughts: string) => void;
+  export let onChange: (newThoughts: string) => Promise<boolean>;
 
   let modalOpen = false;
   let textarea: HTMLTextAreaElement | undefined;
@@ -39,7 +40,18 @@
   <Modal
     title="Your Thoughts"
     desc="View or modify your review/thoughts on {contentTitle}"
-    onClose={() => (modalOpen = false)}
+    onClose={async () => {
+      if (!textarea) {
+        notify({
+          text: "Failed to find the text box! Please copy your changes to avoid losing them and try again!"
+        });
+        return;
+      }
+      // If thoughts weren't changed or changes saved successfully.
+      if (thoughts === textarea.value || (await onChange(textarea.value))) {
+        modalOpen = false;
+      }
+    }}
   >
     <textarea
       name="Thoughts"
@@ -48,13 +60,6 @@
       value={thoughts}
       bind:this={textarea}
       on:input={resizeTextarea}
-      on:blur={(e) => {
-        if (thoughts === e.currentTarget.value) {
-          // thoughts didn't change
-          return;
-        }
-        onChange(e.currentTarget?.value);
-      }}
     />
   </Modal>
 {/if}

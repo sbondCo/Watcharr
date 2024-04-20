@@ -70,12 +70,16 @@
     })();
   }
 
-  function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
+  async function contentChanged(
+    newStatus?: WatchedStatus,
+    newRating?: number,
+    newThoughts?: string
+  ): Promise<boolean> {
     if (!gameId) {
       console.error("contentChanged: no gameId");
-      return;
+      return false;
     }
-    updatePlayed(gameId, newStatus, newRating, newThoughts);
+    return await updatePlayed(gameId, newStatus, newRating, newThoughts);
   }
 </script>
 
@@ -182,7 +186,7 @@
             contentTitle={game.name}
             thoughts={wListItem?.thoughts}
             onChange={(newThoughts) => {
-              contentChanged(undefined, undefined, newThoughts);
+              return contentChanged(undefined, undefined, newThoughts);
             }}
           />
         {/if}

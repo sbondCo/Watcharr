@@ -103,8 +103,16 @@
     return credits;
   }
 
-  function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
-    updateWatched(data.movieId, "movie", newStatus, newRating, newThoughts);
+  async function contentChanged(
+    newStatus?: WatchedStatus,
+    newRating?: number,
+    newThoughts?: string
+  ): Promise<boolean> {
+    if (!data.movieId) {
+      console.error("contentChanged: no movieId");
+      return false;
+    }
+    return await updateWatched(data.movieId, "movie", newStatus, newRating, newThoughts);
   }
 </script>
 
@@ -214,7 +222,7 @@
             contentTitle={movie.title}
             thoughts={wListItem?.thoughts}
             onChange={(newThoughts) => {
-              contentChanged(undefined, undefined, newThoughts);
+              return contentChanged(undefined, undefined, newThoughts);
             }}
           />
         {/if}

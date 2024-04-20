@@ -101,8 +101,16 @@
     return credits;
   }
 
-  function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
-    updateWatched(data.tvId, "tv", newStatus, newRating, newThoughts);
+  async function contentChanged(
+    newStatus?: WatchedStatus,
+    newRating?: number,
+    newThoughts?: string
+  ): Promise<boolean> {
+    if (!data.tvId) {
+      console.error("contentChanged: no tvId");
+      return false;
+    }
+    return await updateWatched(data.tvId, "tv", newStatus, newRating, newThoughts);
   }
 </script>
 
@@ -210,7 +218,7 @@
             contentTitle={show.name}
             thoughts={wListItem?.thoughts}
             onChange={(newThoughts) => {
-              contentChanged(undefined, undefined, newThoughts);
+              return contentChanged(undefined, undefined, newThoughts);
             }}
           />
         {/if}
