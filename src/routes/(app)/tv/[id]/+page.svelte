@@ -29,6 +29,7 @@
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
   import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
   import tooltip from "@/lib/actions/tooltip.js";
+  import MyThoughts from "@/lib/content/MyThoughts.svelte";
 
   $: settings = $userSettings;
 
@@ -100,8 +101,16 @@
     return credits;
   }
 
-  function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
-    updateWatched(data.tvId, "tv", newStatus, newRating, newThoughts);
+  async function contentChanged(
+    newStatus?: WatchedStatus,
+    newRating?: number,
+    newThoughts?: string
+  ): Promise<boolean> {
+    if (!data.tvId) {
+      console.error("contentChanged: no tvId");
+      return false;
+    }
+    return await updateWatched(data.tvId, "tv", newStatus, newRating, newThoughts);
   }
 </script>
 
@@ -205,17 +214,11 @@
         <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
         <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
         {#if wListItem}
-          <textarea
-            name="Thoughts"
-            rows="3"
-            placeholder={`My thoughts on ${show.name}`}
-            value={wListItem?.thoughts}
-            on:blur={(e) => {
-              if (wListItem?.thoughts === e.currentTarget.value) {
-                // thoughts didn't change
-                return;
-              }
-              contentChanged(undefined, undefined, e.currentTarget?.value);
+          <MyThoughts
+            contentTitle={show.name}
+            thoughts={wListItem?.thoughts}
+            onChange={(newThoughts) => {
+              return contentChanged(undefined, undefined, newThoughts);
             }}
           />
         {/if}
@@ -403,6 +406,10 @@
     flex-flow: column;
     gap: 10px;
     max-width: 380px;
+
+    @media screen and (max-width: 420px) {
+      max-width: 340px;
+    }
   }
 
   .creators {

@@ -22,21 +22,22 @@ export const baseURL = MODE === "development" ? "http://127.0.0.1:3080/api" : "/
 
 /**
  * Updates watched item with new status, rating or thoughts.
+ * @returns Was success?
  */
-function _updateWatched(
+async function _updateWatched(
   wEntry: Watched,
   status?: WatchedStatus,
   rating?: number,
   thoughts?: string
-) {
+): Promise<boolean> {
   const nid = notify({ text: `Saving`, type: "loading" });
-  if (!status && !rating && typeof thoughts === "undefined") return;
+  if (!status && !rating && typeof thoughts === "undefined") return false;
   const obj = {} as WatchedUpdateRequest;
   if (status) obj.status = status;
   if (rating) obj.rating = rating;
   if (typeof thoughts !== "undefined") obj.thoughts = thoughts;
   if (thoughts === "") obj.removeThoughts = true;
-  axios
+  return await axios
     .put<WatchedUpdateResponse>(`/watched/${wEntry.id}`, obj)
     .then((resp) => {
       if (status) wEntry.status = status;
@@ -55,10 +56,12 @@ function _updateWatched(
       }
       watchedList.update((w) => w);
       notify({ id: nid, text: `Saved!`, type: "success" });
+      return true;
     })
     .catch((err) => {
       console.error(err);
       notify({ id: nid, text: "Failed To Update!", type: "error" });
+      return false;
     });
 }
 
@@ -68,27 +71,26 @@ function _updateWatched(
  * @param contentType show/movie
  * @param status
  * @param rating
- * @returns
+ * @returns Was success?
  */
-export function updateWatched(
+export async function updateWatched(
   contentId: number,
   contentType: MediaType,
   status?: WatchedStatus,
   rating?: number,
   thoughts?: string
-) {
+): Promise<boolean> {
   // If item is already in watched store, run update request instead
   const wList = get(watchedList);
   const wEntry = wList.find(
     (w) => w.content?.tmdbId === contentId && w.content?.type === contentType
   );
   if (wEntry?.id) {
-    _updateWatched(wEntry, status, rating, thoughts);
-    return;
+    return await _updateWatched(wEntry, status, rating, thoughts);
   }
   // Add new watched item
   const nid = notify({ text: `Adding`, type: "loading" });
-  axios
+  return await axios
     .post("/watched", {
       contentId,
       contentType,
@@ -100,10 +102,12 @@ export function updateWatched(
       wList.push(resp.data as Watched);
       watchedList.update(() => wList);
       notify({ id: nid, text: `Added!`, type: "success" });
+      return true;
     })
     .catch((err) => {
       console.error(err);
       notify({ id: nid, text: "Failed To Add!", type: "error" });
+      return false;
     });
 }
 
@@ -134,22 +138,21 @@ export function removeWatched(id: number) {
     });
 }
 
-export function updatePlayed(
+export async function updatePlayed(
   igdbId: number,
   status?: WatchedStatus,
   rating?: number,
   thoughts?: string
-) {
+): Promise<boolean> {
   // If item is already in watched store, run update request instead
   const wList = get(watchedList);
   const wEntry = wList.find((w) => w.game?.igdbId === igdbId);
   if (wEntry?.id) {
-    _updateWatched(wEntry, status, rating, thoughts);
-    return;
+    return await _updateWatched(wEntry, status, rating, thoughts);
   }
   // Add new played item
   const nid = notify({ text: `Adding`, type: "loading" });
-  axios
+  return await axios
     .post("/game/played", {
       igdbId,
       rating,
@@ -160,10 +163,12 @@ export function updatePlayed(
       wList.push(resp.data as Watched);
       watchedList.update(() => wList);
       notify({ id: nid, text: `Added!`, type: "success" });
+      return true;
     })
     .catch((err) => {
       console.error(err);
       notify({ id: nid, text: "Failed To Add!", type: "error" });
+      return false;
     });
 }
 

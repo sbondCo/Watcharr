@@ -20,6 +20,7 @@
   import { getPlayedDependedProps } from "@/lib/util/helpers";
   import tooltip from "@/lib/actions/tooltip.js";
   import Icon from "@/lib/Icon.svelte";
+  import MyThoughts from "@/lib/content/MyThoughts.svelte";
 
   export let data;
 
@@ -69,12 +70,16 @@
     })();
   }
 
-  function contentChanged(newStatus?: WatchedStatus, newRating?: number, newThoughts?: string) {
+  async function contentChanged(
+    newStatus?: WatchedStatus,
+    newRating?: number,
+    newThoughts?: string
+  ): Promise<boolean> {
     if (!gameId) {
       console.error("contentChanged: no gameId");
-      return;
+      return false;
     }
-    updatePlayed(gameId, newStatus, newRating, newThoughts);
+    return await updatePlayed(gameId, newStatus, newRating, newThoughts);
   }
 </script>
 
@@ -177,17 +182,11 @@
         <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
         <Status status={wListItem?.status} isForGame={true} onChange={(n) => contentChanged(n)} />
         {#if wListItem}
-          <textarea
-            name="Thoughts"
-            rows="3"
-            placeholder={`My thoughts on ${game.name}`}
-            value={wListItem?.thoughts}
-            on:blur={(e) => {
-              if (wListItem?.thoughts === e.currentTarget.value) {
-                // thoughts didn't change
-                return;
-              }
-              contentChanged(undefined, undefined, e.currentTarget?.value);
+          <MyThoughts
+            contentTitle={game.name}
+            thoughts={wListItem?.thoughts}
+            onChange={(newThoughts) => {
+              return contentChanged(undefined, undefined, newThoughts);
             }}
           />
         {/if}
@@ -352,6 +351,10 @@
     flex-flow: column;
     gap: 10px;
     max-width: 380px;
+
+    @media screen and (max-width: 420px) {
+      max-width: 340px;
+    }
   }
 
   .creators {
