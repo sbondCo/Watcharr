@@ -402,6 +402,10 @@
     flex-flow: column;
     gap: 10px;
     max-width: 380px;
+
+    @media screen and (max-width: 420px) {
+      max-width: 340px;
+    }
   }
 
   .creators {
