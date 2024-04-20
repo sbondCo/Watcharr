@@ -39,7 +39,7 @@
 {#if modalOpen}
   <Modal
     title="Your Thoughts"
-    desc="View or modify your review/thoughts on {contentTitle}"
+    desc="View or modify your thoughts on {contentTitle}"
     onClose={async () => {
       if (!textarea) {
         notify({
