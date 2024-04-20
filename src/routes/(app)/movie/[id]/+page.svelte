@@ -29,6 +29,7 @@
   import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
   import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
   import tooltip from "@/lib/actions/tooltip.js";
+  import MyThoughts from "@/lib/content/MyThoughts.svelte";
 
   $: settings = $userSettings;
 
@@ -209,17 +210,11 @@
         <Rating rating={wListItem?.rating} onChange={(n) => contentChanged(undefined, n)} />
         <Status status={wListItem?.status} onChange={(n) => contentChanged(n)} />
         {#if wListItem}
-          <textarea
-            name="Thoughts"
-            rows="3"
-            placeholder={`My thoughts on ${movie.title}`}
-            value={wListItem?.thoughts}
-            on:blur={(e) => {
-              if (wListItem?.thoughts === e.currentTarget.value) {
-                // thoughts didn't change
-                return;
-              }
-              contentChanged(undefined, undefined, e.currentTarget?.value);
+          <MyThoughts
+            contentTitle={movie.title}
+            thoughts={wListItem?.thoughts}
+            onChange={(newThoughts) => {
+              contentChanged(undefined, undefined, newThoughts);
             }}
           />
         {/if}
