@@ -4,10 +4,10 @@
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
   import { activeFilters, activeSort, serverFeatures, userSettings } from "@/store";
-  import type { Watched, WatchedEpisode, WatchedSeason } from "@/types";
+  import type { Watched } from "@/types";
   import GamePoster from "./poster/GamePoster.svelte";
   import { get } from "svelte/store";
-  import { getLatestWatchedInTv, seasonAndEpToReadable } from "./util/helpers";
+  import { getLatestWatchedInTv } from "./util/helpers";
   import { notify } from "./util/notify";
 
   export let list: Watched[];
