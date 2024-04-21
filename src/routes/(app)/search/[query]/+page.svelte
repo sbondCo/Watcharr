@@ -246,6 +246,15 @@
         &[data-active="true"] {
           outline: 3px solid $accent-color;
         }
+
+        @media screen and (max-width: 500px) {
+          flex-flow: column;
+        }
+      }
+
+      @media screen and (max-width: 500px) {
+        width: 100%;
+        justify-content: center;
       }
     }
   }
