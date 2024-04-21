@@ -212,15 +212,12 @@
     align-items: center;
     gap: 10px;
 
-    h2 {
-      margin-right: 5px;
-    }
-
     div {
       display: flex;
       flex-flow: row;
       flex-wrap: wrap;
       gap: 10px;
+      margin: 0 15px;
 
       button {
         display: flex;
