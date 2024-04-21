@@ -2,6 +2,7 @@
   import { wlDetailedView } from "@/store";
   import type { WLDetailedViewOption } from "@/types";
   import { get } from "svelte/store";
+  import { page } from "$app/stores";
 
   function detailClicked(d: WLDetailedViewOption) {
     let dv = get(wlDetailedView);
@@ -16,7 +17,7 @@
   $: dve = $wlDetailedView;
 </script>
 
-<div class="menu">
+<div class={`menu${$page.url?.pathname.startsWith("/search/") ? " on-search-page" : ""}`}>
   <div class="inner">
     <h4 class="norm sm-caps">Shown Details</h4>
     <button
@@ -54,6 +55,10 @@
     &:before {
       left: 3px;
     }
+  }
+
+  div.menu.on-search-page:before {
+    left: 86px;
   }
 
   div.inner {
