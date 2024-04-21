@@ -22,11 +22,7 @@
   import GamePoster from "@/lib/poster/GamePoster.svelte";
   import { get } from "svelte/store";
   import { notify } from "@/lib/util/notify.js";
-
-  export let data;
-
-  $: searchQ = $searchQuery;
-  $: wList = $watchedList;
+  import Icon from "@/lib/Icon.svelte";
 
   type GameWithMediaType = GameSearch & { media_type: "game" };
   type CombinedResult =
@@ -34,12 +30,25 @@
     | ContentSearchTv
     | ContentSearchPerson
     | GameWithMediaType;
+  type SearchFilterTypes = MediaType | "game";
+
+  export let data;
+
+  let allSearchResults: CombinedResult[];
+  let searchResults: CombinedResult[];
+  let activeSearchFilter: SearchFilterTypes | undefined;
+
+  $: searchQ = $searchQuery;
+  $: wList = $watchedList;
+  $: (allSearchResults, activeSearchFilter), filterResults();
 
   async function search(query: string) {
     const f = get(serverFeatures);
     if (!f.games) {
       console.log("Search: Only for movies/tv");
-      return (await axios.get<ContentSearch>(`/content/${query}`)).data.results;
+      allSearchResults = (await axios.get<ContentSearch>(`/content/${query}`)).data.results;
+      searchResults = allSearchResults;
+      return;
     }
     console.log("Search: For movies/tv and games");
     // To get around promise.all rejecting both promises when one fails,
@@ -61,36 +70,28 @@
       ...g,
       media_type: "game"
     }));
-    const d = new Array<CombinedResult>().concat
-      .apply([], [r[0].data.results, games])
-      ?.sort((a, b) => {
-        let name = "";
-        if (a.media_type === "game" || a.media_type === "tv" || a.media_type === "person") {
-          name = a.name ?? "";
-        } else if (a.media_type === "movie") {
-          name = a.title ?? "";
-        }
-
-        let name2 = "";
-        if (b.media_type === "game" || b.media_type === "tv" || b.media_type === "person") {
-          name2 = b.name ?? "";
-        } else if (b.media_type === "movie") {
-          name2 = b.title ?? "";
-        }
-
-        if (name < name2) {
-          return 1;
-        }
-        if (name > name2) {
-          return -1;
-        }
-        return 0;
-      });
-    return d;
+    allSearchResults = new Array<CombinedResult>().concat.apply([], [r[0].data.results, games]);
+    searchResults = allSearchResults;
   }
 
   async function searchUsers(query: string) {
     return (await axios.get(`/user/search/${query}`)).data as PublicUser[];
+  }
+
+  function setActiveSearchFilter(to: SearchFilterTypes) {
+    if (activeSearchFilter === to) {
+      activeSearchFilter = undefined;
+      return;
+    }
+    activeSearchFilter = to;
+  }
+
+  function filterResults() {
+    if (!activeSearchFilter) {
+      searchResults = allSearchResults;
+      return;
+    }
+    searchResults = allSearchResults.filter((s) => s.media_type === activeSearchFilter);
   }
 
   onMount(() => {
@@ -105,7 +106,7 @@
 </script>
 
 <svelte:head>
-  <title>Content Search</title>
+  <title>Search Results{data?.slug ? ` for '${data?.slug}'` : ""}</title>
 </svelte:head>
 
 <div class="content">
@@ -121,11 +122,53 @@
 
       {#await search(data.slug)}
         <Spinner />
-      {:then results}
-        <h2>Results</h2>
+      {:then}
+        <div class="results-filters-header">
+          <h2>Results</h2>
+          <div>
+            {#if allSearchResults?.length > 0}
+              {#if allSearchResults.find((s) => s.media_type === "movie")}
+                <button
+                  class="plain"
+                  data-active={activeSearchFilter === "movie"}
+                  on:click={() => setActiveSearchFilter("movie")}
+                >
+                  <Icon i="film" wh={20} /> Movies
+                </button>
+              {/if}
+              {#if allSearchResults.find((s) => s.media_type === "tv")}
+                <button
+                  class="plain"
+                  data-active={activeSearchFilter === "tv"}
+                  on:click={() => setActiveSearchFilter("tv")}
+                >
+                  <Icon i="tv" wh={20} /> TV Shows
+                </button>
+              {/if}
+              {#if allSearchResults.find((s) => s.media_type === "game")}
+                <button
+                  class="plain"
+                  data-active={activeSearchFilter === "game"}
+                  on:click={() => setActiveSearchFilter("game")}
+                >
+                  <Icon i="gamepad" wh={20} /> Games
+                </button>
+              {/if}
+              {#if allSearchResults.find((s) => s.media_type === "person")}
+                <button
+                  class="plain"
+                  data-active={activeSearchFilter === "person"}
+                  on:click={() => setActiveSearchFilter("person")}
+                >
+                  <Icon i="people-nocircle" wh={20} /> People
+                </button>
+              {/if}
+            {/if}
+          </div>
+        </div>
         <PosterList>
-          {#if results?.length > 0}
-            {#each results as w (w.id)}
+          {#if searchResults?.length > 0}
+            {#each searchResults as w (w.id)}
               {#if w.media_type === "person"}
                 <PersonPoster id={w.id} name={w.name} path={w.profile_path} />
               {:else if w.media_type === "game"}
@@ -162,6 +205,60 @@
 </div>
 
 <style lang="scss">
+  .results-filters-header {
+    display: flex;
+    flex-flow: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+
+    div {
+      display: flex;
+      flex-flow: row;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 15px;
+
+      button {
+        display: flex;
+        flex-flow: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        height: fit-content;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        color: $text-color;
+        fill: $text-color;
+        transition:
+          background-color 150ms ease,
+          color 150ms ease,
+          outline 150ms ease;
+
+        &:hover,
+        &[data-active="true"] {
+          color: $bg-color;
+          fill: $bg-color;
+          background-color: $accent-color-hover;
+        }
+
+        &[data-active="true"] {
+          outline: 3px solid $accent-color;
+        }
+
+        @media screen and (max-width: 500px) {
+          flex-flow: column;
+        }
+      }
+
+      @media screen and (max-width: 500px) {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+
   .content {
     display: flex;
     width: 100%;

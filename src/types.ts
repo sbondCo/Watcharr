@@ -24,6 +24,7 @@ export type Icon =
   | "search"
   | "sort"
   | "eye-closed"
+  | "people-nocircle"
   | "people"
   | "person"
   | "person-add"
@@ -32,7 +33,10 @@ export type Icon =
   | "eye"
   | "star"
   | "movary"
-  | "refresh";
+  | "refresh"
+  | "gamepad"
+  | "film"
+  | "tv";
 
 export type Theme = "light" | "dark";
 
@@ -817,6 +821,7 @@ export interface TwitchSettings {
 export interface DropDownItem {
   id: number | string;
   value: string;
+  icon: Icon;
 }
 
 export interface ListBoxItem {
