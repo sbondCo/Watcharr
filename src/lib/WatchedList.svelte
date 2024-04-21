@@ -7,7 +7,7 @@
   import type { Watched, WatchedEpisode, WatchedSeason } from "@/types";
   import GamePoster from "./poster/GamePoster.svelte";
   import { get } from "svelte/store";
-  import { seasonAndEpToReadable } from "./util/helpers";
+  import { getLatestWatchedInTv, seasonAndEpToReadable } from "./util/helpers";
   import { notify } from "./util/notify";
 
   export let list: Watched[];
@@ -150,82 +150,6 @@
     } catch (err) {
       console.error("filt: Failed to filter/sort current list!", err);
       notify({ text: "Failed to filter/sort list!", type: "error", time: 6000 });
-    }
-  }
-
-  // Get biggest season watching or biggest season watched.
-  // This could probably be simpler but -_-
-  function getLatestWatchedInTv(
-    ws: WatchedSeason[] | undefined,
-    we: WatchedEpisode[] | undefined
-  ): string {
-    if ((!ws || ws.length <= 0) && (!we || we.length <= 0)) {
-      return "";
-    }
-
-    let biggestSeasonWatched = -1;
-    let biggestSeasonWatching = -1;
-    if (ws && ws.length > 0) {
-      for (let i = 0; i < ws.length; i++) {
-        const s = ws[i];
-        if (s.status === "WATCHING") {
-          if (s.seasonNumber > biggestSeasonWatching) {
-            biggestSeasonWatching = s.seasonNumber;
-          }
-        } else if (s.status === "FINISHED") {
-          if (s.seasonNumber > biggestSeasonWatched) {
-            biggestSeasonWatched = s.seasonNumber;
-          }
-        }
-      }
-    }
-    const season = biggestSeasonWatching >= 0 ? biggestSeasonWatching : biggestSeasonWatched;
-
-    // Look for biggest watched/watching episode in season if any.
-    // Does same thing as above.
-    let episode: WatchedEpisode | undefined;
-    if (we && we.length > 0) {
-      let biggestEpisodeWatched: WatchedEpisode | undefined;
-      let biggestEpisodeWatching: WatchedEpisode | undefined;
-      for (let i = 0; i < we.length; i++) {
-        const s = we[i];
-        if (season >= 0 && s.seasonNumber !== season) continue;
-        if (s.status === "WATCHING") {
-          if (!biggestEpisodeWatching) {
-            biggestEpisodeWatching = s;
-          }
-          if (
-            s.episodeNumber > biggestEpisodeWatching.episodeNumber ||
-            s.seasonNumber > biggestEpisodeWatching.seasonNumber
-          ) {
-            biggestEpisodeWatching = s;
-          }
-        } else if (s.status === "FINISHED") {
-          if (!biggestEpisodeWatched) {
-            biggestEpisodeWatched = s;
-          }
-          if (
-            s.episodeNumber > biggestEpisodeWatched.episodeNumber ||
-            s.seasonNumber > biggestEpisodeWatched.seasonNumber
-          ) {
-            biggestEpisodeWatched = s;
-          }
-        }
-      }
-      if (biggestEpisodeWatched || biggestEpisodeWatching) {
-        episode =
-          biggestEpisodeWatching !== undefined ? biggestEpisodeWatching : biggestEpisodeWatched;
-      }
-    }
-
-    if (season >= 0 && episode) {
-      return seasonAndEpToReadable(season, episode.episodeNumber);
-    } else if (season >= 0) {
-      return `Season ${season}`;
-    } else if (episode) {
-      return seasonAndEpToReadable(episode.seasonNumber, episode.episodeNumber);
-    } else {
-      return "";
     }
   }
 </script>

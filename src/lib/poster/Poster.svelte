@@ -146,7 +146,7 @@
         }}
       />
     {/if}
-    {#if $page.url?.pathname === "/" && extraDetails && dve && dve.length > 0}
+    {#if ($page.url?.pathname === "/" || $page.url?.pathname.startsWith("/search/")) && extraDetails && dve && dve.length > 0}
       <div class="extra-details">
         <!--
           This is one line because svelte leaves whitespace,
