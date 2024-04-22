@@ -28,22 +28,28 @@ async function _updateWatched(
   wEntry: Watched,
   status?: WatchedStatus,
   rating?: number,
-  thoughts?: string
+  thoughts?: string,
+  pinned?: boolean
 ): Promise<boolean> {
+  if (!status && !rating && typeof thoughts === "undefined" && typeof pinned === "undefined") {
+    console.warn("_updateWatched: Nothing was provided, so nothing can be updated!!!!");
+    return false;
+  }
   const nid = notify({ text: `Saving`, type: "loading" });
-  if (!status && !rating && typeof thoughts === "undefined") return false;
   const obj = {} as WatchedUpdateRequest;
   if (status) obj.status = status;
   if (rating) obj.rating = rating;
   if (typeof thoughts !== "undefined") obj.thoughts = thoughts;
   if (thoughts === "") obj.removeThoughts = true;
+  if (typeof pinned !== "undefined") obj.pinned = pinned;
   return await axios
     .put<WatchedUpdateResponse>(`/watched/${wEntry.id}`, obj)
     .then((resp) => {
       if (status) wEntry.status = status;
       if (rating) wEntry.rating = rating;
       if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
-      if (resp?.data?.newActivity) {
+      if (typeof pinned !== "undefined") wEntry.pinned = pinned;
+      if (resp?.data?.newActivity && resp?.data?.newActivity?.id) {
         if (wEntry.activity?.length > 0) {
           wEntry.activity.push(resp.data.newActivity);
         } else {
@@ -78,7 +84,8 @@ export async function updateWatched(
   contentType: MediaType,
   status?: WatchedStatus,
   rating?: number,
-  thoughts?: string
+  thoughts?: string,
+  pinned?: boolean
 ): Promise<boolean> {
   // If item is already in watched store, run update request instead
   const wList = get(watchedList);
@@ -86,7 +93,7 @@ export async function updateWatched(
     (w) => w.content?.tmdbId === contentId && w.content?.type === contentType
   );
   if (wEntry?.id) {
-    return await _updateWatched(wEntry, status, rating, thoughts);
+    return await _updateWatched(wEntry, status, rating, thoughts, pinned);
   }
   // Add new watched item
   const nid = notify({ text: `Adding`, type: "loading" });
@@ -142,13 +149,14 @@ export async function updatePlayed(
   igdbId: number,
   status?: WatchedStatus,
   rating?: number,
-  thoughts?: string
+  thoughts?: string,
+  pinned?: boolean
 ): Promise<boolean> {
   // If item is already in watched store, run update request instead
   const wList = get(watchedList);
   const wEntry = wList.find((w) => w.game?.igdbId === igdbId);
   if (wEntry?.id) {
-    return await _updateWatched(wEntry, status, rating, thoughts);
+    return await _updateWatched(wEntry, status, rating, thoughts, pinned);
   }
   // Add new played item
   const nid = notify({ text: `Adding`, type: "loading" });
