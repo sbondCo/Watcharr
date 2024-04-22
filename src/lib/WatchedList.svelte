@@ -182,6 +182,7 @@
             dateModified: w.updatedAt
           }}
           fluidSize={true}
+          pinned={w.pinned}
         />
       {:else if w.content}
         <Poster
