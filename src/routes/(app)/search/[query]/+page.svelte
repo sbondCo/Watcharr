@@ -23,6 +23,7 @@
   import { get } from "svelte/store";
   import { notify } from "@/lib/util/notify.js";
   import Icon from "@/lib/Icon.svelte";
+  import { onNavigate } from "$app/navigation";
 
   type GameWithMediaType = GameSearch & { media_type: "game" };
   type CombinedResult =
@@ -127,7 +128,7 @@
           <h2>Results</h2>
           <div>
             {#if allSearchResults?.length > 0}
-              {#if allSearchResults.find((s) => s.media_type === "movie")}
+              {#if allSearchResults.find((s) => s.media_type === "movie") || activeSearchFilter === "movie"}
                 <button
                   class="plain"
                   data-active={activeSearchFilter === "movie"}
@@ -136,7 +137,7 @@
                   <Icon i="film" wh={20} /> Movies
                 </button>
               {/if}
-              {#if allSearchResults.find((s) => s.media_type === "tv")}
+              {#if allSearchResults.find((s) => s.media_type === "tv") || activeSearchFilter === "tv"}
                 <button
                   class="plain"
                   data-active={activeSearchFilter === "tv"}
@@ -145,7 +146,7 @@
                   <Icon i="tv" wh={20} /> TV Shows
                 </button>
               {/if}
-              {#if allSearchResults.find((s) => s.media_type === "game")}
+              {#if allSearchResults.find((s) => s.media_type === "game") || activeSearchFilter === "game"}
                 <button
                   class="plain"
                   data-active={activeSearchFilter === "game"}
@@ -154,7 +155,7 @@
                   <Icon i="gamepad" wh={20} /> Games
                 </button>
               {/if}
-              {#if allSearchResults.find((s) => s.media_type === "person")}
+              {#if allSearchResults.find((s) => s.media_type === "person") || activeSearchFilter === "person"}
                 <button
                   class="plain"
                   data-active={activeSearchFilter === "person"}
