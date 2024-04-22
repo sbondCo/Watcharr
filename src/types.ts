@@ -36,7 +36,9 @@ export type Icon =
   | "refresh"
   | "gamepad"
   | "film"
-  | "tv";
+  | "tv"
+  | "pin"
+  | "unpin";
 
 export type Theme = "light" | "dark";
 
@@ -100,6 +102,7 @@ export interface Watched extends dbModel {
   activity: Activity[];
   status: WatchedStatus;
   thoughts: string;
+  pinned: boolean;
   watchedSeasons?: WatchedSeason[];
   watchedEpisodes?: WatchedEpisode[];
 }
@@ -122,6 +125,7 @@ export interface WatchedUpdateRequest {
   status?: WatchedStatus;
   thoughts?: string;
   removeThoughts?: boolean;
+  pinned?: boolean;
 }
 
 export interface WatchedUpdateResponse {

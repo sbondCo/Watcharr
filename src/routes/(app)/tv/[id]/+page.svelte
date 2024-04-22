@@ -104,13 +104,14 @@
   async function contentChanged(
     newStatus?: WatchedStatus,
     newRating?: number,
-    newThoughts?: string
+    newThoughts?: string,
+    pinned?: boolean
   ): Promise<boolean> {
     if (!data.tvId) {
       console.error("contentChanged: no tvId");
       return false;
     }
-    return await updateWatched(data.tvId, "tv", newStatus, newRating, newThoughts);
+    return await updateWatched(data.tvId, "tv", newStatus, newRating, newThoughts, pinned);
   }
 </script>
 
@@ -178,6 +179,22 @@
               />
             {/if}
             {#if wListItem}
+              <button
+                class="pin-btn"
+                on:click={() => {
+                  if (wListItem?.pinned) {
+                    contentChanged(undefined, undefined, undefined, false);
+                  } else {
+                    contentChanged(undefined, undefined, undefined, true);
+                  }
+                }}
+                use:tooltip={{
+                  text: `${wListItem?.pinned ? "Unpin from" : "Pin to"} top of list`,
+                  pos: "bot"
+                }}
+              >
+                <Icon i={wListItem?.pinned ? "unpin" : "pin"} wh={19} />
+              </button>
               <button
                 class="delete-btn"
                 on:click={() =>
@@ -365,9 +382,11 @@
             }
           }
 
-          .delete-btn {
+          .pin-btn {
             margin-left: auto;
+          }
 
+          .delete-btn {
             &:hover {
               color: $error;
             }

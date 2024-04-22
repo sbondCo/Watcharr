@@ -60,56 +60,62 @@
   function filt() {
     try {
       // Set watched to list and sort it.
-      watched = list.sort((a, b) => {
-        if (sort[0] === "DATEADDED" && sort[1] === "UP") {
-          return Date.parse(a.createdAt) - Date.parse(b.createdAt);
-        } else if (sort[0] === "ALPHA") {
-          const atitle = a.content ? a.content.title : a.game ? a.game.name : "";
-          const btitle = b.content ? b.content.title : b.game ? b.game.name : "";
-          if (sort[1] === "UP") {
-            return atitle.localeCompare(btitle);
-          } else if (sort[1] === "DOWN") {
-            return btitle.localeCompare(atitle);
+      watched = list
+        .sort((a, b) => {
+          if (sort[0] === "DATEADDED" && sort[1] === "UP") {
+            return Date.parse(a.createdAt) - Date.parse(b.createdAt);
+          } else if (sort[0] === "ALPHA") {
+            const atitle = a.content ? a.content.title : a.game ? a.game.name : "";
+            const btitle = b.content ? b.content.title : b.game ? b.game.name : "";
+            if (sort[1] === "UP") {
+              return atitle.localeCompare(btitle);
+            } else if (sort[1] === "DOWN") {
+              return btitle.localeCompare(atitle);
+            }
+          } else if (sort[0] === "LASTCHANGED") {
+            if (sort[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
+            else if (sort[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
+          } else if (sort[0] === "LASTFIN") {
+            const aLastFinishActivity = a.activity
+              ?.sort(
+                (aa, bb) =>
+                  Date.parse(bb.customDate ?? bb.updatedAt) -
+                  Date.parse(aa.customDate ?? aa.updatedAt)
+              )
+              ?.find(
+                (aa) =>
+                  (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
+                  (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
+              );
+            const bLastFinishActivity = b.activity
+              ?.sort(
+                (aa, bb) =>
+                  Date.parse(bb.customDate ?? bb.updatedAt) -
+                  Date.parse(aa.customDate ?? aa.updatedAt)
+              )
+              ?.find(
+                (aa) =>
+                  (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
+                  (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
+              );
+            if (!aLastFinishActivity) return 1;
+            if (!bLastFinishActivity) return -1;
+            const alfaDate = aLastFinishActivity.customDate ?? aLastFinishActivity.updatedAt;
+            const blfaDate = bLastFinishActivity.customDate ?? bLastFinishActivity.updatedAt;
+            if (sort[1] === "UP") return Date.parse(alfaDate) - Date.parse(blfaDate);
+            else if (sort[1] === "DOWN") return Date.parse(blfaDate) - Date.parse(alfaDate);
+          } else if (sort[0] === "RATING") {
+            if (sort[1] === "UP") return (a.rating ?? 0) - (b.rating ?? 0);
+            else if (sort[1] === "DOWN") return (b.rating ?? 0) - (a.rating ?? 0);
           }
-        } else if (sort[0] === "LASTCHANGED") {
-          if (sort[1] === "UP") return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
-          else if (sort[1] === "DOWN") return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
-        } else if (sort[0] === "LASTFIN") {
-          const aLastFinishActivity = a.activity
-            ?.sort(
-              (aa, bb) =>
-                Date.parse(bb.customDate ?? bb.updatedAt) -
-                Date.parse(aa.customDate ?? aa.updatedAt)
-            )
-            ?.find(
-              (aa) =>
-                (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
-                (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
-            );
-          const bLastFinishActivity = b.activity
-            ?.sort(
-              (aa, bb) =>
-                Date.parse(bb.customDate ?? bb.updatedAt) -
-                Date.parse(aa.customDate ?? aa.updatedAt)
-            )
-            ?.find(
-              (aa) =>
-                (aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
-                (aa.type === "ADDED_WATCHED" && aa.data?.includes("FINISHED"))
-            );
-          if (!aLastFinishActivity) return 1;
-          if (!bLastFinishActivity) return -1;
-          const alfaDate = aLastFinishActivity.customDate ?? aLastFinishActivity.updatedAt;
-          const blfaDate = bLastFinishActivity.customDate ?? bLastFinishActivity.updatedAt;
-          if (sort[1] === "UP") return Date.parse(alfaDate) - Date.parse(blfaDate);
-          else if (sort[1] === "DOWN") return Date.parse(blfaDate) - Date.parse(alfaDate);
-        } else if (sort[0] === "RATING") {
-          if (sort[1] === "UP") return (a.rating ?? 0) - (b.rating ?? 0);
-          else if (sort[1] === "DOWN") return (b.rating ?? 0) - (a.rating ?? 0);
-        }
-        // default DATEADDED DOWN
-        return Date.parse(b.createdAt) - Date.parse(a.createdAt);
-      });
+          // default DATEADDED DOWN
+          return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+        })
+        .sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          return 0;
+        });
       // If games type filter enabled, but games disabled on server, make sure we remove it from active filters.
       if (!features.games) {
         const af = get(activeFilters);
@@ -198,6 +204,7 @@
             lastWatched: getLatestWatchedInTv(w.watchedSeasons, w.watchedEpisodes)
           }}
           fluidSize={true}
+          pinned={w.pinned}
         />
       {/if}
     {/each}

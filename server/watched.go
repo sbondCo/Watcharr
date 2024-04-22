@@ -30,6 +30,7 @@ type Watched struct {
 	Status          WatchedStatus    `json:"status"`
 	Rating          int8             `json:"rating"`
 	Thoughts        string           `json:"thoughts"`
+	Pinned          bool             `json:"pinned" gorm:"default:false;not null"`
 	UserID          uint             `json:"-" gorm:"uniqueIndex:usernctnidx;uniqueIndex:userngamidx"`
 	ContentID       *int             `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	Content         *Content         `json:"content,omitempty"`
@@ -52,10 +53,11 @@ type WatchedAddRequest struct {
 }
 
 type WatchedUpdateRequest struct {
-	Status         WatchedStatus `json:"status" binding:"required_without_all=Rating Thoughts RemoveThoughts"`
-	Rating         int8          `json:"rating" binding:"max=10,required_without_all=Status Thoughts RemoveThoughts"`
-	Thoughts       string        `json:"thoughts" binding:"required_without_all=Status Rating RemoveThoughts"`
+	Status         WatchedStatus `json:"status" binding:"required_without_all=Rating Thoughts RemoveThoughts Pinned"`
+	Rating         int8          `json:"rating" binding:"max=10,required_without_all=Status Thoughts RemoveThoughts Pinned"`
+	Thoughts       string        `json:"thoughts" binding:"required_without_all=Status Rating RemoveThoughts Pinned"`
 	RemoveThoughts bool          `json:"removeThoughts"`
+	Pinned         *bool         `json:"pinned" binding:"required_without_all=Status Rating Thoughts RemoveThoughts"`
 }
 
 type WatchedUpdateResponse struct {
@@ -193,6 +195,9 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 	}
 	if ar.RemoveThoughts {
 		upwat.Thoughts = ""
+	}
+	if ar.Pinned != nil {
+		upwat.Pinned = *ar.Pinned
 	}
 	res = db.Save(upwat)
 	if res.RowsAffected <= 0 {

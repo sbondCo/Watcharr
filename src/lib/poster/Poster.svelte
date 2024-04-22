@@ -37,6 +37,7 @@
   export let hideButtons = false;
   export let extraDetails: ExtraDetails | undefined = undefined;
   export let fluidSize = false;
+  export let pinned = false;
   // When provided, default click handlers will instead run this callback.
   export let onClick: (() => void) | undefined = undefined;
 
@@ -126,7 +127,7 @@
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
   on:keypress={() => console.log("on kpress")}
-  class={`${posterActive ? "active " : ""}`}
+  class={`${posterActive ? "active " : ""}${pinned ? "pinned " : ""}`}
 >
   <div
     class={`container${!poster || !media.poster_path ? " details-shown" : ""}`}
@@ -200,6 +201,10 @@
 <style lang="scss">
   li.active {
     cursor: pointer;
+  }
+
+  li.pinned:not(.active) .container {
+    outline: 3px solid gold;
   }
 
   .container {
