@@ -160,32 +160,33 @@
               {/if}
             {/if}
             {#if wListItem}
-              <button
-                class="pin-btn"
-                on:click={() => {
-                  if (wListItem?.pinned) {
-                    contentChanged(undefined, undefined, undefined, false);
-                  } else {
-                    contentChanged(undefined, undefined, undefined, true);
-                  }
-                }}
-                use:tooltip={{
-                  text: `${wListItem?.pinned ? "Unpin from" : "Pin to"} top of list`,
-                  pos: "bot"
-                }}
-              >
-                <Icon i={wListItem?.pinned ? "unpin" : "pin"} wh={19} />
-              </button>
-              <button
-                class="delete-btn"
-                on:click={() =>
-                  wListItem
-                    ? removeWatched(wListItem.id)
-                    : console.error("no wlistItem.. can't delete")}
-                use:tooltip={{ text: "Delete", pos: "bot" }}
-              >
-                <Icon i="trash" wh={19} />
-              </button>
+              <div class="other-side">
+                <button
+                  on:click={() => {
+                    if (wListItem?.pinned) {
+                      contentChanged(undefined, undefined, undefined, false);
+                    } else {
+                      contentChanged(undefined, undefined, undefined, true);
+                    }
+                  }}
+                  use:tooltip={{
+                    text: `${wListItem?.pinned ? "Unpin from" : "Pin to"} top of list`,
+                    pos: "bot"
+                  }}
+                >
+                  <Icon i={wListItem?.pinned ? "unpin" : "pin"} wh={19} />
+                </button>
+                <button
+                  class="delete-btn"
+                  on:click={() =>
+                    wListItem
+                      ? removeWatched(wListItem.id)
+                      : console.error("no wlistItem.. can't delete")}
+                  use:tooltip={{ text: "Delete", pos: "bot" }}
+                >
+                  <Icon i="trash" wh={19} />
+                </button>
+              </div>
             {/if}
           </div>
 
@@ -304,6 +305,7 @@
         .btns {
           display: flex;
           flex-flow: row;
+          flex-wrap: wrap;
           gap: 8px;
           margin-top: auto;
 
@@ -327,8 +329,14 @@
             }
           }
 
-          .pin-btn {
-            margin-left: auto;
+          .other-side {
+            display: flex;
+            flex-flow: row;
+            gap: 8px;
+
+            @media screen and (min-width: 900px) {
+              margin-left: auto;
+            }
           }
 
           .delete-btn {
