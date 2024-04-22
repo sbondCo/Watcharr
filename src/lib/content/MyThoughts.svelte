@@ -70,7 +70,7 @@
     width: 100%;
     text-align: start;
     padding: 7px 10px;
-    border: 2px solid black;
+    border: 2px solid $text-color;
     border-radius: 5px;
     max-height: 100px;
     opacity: 0.5;
