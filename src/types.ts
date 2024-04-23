@@ -11,6 +11,7 @@ export type Icon =
   | "play"
   | "pause"
   | "jellyfin"
+  | "emby"
   | "plex"
   | "trash"
   | "close"
@@ -207,6 +208,7 @@ export interface AvailableAuthProviders {
   available: string[];
   signupEnabled: boolean;
   isInSetup: boolean;
+  useEmby: boolean;
 }
 
 export interface TokenClaims {
@@ -788,6 +790,7 @@ export interface ManagedUser {
 export interface ServerConfig {
   DEFAULT_COUNTRY: string;
   JELLYFIN_HOST: string;
+  USE_EMBY: boolean;
   SIGNUP_ENABLED: boolean;
   TMDB_KEY: string;
   PLEX_HOST: string;

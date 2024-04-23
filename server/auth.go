@@ -150,6 +150,7 @@ type AvailableAuthProvidersResponse struct {
 	AvailableAuthProviders []string `json:"available"`
 	SignupEnabled          bool     `json:"signupEnabled"`
 	IsInSetup              bool     `json:"isInSetup"`
+	UseEmby                bool     `json:"useEmby"`
 }
 
 type ArgonParams struct {

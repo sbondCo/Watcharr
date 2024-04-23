@@ -167,7 +167,11 @@
             {/if}
             {#if jellyfinUrl}
               <a class="btn" href={jellyfinUrl} target="_blank">
-                <Icon i="jellyfin" wh={14} />Play On Jellyfin
+                {#if localStorage.getItem("useEmby")}
+                  <Icon i="emby" wh={14} />Play On Emby
+                {:else}
+                  <Icon i="jellyfin" wh={14} />Play On Jellyfin
+                {/if}
               </a>
             {/if}
             {#if $serverFeatures.sonarr && data.tvId}

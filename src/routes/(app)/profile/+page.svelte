@@ -292,7 +292,7 @@
         {/if}
         {#if user?.type === UserType?.Jellyfin}
           <button on:click={() => (jellyfinSyncModalOpen = true)} disabled={exportDisabled}>
-            Sync With Jellyfin
+            Sync With {localStorage.getItem("useEmby") ? "Emby" : "Jellyfin"}
           </button>
         {/if}
         {#if user?.type === UserType?.Plex}

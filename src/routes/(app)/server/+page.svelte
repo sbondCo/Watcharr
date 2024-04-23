@@ -39,6 +39,7 @@
   let tmdbkDisabled = false;
   let plexHostDisabled = false;
   let countryDisabled = false;
+  let useEmbyDisabled = false;
   let selectedCountry: string;
   let countries: any;
   let countriesDropdown: DropDownItem[] = [];
@@ -91,6 +92,11 @@
 
   async function getServerStats() {
     return (await axios.get("/server/stats")).data as ServerStats;
+  }
+
+  let jellyfinOrEmby = "Jellyfin";
+  $: {
+    jellyfinOrEmby = serverConfig?.USE_EMBY ? "Emby" : "Jellyfin";
   }
 </script>
 
@@ -148,13 +154,13 @@
           />
         </Setting>
         <Setting
-          title="Jellyfin Host"
-          desc="Point to your Jellyfin server to enable related features. Don't change server after
+          title="{jellyfinOrEmby} Host"
+          desc="Point to your {jellyfinOrEmby} server to enable related features. Don't change server after
         already using another."
         >
           <input
             type="text"
-            placeholder="https://jellyfin.example.com"
+            placeholder="https://{jellyfinOrEmby.toLowerCase()}.example.com"
             bind:value={serverConfig.JELLYFIN_HOST}
             on:blur={() => {
               jfDisabled = true;
@@ -163,6 +169,23 @@
               });
             }}
             disabled={jfDisabled}
+          />
+        </Setting>
+        <Setting
+          title="Use Emby"
+          desc="Do you want to pretend you're using Emby instead of Jellyfin?"
+          row
+        >
+          <Checkbox
+            name="USE_EMBY"
+            disabled={useEmbyDisabled}
+            value={serverConfig.USE_EMBY}
+            toggled={(on) => {
+              useEmbyDisabled = true;
+              updateServerConfig("USE_EMBY", on, () => {
+                useEmbyDisabled = false;
+              });
+            }}
           />
         </Setting>
         <Setting
