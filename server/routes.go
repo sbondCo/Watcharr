@@ -622,6 +622,7 @@ func (b *BaseRouter) addAuthRoutes() {
 			AvailableAuthProviders: availableAuthProviders,
 			SignupEnabled:          Config.SIGNUP_ENABLED,
 			IsInSetup:              ServerInSetup,
+			UseEmby:                Config.USE_EMBY,
 		})
 	})
 

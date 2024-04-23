@@ -11,6 +11,7 @@
   let login = true;
   let availableProviders: string[] = [];
   let signupEnabled = true;
+  let useEmby = false;
 
   onMount(() => {
     if (localStorage.getItem("token")) {
@@ -25,6 +26,7 @@
         }
         availableProviders = r.data.available;
         signupEnabled = r.data.signupEnabled;
+        useEmby = r.data.useEmby;
       }
     });
   });
@@ -60,6 +62,11 @@
         if (resp.data?.token) {
           console.log("Received token... logging in.");
           localStorage.setItem("token", resp.data.token);
+          if (useEmby) {
+            localStorage.setItem("useEmby", "1");
+          } else {
+            localStorage.removeItem("useEmby");
+          }
           goto("/");
           notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
         }
@@ -142,9 +149,19 @@
         <div class="login-btns">
           <button type="submit"><span class="watcharr">W</span>Watcharr</button>
           {#if availableProviders?.length > 0}
-            {#each availableProviders.filter((ap) => ap !== "plex") as p}
-              <button type="submit" name={p} class="other"><Icon i={p} wh={18} />{p}</button>
-            {/each}
+            {#if availableProviders.find((ap) => ap === "jellyfin")}
+              {#if useEmby}
+                <button type="submit" name="jellyfin" class="other">
+                  <Icon i="emby" wh={18} />
+                  emby
+                </button>
+              {:else}
+                <button type="submit" name="jellyfin" class="other">
+                  <Icon i="jellyfin" wh={18} />
+                  jellyfin
+                </button>
+              {/if}
+            {/if}
           {/if}
         </div>
         {#if availableProviders?.findIndex((provider) => provider == "plex") > -1}

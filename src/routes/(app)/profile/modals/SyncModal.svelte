@@ -113,7 +113,11 @@
 </script>
 
 <Modal
-  title="{type === 'jellyfin' ? 'Jellyfin' : 'Plex'} Sync"
+  title="{type === 'jellyfin'
+    ? localStorage.getItem('useEmby')
+      ? 'Emby'
+      : 'Jellyfin'
+    : 'Plex'} Sync"
   maxWidth="700px"
   onClose={modalClose}
 >

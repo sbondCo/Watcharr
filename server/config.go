@@ -34,6 +34,9 @@ type ServerConfig struct {
 	// to enable it as an auth provider.
 	JELLYFIN_HOST string `json:",omitempty"`
 
+	// Optional: Use Emby instead of Jellyfin branding in the ui.
+	USE_EMBY bool
+
 	// Enable/disable signup functionality.
 	// Set to `false` to disable registering an account.
 	SIGNUP_ENABLED bool
@@ -73,6 +76,7 @@ func (c *ServerConfig) GetSafe() ServerConfig {
 		SIGNUP_ENABLED:  c.SIGNUP_ENABLED,
 		DEFAULT_COUNTRY: c.DEFAULT_COUNTRY,
 		JELLYFIN_HOST:   c.JELLYFIN_HOST,
+		USE_EMBY:        c.USE_EMBY,
 		TMDB_KEY:        c.TMDB_KEY,
 		PLEX_HOST:       c.PLEX_HOST,
 		PLEX_MACHINE_ID: c.PLEX_MACHINE_ID,
@@ -150,6 +154,8 @@ func updateConfig(k string, v any) error {
 	}
 	if k == "JELLYFIN_HOST" {
 		Config.JELLYFIN_HOST = v.(string)
+	} else if k == "USE_EMBY" {
+		Config.USE_EMBY = v.(bool)
 	} else if k == "SIGNUP_ENABLED" {
 		Config.SIGNUP_ENABLED = v.(bool)
 	} else if k == "TMDB_KEY" {
