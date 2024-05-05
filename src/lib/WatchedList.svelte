@@ -4,7 +4,8 @@
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
   import { activeFilters, activeSort, serverFeatures, userSettings } from "@/store";
-  import { Watched, WatchedStatus } from "@/types";
+  import { WatchedStatus } from "@/types";
+  import type { Watched } from "@/types";
   import GamePoster from "./poster/GamePoster.svelte";
   import { get } from "svelte/store";
   import { getLatestWatchedInTv } from "./util/helpers";
@@ -179,9 +180,9 @@
         <h2 class="norm first-upper-case">{status}</h2>
       </div>
     {/if}
-    {#each watched as w (w.id)}
-      {#if w.status === status || filters.status.length > 0}
-        <PosterList>
+    <PosterList>
+      {#each watched as w (w.id)}
+        {#if w.status === status || filters.status.length > 0}
           {#if w.game}
             <GamePoster
               id={w.id}
@@ -227,9 +228,9 @@
               pinned={w.pinned}
             />
           {/if}
-        </PosterList>
-      {/if}
-    {/each}
+        {/if}
+      {/each}
+    </PosterList>
   {/each}
 {/if}
 
