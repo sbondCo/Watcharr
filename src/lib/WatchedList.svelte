@@ -174,7 +174,7 @@
     {/if}
   </div>
 {:else}
-  {#each (filters.status.length > 0 ? ["ALL"] : Object.values(WatchedStatus)) as status}
+  {#each filters.status.length > 0 ? ["ALL"] : Object.values(WatchedStatus) as status}
     {#if filters.status.length === 0}
       <div class="central-div">
         <h2 class="norm first-upper-case">{status}</h2>

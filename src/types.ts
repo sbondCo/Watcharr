@@ -6,7 +6,7 @@ export const WatchedStatus = {
   DROPPED: "DROPPED"
 } as const;
 
-export type WatchedStatus = typeof WatchedStatus[keyof typeof WatchedStatus];
+export type WatchedStatus = (typeof WatchedStatus)[keyof typeof WatchedStatus];
 export type ContentType = "tv" | "movie";
 export type MediaType = ContentType | "person";
 
