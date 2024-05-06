@@ -182,7 +182,7 @@
     {/if}
     <PosterList>
       {#each watched as w (w.id)}
-        {#if w.status === status || filters.status.length > 0}
+        {#if status.includes(w.status) || filters.status.length > 0}
           {#if w.game}
             <GamePoster
               id={w.id}

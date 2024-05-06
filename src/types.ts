@@ -2,7 +2,7 @@ export const WatchedStatus = {
   WATCHING: "WATCHING",
   PLANNED: "PLANNED",
   FINISHED: "FINISHED",
-  HOLD: "HOLD",
+  HOLD: "ON HOLD",
   DROPPED: "DROPPED"
 } as const;
 
