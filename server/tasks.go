@@ -74,12 +74,18 @@ func setupTasks(db *gorm.DB) {
 
 // Small helper to add a new job to the scheduler.
 // Makes the setupTasks function a little easier to read.
-func addTaskToScheduler(name string, dur time.Duration) error {
+// Gets schedule from config, or `defaultDur` if not manually configured.
+func addTaskToScheduler(name string, defaultDur time.Duration) error {
+	s := defaultDur
+	if Config.TASK_SCHEDULE[name] != 0 {
+		s = time.Duration(Config.TASK_SCHEDULE[name]) * time.Second
+	}
 	_, err := taskScheduler.NewJob(
-		gocron.DurationJob(dur),
+		gocron.DurationJob(s),
 		gocron.NewTask(taskFuncs[name]),
 		gocron.WithName(name),
 	)
+	slog.Debug("addTaskToScheduler: Job added.", "job_name", name, "duration_used", s, "duration_default", defaultDur)
 	return err
 }
 
@@ -107,6 +113,7 @@ func getTask(name string) *gocron.Job {
 	for _, j := range taskScheduler.Jobs() {
 		if j.Name() == name {
 			job = &j
+			break
 		}
 	}
 	return job
@@ -118,7 +125,7 @@ func rescheduleTask(name string, req TaskRescheduleRequest) error {
 	if j == nil {
 		return errors.New("no task found")
 	}
-	taskScheduler.Update(
+	_, err := taskScheduler.Update(
 		(*j).ID(),
 		gocron.DurationJob(
 			time.Duration(req.Seconds)*time.Second,
@@ -128,5 +135,9 @@ func rescheduleTask(name string, req TaskRescheduleRequest) error {
 		),
 		gocron.WithName(name),
 	)
+	if err != nil {
+		slog.Error("rescheduleTask: Failed to update job!", "error", err)
+		return errors.New("failed to update job")
+	}
 	return nil
 }
