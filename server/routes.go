@@ -1394,3 +1394,31 @@ func (b *BaseRouter) addJobRoutes() {
 		c.JSON(http.StatusOK, *response)
 	})
 }
+
+func (b *BaseRouter) addTaskRoutes() {
+	task := b.rg.Group("/task").Use(AuthRequired(b.db), AdminRequired())
+
+	task.GET("/", func(c *gin.Context) {
+		response := getAllTasks()
+		c.JSON(http.StatusOK, response)
+	})
+
+	task.PUT(":name", func(c *gin.Context) {
+		if c.Param("name") == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "no task name provided"})
+			return
+		}
+		var rr TaskRescheduleRequest
+		err := c.ShouldBindJSON(&rr)
+		if err == nil {
+			err := rescheduleTask(c.Param("name"), rr)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
