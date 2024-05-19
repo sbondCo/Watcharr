@@ -1066,3 +1066,13 @@ export interface GetJobResponse {
   currentTask?: string;
   errors: string[];
 }
+
+export interface TaskRescheduleRequest {
+  seconds: number;
+}
+
+export interface AllTasksResponse {
+  name: string;
+  nextRun: Date;
+  seconds: number;
+}

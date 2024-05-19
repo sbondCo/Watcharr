@@ -23,6 +23,7 @@
   import Stat from "@/lib/stats/Stat.svelte";
   import TwitchModal from "./modals/TwitchModal.svelte";
   import RegionDropDown from "@/lib/RegionDropDown.svelte";
+  import TaskScheduleModal from "./modals/TaskScheduleModal.svelte";
 
   let serverConfig: ServerConfig;
   let sonarrModalOpen = false;
@@ -32,6 +33,7 @@
   let radarrServerEditing: RadarrSettings;
   let radarrModalEditing = false;
   let twitchModalOpen = false;
+  let taskScheduleModalOpen = false;
   // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
@@ -250,6 +252,19 @@
             }}
           />
         </Setting>
+        <Setting>
+          <SettingButton
+            title="Task Schedule"
+            desc="View and configure server task schedule."
+            icon={"arrow"}
+            onClick={() => {
+              taskScheduleModalOpen = true;
+            }}
+          />
+        </Setting>
+        {#if taskScheduleModalOpen}
+          <TaskScheduleModal onClose={() => (taskScheduleModalOpen = false)}></TaskScheduleModal>
+        {/if}
         <div>
           <h3>Services</h3>
           <h5 class="norm">
