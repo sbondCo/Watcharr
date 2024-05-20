@@ -138,10 +138,23 @@ func getTask(name string) *gocron.Job {
 
 // Reschedule a task by name.
 func rescheduleTask(name string, req TaskRescheduleRequest) error {
+	if req.Seconds == 0 {
+		return errors.New("request has no seconds")
+	}
 	j := getTask(name)
 	if j == nil {
 		return errors.New("no task found")
 	}
+	// Update config
+	if Config.TASK_SCHEDULE == nil {
+		Config.TASK_SCHEDULE = map[string]int{}
+	}
+	Config.TASK_SCHEDULE[name] = req.Seconds
+	if err := writeConfig(); err != nil {
+		slog.Error("rescheduleTask: Failed to write updated config to file!", "error", err)
+		return errors.New("failed to write config")
+	}
+	// Update job in scheduler
 	_, err := taskScheduler.Update(
 		(*j).ID(),
 		gocron.DurationJob(
