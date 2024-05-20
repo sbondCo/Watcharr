@@ -18,32 +18,35 @@
 
   async function getAllTasks() {
     try {
-      formDisabled = true;
       const res = await axios.get<AllTasksResponse[]>("/task/");
       taskSchedule = res.data;
-      formDisabled = false;
     } catch (err) {
       console.error("getAllTasks failed!", err);
       notify({ type: "error", text: "Failed to get all tasks from server.", time: 6000 });
-      formDisabled = false;
     }
   }
 
   async function rescheduleTask(name: string, seconds: number) {
+    const nid = notify({ type: "loading", text: "Updating.." });
     try {
       formDisabled = true;
       const res = await axios.put(`/task/${name}`, { seconds });
       if (res.status === 200) {
-        notify({ type: "success", text: "Schedule updated." });
+        notify({ id: nid, type: "success", text: "Schedule updated." });
         getAllTasks();
       } else {
         console.error("rescheduleTask: Unexpected response status code:", res.status);
-        notify({ type: "error", text: "Unexpected response from reschedule request.", time: 6000 });
+        notify({
+          id: nid,
+          type: "error",
+          text: "Unexpected response from reschedule request.",
+          time: 6000
+        });
       }
       formDisabled = false;
     } catch (err) {
       console.error("rescheduleTask failed!", err);
-      notify({ type: "error", text: "Failed to update schedule.", time: 6000 });
+      notify({ id: nid, type: "error", text: "Failed to update schedule.", time: 6000 });
       formDisabled = false;
     }
   }
@@ -55,7 +58,7 @@
     }, 1000);
     const getTasksInterval = setInterval(() => {
       getAllTasks();
-    }, 5000);
+    }, 8000);
     return () => {
       clearInterval(nowInterval);
       clearInterval(getTasksInterval);
