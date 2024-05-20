@@ -2,18 +2,20 @@
   import Modal from "@/lib/Modal.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
+  import { toRelativeTime } from "@/lib/util/helpers";
   import type { AllTasksResponse } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
 
   export let onClose: () => void;
 
+  $: now = Date.now();
+
   let error: string;
   let formDisabled = false;
-
   let taskSchedule: AllTasksResponse[] = [];
 
-  async function getSettingsData() {
+  async function getAllTasks() {
     try {
       formDisabled = true;
       const res = await axios.get<AllTasksResponse[]>("/task/");
@@ -21,14 +23,24 @@
       formDisabled = false;
       error = "";
     } catch (err) {
-      console.error("getSettingsData failed!", err);
-      error = `Request Failed, check your Host and Key`;
+      console.error("getAllTasks failed!", err);
+      error = `Failed to get all tasks from server`;
       formDisabled = false;
     }
   }
 
   onMount(() => {
-    getSettingsData();
+    getAllTasks();
+    const nowInterval = setInterval(() => {
+      now = Date.now();
+    }, 1000);
+    const getTasksInterval = setInterval(() => {
+      getAllTasks();
+    }, 5000);
+    return () => {
+      clearInterval(nowInterval);
+      clearInterval(getTasksInterval);
+    };
   });
 </script>
 
@@ -42,8 +54,12 @@
   {/if}
   <SettingsList>
     {#each taskSchedule as task}
+      {@const nextRun = toRelativeTime((new Date(task.nextRun).getTime() - now) / 1000)}
       <Setting title={task.name}>
+        Runs every&nbsp;
         <input type="text" placeholder="60" value={task.seconds} disabled={formDisabled} />
+        &nbsp;seconds. Next{nextRun === "now" ? "" : " in"}
+        {nextRun}.
       </Setting>
     {/each}
   </SettingsList>
