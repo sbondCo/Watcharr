@@ -1,8 +1,10 @@
 <script lang="ts">
   import Modal from "@/lib/Modal.svelte";
+  import Spinner from "@/lib/Spinner.svelte";
   import Setting from "@/lib/settings/Setting.svelte";
   import SettingsList from "@/lib/settings/SettingsList.svelte";
   import { toRelativeTime } from "@/lib/util/helpers";
+  import { notify } from "@/lib/util/notify";
   import type { AllTasksResponse } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
@@ -11,7 +13,6 @@
 
   $: now = Date.now();
 
-  let error: string;
   let formDisabled = false;
   let taskSchedule: AllTasksResponse[] = [];
 
@@ -21,10 +22,28 @@
       const res = await axios.get<AllTasksResponse[]>("/task/");
       taskSchedule = res.data;
       formDisabled = false;
-      error = "";
     } catch (err) {
       console.error("getAllTasks failed!", err);
-      error = `Failed to get all tasks from server`;
+      notify({ type: "error", text: "Failed to get all tasks from server.", time: 6000 });
+      formDisabled = false;
+    }
+  }
+
+  async function rescheduleTask(name: string, seconds: number) {
+    try {
+      formDisabled = true;
+      const res = await axios.put(`/task/${name}`, { seconds });
+      if (res.status === 200) {
+        notify({ type: "success", text: "Schedule updated." });
+        getAllTasks();
+      } else {
+        console.error("rescheduleTask: Unexpected response status code:", res.status);
+        notify({ type: "error", text: "Unexpected response from reschedule request.", time: 6000 });
+      }
+      formDisabled = false;
+    } catch (err) {
+      console.error("rescheduleTask failed!", err);
+      notify({ type: "error", text: "Failed to update schedule.", time: 6000 });
       formDisabled = false;
     }
   }
@@ -49,19 +68,28 @@
   desc="Want a routine task to occur more or less frequently? Configure it below."
   {onClose}
 >
-  {#if error}
-    <span class="error">{error}!</span>
-  {/if}
   <SettingsList>
-    {#each taskSchedule as task}
-      {@const nextRun = toRelativeTime((new Date(task.nextRun).getTime() - now) / 1000)}
-      <Setting title={task.name}>
-        Runs every&nbsp;
-        <input type="text" placeholder="60" value={task.seconds} disabled={formDisabled} />
-        &nbsp;seconds. Next{nextRun === "now" ? "" : " in"}
-        {nextRun}.
-      </Setting>
-    {/each}
+    {#if taskSchedule?.length <= 0}
+      <Spinner />
+    {:else}
+      {#each taskSchedule as task}
+        {@const nextRun = toRelativeTime((new Date(task.nextRun).getTime() - now) / 1000)}
+        <Setting title={task.name}>
+          Runs every&nbsp;
+          <input
+            type="number"
+            placeholder="60"
+            bind:value={task.seconds}
+            disabled={formDisabled}
+            on:blur={() => {
+              rescheduleTask(task.name, task.seconds);
+            }}
+          />
+          &nbsp;seconds. Next{nextRun === "now" ? "" : " in"}
+          {nextRun}.
+        </Setting>
+      {/each}
+    {/if}
   </SettingsList>
 </Modal>
 
