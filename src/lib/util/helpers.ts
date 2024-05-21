@@ -346,3 +346,24 @@ export function toRelativeDate(d: Date): string {
   }
   return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]} ${d.getFullYear()}`;
 }
+
+/**
+ * To relative time (seconds, mins, hours).
+ * @param s Seconds.
+ */
+export function toRelativeTime(s: number) {
+  const totalMinutes = Math.floor(s / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  const secs = Math.floor(s % 60);
+  if (hours > 0) {
+    return `${hours} hours`;
+  }
+  if (mins > 0) {
+    return `${mins} minutes`;
+  }
+  if (secs > 0) {
+    return `${secs} seconds`;
+  }
+  return "now";
+}

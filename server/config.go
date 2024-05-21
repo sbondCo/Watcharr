@@ -58,6 +58,9 @@ type ServerConfig struct {
 	RADARR []RadarrSettings `json:",omitempty"`
 	TWITCH game.IGDB        `json:",omitempty"`
 
+	// Optional: Schedule for tasks.
+	TASK_SCHEDULE map[string]int `json:",omitempty"`
+
 	// Enable/disable debug logging. Useful for when trying
 	// to figure out exactly what the server is doing at a point
 	// of failure.
