@@ -19,7 +19,15 @@
   async function getAllTasks() {
     try {
       const res = await axios.get<AllTasksResponse[]>("/task/");
-      taskSchedule = res.data;
+      taskSchedule = res.data?.sort((a, b) => {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
+      });
     } catch (err) {
       console.error("getAllTasks failed!", err);
       notify({ type: "error", text: "Failed to get all tasks from server.", time: 6000 });
