@@ -109,17 +109,4 @@
     width: 200px;
     margin-top: 5px;
   }
-
-  .error {
-    position: sticky;
-    top: 0;
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    padding: 10px;
-    background-color: rgb(221, 48, 48);
-    text-transform: capitalize;
-    color: white;
-    margin-bottom: 15px;
-  }
 </style>
