@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gin-contrib/cache/persistence"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -18,6 +19,8 @@ const (
 	MOVIE ContentType = "movie"
 	SHOW  ContentType = "tv"
 )
+
+var ContentStore = persistence.NewInMemoryStore(time.Hour * 24)
 
 // For storing cached content, so we can serve the basic local data for watched list to work
 type Content struct {
@@ -294,12 +297,25 @@ func tvCredits(id string) (TMDBContentCredits, error) {
 	return *resp, nil
 }
 
+// This method is manually cached, so it can be easily used in other places (on the server) with cache benefits
 func seasonDetails(tvId string, seasonNumber string) (TMDBSeasonDetails, error) {
+	var cacheKey = "contentstore-seasondetails-" + tvId + "-" + seasonNumber
 	resp := new(TMDBSeasonDetails)
+	if err := ContentStore.Get(cacheKey, &resp); err != nil {
+		if err != persistence.ErrCacheMiss {
+			slog.Error("seasonDetails: Cache failed for some reason", "error", err)
+		}
+	} else {
+		slog.Debug("seasonDetails: Returning cache.")
+		return *resp, nil
+	}
 	err := tmdbRequest("/tv/"+tvId+"/season/"+seasonNumber, map[string]string{}, &resp)
 	if err != nil {
-		slog.Error("Failed to complete season details request!", "error", err.Error())
+		slog.Error("seasonDetails: Failed to complete season details request!", "error", err.Error())
 		return TMDBSeasonDetails{}, errors.New("failed to complete season details request")
+	}
+	if err := ContentStore.Set(cacheKey, resp, time.Hour*24); err != nil {
+		slog.Error("seasonDetails: Failed to set cache!", "error", err)
 	}
 	return *resp, nil
 }
