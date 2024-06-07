@@ -25,6 +25,7 @@ var (
 	IMPORTED_ADDED_WATCHED_JF   ActivityType = "IMPORTED_ADDED_WATCHED_JF"
 	IMPORTED_ADDED_WATCHED_PLEX ActivityType = "IMPORTED_ADDED_WATCHED_PLEX"
 	SEASON_ADDED                ActivityType = "SEASON_ADDED"
+	SEASON_ADDED_AUTO           ActivityType = "SEASON_ADDED_AUTO" // When a season is added because of a different, but related user action (eg: setting an episode to watched)
 	SEASON_ADDED_JF             ActivityType = "SEASON_ADDED_JF"
 	SEASON_ADDED_PLEX           ActivityType = "SEASON_ADDED_PLEX"
 	SEASON_REMOVED              ActivityType = "SEASON_REMOVED"

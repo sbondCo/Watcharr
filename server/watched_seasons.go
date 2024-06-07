@@ -139,3 +139,15 @@ func rmWatchedSeason(db *gorm.DB, userId uint, seasonId uint) (Activity, error) 
 	}
 	return Activity{}, errors.New("removed, but failed to add activity entry")
 }
+
+func getWatchedSeason(db *gorm.DB, userId uint, watchedId uint, seasonNumber int) (*WatchedSeason, error) {
+	var ws *WatchedSeason
+	if res := db.Model(&WatchedSeason{}).Where("watched_id = ? AND season_number = ? AND user_id = ?", watchedId, seasonNumber, userId).Take(&ws); res.Error != nil {
+		slog.Error("getWatchedSeason: Failed to get:", "error", res.Error.Error())
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return &WatchedSeason{}, errors.New("failed to get watched season")
+	}
+	return ws, nil
+}

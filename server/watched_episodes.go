@@ -115,6 +115,10 @@ func addWatchedEpisodes(db *gorm.DB, userId uint, ar WatchedEpisodeAddRequest) (
 		}
 		addedActivity, _ = addActivity(db, userId, act)
 	}
+	if ar.Status != "" {
+		slog.Debug("addWatchedEpisodes: Episode status was changed, calling hook.")
+		hookEpisodeStatusChanged(db, userId, ar.WatchedID, ar.SeasonNumber, ar.EpisodeNumber, ar.Status)
+	}
 	return WatchedEpisodeAddResponse{
 		WatchedEpisodes: w.WatchedEpisodes,
 		AddedActivity:   addedActivity,
@@ -146,4 +150,12 @@ func rmWatchedEpisode(db *gorm.DB, userId uint, id uint) (Activity, error) {
 		return addedActivity, nil
 	}
 	return Activity{}, errors.New("removed, but failed to add activity entry")
+}
+
+func getNumberOfWatchedEpisodesInSeason(db *gorm.DB, userId uint, watchedId uint, seasonNumber int, acceptableStatus []WatchedStatus) (int64, error) {
+	var count int64
+	if res := db.Model(&WatchedEpisode{}).Where("user_id = ? AND watched_id = ? AND season_number = ? AND status IN ?", userId, watchedId, seasonNumber, acceptableStatus).Count(&count); res.Error != nil {
+		return 0, res.Error
+	}
+	return count, nil
 }
