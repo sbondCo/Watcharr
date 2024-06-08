@@ -28,6 +28,9 @@ type WatchedSeasonAddRequest struct {
 	Rating          int8          `json:"rating"`
 	addActivity     ActivityType  `json:"-"`
 	addActivityDate time.Time     `json:"-"`
+	// Data to add to activity if the season is created.
+	// Combined with data we already add.
+	addActivityData map[string]interface{} `json:"-"`
 }
 
 type WatchedSeasonAddResponse struct {
@@ -98,7 +101,15 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest) (Wat
 			}
 		}
 	} else {
-		json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status, "rating": ar.Rating})
+		actData := map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status, "rating": ar.Rating}
+		if len(ar.addActivityData) > 0 {
+			for k, v := range ar.addActivityData {
+				if _, ok := ar.addActivityData[k]; ok {
+					actData[k] = v
+				}
+			}
+		}
+		json, _ := json.Marshal(actData)
 		act := ActivityAddRequest{WatchedID: w.ID, Type: SEASON_ADDED, Data: string(json)}
 		if ar.addActivity != "" {
 			act.Type = ar.addActivity
@@ -138,4 +149,16 @@ func rmWatchedSeason(db *gorm.DB, userId uint, seasonId uint) (Activity, error) 
 		return addedActivity, nil
 	}
 	return Activity{}, errors.New("removed, but failed to add activity entry")
+}
+
+func getWatchedSeason(db *gorm.DB, userId uint, watchedId uint, seasonNumber int) (*WatchedSeason, error) {
+	var ws *WatchedSeason
+	if res := db.Model(&WatchedSeason{}).Where("watched_id = ? AND season_number = ? AND user_id = ?", watchedId, seasonNumber, userId).Take(&ws); res.Error != nil {
+		slog.Error("getWatchedSeason: Failed to get:", "error", res.Error.Error())
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return &WatchedSeason{}, errors.New("failed to get watched season")
+	}
+	return ws, nil
 }

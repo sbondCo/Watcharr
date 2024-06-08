@@ -150,7 +150,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get season details
-	content.GET("/tv/:id/season/:num", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/tv/:id/season/:num", func(c *gin.Context) {
 		if c.Param("id") == "" || c.Param("num") == "" {
 			c.Status(400)
 			return
@@ -161,7 +161,7 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	}))
+	})
 
 	// Get person details
 	content.GET("/person/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {

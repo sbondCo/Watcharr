@@ -39,7 +39,8 @@ export type Icon =
   | "film"
   | "tv"
   | "pin"
-  | "unpin";
+  | "unpin"
+  | "sparkles";
 
 export type Theme = "light" | "dark";
 
@@ -145,6 +146,14 @@ export interface WatchedSeasonAddResponse {
 export interface WatchedEpisodeAddResponse {
   watchedEpisodes: WatchedEpisode[];
   addedActivity: Activity;
+  episodeStatusChangedHookResponse?: EpisodeStatusChangedHookResponse;
+}
+
+export interface EpisodeStatusChangedHookResponse {
+  newShowStatus?: WatchedStatus;
+  watchedSeason?: WatchedSeason;
+  addedActivities?: Activity[];
+  errors?: string[];
 }
 
 export interface Profile {

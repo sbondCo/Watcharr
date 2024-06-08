@@ -53,6 +53,47 @@
           } else {
             wEntry.activity = [r.data.addedActivity];
           }
+          try {
+            const epHookResp = r?.data?.episodeStatusChangedHookResponse;
+            if (epHookResp && Object.keys(epHookResp).length > 0) {
+              if (epHookResp.errors && epHookResp.errors.length > 0) {
+                console.error(
+                  "episodeStatusChangedHookResponse contained errors! All possible automations may not have been completed.",
+                  epHookResp.errors
+                );
+                notify({
+                  type: "error",
+                  text: "Some automations have failed, check console for more info."
+                });
+              }
+              if (epHookResp.addedActivities && epHookResp.addedActivities.length > 0) {
+                wEntry.activity.push(...epHookResp.addedActivities);
+              }
+              if (epHookResp.watchedSeason) {
+                if (!wEntry.watchedSeasons) {
+                  wEntry.watchedSeasons = [epHookResp.watchedSeason];
+                } else {
+                  const watchedSeasonIdx = wEntry.watchedSeasons.findIndex(
+                    (s) => s.id === epHookResp.watchedSeason?.id
+                  );
+                  if (watchedSeasonIdx === -1) {
+                    wEntry.watchedSeasons.push(epHookResp.watchedSeason);
+                  } else {
+                    wEntry.watchedSeasons[watchedSeasonIdx] = epHookResp.watchedSeason;
+                  }
+                }
+              }
+              if (epHookResp.newShowStatus) {
+                wEntry.status = epHookResp.newShowStatus;
+              }
+            }
+          } catch (err) {
+            console.error("Failed to process episodeStatusChangedHookResponse", err);
+            notify({
+              type: "error",
+              text: "Failed to process automation response, check console for more info."
+            });
+          }
           watchedList.update((w) => w);
           notify({ id: nid, text: `Saved!`, type: "success" });
         }
