@@ -39,6 +39,8 @@ type WatchedEpisodeAddRequest struct {
 type WatchedEpisodeAddResponse struct {
 	WatchedEpisodes []WatchedEpisode `json:"watchedEpisodes"`
 	AddedActivity   Activity         `json:"addedActivity"`
+	// Response from hook
+	EpisodeStatusChangedHookResponse EpisodeStatusChangedHookResponse `json:"episodeStatusChangedHookResponse,omitempty"`
 }
 
 // Add/edit a watched episode.
@@ -115,14 +117,15 @@ func addWatchedEpisodes(db *gorm.DB, userId uint, ar WatchedEpisodeAddRequest) (
 		}
 		addedActivity, _ = addActivity(db, userId, act)
 	}
-	if ar.Status != "" {
-		slog.Debug("addWatchedEpisodes: Episode status was changed, calling hook.")
-		hookEpisodeStatusChanged(db, userId, ar.WatchedID, ar.SeasonNumber, ar.EpisodeNumber, ar.Status)
-	}
-	return WatchedEpisodeAddResponse{
+	episodeAddResp := WatchedEpisodeAddResponse{
 		WatchedEpisodes: w.WatchedEpisodes,
 		AddedActivity:   addedActivity,
-	}, nil
+	}
+	if ar.Status != "" {
+		slog.Debug("addWatchedEpisodes: Episode status was changed, calling hook.")
+		episodeAddResp.EpisodeStatusChangedHookResponse = hookEpisodeStatusChanged(db, userId, ar.WatchedID, ar.SeasonNumber, ar.EpisodeNumber, ar.Status)
+	}
+	return episodeAddResp, nil
 }
 
 // Remove a watched episode

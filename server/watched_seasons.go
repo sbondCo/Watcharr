@@ -28,6 +28,9 @@ type WatchedSeasonAddRequest struct {
 	Rating          int8          `json:"rating"`
 	addActivity     ActivityType  `json:"-"`
 	addActivityDate time.Time     `json:"-"`
+	// Data to add to activity if the season is created.
+	// Combined with data we already add.
+	addActivityData map[string]interface{} `json:"-"`
 }
 
 type WatchedSeasonAddResponse struct {
@@ -98,7 +101,15 @@ func addWatchedSeason(db *gorm.DB, userId uint, ar WatchedSeasonAddRequest) (Wat
 			}
 		}
 	} else {
-		json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status, "rating": ar.Rating})
+		actData := map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status, "rating": ar.Rating}
+		if len(ar.addActivityData) > 0 {
+			for k, v := range ar.addActivityData {
+				if _, ok := ar.addActivityData[k]; ok {
+					actData[k] = v
+				}
+			}
+		}
+		json, _ := json.Marshal(actData)
 		act := ActivityAddRequest{WatchedID: w.ID, Type: SEASON_ADDED, Data: string(json)}
 		if ar.addActivity != "" {
 			act.Type = ar.addActivity

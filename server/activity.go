@@ -10,11 +10,13 @@ import (
 
 type ActivityType string
 
+// _AUTO activities are for when logic updates something for the user (automations basically).
 var (
 	ADDED_WATCHED               ActivityType = "ADDED_WATCHED"
 	REMOVED_WATCHED             ActivityType = "REMOVED_WATCHED"
 	RATING_CHANGED              ActivityType = "RATING_CHANGED"
 	STATUS_CHANGED              ActivityType = "STATUS_CHANGED"
+	STATUS_CHANGED_AUTO         ActivityType = "STATUS_CHANGED_AUTO"
 	THOUGHTS_CHANGED            ActivityType = "THOUGHTS_CHANGED"
 	THOUGHTS_REMOVED            ActivityType = "THOUGHTS_REMOVED"
 	IMPORTED_WATCHED            ActivityType = "IMPORTED_WATCHED"
@@ -25,12 +27,13 @@ var (
 	IMPORTED_ADDED_WATCHED_JF   ActivityType = "IMPORTED_ADDED_WATCHED_JF"
 	IMPORTED_ADDED_WATCHED_PLEX ActivityType = "IMPORTED_ADDED_WATCHED_PLEX"
 	SEASON_ADDED                ActivityType = "SEASON_ADDED"
-	SEASON_ADDED_AUTO           ActivityType = "SEASON_ADDED_AUTO" // When a season is added because of a different, but related user action (eg: setting an episode to watched)
+	SEASON_ADDED_AUTO           ActivityType = "SEASON_ADDED_AUTO"
 	SEASON_ADDED_JF             ActivityType = "SEASON_ADDED_JF"
 	SEASON_ADDED_PLEX           ActivityType = "SEASON_ADDED_PLEX"
 	SEASON_REMOVED              ActivityType = "SEASON_REMOVED"
 	SEASON_RATING_CHANGED       ActivityType = "SEASON_RATING_CHANGED"
 	SEASON_STATUS_CHANGED       ActivityType = "SEASON_STATUS_CHANGED"
+	SEASON_STATUS_CHANGED_AUTO  ActivityType = "SEASON_STATUS_CHANGED_AUTO"
 	EPISODE_ADDED               ActivityType = "EPISODE_ADDED"
 	EPISODE_ADDED_JF            ActivityType = "EPISODE_ADDED_JF"
 	EPISODE_ADDED_PLEX          ActivityType = "EPISODE_ADDED_PLEX"
