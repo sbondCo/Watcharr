@@ -55,7 +55,7 @@
           }
           try {
             const epHookResp = r?.data?.episodeStatusChangedHookResponse;
-            if (epHookResp) {
+            if (epHookResp && Object.keys(epHookResp).length > 0) {
               if (epHookResp.errors && epHookResp.errors.length > 0) {
                 console.error(
                   "episodeStatusChangedHookResponse contained errors! All possible automations may not have been completed.",

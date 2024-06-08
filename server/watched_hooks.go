@@ -9,14 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO add our own activity when we update a season/show status!
-
-// TODO might need to use pointers
 type EpisodeStatusChangedHookResponse struct {
 	// The watched shows status if we modified it.
 	NewShowStatus WatchedStatus `json:"newShowStatus,omitempty"`
 	// The full watched season (if created or modified).
-	WatchedSeason WatchedSeason `json:"watchedSeason,omitempty"`
+	WatchedSeason *WatchedSeason `json:"watchedSeason,omitempty"`
 	// All activies we have added.
 	AddedActivities []Activity `json:"addedActivities,omitempty"`
 	// All errors (fatal and non-fatal) that were encountered.
@@ -67,7 +64,7 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 			if err != nil {
 				hookResponse.Errors = append(hookResponse.Errors, "failed to get newly added watched season for response")
 			} else {
-				hookResponse.WatchedSeason = *justAddedWatchedSeason
+				hookResponse.WatchedSeason = justAddedWatchedSeason
 			}
 			hookResponse.AddedActivities = append(hookResponse.AddedActivities, resp.AddedActivity)
 		}
@@ -77,7 +74,7 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 			slog.Error("hookEpisodeStatusChanged: Failed to update season status!", "error", res.Error)
 			hookResponse.Errors = append(hookResponse.Errors, "failed to update season status")
 		} else {
-			hookResponse.WatchedSeason = *watchedSeason
+			hookResponse.WatchedSeason = watchedSeason
 			json, _ := json.Marshal(map[string]interface{}{"season": seasonNum, "status": watchedSeason.Status, "reason": fmt.Sprintf("Episode %d was set to %s while the season had no status.", episodeNum, newEpisodeStatus)})
 			addHookActivity(SEASON_STATUS_CHANGED_AUTO, string(json))
 		}
@@ -129,7 +126,7 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 			return hookResponse
 		} else {
 			if watchedSeason != nil {
-				hookResponse.WatchedSeason = *watchedSeason
+				hookResponse.WatchedSeason = watchedSeason
 				hookResponse.WatchedSeason.Status = newStatus
 			} else {
 				slog.Error("hookEpisodeStatusChanged: watchedSeason was nil HOW DID THIS HAPPEN? Anyways the client won't be able to update its state with the new season status until it is refreshed.")
