@@ -128,7 +128,12 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 			hookResponse.Errors = append(hookResponse.Errors, "failed to update season status to finished")
 			return hookResponse
 		} else {
-			hookResponse.WatchedSeason.Status = newStatus
+			if watchedSeason != nil {
+				hookResponse.WatchedSeason = *watchedSeason
+				hookResponse.WatchedSeason.Status = newStatus
+			} else {
+				slog.Error("hookEpisodeStatusChanged: watchedSeason was nil HOW DID THIS HAPPEN? Anyways the client won't be able to update its state with the new season status until it is refreshed.")
+			}
 			json, _ := json.Marshal(map[string]interface{}{"season": seasonNum, "status": newStatus, "reason": fmt.Sprintf("The season was deemed completed when episode %d was set to %s.", episodeNum, newEpisodeStatus)})
 			addHookActivity(SEASON_STATUS_CHANGED_AUTO, string(json))
 		}
