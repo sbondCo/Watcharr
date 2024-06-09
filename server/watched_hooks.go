@@ -32,12 +32,6 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 		}
 	}
 
-	// 1. Only continue if the episode was not marked dropped.
-	if newEpisodeStatus == DROPPED {
-		slog.Error("hookEpisodeStatusChanged: newEpisodeStatus is DROPPED, not continuing.")
-		return EpisodeStatusChangedHookResponse{}
-	}
-
 	hookResponse := EpisodeStatusChangedHookResponse{}
 
 	addHookActivity := func(aType ActivityType, data string) {
@@ -55,7 +49,7 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 	if watchedSeason == nil {
 		slog.Debug("hookEpisodeStatusChanged: Watched season does not exist. Creating now.")
 		seasonStatus := newEpisodeStatus
-		if newEpisodeStatus == FINISHED {
+		if newEpisodeStatus == FINISHED || newEpisodeStatus == DROPPED {
 			seasonStatus = WATCHING
 		}
 		resp, err := addWatchedSeason(db, userId, WatchedSeasonAddRequest{
