@@ -27,6 +27,7 @@
   let hideSpoilersDisabled = false;
   let countryDisabled = false;
   let includePreviouslyWatchedDisabled = false;
+  let automateShowStatusesDisabled = false;
   let pwChangeModalOpen = false;
   let getProfilePromise = getProfile();
   let jellyfinSyncModalOpen = false;
@@ -255,6 +256,25 @@
             hideSpoilersDisabled = true;
             updateUserSetting("hideSpoilers", on, () => {
               hideSpoilersDisabled = false;
+            });
+          }}
+        />
+      </Setting>
+
+      <Setting
+        title="Automate Show Statuses"
+        desc="Do you want to automate show statuses (show, season, episode)?"
+        tag="experimental"
+        row
+      >
+        <Checkbox
+          name="automateShowStatusesDisabled"
+          disabled={automateShowStatusesDisabled}
+          value={settings?.automateShowStatuses}
+          toggled={(on) => {
+            automateShowStatusesDisabled = true;
+            updateUserSetting("automateShowStatuses", on, () => {
+              automateShowStatusesDisabled = false;
             });
           }}
         />

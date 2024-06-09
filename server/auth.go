@@ -91,6 +91,8 @@ type UserSettings struct {
 	IncludePreviouslyWatched *bool `gorm:"default:false" json:"includePreviouslyWatched"`
 	// User's country to get correct content streaming providers.
 	Country *string `gorm:"default:'US'" json:"country"`
+	// Does the user want show, season and episode automations enabled.
+	AutomateShowStatuses *bool `gorm:"default:true" json:"automateShowStatuses"`
 }
 
 // Holds third party service auth tokens for users.
