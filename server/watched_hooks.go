@@ -74,7 +74,8 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 			if err != nil {
 				hookResponse.Errors = append(hookResponse.Errors, "failed to get newly added watched season for response")
 			} else {
-				hookResponse.WatchedSeason = justAddedWatchedSeason
+				watchedSeason = justAddedWatchedSeason
+				hookResponse.WatchedSeason = watchedSeason
 			}
 			hookResponse.AddedActivities = append(hookResponse.AddedActivities, resp.AddedActivity)
 		}
@@ -130,13 +131,18 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 	if finishedEpisodesCount >= int64(allEpisodesCount) {
 		slog.Debug("hookEpisodeStatusChanged: All episodes have been completed (finished or dropped). Marking season finished.")
 		newStatus := FINISHED
+		if watchedSeason != nil && watchedSeason.Status == newStatus {
+			slog.Debug("hookEpisodeStatusChanged: WatchedSeason status is same as newStatus so not updating.")
+			return hookResponse
+		}
 		if res := db.Model(&WatchedSeason{}).Where("watched_id = ? AND season_number = ? AND user_id = ?", watchedId, seasonNum, userId).Update("status", newStatus); res.Error != nil {
 			slog.Error("hookEpisodeStatusChanged: Failed to update season status to finished:", "error", res.Error.Error())
 			hookResponse.Errors = append(hookResponse.Errors, "failed to update season status to finished")
 			return hookResponse
 		} else {
-			if hookResponse.WatchedSeason != nil {
-				hookResponse.WatchedSeason.Status = newStatus
+			if watchedSeason != nil {
+				watchedSeason.Status = newStatus
+				hookResponse.WatchedSeason = watchedSeason
 			} else {
 				slog.Error("hookEpisodeStatusChanged: watchedSeason was nil HOW DID THIS HAPPEN? Anyways the client won't be able to update its state with the new season status until it is refreshed.")
 			}
