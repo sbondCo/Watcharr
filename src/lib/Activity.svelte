@@ -313,11 +313,6 @@
   }
 
   h2 {
-    font-family:
-      sans-serif,
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont;
     font-size: 30px;
     font-weight: bold;
     margin-left: 30px;
