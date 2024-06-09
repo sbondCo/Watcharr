@@ -73,7 +73,8 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 			}
 			hookResponse.AddedActivities = append(hookResponse.AddedActivities, resp.AddedActivity)
 		}
-	} else if watchedSeason.Status == "" || watchedSeason.Status == PLANNED || watchedSeason.Status == HOLD || watchedSeason.Status == DROPPED {
+	} else if watchedSeason.Status == "" || watchedSeason.Status == PLANNED ||
+		((newEpisodeStatus == FINISHED || newEpisodeStatus == WATCHING) && (watchedSeason.Status == HOLD || watchedSeason.Status == DROPPED)) {
 		reasonStr := fmt.Sprintf("Episode %d was set to %s while the season had ", episodeNum, newEpisodeStatus)
 		if watchedSeason.Status == "" {
 			reasonStr += "no status."
