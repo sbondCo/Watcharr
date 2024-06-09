@@ -73,14 +73,20 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 			}
 			hookResponse.AddedActivities = append(hookResponse.AddedActivities, resp.AddedActivity)
 		}
-	} else if watchedSeason.Status == "" || watchedSeason.Status == PLANNED {
+	} else if watchedSeason.Status == "" || watchedSeason.Status == PLANNED || watchedSeason.Status == HOLD || watchedSeason.Status == DROPPED {
+		reasonStr := fmt.Sprintf("Episode %d was set to %s while the season had ", episodeNum, newEpisodeStatus)
+		if watchedSeason.Status == "" {
+			reasonStr += "no status."
+		} else {
+			reasonStr += fmt.Sprintf("a status of %s.", watchedSeason.Status)
+		}
 		watchedSeason.Status = WATCHING
 		if res := db.Save(watchedSeason); res.Error != nil {
 			slog.Error("hookEpisodeStatusChanged: Failed to update season status!", "error", res.Error)
 			hookResponse.Errors = append(hookResponse.Errors, "failed to update season status")
 		} else {
 			hookResponse.WatchedSeason = watchedSeason
-			json, _ := json.Marshal(map[string]interface{}{"season": seasonNum, "status": watchedSeason.Status, "reason": fmt.Sprintf("Episode %d was set to %s while the season had no status.", episodeNum, newEpisodeStatus)})
+			json, _ := json.Marshal(map[string]interface{}{"season": seasonNum, "status": watchedSeason.Status, "reason": reasonStr})
 			addHookActivity(SEASON_STATUS_CHANGED_AUTO, string(json))
 		}
 	}
