@@ -1,6 +1,6 @@
 {
   "name": "watcharr",
-  "version": "1.40.0-dev2",
+  "version": "1.40.0",
   "private": true,
   "scripts": {
     "dev": "vite dev",
