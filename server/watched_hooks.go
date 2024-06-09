@@ -112,6 +112,9 @@ func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNu
 	}
 
 	// 4. If all episodes are FINISHED or DROPPED, set the season to FINISHED
+	// BUG If a seasons status is removed and the last episode of the season is marked finished,
+	//     this will add activity for the season being marked finished, right after it is set
+	//     to Watching just above. I think this might never happen to anyone so um ye.
 	tmdbIdStr := strconv.Itoa(watchedShow.Content.TmdbID)
 	seasonNumStr := strconv.Itoa(seasonNum)
 	seasonDetails, err := seasonDetails(tmdbIdStr, seasonNumStr)
