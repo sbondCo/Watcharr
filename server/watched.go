@@ -21,7 +21,7 @@ const (
 	FINISHED WatchedStatus = "FINISHED"
 	WATCHING WatchedStatus = "WATCHING"
 	PLANNED  WatchedStatus = "PLANNED"
-	HOLD     WatchedStatus = "ONHOLD"
+	HOLD     WatchedStatus = "HOLD"
 	DROPPED  WatchedStatus = "DROPPED"
 )
 
