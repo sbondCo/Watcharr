@@ -91,8 +91,8 @@ type PlexLibraryItemsResponse struct {
 		Title1              string `json:"title1"`
 		Title2              string `json:"title2"`
 		ViewGroup           string `json:"viewGroup"`
-		ViewMode            int    `json:"viewMode"`
-		Metadata            []struct {
+		// ViewMode            int    `json:"viewMode"` // Causing string error, not used so commented out for now.
+		Metadata []struct {
 			RatingKey              string  `json:"ratingKey"`
 			Key                    string  `json:"key"`
 			GUID                   string  `json:"guid"` // Plex guid
@@ -193,8 +193,8 @@ type PlexLibraryItemSeasonsResponse struct {
 		Title1              string `json:"title1"`
 		Title2              string `json:"title2"`
 		ViewGroup           string `json:"viewGroup"`
-		ViewMode            int    `json:"viewMode"`
-		Directory           []struct {
+		// ViewMode            int    `json:"viewMode"` // Causing string error, not used so commented out for now.
+		Directory []struct {
 			LeafCount       int    `json:"leafCount"`
 			Thumb           string `json:"thumb"`
 			ViewedLeafCount int    `json:"viewedLeafCount"`
@@ -256,8 +256,8 @@ type PlexLibraryItemEpisodesResponse struct {
 		Title1              string `json:"title1"`
 		Title2              string `json:"title2"`
 		ViewGroup           string `json:"viewGroup"`
-		ViewMode            int    `json:"viewMode"`
-		Metadata            []struct {
+		// ViewMode            int    `json:"viewMode"` // Causing string error, not used so commented out for now.
+		Metadata []struct {
 			RatingKey             string  `json:"ratingKey"`
 			Key                   string  `json:"key"`
 			ParentRatingKey       string  `json:"parentRatingKey"`
