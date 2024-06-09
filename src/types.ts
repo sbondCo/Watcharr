@@ -170,6 +170,7 @@ export interface UserSettings {
   hideSpoilers: boolean;
   includePreviouslyWatched: boolean;
   country: string;
+  automateShowStatuses: boolean;
 }
 
 export interface ChangePasswordForm {

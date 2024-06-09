@@ -22,6 +22,16 @@ type EpisodeStatusChangedHookResponse struct {
 
 // Called after an episode watched status has been set.
 func hookEpisodeStatusChanged(db *gorm.DB, userId uint, watchedId uint, seasonNum int, episodeNum int, newEpisodeStatus WatchedStatus) EpisodeStatusChangedHookResponse {
+	userSettings, err := userGetSettings(db, userId)
+	if err != nil {
+		slog.Error("hookEpisodeStatusChanged: Failed to get user settings! Hook will continue.", "error", err)
+	} else {
+		if !*userSettings.AutomateShowStatuses {
+			slog.Debug("hookEpisodeStatusChanged: User has AutomateShowStatuses disabled. Skipping hook.", "user_id", userId)
+			return EpisodeStatusChangedHookResponse{}
+		}
+	}
+
 	// 1. Only continue if the episode was not marked dropped.
 	if newEpisodeStatus == DROPPED {
 		slog.Error("hookEpisodeStatusChanged: newEpisodeStatus is DROPPED, not continuing.")
