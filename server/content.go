@@ -243,9 +243,12 @@ func transformProviders(c *interface{}, country string) {
 	}
 }
 
-func searchContent(query string) (TMDBSearchMultiResponse, error) {
+func searchContent(query string, pageNum int) (TMDBSearchMultiResponse, error) {
 	resp := new(TMDBSearchMultiResponse)
-	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": "1"}, &resp)
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete multi search request!", "error", err.Error())
 		return TMDBSearchMultiResponse{}, errors.New("failed to complete multi search request")

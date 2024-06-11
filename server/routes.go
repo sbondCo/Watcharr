@@ -85,7 +85,17 @@ func (b *BaseRouter) addContentRoutes() {
 			c.Status(400)
 			return
 		}
-		content, err := searchContent(c.Param("query"))
+		pageQ := c.Query("page")
+		pageNum := 1
+		if pageQ != "" {
+			num, err := strconv.Atoi(pageQ)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
+				return
+			}
+			pageNum = num
+		}
+		content, err := searchContent(c.Param("query"), pageNum)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
