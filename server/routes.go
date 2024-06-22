@@ -79,10 +79,9 @@ func (b *BaseRouter) addContentRoutes() {
 	exp := time.Hour * 24
 
 	// Search for content
-	content.GET("/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
-		// println(c.Param("query"))
+	content.GET("/search/multi/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("query") == "" {
-			c.Status(400)
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
 		pageQ := c.Query("page")
