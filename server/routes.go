@@ -102,6 +102,78 @@ func (b *BaseRouter) addContentRoutes() {
 		c.JSON(http.StatusOK, content)
 	}))
 
+	// Search for movies
+	content.GET("/search/movie/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("query") == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
+			return
+		}
+		pageQ := c.Query("page")
+		pageNum := 1
+		if pageQ != "" {
+			num, err := strconv.Atoi(pageQ)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
+				return
+			}
+			pageNum = num
+		}
+		content, err := searchMovies(c.Param("query"), pageNum)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	}))
+
+	// Search for shows
+	content.GET("/search/tv/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("query") == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
+			return
+		}
+		pageQ := c.Query("page")
+		pageNum := 1
+		if pageQ != "" {
+			num, err := strconv.Atoi(pageQ)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
+				return
+			}
+			pageNum = num
+		}
+		content, err := searchTv(c.Param("query"), pageNum)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	}))
+
+	// Search for people
+	content.GET("/search/person/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("query") == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
+			return
+		}
+		pageQ := c.Query("page")
+		pageNum := 1
+		if pageQ != "" {
+			num, err := strconv.Atoi(pageQ)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
+				return
+			}
+			pageNum = num
+		}
+		content, err := searchPeople(c.Param("query"), pageNum)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	}))
+
 	// Get movie details (for movie page)
 	content.GET("/movie/:id", WhereaboutsRequired(), cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("id") == "" {
