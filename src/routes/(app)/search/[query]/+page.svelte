@@ -51,7 +51,6 @@
 
   $: searchQ = $searchQuery;
   $: wList = $watchedList;
-  // $: (allSearchResults, activeSearchFilter), filterResults();
 
   async function searchMulti(query: string, page: number) {
     try {
@@ -66,7 +65,6 @@
 
   async function searchMovies(query: string, page: number) {
     try {
-      page = 1;
       const movies = await axios.get<MoviesSearchResponse>(
         `/content/search/movie/${query}?page=${page}`
       );
@@ -81,7 +79,6 @@
 
   async function searchTv(query: string, page: number) {
     try {
-      page = 1;
       const shows = await axios.get<ShowsSearchResponse>(
         `/content/search/tv/${query}?page=${page}`
       );
@@ -96,7 +93,6 @@
 
   async function searchPeople(query: string, page: number) {
     try {
-      page = 1;
       const people = await axios.get<PeopleSearchResponse>(
         `/content/search/person/${query}?page=${page}`
       );
@@ -145,14 +141,25 @@
         // If we have a search filter selected, search for just one specific type of content.
         console.log("Search: A filter is active:", activeSearchFilter);
         if (activeSearchFilter === "movie") {
-          allSearchResults = (await searchMovies(query, curPage + 1)).data.results;
+          const cdata = (await searchMovies(query, curPage + 1)).data;
+          allSearchResults.push(...cdata.results);
+          if (cdata.total_pages) {
+            maxContentPage = cdata.total_pages;
+          }
         } else if (activeSearchFilter === "tv") {
-          allSearchResults = (await searchTv(query, curPage + 1)).data.results;
+          const cdata = (await searchTv(query, curPage + 1)).data;
+          allSearchResults.push(...cdata.results);
+          if (cdata.total_pages) {
+            maxContentPage = cdata.total_pages;
+          }
         } else if (activeSearchFilter === "person") {
-          allSearchResults = (await searchPeople(query, curPage + 1)).data
-            .results as CombinedResult[];
+          const cdata = (await searchPeople(query, curPage + 1)).data;
+          allSearchResults.push(...(cdata.results as CombinedResult[]));
+          if (cdata.total_pages) {
+            maxContentPage = cdata.total_pages;
+          }
         } else if (activeSearchFilter === "game") {
-          allSearchResults = (await searchGames(query, curPage + 1)).data;
+          allSearchResults.push(...(await searchGames(query, curPage + 1)).data);
         } else {
           console.error("Active search filter is invalid:", activeSearchFilter);
         }
@@ -222,13 +229,13 @@
     }
     doCleanSearch();
 
-    // window.addEventListener("scroll", infiniteScroll);
-    // window.addEventListener("resize", infiniteScroll);
+    window.addEventListener("scroll", infiniteScroll);
+    window.addEventListener("resize", infiniteScroll);
 
-    // return () => {
-    //   window.removeEventListener("scroll", infiniteScroll);
-    //   window.removeEventListener("resize", infiniteScroll);
-    // };
+    return () => {
+      window.removeEventListener("scroll", infiniteScroll);
+      window.removeEventListener("resize", infiniteScroll);
+    };
   });
 
   afterNavigate(() => {
