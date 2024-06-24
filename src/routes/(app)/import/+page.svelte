@@ -369,6 +369,119 @@
     }
   }
 
+  async function processRyotFile(files?: FileList | null) {
+    try {
+      console.log("processRyotFile", files);
+      if (!files || files?.length <= 0) {
+        console.error("processRyotFile", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
+        });
+        isDragOver = false;
+        return;
+      }
+      isLoading = true;
+      if (files.length > 1) {
+        notify({
+          type: "error",
+          text: "Only one file at a time is supported. Continuing with the first.",
+          time: 6000
+        });
+      }
+
+      // Currently only support for importing one file at a time
+      const file = files[0];
+      if (file.type !== "application/json") {
+        notify({
+          type: "error",
+          text: "Must be a Ryot JSON export file"
+        });
+        isLoading = false;
+        isDragOver = false;
+        return;
+      }
+
+      // Build toImport array
+      const toImport: ImportedList[] = [];
+      const fileText = await readFile(new FileReader(), file);
+      const jsonData = JSON.parse(fileText)["media"] as Watched[];
+      for (const v of jsonData) {
+        if (!v.source_id || !v.identifier) {
+          notify({
+            type: "error",
+            text: "Item in export has no title or TMDB identifier! Look in console for more details."
+          });
+          console.error(
+            "Can't add export item to import table! It has no source_id or identifier! Item:",
+            v
+          );
+          continue;
+        }
+        
+        // Create t
+        let t;
+        if(v.lot === "movie"){             
+          // WatchedStatus = "PLANNED" | "WATCHING" | "FINISHED" | "HOLD" | "DROPPED";
+          // TODO: Make better
+          // Translate status - May have multiple
+          // Main Ryot statuses: "Watchlist", "In Progress", "Completed", "Monitoring"
+          // There is no data equivalent to HOLD or DROPPED in the Ryot export
+          let mainStatus = null;
+          for(const s of v.collections){            
+            if(s === "Completed"){
+              mainStatus = "FINISHED";
+              break;
+            }
+            else if(s === "Watchlist")   mainStatus = "PLANNED";
+            else if(s === "In Progress") mainStatus = "WATCHING";
+            else if(s === "Monitoring")  mainStatus = "PLANNED";            
+          }
+
+          const tmp: ImportedList = {
+            name: v.source_id,
+            tmdbId: Number(v.identifier),
+            type: v.lot,
+            status: mainStatus,
+            thoughts: "",
+            datesWatched: v.seen_history.map(seen => new Date(seen.ended_on))
+          };
+          t = tmp;
+        }
+        else if(v.lot === "show"){
+          const tmp: ImportedList = {
+            name: v.source_id,
+            tmdbId: Number(v.identifier),
+            type: v.lot,
+            status: v.collections.includes("Completed") ? "FINISHED":"WATCHING",
+            thoughts: "",
+            watchedEpisodes: v.seen_history.map(h => ({
+                status: h.progress === "100" ? "FINISHED":"WATCHING",
+                seasonNumber: h.show_season_number,
+                episodeNumber: h.show_episode_number
+              }
+            ))
+          };
+          t = tmp;
+        }
+
+        console.log(t);
+        toImport.push(t);
+      }
+      console.log("toImport:", toImport);
+      importedList.set({
+        data: JSON.stringify(toImport),
+        type: "ryot"
+      });
+      goto("/import/process");
+    } catch (err) {
+      isLoading = false;
+      notify({ type: "error", text: "Failed to read file!" });
+      console.error("import: Failed to read file!", err);
+    }
+  }
+
   onMount(() => {
     if (!localStorage.getItem("token")) {
       goto("/login");
@@ -406,6 +519,11 @@
         <DropFileButton
           text="MyAnimeList Export"
           filesSelected={(f) => processFilesMyAnimeList(f)}
+        />
+
+        <DropFileButton
+          text="Ryot Exports"
+          filesSelected={(f) => processRyotFile(f)}
         />
       {/if}
     </div>
