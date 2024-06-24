@@ -180,11 +180,20 @@
       console.debug("allSearchResults:", allSearchResults);
       searchResults = allSearchResults;
       curPage++;
+      searchRunning = false;
+      // If results don't fill the page enough to enable scrolling,
+      // the user could be stuck and not be able to get more results
+      // to show, run `infiniteScroll` to load more if we can.
+      // Smol timeout to give ui time to render so end of page calc
+      // can be accurate.
+      setTimeout(() => {
+        infiniteScroll();
+      }, 250);
     } catch (err) {
       console.error("search failed!", err);
       contentSearchErr = err;
+      searchRunning = false;
     }
-    searchRunning = false;
   }
 
   async function doCleanSearch() {
