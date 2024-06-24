@@ -309,13 +309,15 @@
           >
             <Icon i="tv" wh={20} /> TV Shows
           </button>
-          <button
-            class="plain"
-            data-active={activeSearchFilter === "game"}
-            on:click={() => setActiveSearchFilter("game")}
-          >
-            <Icon i="gamepad" wh={20} /> Games
-          </button>
+          {#if $serverFeatures.games}
+            <button
+              class="plain"
+              data-active={activeSearchFilter === "game"}
+              on:click={() => setActiveSearchFilter("game")}
+            >
+              <Icon i="gamepad" wh={20} /> Games
+            </button>
+          {/if}
           <button
             class="plain"
             data-active={activeSearchFilter === "person"}
