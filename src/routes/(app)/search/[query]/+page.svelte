@@ -243,6 +243,7 @@
       window.removeEventListener("scroll", infiniteScroll);
       if (data.slug) await search(data.slug);
       window.addEventListener("scroll", infiniteScroll);
+      console.debug(`Page: ${curPage} / ${maxContentPage}`);
     }
   }
 
@@ -278,7 +279,7 @@
   <title>Search Results{data?.slug ? ` for '${data?.slug}'` : ""}</title>
 </svelte:head>
 
-<span style="position: sticky;top: 70px;">{curPage} / {maxContentPage}</span>
+<!-- <span style="position: sticky;top: 70px;">{curPage} / {maxContentPage}</span> -->
 
 <div class="content">
   <div class="inner">
