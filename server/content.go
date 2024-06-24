@@ -243,12 +243,63 @@ func transformProviders(c *interface{}, country string) {
 	}
 }
 
-func searchContent(query string) (TMDBSearchMultiResponse, error) {
+func searchContent(query string, pageNum int) (TMDBSearchMultiResponse, error) {
 	resp := new(TMDBSearchMultiResponse)
-	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": "1"}, &resp)
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete multi search request!", "error", err.Error())
 		return TMDBSearchMultiResponse{}, errors.New("failed to complete multi search request")
+	}
+	return *resp, nil
+}
+
+func searchMovies(query string, pageNum int) (TMDBSearchMoviesResponse, error) {
+	resp := new(TMDBSearchMoviesResponse)
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	err := tmdbRequest("/search/movie", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete movie search request!", "error", err.Error())
+		return TMDBSearchMoviesResponse{}, errors.New("failed to complete movie search request")
+	}
+	for i := range resp.Results {
+		resp.Results[i].MediaType = "movie"
+	}
+	return *resp, nil
+}
+
+func searchTv(query string, pageNum int) (TMDBSearchShowsResponse, error) {
+	resp := new(TMDBSearchShowsResponse)
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	err := tmdbRequest("/search/tv", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete tv search request!", "error", err.Error())
+		return TMDBSearchShowsResponse{}, errors.New("failed to complete tv search request")
+	}
+	for i := range resp.Results {
+		resp.Results[i].MediaType = "tv"
+	}
+	return *resp, nil
+}
+
+func searchPeople(query string, pageNum int) (TMDBSearchPeopleResponse, error) {
+	resp := new(TMDBSearchPeopleResponse)
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	err := tmdbRequest("/search/person", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete people search request!", "error", err.Error())
+		return TMDBSearchPeopleResponse{}, errors.New("failed to complete people search request")
+	}
+	for i := range resp.Results {
+		resp.Results[i].MediaType = "person"
 	}
 	return *resp, nil
 }

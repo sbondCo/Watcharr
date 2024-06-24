@@ -1,6 +1,7 @@
 <script lang="ts">
   export let pretty: string;
   export let error: any;
+  export let onRetry: () => void | undefined = undefined!;
 </script>
 
 <div>
@@ -13,6 +14,9 @@
       {/if}
     {:else}
       <p>{JSON.stringify(error)}</p>
+    {/if}
+    {#if onRetry}
+      <button on:click={onRetry}>Try Again</button>
     {/if}
   </div>
 </div>
