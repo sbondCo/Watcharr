@@ -106,6 +106,11 @@
 
   async function searchGames(query: string, page: number) {
     try {
+      // Doesn't support pagination, so return if a page higher than 1
+      // is requested.
+      if (page > 1) {
+        return;
+      }
       const f = get(serverFeatures);
       if (!f.games) {
         console.debug("game search is not enabled on this server");
@@ -155,7 +160,12 @@
           // HACK couldn't be bothered to fix this type error
           allSearchResults.push(...(cdata.results as unknown as CombinedResult[]));
         } else if (activeSearchFilter === "game") {
-          allSearchResults.push(...(await searchGames(query, curPage + 1)).data);
+          const gdata = await searchGames(query, curPage + 1);
+          if (gdata) {
+            allSearchResults.push(...gdata.data);
+          } else {
+            console.log("no gdata");
+          }
         } else {
           console.error("Active search filter is invalid:", activeSearchFilter);
         }
@@ -173,7 +183,7 @@
           }
           allSearchResults.push(...r[0].value.data.results);
         }
-        if (r[1].status == "fulfilled") {
+        if (r[1].status == "fulfilled" && r[1].value) {
           allSearchResults.push(...r[1].value.data);
         }
       }
