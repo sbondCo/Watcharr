@@ -44,24 +44,12 @@
   let curPage = 0;
   let maxContentPage = 1;
   let searchRunning = false;
-  let pageErr: any = "";
   let contentSearchErr: any;
 
   const infiniteScrollThreshold = 150;
 
   $: searchQ = $searchQuery;
   $: wList = $watchedList;
-
-  async function searchMulti(query: string, page: number) {
-    try {
-      return await axios.get<ContentSearch>(`/content/search/multi/${query}?page=${page}`);
-    } catch (err) {
-      console.error("Movies/Tv search failed!", err);
-      notify({ text: "Movie/Tv Search Failed!", type: "error" });
-      contentSearchErr = err;
-      return { data: { results: [], page: 1, total_pages: 1 } };
-    }
-  }
 
   async function searchMovies(query: string, page: number) {
     try {
@@ -73,7 +61,7 @@
       console.error("Movies search failed!", err);
       notify({ text: "Movie Search Failed!", type: "error" });
       contentSearchErr = err;
-      return { data: { results: [], page: 1, total_pages: 1 } };
+      throw err;
     }
   }
 
@@ -87,7 +75,7 @@
       console.error("Tv search failed!", err);
       notify({ text: "Tv Search Failed!", type: "error" });
       contentSearchErr = err;
-      return { data: { results: [], page: 1, total_pages: 1 } };
+      throw err;
     }
   }
 
@@ -101,7 +89,18 @@
       console.error("People search failed!", err);
       notify({ text: "People Search Failed!", type: "error" });
       contentSearchErr = err;
-      return { data: { results: [], page: 1, total_pages: 1 } };
+      throw err;
+    }
+  }
+
+  async function searchMulti(query: string, page: number) {
+    try {
+      return await axios.get<ContentSearch>(`/content/search/multi/${query}?page=${page}`);
+    } catch (err) {
+      console.error("Movies/Tv search failed!", err);
+      notify({ text: "Movie/Tv Search Failed!", type: "error" });
+      contentSearchErr = err;
+      throw err;
     }
   }
 
@@ -122,7 +121,11 @@
     } catch (err) {
       console.error("Game search failed!", err);
       notify({ text: "Game Search Failed!", type: "error" });
-      return { data: [] };
+      // This could cause the multi error to be replaced with this one
+      // if both requests fail, but it shouldn't matter, retry button
+      // should still do it's job if needed.
+      contentSearchErr = err;
+      throw err;
     }
   }
 
@@ -140,49 +143,46 @@
       if (activeSearchFilter) {
         // If we have a search filter selected, search for just one specific type of content.
         console.log("Search: A filter is active:", activeSearchFilter);
+        let cdata;
         if (activeSearchFilter === "movie") {
-          const cdata = (await searchMovies(query, curPage + 1)).data;
+          cdata = (await searchMovies(query, curPage + 1)).data;
           allSearchResults.push(...cdata.results);
-          if (cdata.total_pages) {
-            maxContentPage = cdata.total_pages;
-          }
         } else if (activeSearchFilter === "tv") {
-          const cdata = (await searchTv(query, curPage + 1)).data;
+          cdata = (await searchTv(query, curPage + 1)).data;
           allSearchResults.push(...cdata.results);
-          if (cdata.total_pages) {
-            maxContentPage = cdata.total_pages;
-          }
         } else if (activeSearchFilter === "person") {
-          const cdata = (await searchPeople(query, curPage + 1)).data;
-          allSearchResults.push(...(cdata.results as CombinedResult[]));
-          if (cdata.total_pages) {
-            maxContentPage = cdata.total_pages;
-          }
+          cdata = (await searchPeople(query, curPage + 1)).data;
+          // HACK couldn't be bothered to fix this type error
+          allSearchResults.push(...(cdata.results as unknown as CombinedResult[]));
         } else if (activeSearchFilter === "game") {
           allSearchResults.push(...(await searchGames(query, curPage + 1)).data);
         } else {
           console.error("Active search filter is invalid:", activeSearchFilter);
         }
+        maxContentPage = cdata ? cdata.total_pages ?? 1 : 1;
       } else {
         // If no search filter is applied, do default multi+game combined search.
         console.log("Search: No filter is applied.");
-        const r = await Promise.all([
+        const r = await Promise.allSettled([
           searchMulti(query, curPage + 1),
           searchGames(query, curPage + 1)
         ]);
-        if (r[0].data.total_pages) {
-          maxContentPage = r[0].data.total_pages;
+        if (r[0].status == "fulfilled") {
+          if (r[0].value.data.total_pages) {
+            maxContentPage = r[0].value.data.total_pages;
+          }
+          allSearchResults.push(...r[0].value.data.results);
         }
-        allSearchResults.push(
-          ...new Array<CombinedResult>().concat.apply([], [r[0].data.results, r[1].data])
-        );
+        if (r[1].status == "fulfilled") {
+          allSearchResults.push(...r[1].value.data);
+        }
       }
       console.debug("allSearchResults:", allSearchResults);
       searchResults = allSearchResults;
       curPage++;
     } catch (err) {
       console.error("search failed!", err);
-      pageErr = err;
+      contentSearchErr = err;
     }
     searchRunning = false;
   }
@@ -212,6 +212,10 @@
   }
 
   async function infiniteScroll() {
+    // If an error is being shown, no more infinite scroll.
+    if (contentSearchErr) {
+      return;
+    }
     if (
       window.innerHeight + Math.round(window.scrollY) + infiniteScrollThreshold >=
       document.body.offsetHeight
@@ -322,7 +326,8 @@
               <Poster media={w} {...getWatchedDependedProps(w.id, w.media_type, wList)} fluidSize />
             {/if}
           {/each}
-        {:else if !searchRunning}
+        {:else if !searchRunning && !contentSearchErr}
+          <!-- If search is running or we have an error, no point in showing 'no results' message. -->
           No Search Results!
         {/if}
       </PosterList>
@@ -332,7 +337,16 @@
       {/if}
 
       {#if contentSearchErr}
-        <Error pretty="Failed to load results!" error={contentSearchErr} />
+        <div style="margin-bottom: 60px;">
+          <Error
+            pretty="Failed to load results!"
+            error={contentSearchErr}
+            onRetry={() => {
+              contentSearchErr = undefined;
+              search(data.slug);
+            }}
+          />
+        </div>
       {/if}
     {:else}
       <h2>No Search Query!</h2>
