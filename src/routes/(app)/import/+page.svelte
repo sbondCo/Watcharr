@@ -370,6 +370,7 @@
   }
 
   async function processRyotFile(files?: FileList | null) {
+    // TODO: Bugfix: Always ask for correct match
     try {
       console.log("processRyotFile", files);
       if (!files || files?.length <= 0) {
@@ -419,51 +420,46 @@
           );
           continue;
         }
-        
-        // Create t
-        let t;
-        if(v.lot === "movie"){             
-          // WatchedStatus = "PLANNED" | "WATCHING" | "FINISHED" | "HOLD" | "DROPPED";
-          // TODO: Make better
-          // Translate status - May have multiple
-          // Main Ryot statuses: "Watchlist", "In Progress", "Completed", "Monitoring"
-          // There is no data equivalent to HOLD or DROPPED in the Ryot export
-          let mainStatus = null;
-          for(const s of v.collections){            
-            if(s === "Completed"){
-              mainStatus = "FINISHED";
-              break;
-            }
-            else if(s === "Watchlist")   mainStatus = "PLANNED";
-            else if(s === "In Progress") mainStatus = "WATCHING";
-            else if(s === "Monitoring")  mainStatus = "PLANNED";            
-          }
 
-          const tmp: ImportedList = {
-            name: v.source_id,
-            tmdbId: Number(v.identifier),
-            type: v.lot,
-            status: mainStatus,
-            thoughts: "",
-            datesWatched: v.seen_history.map(seen => new Date(seen.ended_on))
-          };
-          t = tmp;
+        // Define the main general status of the movie/show
+        // In Ryot, it can be marked as multiple of the following
+        const ryotStatusRanks: string[] = ["Watchlist", "Monitoring", "In Progress", "Completed"]
+        const ryotToWatcharr:  string[] = ["PLANNED",   "PLANNED",    "WATCHING",    "FINISHED"]
+        let rank = 0;           
+        for(const s of v.collections){            
+          rank = Math.max(rank, ryotStatusRanks.indexOf(s))
         }
-        else if(v.lot === "show"){
-          const tmp: ImportedList = {
-            name: v.source_id,
-            tmdbId: Number(v.identifier),
-            type: v.lot,
-            status: v.collections.includes("Completed") ? "FINISHED":"WATCHING",
-            thoughts: "",
-            watchedEpisodes: v.seen_history.map(h => ({
-                status: h.progress === "100" ? "FINISHED":"WATCHING",
-                seasonNumber: h.show_season_number,
-                episodeNumber: h.show_episode_number
-              }
-            ))
-          };
-          t = tmp;
+        
+        let mainStatus = ryotToWatcharr[rank];
+
+        const t: ImportedList = {
+          tmdbId: Number(v.identifier),
+          name: v.source_id,
+          type: v.lot === "show" ? "tv" : v.lot,
+          status: mainStatus,
+
+          // In Ryot, shows can have one review for each episode - Not supported in Watcharr
+          // Will ignore the episodes' reviews
+          thoughts: v.lot === "movie" && v.reviews.length ? v.reviews[0].review.text : "",
+
+          // Ryot does not support overall rating for shows
+          rating: v.lot === "movie" && v.reviews.length ? Number(v.reviews[0].rating) : null,
+          
+          datesWatched: v.lot === "movie" && v.seen_history.length ? v.seen_history.map(seen => new Date(seen.ended_on)) : [],
+
+          // Episode ratings are on a separate field: "reviews"
+          watchedEpisodes: v.seen_history.map(episode => ({
+            status: episode.progress === "100" ? "FINISHED" : "WATCHING",
+            
+            // Linear :( search the reviews for a match
+            rating: Number((v.reviews.find(review => 
+              review.show_season_number  === episode.show_season_number &&
+              review.show_episode_number === episode.show_episode_number
+            ) || {}).rating) || null,
+
+            seasonNumber:  episode.show_season_number,
+            episodeNumber: episode.show_episode_number
+          }))
         }
 
         console.log(t);
