@@ -170,6 +170,8 @@
           console.error("Active search filter is invalid:", activeSearchFilter);
         }
         maxContentPage = cdata ? cdata.total_pages ?? 1 : 1;
+        searchResults = allSearchResults;
+        curPage++;
       } else {
         // If no search filter is applied, do default multi+game combined search.
         console.log("Search: No filter is applied.");
@@ -182,14 +184,15 @@
             maxContentPage = r[0].value.data.total_pages;
           }
           allSearchResults.push(...r[0].value.data.results);
+          curPage++;
         }
         if (r[1].status == "fulfilled" && r[1].value) {
           allSearchResults.push(...r[1].value.data);
         }
+        searchResults = allSearchResults;
       }
       console.debug("allSearchResults:", allSearchResults);
-      searchResults = allSearchResults;
-      curPage++;
+
       searchRunning = false;
       // If results don't fill the page enough to enable scrolling,
       // the user could be stuck and not be able to get more results
@@ -279,7 +282,7 @@
   <title>Search Results{data?.slug ? ` for '${data?.slug}'` : ""}</title>
 </svelte:head>
 
-<!-- <span style="position: sticky;top: 70px;">{curPage} / {maxContentPage}</span> -->
+<span style="position: sticky;top: 70px;">{curPage} / {maxContentPage}</span>
 
 <div class="content">
   <div class="inner">
