@@ -370,7 +370,6 @@
   }
 
   async function processRyotFile(files?: FileList | null) {
-    // TODO: Bugfix: Always ask for correct match
     try {
       console.log("processRyotFile", files);
       if (!files || files?.length <= 0) {
@@ -423,20 +422,22 @@
 
         // Define the main general status of the movie/show
         // In Ryot, it can be marked as multiple of the following
-        const ryotStatusRanks: string[] = ["Watchlist", "Monitoring", "In Progress", "Completed"]
-        const ryotToWatcharr:  string[] = ["PLANNED",   "PLANNED",    "WATCHING",    "FINISHED"]
+        const statusRanks = [
+          ["Watchlist",   "PLANNED"], 
+          ["Monitoring",  "PLANNED"], 
+          ["In Progress", "WATCHING"], 
+          ["Completed",   "FINISHED"]
+        ];
         let rank = 0;           
         for(const s of v.collections){            
-          rank = Math.max(rank, ryotStatusRanks.indexOf(s))
+          rank = Math.max(rank, statusRanks.findIndex(pair => pair[0] == s))
         }
-        
-        let mainStatus = ryotToWatcharr[rank];
 
         const t: ImportedList = {
           tmdbId: Number(v.identifier),
-          name: v.source_id,
-          type: v.lot === "show" ? "tv" : v.lot,
-          status: mainStatus,
+          name:   v.source_id,
+          type:   v.lot === "show" ? "tv" : v.lot,
+          status: statusRanks[rank][1],
 
           // In Ryot, shows can have one review for each episode - Not supported in Watcharr
           // Will ignore the episodes' reviews
