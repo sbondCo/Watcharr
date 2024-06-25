@@ -519,6 +519,7 @@
         />
 
         <DropFileButton
+          icon="ryot"
           text="Ryot Exports"
           filesSelected={(f) => processRyotFile(f)}
         />
