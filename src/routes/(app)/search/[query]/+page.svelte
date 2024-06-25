@@ -184,6 +184,9 @@
             maxContentPage = r[0].value.data.total_pages;
           }
           allSearchResults.push(...r[0].value.data.results);
+          // We only want the current page to increment if multi results
+          // request was fulfilled, otherwise the 'try again' button
+          // won't work since curPage === maxContentPage (search() wont run).
           curPage++;
         }
         if (r[1].status == "fulfilled" && r[1].value) {
