@@ -421,8 +421,9 @@
         }
 
         // Define the main general status of the movie/show
-        // In Ryot, it can be marked as multiple of the following
+        // In Ryot, it can be marked as multiple of the following, so choose the most relevant
         const statusRanks = [
+          ["",            "DROPPED"], 
           ["Watchlist",   "PLANNED"], 
           ["Monitoring",  "PLANNED"], 
           ["In Progress", "WATCHING"], 
