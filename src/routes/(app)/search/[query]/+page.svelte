@@ -294,7 +294,7 @@
   <title>Search Results{data?.slug ? ` for '${data?.slug}'` : ""}</title>
 </svelte:head>
 
-<span style="position: sticky;top: 70px;">{curPage} / {maxContentPage}</span>
+<!-- <span style="position: sticky;top: 70px;">{curPage} / {maxContentPage}</span> -->
 
 <div class="content">
   <div class="inner">
