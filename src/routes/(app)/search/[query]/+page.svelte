@@ -27,6 +27,7 @@
   import { notify } from "@/lib/util/notify.js";
   import Icon from "@/lib/Icon.svelte";
   import { afterNavigate } from "$app/navigation";
+  import { page } from "$app/stores";
 
   type GameWithMediaType = GameSearch & { media_type: "game" };
   type CombinedResult =
@@ -203,7 +204,15 @@
       // Smol timeout to give ui time to render so end of page calc
       // can be accurate.
       setTimeout(() => {
-        infiniteScroll();
+        const p = get(page);
+        // Quick fix, if user navigates away from search page while response is loading,
+        // we don't want to call infiniteScroll or we could end up loading all pages
+        // in the background.
+        if (p.url?.pathname?.toLowerCase()?.startsWith("/search")) {
+          infiniteScroll();
+        } else {
+          console.debug("No longer on search page, not calling infiniteScroll.");
+        }
       }, 250);
     } catch (err) {
       console.error("search failed!", err);
