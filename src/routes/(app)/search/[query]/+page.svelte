@@ -370,7 +370,9 @@
       </PosterList>
 
       {#if searchRunning}
-        <Spinner />
+        <div style="margin-bottom: 60px;">
+          <Spinner />
+        </div>
       {/if}
 
       {#if contentSearchErr}
