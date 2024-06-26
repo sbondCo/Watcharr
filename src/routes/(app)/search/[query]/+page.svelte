@@ -4,7 +4,7 @@
   import { searchQuery, serverFeatures, watchedList } from "@/store";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import axios from "axios";
+  import axios, { type GenericAbortSignal } from "axios";
   import { getWatchedDependedProps, getPlayedDependedProps } from "@/lib/util/helpers";
   import PersonPoster from "@/lib/poster/PersonPoster.svelte";
   import type {
@@ -24,7 +24,6 @@
   import Error from "@/lib/Error.svelte";
   import GamePoster from "@/lib/poster/GamePoster.svelte";
   import { get } from "svelte/store";
-  import { notify } from "@/lib/util/notify.js";
   import Icon from "@/lib/Icon.svelte";
   import { afterNavigate } from "$app/navigation";
   import { page } from "$app/stores";
@@ -48,6 +47,7 @@
   let contentSearchErr: any;
 
   const infiniteScrollThreshold = 150;
+  let reqController = new AbortController();
 
   $: searchQ = $searchQuery;
   $: wList = $watchedList;
@@ -55,13 +55,14 @@
   async function searchMovies(query: string, page: number) {
     try {
       const movies = await axios.get<MoviesSearchResponse>(
-        `/content/search/movie/${query}?page=${page}`
+        `/content/search/movie/${query}?page=${page}`,
+        {
+          signal: reqController.signal
+        }
       );
       return movies;
     } catch (err) {
       console.error("Movies search failed!", err);
-      notify({ text: "Movie Search Failed!", type: "error" });
-      contentSearchErr = err;
       throw err;
     }
   }
@@ -69,13 +70,14 @@
   async function searchTv(query: string, page: number) {
     try {
       const shows = await axios.get<ShowsSearchResponse>(
-        `/content/search/tv/${query}?page=${page}`
+        `/content/search/tv/${query}?page=${page}`,
+        {
+          signal: reqController.signal
+        }
       );
       return shows;
     } catch (err) {
       console.error("Tv search failed!", err);
-      notify({ text: "Tv Search Failed!", type: "error" });
-      contentSearchErr = err;
       throw err;
     }
   }
@@ -83,24 +85,25 @@
   async function searchPeople(query: string, page: number) {
     try {
       const people = await axios.get<PeopleSearchResponse>(
-        `/content/search/person/${query}?page=${page}`
+        `/content/search/person/${query}?page=${page}`,
+        {
+          signal: reqController.signal
+        }
       );
       return people;
     } catch (err) {
       console.error("People search failed!", err);
-      notify({ text: "People Search Failed!", type: "error" });
-      contentSearchErr = err;
       throw err;
     }
   }
 
   async function searchMulti(query: string, page: number) {
     try {
-      return await axios.get<ContentSearch>(`/content/search/multi/${query}?page=${page}`);
+      return await axios.get<ContentSearch>(`/content/search/multi/${query}?page=${page}`, {
+        signal: reqController.signal
+      });
     } catch (err) {
-      console.error("Movies/Tv search failed!", err);
-      notify({ text: "Movie/Tv Search Failed!", type: "error" });
-      contentSearchErr = err;
+      console.error(`Movies/Tv search failed! (${query})`, err);
       throw err;
     }
   }
@@ -117,25 +120,23 @@
         console.debug("game search is not enabled on this server");
         return { data: [] };
       }
-      const games = await axios.get<GameSearch[]>(`/game/search/${query}`);
+      const games = await axios.get<GameSearch[]>(`/game/search/${query}`, {
+        signal: reqController.signal
+      });
       return {
-        data: games.data.map((g) => ({
+        data: games?.data?.map((g) => ({
           ...g,
           media_type: "game"
         })) as GameWithMediaType[]
       };
     } catch (err) {
-      console.error("Game search failed!", err);
-      notify({ text: "Game Search Failed!", type: "error" });
-      // This could cause the multi error to be replaced with this one
-      // if both requests fail, but it shouldn't matter, retry button
-      // should still do it's job if needed.
-      contentSearchErr = err;
+      console.error(`Game search failed! (${query})`, err);
       throw err;
     }
   }
 
   async function search(query: string) {
+    console.debug("search: query:", query);
     if (searchRunning) {
       console.debug("search: already running");
       return;
@@ -145,6 +146,7 @@
       return;
     }
     searchRunning = true;
+    reqController = new AbortController();
     try {
       if (activeSearchFilter) {
         // If we have a search filter selected, search for just one specific type of content.
@@ -194,6 +196,13 @@
           allSearchResults.push(...r[1].value.data);
         }
         searchResults = allSearchResults;
+        // Check this after setting searchResults, so if only game search fails,
+        // we can still show the multi results if that succeeded (and vice versa).
+        if (r[0].status === "rejected") {
+          throw r[0].reason;
+        } else if (r[1].status === "rejected") {
+          throw r[1].reason;
+        }
       }
       console.debug("allSearchResults:", allSearchResults);
 
@@ -214,10 +223,14 @@
           console.debug("No longer on search page, not calling infiniteScroll.");
         }
       }, 250);
-    } catch (err) {
-      console.error("search failed!", err);
-      contentSearchErr = err;
+    } catch (err: any) {
       searchRunning = false;
+      if (err?.code === "ERR_CANCELED") {
+        console.warn("search was cancelled, not showing error.");
+      } else {
+        console.error("search failed!", err);
+        contentSearchErr = err;
+      }
     }
   }
 
@@ -226,6 +239,7 @@
       console.error("doCleanSearch: No query to use.");
       return;
     }
+    console.debug("doCleanSearch()");
     curPage = 0;
     allSearchResults = [];
     searchResults = [];
@@ -278,15 +292,15 @@
   });
 
   afterNavigate(() => {
-    console.log("Query changed, performing new search");
-    if (!searchQ && data.slug) {
-      searchQuery.set(data.slug);
-    }
+    console.log("Query changed (or just loaded first query), performing search");
+    reqController.abort("navigated away");
+    searchRunning = false;
     doCleanSearch();
   });
 
   onDestroy(() => {
     searchQuery.set("");
+    reqController.abort("page destroyed");
   });
 </script>
 
