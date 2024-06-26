@@ -291,7 +291,20 @@
     };
   });
 
-  afterNavigate(() => {
+  afterNavigate((e) => {
+    if (!e.from?.route?.id?.toLowerCase()?.includes("/search/")) {
+      // AfterNavigate will also be called when this page is mounted,
+      // but that won't work for us since the OnMount hook also runs
+      // a clean search, which can cause errors when both ran at same
+      // time. We can't remove the OnMount hook since it's the only
+      // hook to be ran if watcharr is first loaded at a search url.
+      // `e.type` is always `goto` (that's how we search) so we can't
+      // use that. The only alternative to only run this hook after a
+      // navigation on the search page (query change), seems to be
+      // checking the `from` property an making sure it's from the
+      // `/search/` route already.
+      return;
+    }
     console.log("Query changed (or just loaded first query), performing search");
     reqController.abort("navigated away");
     searchRunning = false;
@@ -299,6 +312,7 @@
   });
 
   onDestroy(() => {
+    console.warn("SEARCH DESTROYED");
     searchQuery.set("");
     reqController.abort("page destroyed");
   });
