@@ -312,7 +312,7 @@
   });
 
   onDestroy(() => {
-    console.warn("SEARCH DESTROYED");
+    console.debug("SEARCH PAGE DESTROYED");
     searchQuery.set("");
     reqController.abort("page destroyed");
   });
