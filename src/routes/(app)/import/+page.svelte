@@ -408,13 +408,13 @@
       const fileText = await readFile(new FileReader(), file);
       const jsonData = JSON.parse(fileText)["media"] as Watched[];
       for (const v of jsonData) {
-        if (!v.source_id || !v.identifier) {
+        if (!v.source_id || !v.identifier || !(v.lot == "show" || v.lot == "movie")) {
           notify({
             type: "error",
-            text: "Item in export has no title or TMDB identifier! Look in console for more details."
+            text: "Item in export either has no title, TMDB identifier or is not a movie/tv show! Look in console for more details."
           });
           console.error(
-            "Can't add export item to import table! It has no source_id or identifier! Item:",
+            "Can't add export item to import table! It has title, TMDB identifier or is not a movie/tv show! Item:",
             v
           );
           continue;
@@ -423,21 +423,24 @@
         // Define the main general status of the movie/show
         // In Ryot, it can be marked as multiple of the following, so choose the most relevant
         const statusRanks = [
-          ["",            "DROPPED"], 
-          ["Watchlist",   "PLANNED"], 
-          ["Monitoring",  "PLANNED"], 
-          ["In Progress", "WATCHING"], 
-          ["Completed",   "FINISHED"]
+          ["", "DROPPED"],
+          ["Watchlist", "PLANNED"],
+          ["Monitoring", "PLANNED"],
+          ["In Progress", "WATCHING"],
+          ["Completed", "FINISHED"]
         ];
-        let rank = 0;           
-        for(const s of v.collections){            
-          rank = Math.max(rank, statusRanks.findIndex(pair => pair[0] == s))
+        let rank = 0;
+        for (const s of v.collections) {
+          rank = Math.max(
+            rank,
+            statusRanks.findIndex((pair) => pair[0] == s)
+          );
         }
 
         const t: ImportedList = {
           tmdbId: Number(v.identifier),
-          name:   v.source_id,
-          type:   v.lot === "show" ? "tv" : v.lot,
+          name: v.source_id,
+          type: v.lot === "show" ? "tv" : v.lot,
           status: statusRanks[rank][1],
 
           // In Ryot, shows can have one review for each episode - Not supported in Watcharr
@@ -446,23 +449,32 @@
 
           // Ryot does not support overall rating for shows
           rating: v.lot === "movie" && v.reviews.length ? Number(v.reviews[0].rating) : null,
-          
-          datesWatched: v.lot === "movie" && v.seen_history.length ? v.seen_history.map(seen => new Date(seen.ended_on)) : [],
+
+          datesWatched:
+            v.lot === "movie" && v.seen_history.length
+              ? v.seen_history.map((seen) => new Date(seen.ended_on))
+              : [],
 
           // Episode ratings are on a separate field: "reviews"
-          watchedEpisodes: v.seen_history.map(episode => ({
+          watchedEpisodes: v.seen_history.map((episode) => ({
             status: episode.progress === "100" ? "FINISHED" : "WATCHING",
-            
-            // Linear :( search the reviews for a match
-            rating: Number((v.reviews.find(review => 
-              review.show_season_number  === episode.show_season_number &&
-              review.show_episode_number === episode.show_episode_number
-            ) || {}).rating) || null,
 
-            seasonNumber:  episode.show_season_number,
+            // Linear :( search the reviews for a match
+            rating:
+              Number(
+                (
+                  v.reviews.find(
+                    (review) =>
+                      review.show_season_number === episode.show_season_number &&
+                      review.show_episode_number === episode.show_episode_number
+                  ) || {}
+                ).rating
+              ) || null,
+
+            seasonNumber: episode.show_season_number,
             episodeNumber: episode.show_episode_number
           }))
-        }
+        };
 
         console.log(t);
         toImport.push(t);
@@ -519,11 +531,7 @@
           filesSelected={(f) => processFilesMyAnimeList(f)}
         />
 
-        <DropFileButton
-          icon="ryot"
-          text="Ryot Exports"
-          filesSelected={(f) => processRyotFile(f)}
-        />
+        <DropFileButton icon="ryot" text="Ryot Exports" filesSelected={(f) => processRyotFile(f)} />
       {/if}
     </div>
   </div>
