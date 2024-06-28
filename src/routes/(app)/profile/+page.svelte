@@ -135,23 +135,23 @@
   /**
    * Takes in number of minutes and converts to readable.
    * eg into months, weeks, days, hours and minutes.
-  */
+   */
   function toFormattedTimeLong(m: number) {
     // Considers a 30 days long month
     const countInMinutes = [
       ["month", 43200],
       ["week", 10080],
       ["day", 1440],
-      ["hour", 60],
-    ]
+      ["hour", 60]
+    ];
 
     let ansString: String = "";
     let tmp;
-    for(const c of countInMinutes){
+    for (const c of countInMinutes) {
       tmp = Math.floor(m / c[1]);
 
       // Ignore fields with fewer than 1 unit
-      if(tmp) ansString += `${tmp} ${c[0]}${tmp >= 2 ? "s, " : ", "}`;
+      if (tmp) ansString += `${tmp} ${c[0]}${tmp >= 2 ? "s, " : ", "}`;
       m -= tmp * c[1];
     }
 
