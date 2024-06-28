@@ -145,14 +145,14 @@
       ["hour", 60]
     ];
 
-    let ansString: String = "";
+    let ansString = "";
     let tmp;
     for (const c of countInMinutes) {
-      tmp = Math.floor(m / c[1]);
+      tmp = Math.floor(m / (c[1] as number));
 
       // Ignore fields with fewer than 1 unit
       if (tmp) ansString += `${tmp} ${c[0]}${tmp >= 2 ? "s, " : ", "}`;
-      m -= tmp * c[1];
+      m -= tmp * (c[1] as number);
     }
 
     return ansString.slice(0, -2);

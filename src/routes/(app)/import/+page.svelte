@@ -18,7 +18,8 @@
     MovaryHistory,
     MovaryRatings,
     MovaryWatchlist,
-    Watched
+    Watched,
+    WatchedStatus
   } from "@/types";
 
   let isDragOver = false;
@@ -406,7 +407,7 @@
       // Build toImport array
       const toImport: ImportedList[] = [];
       const fileText = await readFile(new FileReader(), file);
-      const jsonData = JSON.parse(fileText)["media"] as Watched[];
+      const jsonData = JSON.parse(fileText)["media"] as any[];
       for (const v of jsonData) {
         if (!v.source_id || !v.identifier || !(v.lot == "show" || v.lot == "movie")) {
           notify({
@@ -422,7 +423,7 @@
 
         // Define the main general status of the movie/show
         // In Ryot, it can be marked as multiple of the following, so choose the most relevant
-        const statusRanks = [
+        const statusRanks: [string, WatchedStatus][] = [
           ["", "DROPPED"],
           ["Watchlist", "PLANNED"],
           ["Monitoring", "PLANNED"],
@@ -448,15 +449,15 @@
           thoughts: v.lot === "movie" && v.reviews.length ? v.reviews[0].review.text : "",
 
           // Ryot does not support overall rating for shows
-          rating: v.lot === "movie" && v.reviews.length ? Number(v.reviews[0].rating) : null,
+          rating: v.lot === "movie" && v.reviews.length ? Number(v.reviews[0].rating) : undefined,
 
           datesWatched:
             v.lot === "movie" && v.seen_history.length
-              ? v.seen_history.map((seen) => new Date(seen.ended_on))
+              ? v.seen_history.map((seen: any) => new Date(seen.ended_on))
               : [],
 
           // Episode ratings are on a separate field: "reviews"
-          watchedEpisodes: v.seen_history.map((episode) => ({
+          watchedEpisodes: v.seen_history.map((episode: any) => ({
             status: episode.progress === "100" ? "FINISHED" : "WATCHING",
 
             // Linear :( search the reviews for a match
@@ -464,7 +465,7 @@
               Number(
                 (
                   v.reviews.find(
-                    (review) =>
+                    (review: any) =>
                       review.show_season_number === episode.show_season_number &&
                       review.show_episode_number === episode.show_episode_number
                   ) || {}
@@ -475,8 +476,6 @@
             episodeNumber: episode.show_episode_number
           }))
         };
-
-        console.log(t);
         toImport.push(t);
       }
       console.log("toImport:", toImport);
