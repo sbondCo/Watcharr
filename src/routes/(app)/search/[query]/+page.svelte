@@ -224,12 +224,12 @@
         }
       }, 250);
     } catch (err: any) {
-      searchRunning = false;
       if (err?.code === "ERR_CANCELED") {
         console.warn("search was cancelled, not showing error.");
       } else {
         console.error("search failed!", err);
         contentSearchErr = err;
+        searchRunning = false;
       }
     }
   }
