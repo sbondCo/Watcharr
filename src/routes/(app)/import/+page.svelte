@@ -438,6 +438,19 @@
           );
         }
 
+        /**
+         * Ryot ratings are scored out of 100,
+         * scale this down to fit with watcharrs
+         * ratings that are out of 10.
+         */
+        const validifyRating = (ryotRating: number) => {
+          const r = Number(ryotRating);
+          if (isNaN(r)) {
+            return 0;
+          }
+          return Math.floor(r / 10);
+        };
+
         const t: ImportedList = {
           tmdbId: Number(v.identifier),
           name: v.source_id,
@@ -446,30 +459,35 @@
 
           // In Ryot, shows can have one review for each episode - Not supported in Watcharr
           // Will ignore the episodes' reviews
-          thoughts: v.lot === "movie" && v.reviews.length ? v.reviews[0].review.text : "",
+          thoughts: v.lot === "movie" && v.reviews?.length ? v.reviews[0].review?.text : "",
 
           // Ryot does not support overall rating for shows
-          rating: v.lot === "movie" && v.reviews.length ? Number(v.reviews[0].rating) : undefined,
+          rating:
+            v.lot === "movie" && v.reviews?.length
+              ? validifyRating(Number(v.reviews[0].rating))
+              : undefined,
 
           datesWatched:
-            v.lot === "movie" && v.seen_history.length
+            v.lot === "movie" && v.seen_history?.length
               ? v.seen_history.map((seen: any) => new Date(seen.ended_on))
               : [],
 
           // Episode ratings are on a separate field: "reviews"
-          watchedEpisodes: v.seen_history.map((episode: any) => ({
+          watchedEpisodes: v.seen_history?.map((episode: any) => ({
             status: episode.progress === "100" ? "FINISHED" : "WATCHING",
 
             // Linear :( search the reviews for a match
             rating:
-              Number(
-                (
-                  v.reviews.find(
-                    (review: any) =>
-                      review.show_season_number === episode.show_season_number &&
-                      review.show_episode_number === episode.show_episode_number
-                  ) || {}
-                ).rating
+              validifyRating(
+                Number(
+                  (
+                    v.reviews?.find(
+                      (review: any) =>
+                        review.show_season_number === episode.show_season_number &&
+                        review.show_episode_number === episode.show_episode_number
+                    ) || {}
+                  )?.rating
+                )
               ) || null,
 
             seasonNumber: episode.show_season_number,
