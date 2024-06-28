@@ -34,6 +34,7 @@ export type Icon =
   | "eye"
   | "star"
   | "movary"
+  | "ryot"
   | "refresh"
   | "gamepad"
   | "film"

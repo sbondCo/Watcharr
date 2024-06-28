@@ -253,6 +253,19 @@
           text: "Failed to process import data!"
         });
       }
+    } else if (list?.type === "ryot") {
+      importText = "Ryot";
+      try {
+        const s = JSON.parse(list.data);
+        // Builds imported list in previous step for ease.
+        rList = s;
+      } catch (err) {
+        console.error("Ryot import processing failed!", err);
+        notify({
+          type: "error",
+          text: "Processing failed!. Please report this issue if it persists."
+        });
+      }
     }
     // TODO: remove duplicate names in list
     return list;

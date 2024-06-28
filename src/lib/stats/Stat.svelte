@@ -30,14 +30,11 @@
     > span:first-of-type {
       font-weight: bold;
       font-size: 20px;
+      margin-top: auto;
 
       &.large {
         font-size: 32px;
       }
-    }
-
-    > span:last-child {
-      margin-top: auto;
     }
 
     .disclaimer {

@@ -145,7 +145,7 @@
 
           <span class="quick-info">
             {#if show?.episode_run_time?.length > 0}
-              <span>{show.episode_run_time.join(",")}m</span>
+              <span>{show.episode_run_time.join(",")} min</span>
             {/if}
 
             <div>
