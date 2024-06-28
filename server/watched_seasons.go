@@ -25,7 +25,7 @@ type WatchedSeasonAddRequest struct {
 	WatchedID       uint          `json:"watchedId"`
 	SeasonNumber    int           `json:"seasonNumber"`
 	Status          WatchedStatus `json:"status"`
-	Rating          int8          `json:"rating"`
+	Rating          int8          `json:"rating" binding:"max=10"`
 	addActivity     ActivityType  `json:"-"`
 	addActivityDate time.Time     `json:"-"`
 	// Data to add to activity if the season is created.

@@ -31,7 +31,7 @@ type WatchedEpisodeAddRequest struct {
 	SeasonNumber    int           `json:"seasonNumber"`
 	EpisodeNumber   int           `json:"episodeNumber"`
 	Status          WatchedStatus `json:"status"`
-	Rating          int8          `json:"rating"`
+	Rating          int8          `json:"rating" binding:"max=10"`
 	addActivity     ActivityType  `json:"-"`
 	addActivityDate time.Time     `json:"-"`
 }
