@@ -146,7 +146,7 @@
           />
 
           <span class="quick-info">
-            <span>{movie.runtime}m</span>
+            <span>{movie.runtime} min</span>
 
             <div>
               {#each movie.genres as g, i}
