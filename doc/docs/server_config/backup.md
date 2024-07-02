@@ -5,7 +5,7 @@ description: Backing up your server.
 
 # Backing Up
 
-Watcharr cannot handle backing up for you, but its simple structure should make it easy to slide into your existing backup routine.
+Watcharr cannot handle backing up for you, but its simple structure should make it easy to slide it into your existing backup routine.
 
 Once you have created your first backup, it's recommended that you try restoring from that backup to make sure everything is correct and will work in case you need to restore from it in the future.
 
