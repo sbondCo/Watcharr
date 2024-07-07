@@ -91,11 +91,11 @@ func updateJobStatus(id string, userId uint, status JobStatus) error {
 	}
 	j.Status = status
 	// If job is set to done, remove it after 1 minute.
-	if status == JOB_DONE {
-		slog.Debug("updateJobStatus: Job set to done. Will be removed after 1m.", "id", id)
+	if status == JOB_DONE || status == JOB_CANCELLED {
+		slog.Debug("updateJobStatus: Job set to done or cancelled. Will be removed after 5m.", "id", id, "status", status)
 		go func() {
-			time.Sleep(1 * time.Minute)
-			slog.Debug("updateJobStatus: Job done. waited 1m.. removing job now.", "id", id)
+			time.Sleep(5 * time.Minute)
+			slog.Debug("updateJobStatus: Job done. waited 5m.. removing job now.", "id", id)
 			rmJob(id, userId)
 		}()
 	}
