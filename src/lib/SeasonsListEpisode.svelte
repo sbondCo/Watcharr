@@ -170,7 +170,7 @@
         <span class="episode-name">{ep.name}</span>
         {#if ep.runtime}
           <span class="episode-runtime" title="This episode has a runtime of {ep.runtime} minutes."
-            >{ep.runtime}m</span
+            >{ep.runtime} min</span
           >
         {/if}
       </span>
