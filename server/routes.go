@@ -1005,10 +1005,10 @@ func (b *BaseRouter) addImportRoutes() {
 
 	imprt.POST("/trakt", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
-		var ar ImportRequest
+		var ar TraktImportRequest
 		err := c.ShouldBindJSON(&ar)
 		if err == nil {
-			response, err := importContent(b.db, userId, ar)
+			response, err := traktImportWatched(b.db, userId, ar.Username)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 				return
