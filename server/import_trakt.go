@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -71,9 +72,9 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 	// Get trakt user. We want to get their profile `slug` for use in
 	// next requests and we can check their profile isn't private while here.
 	var traktUser TraktUser
-	_, err := traktAPIRequest("users/"+traktUsername, &traktUser)
+	_, err := traktAPIRequest("users/"+traktUsername, map[string]string{}, &traktUser)
 	if err != nil {
-		slog.Error("startTraktImport: Failed to get users profile", "error", err)
+		slog.Error("startTraktImport: Failed to get users profile", "error", err, "trakt_user", traktUser)
 		addJobError(jobId, userId, "failed to request trakt profile from api")
 		updateJobStatus(jobId, userId, JOB_CANCELLED)
 		return
@@ -89,13 +90,24 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 	toImport := map[string]ImportRequest{}
 	// Process all history for this user (in chunks of 1000).
 	var history []TraktHistory
-	historyHeaders, err := traktAPIRequest("users/"+userSlug+"/history?limit=1000", &history)
+	historyHeaders, err := traktAPIRequest("users/"+userSlug+"/history", map[string]string{"limit": "1000"}, &history)
 	slog.Debug("headers", historyHeaders) // DEBUG
 	if err != nil {
 		slog.Error("startTraktImport: Failed to get users history", "error", err)
 		addJobError(jobId, userId, "failed to get your history")
 	} else {
 		for _, v := range history {
+			var collectingText string
+			if v.Type == "episode" {
+				collectingText = fmt.Sprintf("%s S%dE%d", v.Show.Title, v.Episode.Season, v.Episode.Number)
+			} else if v.Type == "show" {
+				collectingText = v.Show.Title
+			} else if v.Type == "movie" {
+				collectingText = v.Movie.Title
+			}
+			if collectingText != "" {
+				updateJobCurrentTask(jobId, userId, "collecting "+collectingText)
+			}
 			err = processTraktHistoryItem(v, toImport)
 			if err != nil {
 				var (
@@ -119,6 +131,7 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 				addJobError(jobId, userId, "Failed to process history: "+title+" type:"+v.Type+" trakt id:"+strconv.Itoa(traktId)+" tmdb id:"+strconv.Itoa(tmdbId)+" error:"+err.Error())
 			}
 		}
+		slog.Debug("startTraktImport: toImport:", "toimport", toImport)
 	}
 	// Get watchlist for PLANNED items
 	// Process ratings
@@ -175,14 +188,20 @@ func processTraktHistoryItem(v TraktHistory, toImport map[string]ImportRequest) 
 	return nil
 }
 
-func traktAPIRequest(ep string, resp interface{}) (http.Header, error) {
-	slog.Debug("traktAPIRequest", "endpoint", ep)
-	base, err := url.Parse("https://api.themoviedb.org/3")
+func traktAPIRequest(ep string, p map[string]string, resp interface{}) (http.Header, error) {
+	base, err := url.Parse("https://api.trakt.tv")
 	if err != nil {
 		return map[string][]string{}, errors.New("failed to parse api uri")
 	}
 	base.Path += ep
-
+	if len(p) > 0 {
+		params := url.Values{}
+		for k, v := range p {
+			params.Add(k, v)
+		}
+		base.RawQuery = params.Encode()
+	}
+	slog.Debug("traktAPIRequest", "request_url", base.String())
 	req, err := http.NewRequest("GET", base.String(), nil)
 	if err != nil {
 		return map[string][]string{}, err
@@ -190,7 +209,6 @@ func traktAPIRequest(ep string, resp interface{}) (http.Header, error) {
 	req.Header.Add("trakt-api-key", "c481cb044dcd58d83f3fde113741d1e28d19c1bef1bcbfcb9acedee222f3a673")
 	req.Header.Add("trakt-api-version", "2")
 	req.Header.Add("Content-type", "application/json")
-
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return map[string][]string{}, err
@@ -202,7 +220,7 @@ func traktAPIRequest(ep string, resp interface{}) (http.Header, error) {
 	}
 	if !(res.StatusCode >= 200 && res.StatusCode <= 299) {
 		slog.Error("traktAPIRequest: non 2xx status code:", "status_code", res.StatusCode)
-		return map[string][]string{}, errors.New(string(body))
+		return map[string][]string{}, errors.New("non success status code")
 	}
 	err = json.Unmarshal([]byte(body), &resp)
 	if err != nil {
