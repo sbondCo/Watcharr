@@ -10,6 +10,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
 	"strconv"
 	"time"
 
@@ -90,13 +92,26 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 	toImport := map[string]ImportRequest{}
 	// Process all history for this user (in chunks of 1000).
 	var history []TraktHistory
+	slog.Debug("startTraktImport: Getting first history page")
 	historyHeaders, err := traktAPIRequest("users/"+userSlug+"/history", map[string]string{"limit": "1000"}, &history)
-	slog.Debug("headers", historyHeaders) // DEBUG
 	if err != nil {
 		slog.Error("startTraktImport: Failed to get users history", "error", err)
 		addJobError(jobId, userId, "failed to get your history")
 	} else {
-		for _, v := range history {
+		pageCount := historyHeaders.Get("x-pagination-page-count")
+		slog.Debug("startTraktImport: Got first history page", "page_count", pageCount)
+		if pageCount == "" {
+			slog.Error("startTraktImport: Failed to get history page count!", "page_count", pageCount)
+			addJobError(jobId, userId, "Failed to get history page count")
+			return
+		}
+		pageCountNum, err := strconv.Atoi(pageCount)
+		if err != nil {
+			slog.Error("startTraktImport: Failed to parse history page count into an int!", "error", err)
+			addJobError(jobId, userId, "Failed to parse history page count: "+pageCount)
+			return
+		}
+		rProc := func(v TraktHistory) {
 			var collectingText string
 			if v.Type == "episode" {
 				collectingText = fmt.Sprintf("%s S%dE%d", v.Show.Title, v.Episode.Season, v.Episode.Number)
@@ -110,25 +125,23 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 			}
 			err = processTraktHistoryItem(v, toImport)
 			if err != nil {
-				var (
-					title   string
-					traktId int
-					tmdbId  int
-				)
-				if v.Type == "episode" {
-					title = v.Episode.Title
-					traktId = v.Episode.Ids.Trakt
-					tmdbId = v.Episode.Ids.Tmdb
-				} else if v.Type == "show" {
-					title = v.Show.Title
-					traktId = v.Show.Ids.Trakt
-					tmdbId = v.Show.Ids.Tmdb
-				} else if v.Type == "movie" {
-					title = v.Movie.Title
-					traktId = v.Movie.Ids.Trakt
-					tmdbId = v.Movie.Ids.Tmdb
+				addJobError(jobId, userId, err.Error())
+			}
+		}
+		// Process first page of history (next pages processed below)
+		for _, v := range history {
+			rProc(v)
+		}
+		for i := range pageCountNum {
+			slog.Debug("startTraktImport: Getting history page", "page_num", i)
+			_, err := traktAPIRequest("users/"+userSlug+"/history", map[string]string{"limit": "1000", "page": strconv.Itoa(i)}, &history)
+			if err != nil {
+				slog.Error("startTraktImport: Failed to get a history page", "page_num", i, "error", err)
+				addJobError(jobId, userId, "Failed to get history page: "+strconv.Itoa(i))
+			} else {
+				for _, v := range history {
+					rProc(v)
 				}
-				addJobError(jobId, userId, "Failed to process history: "+title+" type:"+v.Type+" trakt id:"+strconv.Itoa(traktId)+" tmdb id:"+strconv.Itoa(tmdbId)+" error:"+err.Error())
 			}
 		}
 		slog.Debug("startTraktImport: toImport:", "toimport", toImport)
@@ -140,15 +153,18 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 func processTraktHistoryItem(v TraktHistory, toImport map[string]ImportRequest) error {
 	var (
 		title          string
+		traktId        int
 		tmdbId         int
 		contentType    ContentType
 		watchedEpisode WatchedEpisode
 	)
 	if v.Type == "show" || v.Type == "episode" {
 		title = v.Show.Title
+		traktId = v.Show.Ids.Trakt
 		tmdbId = v.Show.Ids.Tmdb
 		contentType = SHOW
 		if v.Type == "episode" {
+			traktId = v.Episode.Ids.Trakt
 			watchedEpisode = WatchedEpisode{
 				SeasonNumber:  v.Episode.Season,
 				EpisodeNumber: v.Episode.Number,
@@ -164,13 +180,14 @@ func processTraktHistoryItem(v TraktHistory, toImport map[string]ImportRequest) 
 		}
 	} else if v.Type == "movie" {
 		title = v.Movie.Title
+		traktId = v.Movie.Ids.Trakt
 		tmdbId = v.Movie.Ids.Tmdb
 		contentType = MOVIE
 		slog.Debug("processTraktHistoryItem: Processing a movie.", "contentTitle", title, "contentTmdbId", tmdbId)
 	}
 	if tmdbId == 0 {
 		slog.Debug("processTraktHistoryItem: Item had no tmdbId. Cannot process.")
-		return errors.New("no tmdbId found")
+		return errors.New("Failed to process history: " + title + " type:" + v.Type + " trakt id:" + strconv.Itoa(traktId) + " tmdb id:" + strconv.Itoa(tmdbId) + " error:" + "item had no tmdb id")
 	}
 	mapKey := string(contentType) + strconv.Itoa(tmdbId)
 	if e, ok := toImport[mapKey]; ok {
