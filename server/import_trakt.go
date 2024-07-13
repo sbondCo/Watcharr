@@ -437,10 +437,10 @@ func traktImportWatched(
 	userId uint,
 	traktUsername string,
 ) (TraktImportResponse, error) {
-	jobId, err := addJob("trakt_import", userId)
+	jobId, err := addUniqueJob("trakt_import", userId)
 	if err != nil {
 		slog.Error("traktSyncWatched: Failed to create a job", "error", err)
-		return TraktImportResponse{}, errors.New("failed to create job")
+		return TraktImportResponse{}, err
 	}
 
 	updateJobStatus(jobId, userId, JOB_RUNNING)

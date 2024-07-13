@@ -20,6 +20,7 @@
   let jobId: string | undefined;
   let currentTask: string | undefined;
   let latestJobStatus: GetJobResponse | undefined;
+  let jobFailError: string | undefined;
 
   async function startSync() {
     try {
@@ -33,9 +34,10 @@
       jobId = r.jobId;
       step = "job-running";
       startJobWatcher();
-    } catch (err) {
+    } catch (err: any) {
       console.error("startSync failed!", err);
       step = "errored";
+      jobFailError = err?.response ? err?.response?.data?.error : String(err);
     }
   }
 
@@ -153,7 +155,11 @@
         {/if}
       {:else if step === "errored"}
         <h4 class="norm">We Errored!</h4>
-        <span>We errored before starting the job or the job was cancelled.</span>
+        {#if jobFailError}
+          <span>{jobFailError}</span>
+        {:else}
+          <span>We errored before starting the job or the job was cancelled.</span>
+        {/if}
         {#if latestJobStatus?.errors && latestJobStatus?.errors?.length > 0}
           <ul>
             {#each latestJobStatus?.errors as e}
