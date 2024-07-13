@@ -38,10 +38,12 @@ var activeJobs = make(map[string]*Job)
 
 // Add a job to our activeJobs map.
 // Returns id of job on success, or error if failed to add.
+// Only return safe errors for display to users, log serious errors.
 func addJob(name string, userId uint) (string, error) {
 	idk, err := generateString(8)
 	if err != nil {
-		return "", err
+		slog.Error("addJob: Failed to generate a job id!", "error", err)
+		return "", errors.New("failed to generate a job id, please try again")
 	}
 	_, ok := activeJobs[idk]
 	if ok {
@@ -54,6 +56,22 @@ func addJob(name string, userId uint) (string, error) {
 		UserId: userId,
 	}
 	return idk, nil
+}
+
+// Add a job, but only if one with the same `name` isn't already running.
+// Only return safe errors for display to users.
+func addUniqueJob(name string, userId uint) (string, error) {
+	found := false
+	for _, v := range activeJobs {
+		if v.UserId == userId && v.Name == name && (v.Status == JOB_CREATED || v.Status == JOB_RUNNING) {
+			found = true
+			break
+		}
+	}
+	if found {
+		return "", errors.New("a job of this type is already running, please wait for the existing job to finish")
+	}
+	return addJob(name, userId)
 }
 
 func rmJob(id string, userId uint) {
