@@ -32,37 +32,55 @@ type TraktUser struct {
 }
 
 type TraktHistory struct {
-	ID        int64     `json:"id"`
-	WatchedAt time.Time `json:"watched_at"`
-	Action    string    `json:"action"`
-	Type      string    `json:"type"`
-	Movie     struct {
-		Title string `json:"title"`
-		Year  int    `json:"year"`
-		Ids   struct {
-			Trakt int    `json:"trakt"`
-			Slug  string `json:"slug"`
-			Tmdb  int    `json:"tmdb"`
-		} `json:"ids"`
-	} `json:"movie,omitempty"`
-	Episode struct {
-		Season int    `json:"season"`
-		Number int    `json:"number"`
-		Title  string `json:"title"`
-		Ids    struct {
-			Trakt int `json:"trakt"`
-			Tmdb  int `json:"tmdb"`
-		} `json:"ids"`
-	} `json:"episode,omitempty"`
-	Show struct {
-		Title string `json:"title"`
-		Year  int    `json:"year"`
-		Ids   struct {
-			Trakt int    `json:"trakt"`
-			Slug  string `json:"slug"`
-			Tmdb  int    `json:"tmdb"`
-		} `json:"ids"`
-	} `json:"show,omitempty"`
+	ID        int64            `json:"id"`
+	WatchedAt time.Time        `json:"watched_at"`
+	Action    string           `json:"action"`
+	Type      string           `json:"type"`
+	Show      TraktListShow    `json:"show,omitempty"`
+	Episode   TraktListEpisode `json:"episode,omitempty"`
+	Movie     TraktListMovie   `json:"movie,omitempty"`
+}
+
+type TraktWatchlist []struct {
+	Rank     int              `json:"rank"`
+	ID       int              `json:"id"`
+	ListedAt time.Time        `json:"listed_at"`
+	Notes    string           `json:"notes"`
+	Type     string           `json:"type"`
+	Show     TraktListShow    `json:"show,omitempty"`
+	Episode  TraktListEpisode `json:"episode,omitempty"`
+	Movie    TraktListMovie   `json:"movie,omitempty"`
+}
+
+type TraktListShow struct {
+	Title string `json:"title"`
+	Year  int    `json:"year"`
+	Ids   struct {
+		Trakt int    `json:"trakt"`
+		Slug  string `json:"slug"`
+		Tmdb  int    `json:"tmdb"`
+	} `json:"ids"`
+}
+
+type TraktListEpisode struct {
+	Season int    `json:"season"`
+	Number int    `json:"number"`
+	Title  string `json:"title"`
+	Ids    struct {
+		Trakt int    `json:"trakt"`
+		Slug  string `json:"slug"`
+		Tmdb  int    `json:"tmdb"`
+	} `json:"ids"`
+}
+
+type TraktListMovie struct {
+	Title string `json:"title"`
+	Year  int    `json:"year"`
+	Ids   struct {
+		Trakt int    `json:"trakt"`
+		Slug  string `json:"slug"`
+		Tmdb  int    `json:"tmdb"`
+	} `json:"ids"`
 }
 
 type TraktImportResponse struct {
@@ -95,8 +113,10 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 	slog.Debug("startTraktImport: Getting first history page")
 	historyHeaders, err := traktAPIRequest("users/"+userSlug+"/history", map[string]string{"limit": "1000"}, &history)
 	if err != nil {
+		// FATAL if we can't get the users history, we probably shouldn't continue (to ratings/watchlist below).
 		slog.Error("startTraktImport: Failed to get users history", "error", err)
 		addJobError(jobId, userId, "failed to get your history")
+		return
 	} else {
 		pageCount := historyHeaders.Get("x-pagination-page-count")
 		slog.Debug("startTraktImport: Got first history page", "page_count", pageCount)
@@ -144,9 +164,95 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 				}
 			}
 		}
-		slog.Debug("startTraktImport: toImport:", "toimport", toImport)
+		slog.Info("startTraktImport: Finished processing all history")
+		history = nil // clear whatever is lingering in the history slice
 	}
 	// Get watchlist for PLANNED items
+	slog.Info("startTraktImport: Getting whole watchlist")
+	var watchlist TraktWatchlist
+	_, err = traktAPIRequest("users/"+userSlug+"/watchlist", map[string]string{}, &watchlist)
+	if err != nil {
+		slog.Error("startTraktImport: Failed to get users watchlist! Cannot import planned content.", "error", err)
+		addJobError(jobId, userId, "failed to get your watchlist (planned items cannot be imported)")
+	} else {
+		slog.Debug("startTraktImport: Successfully got whole watchlist")
+		for _, v := range watchlist {
+			slog.Debug("startTraktImport: Processing watchlist item", "item", v)
+			var (
+				title       string
+				contentType ContentType
+				tmdbId      int
+			)
+			if v.Type == "show" || v.Type == "episode" {
+				title = v.Show.Title
+				tmdbId = v.Show.Ids.Tmdb
+				contentType = SHOW
+				if v.Type == "episode" {
+					title = v.Episode.Title
+				}
+			} else if v.Type == "movie" {
+				title = v.Movie.Title
+				tmdbId = v.Movie.Ids.Tmdb
+				contentType = MOVIE
+			}
+			updateJobCurrentTask(jobId, userId, "setting status for "+title)
+			mapKey := makeTraktMapKey(contentType, tmdbId)
+			if mv, ok := toImport[mapKey]; ok {
+				// If item already exists in toImport, set its status to planned.
+				if v.Type == "episode" {
+					// For episode entries, we have to find the WatchedEpisode to set its status to planned.
+					weFound := false
+					for i, we := range mv.WatchedEpisodes {
+						if we.SeasonNumber == v.Episode.Season && we.EpisodeNumber == v.Episode.Number {
+							we.Status = PLANNED
+							mv.WatchedEpisodes[i] = we
+							weFound = true
+							break
+						}
+					}
+					if !weFound {
+						mv.WatchedEpisodes = append(mv.WatchedEpisodes, WatchedEpisode{
+							SeasonNumber:  v.Episode.Season,
+							EpisodeNumber: v.Episode.Number,
+							Status:        PLANNED,
+							GormModel: GormModel{
+								CreatedAt: v.ListedAt,
+							},
+						})
+					}
+					toImport[mapKey] = mv
+				} else {
+					mv.Status = PLANNED
+					if v.Notes != "" {
+						// episodes dont support notes in watcharr
+						mv.Thoughts = v.Notes
+					}
+					toImport[mapKey] = mv
+				}
+			} else {
+				// If the item does not exist in toImport, create it and set it to planned.
+				ti := ImportRequest{
+					Type:   contentType,
+					TmdbID: tmdbId,
+					Status: PLANNED,
+				}
+				if v.Type == "episode" {
+					ti.WatchedEpisodes = []WatchedEpisode{{
+						SeasonNumber:  v.Episode.Season,
+						EpisodeNumber: v.Episode.Number,
+						Status:        PLANNED,
+						GormModel: GormModel{
+							CreatedAt: v.ListedAt,
+						},
+					}}
+				} else {
+					// episodes dont support notes in watcharr
+					ti.Thoughts = v.Notes
+				}
+				toImport[mapKey] = ti
+			}
+		}
+	}
 	// Process ratings
 }
 
@@ -189,7 +295,7 @@ func processTraktHistoryItem(v TraktHistory, toImport map[string]ImportRequest) 
 		slog.Debug("processTraktHistoryItem: Item had no tmdbId. Cannot process.")
 		return errors.New("Failed to process history: " + title + " type:" + v.Type + " trakt id:" + strconv.Itoa(traktId) + " tmdb id:" + strconv.Itoa(tmdbId) + " error:" + "item had no tmdb id")
 	}
-	mapKey := string(contentType) + strconv.Itoa(tmdbId)
+	mapKey := makeTraktMapKey(contentType, tmdbId)
 	if e, ok := toImport[mapKey]; ok {
 		e.WatchedEpisodes = append(toImport[mapKey].WatchedEpisodes, watchedEpisode)
 		toImport[mapKey] = e
@@ -203,6 +309,11 @@ func processTraktHistoryItem(v TraktHistory, toImport map[string]ImportRequest) 
 		}
 	}
 	return nil
+}
+
+// `tmdbId` is for the movie or show (not for episodes).
+func makeTraktMapKey(ct ContentType, tmdbId int) string {
+	return string(ct) + strconv.Itoa(tmdbId)
 }
 
 func traktAPIRequest(ep string, p map[string]string, resp interface{}) (http.Header, error) {
