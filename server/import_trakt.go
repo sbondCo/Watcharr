@@ -52,6 +52,14 @@ type TraktWatchlist []struct {
 	Movie    TraktListMovie   `json:"movie,omitempty"`
 }
 
+type TraktRatings []struct {
+	Rating  int              `json:"rating"`
+	Type    string           `json:"type"`
+	Show    TraktListShow    `json:"show,omitempty"`
+	Episode TraktListEpisode `json:"episode,omitempty"`
+	Movie   TraktListMovie   `json:"movie,omitempty"`
+}
+
 type TraktListShow struct {
 	Title string `json:"title"`
 	Year  int    `json:"year"`
@@ -254,6 +262,67 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 		}
 	}
 	// Process ratings
+	slog.Info("startTraktImport: Getting all ratings")
+	var ratings TraktRatings
+	_, err = traktAPIRequest("users/"+userSlug+"/ratings", map[string]string{}, &ratings)
+	if err != nil {
+		slog.Error("startTraktImport: Failed to get users ratings!", "error", err)
+		addJobError(jobId, userId, "failed to get your ratings (content ratings cannot be imported)")
+	} else {
+		slog.Debug("startTraktImport: Successfully got all ratings")
+		for _, v := range ratings {
+			slog.Debug("startTraktImport: Processing rating item", "item", v)
+			var (
+				title       string
+				contentType ContentType
+				tmdbId      int
+				traktSlug   string
+			)
+			if v.Type == "show" || v.Type == "episode" {
+				title = v.Show.Title
+				tmdbId = v.Show.Ids.Tmdb
+				traktSlug = v.Show.Ids.Slug
+				contentType = SHOW
+				if v.Type == "episode" {
+					title = v.Episode.Title
+					traktSlug = v.Episode.Ids.Slug
+				}
+			} else if v.Type == "movie" {
+				title = v.Movie.Title
+				tmdbId = v.Movie.Ids.Tmdb
+				contentType = MOVIE
+				traktSlug = v.Movie.Ids.Slug
+			}
+			updateJobCurrentTask(jobId, userId, fmt.Sprintf("setting rating of %d for %s", v.Rating, title))
+			mapKey := makeTraktMapKey(contentType, tmdbId)
+			if mv, ok := toImport[mapKey]; ok {
+				if v.Type == "episode" {
+					// For episode entries, we have to find the WatchedEpisode to set its rating.
+					epFound := false
+					for i, we := range mv.WatchedEpisodes {
+						if we.SeasonNumber == v.Episode.Season && we.EpisodeNumber == v.Episode.Number {
+							we.Rating = int8(v.Rating)
+							mv.WatchedEpisodes[i] = we
+							epFound = true
+							break
+						}
+					}
+					toImport[mapKey] = mv
+					if !epFound {
+						addJobError(jobId, userId, fmt.Sprintf("episode rating of %d for %s not imported. The episode does not exist in your history or watchlist.", v.Rating, title))
+					}
+				} else {
+					mv.Rating = int8(v.Rating)
+					toImport[mapKey] = mv
+				}
+			} else {
+				// Item should be in toImport by now (from history or watchlist) if it has a rating, otherwise we won't import it
+				addJobError(jobId, userId, fmt.Sprintf("cannot import rating of %d for %s. The main content does not exist in your history or watchlist. type: %s traktSlug: %s", v.Rating, title, v.Type, traktSlug))
+			}
+		}
+	}
+
+	updateJobStatus(jobId, userId, JOB_DONE)
 }
 
 func processTraktHistoryItem(v TraktHistory, toImport map[string]ImportRequest) error {
