@@ -21,6 +21,7 @@
     Watched,
     WatchedStatus
   } from "@/types";
+  import Icon from "@/lib/Icon.svelte";
 
   let isDragOver = false;
   let isLoading = false;
@@ -529,8 +530,13 @@
       {#if isLoading}
         <Spinner />
       {:else}
+        <DropFileButton text="Watcharr Export" filesSelected={(f) => processWatcharrFile(f)} />
+
+        <DropFileButton text=".txt list" filesSelected={(f) => processFiles(f)} />
+
         <DropFileButton
-          text=".txt list or .csv TMDb Export"
+          icon="themoviedb"
+          text=".csv TMDb Export"
           filesSelected={(f) => processFiles(f)}
         />
 
@@ -541,14 +547,18 @@
           allowSelectMultipleFiles
         />
 
-        <DropFileButton text="Watcharr Export" filesSelected={(f) => processWatcharrFile(f)} />
-
         <DropFileButton
+          icon="myanimelist"
           text="MyAnimeList Export"
           filesSelected={(f) => processFilesMyAnimeList(f)}
         />
 
         <DropFileButton icon="ryot" text="Ryot Exports" filesSelected={(f) => processRyotFile(f)} />
+
+        <button class="plain" on:click={() => goto("/import/trakt")}>
+          <Icon i="trakt" wh="100%" />
+          <h4 class="norm">Trakt Import</h4>
+        </button>
       {/if}
     </div>
   </div>
@@ -576,9 +586,16 @@
     .big-btns {
       display: flex;
       justify-content: center;
-      flex-flow: column;
+      flex-flow: row;
+      flex-wrap: wrap;
       gap: 20px;
       margin-top: 20px;
+
+      & > :global(div),
+      & > :global(button) {
+        flex-basis: 40%;
+        flex-grow: 1;
+      }
     }
 
     .header {
@@ -587,6 +604,29 @@
 
       h5 {
         margin-top: 3px;
+      }
+    }
+
+    /* Same style as DropFileButton for the buttons that don't need file support */
+    button {
+      display: flex;
+      flex-flow: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      height: 180px;
+      padding: 20px;
+      background-color: $accent-color;
+      border: unset;
+      border-radius: 10px;
+      user-select: none;
+      transition: 180ms ease-in-out;
+
+      &:hover,
+      &.dragging-over {
+        fill: $bg-color;
+        color: $bg-color;
+        background-color: $accent-color-hover;
       }
     }
   }

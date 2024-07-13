@@ -1002,6 +1002,22 @@ func (b *BaseRouter) addImportRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	imprt.POST("/trakt", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ar TraktImportRequest
+		err := c.ShouldBindJSON(&ar)
+		if err == nil {
+			response, err := traktImportWatched(b.db, userId, ar.Username)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
 }
 
 func (b *BaseRouter) addServerRoutes() {

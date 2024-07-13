@@ -1,6 +1,6 @@
 module github.com/sbondCo/Watcharr
 
-go 1.21
+go 1.22
 
 require (
 	github.com/buckket/go-blurhash v1.1.0

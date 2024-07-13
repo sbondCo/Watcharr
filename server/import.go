@@ -70,6 +70,7 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 			return successfulImport(db, userId, cr.ID, SHOW, ar)
 		}
 	}
+	// tmdbId not passed.. search for the content by name.
 	sr, err := searchContent(ar.Name, 1)
 	if err != nil {
 		slog.Error("import: content search failed", "error", err)
