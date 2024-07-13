@@ -10,8 +10,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
-	"path"
 	"strconv"
 	"time"
 
@@ -329,7 +327,7 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 			addJobError(jobId, userId, fmt.Sprintf("Failed to import %s as %s. tmdbId: %d", v.Type, v.Status, v.TmdbID))
 		}
 	}
-
+	// We are donezo
 	updateJobStatus(jobId, userId, JOB_DONE)
 }
 
