@@ -321,6 +321,14 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 			}
 		}
 	}
+	// Loop over `toImport` and finally import everything.
+	for _, v := range toImport {
+		_, err := importContent(db, userId, v)
+		if err != nil {
+			slog.Error("startTraktImport: Failed to do import on content!", "error", err, "import_obj", v)
+			addJobError(jobId, userId, fmt.Sprintf("Failed to import %s as %s. tmdbId: %d", v.Type, v.Status, v.TmdbID))
+		}
+	}
 
 	updateJobStatus(jobId, userId, JOB_DONE)
 }
