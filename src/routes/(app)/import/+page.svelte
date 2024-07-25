@@ -18,8 +18,10 @@
     MovaryHistory,
     MovaryRatings,
     MovaryWatchlist,
-    Watched
+    Watched,
+    WatchedStatus
   } from "@/types";
+  import Icon from "@/lib/Icon.svelte";
 
   let isDragOver = false;
   let isLoading = false;
@@ -369,6 +371,145 @@
     }
   }
 
+  async function processRyotFile(files?: FileList | null) {
+    try {
+      console.log("processRyotFile", files);
+      if (!files || files?.length <= 0) {
+        console.error("processRyotFile", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
+        });
+        isDragOver = false;
+        return;
+      }
+      isLoading = true;
+      if (files.length > 1) {
+        notify({
+          type: "error",
+          text: "Only one file at a time is supported. Continuing with the first.",
+          time: 6000
+        });
+      }
+
+      // Currently only support for importing one file at a time
+      const file = files[0];
+      if (file.type !== "application/json") {
+        notify({
+          type: "error",
+          text: "Must be a Ryot JSON export file"
+        });
+        isLoading = false;
+        isDragOver = false;
+        return;
+      }
+
+      // Build toImport array
+      const toImport: ImportedList[] = [];
+      const fileText = await readFile(new FileReader(), file);
+      const jsonData = JSON.parse(fileText)["media"] as any[];
+      for (const v of jsonData) {
+        if (!v.source_id || !v.identifier || !(v.lot == "show" || v.lot == "movie")) {
+          notify({
+            type: "error",
+            text: "Item in export either has no title, TMDB identifier or is not a movie/tv show! Look in console for more details."
+          });
+          console.error(
+            "Can't add export item to import table! It has title, TMDB identifier or is not a movie/tv show! Item:",
+            v
+          );
+          continue;
+        }
+
+        // Define the main general status of the movie/show
+        // In Ryot, it can be marked as multiple of the following, so choose the most relevant
+        const statusRanks: [string, WatchedStatus][] = [
+          ["", "DROPPED"],
+          ["Watchlist", "PLANNED"],
+          ["Monitoring", "PLANNED"],
+          ["In Progress", "WATCHING"],
+          ["Completed", "FINISHED"]
+        ];
+        let rank = 0;
+        for (const s of v.collections) {
+          rank = Math.max(
+            rank,
+            statusRanks.findIndex((pair) => pair[0] == s)
+          );
+        }
+
+        /**
+         * Ryot ratings are scored out of 100,
+         * scale this down to fit with watcharrs
+         * ratings that are out of 10.
+         */
+        const validifyRating = (ryotRating: number) => {
+          const r = Number(ryotRating);
+          if (isNaN(r)) {
+            return 0;
+          }
+          return Math.floor(r / 10);
+        };
+
+        const t: ImportedList = {
+          tmdbId: Number(v.identifier),
+          name: v.source_id,
+          type: v.lot === "show" ? "tv" : v.lot,
+          status: statusRanks[rank][1],
+
+          // In Ryot, shows can have one review for each episode - Not supported in Watcharr
+          // Will ignore the episodes' reviews
+          thoughts: v.lot === "movie" && v.reviews?.length ? v.reviews[0].review?.text : "",
+
+          // Ryot does not support overall rating for shows
+          rating:
+            v.lot === "movie" && v.reviews?.length
+              ? validifyRating(Number(v.reviews[0].rating))
+              : undefined,
+
+          datesWatched:
+            v.lot === "movie" && v.seen_history?.length
+              ? v.seen_history.map((seen: any) => new Date(seen.ended_on))
+              : [],
+
+          // Episode ratings are on a separate field: "reviews"
+          watchedEpisodes: v.seen_history?.map((episode: any) => ({
+            status: episode.progress === "100" ? "FINISHED" : "WATCHING",
+
+            // Linear :( search the reviews for a match
+            rating:
+              validifyRating(
+                Number(
+                  (
+                    v.reviews?.find(
+                      (review: any) =>
+                        review.show_season_number === episode.show_season_number &&
+                        review.show_episode_number === episode.show_episode_number
+                    ) || {}
+                  )?.rating
+                )
+              ) || null,
+
+            seasonNumber: episode.show_season_number,
+            episodeNumber: episode.show_episode_number
+          }))
+        };
+        toImport.push(t);
+      }
+      console.log("toImport:", toImport);
+      importedList.set({
+        data: JSON.stringify(toImport),
+        type: "ryot"
+      });
+      goto("/import/process");
+    } catch (err) {
+      isLoading = false;
+      notify({ type: "error", text: "Failed to read file!" });
+      console.error("import: Failed to read file!", err);
+    }
+  }
+
   onMount(() => {
     if (!localStorage.getItem("token")) {
       goto("/login");
@@ -389,8 +530,13 @@
       {#if isLoading}
         <Spinner />
       {:else}
+        <DropFileButton text="Watcharr Export" filesSelected={(f) => processWatcharrFile(f)} />
+
+        <DropFileButton text=".txt list" filesSelected={(f) => processFiles(f)} />
+
         <DropFileButton
-          text=".txt list or .csv TMDb Export"
+          icon="themoviedb"
+          text=".csv TMDb Export"
           filesSelected={(f) => processFiles(f)}
         />
 
@@ -401,12 +547,18 @@
           allowSelectMultipleFiles
         />
 
-        <DropFileButton text="Watcharr Export" filesSelected={(f) => processWatcharrFile(f)} />
-
         <DropFileButton
+          icon="myanimelist"
           text="MyAnimeList Export"
           filesSelected={(f) => processFilesMyAnimeList(f)}
         />
+
+        <DropFileButton icon="ryot" text="Ryot Exports" filesSelected={(f) => processRyotFile(f)} />
+
+        <button class="plain" on:click={() => goto("/import/trakt")}>
+          <Icon i="trakt" wh="100%" />
+          <h4 class="norm">Trakt Import</h4>
+        </button>
       {/if}
     </div>
   </div>
@@ -434,9 +586,16 @@
     .big-btns {
       display: flex;
       justify-content: center;
-      flex-flow: column;
+      flex-flow: row;
+      flex-wrap: wrap;
       gap: 20px;
       margin-top: 20px;
+
+      & > :global(div),
+      & > :global(button) {
+        flex-basis: 40%;
+        flex-grow: 1;
+      }
     }
 
     .header {
@@ -445,6 +604,29 @@
 
       h5 {
         margin-top: 3px;
+      }
+    }
+
+    /* Same style as DropFileButton for the buttons that don't need file support */
+    button {
+      display: flex;
+      flex-flow: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      height: 180px;
+      padding: 20px;
+      background-color: $accent-color;
+      border: unset;
+      border-radius: 10px;
+      user-select: none;
+      transition: 180ms ease-in-out;
+
+      &:hover,
+      &.dragging-over {
+        fill: $bg-color;
+        color: $bg-color;
+        background-color: $accent-color-hover;
       }
     }
   }

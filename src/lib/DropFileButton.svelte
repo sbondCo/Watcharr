@@ -60,7 +60,7 @@
         {#if isDragOver}
           Import {text}
         {:else}
-          Browse For {text}
+          {text}
         {/if}
       </h4>
     </div>

@@ -79,13 +79,94 @@ func (b *BaseRouter) addContentRoutes() {
 	exp := time.Hour * 24
 
 	// Search for content
-	content.GET("/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
-		// println(c.Param("query"))
+	content.GET("/search/multi/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		if c.Param("query") == "" {
-			c.Status(400)
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
-		content, err := searchContent(c.Param("query"))
+		pageQ := c.Query("page")
+		pageNum := 1
+		if pageQ != "" {
+			num, err := strconv.Atoi(pageQ)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
+				return
+			}
+			pageNum = num
+		}
+		content, err := searchContent(c.Param("query"), pageNum)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	}))
+
+	// Search for movies
+	content.GET("/search/movie/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("query") == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
+			return
+		}
+		pageQ := c.Query("page")
+		pageNum := 1
+		if pageQ != "" {
+			num, err := strconv.Atoi(pageQ)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
+				return
+			}
+			pageNum = num
+		}
+		content, err := searchMovies(c.Param("query"), pageNum)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	}))
+
+	// Search for shows
+	content.GET("/search/tv/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("query") == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
+			return
+		}
+		pageQ := c.Query("page")
+		pageNum := 1
+		if pageQ != "" {
+			num, err := strconv.Atoi(pageQ)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
+				return
+			}
+			pageNum = num
+		}
+		content, err := searchTv(c.Param("query"), pageNum)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, content)
+	}))
+
+	// Search for people
+	content.GET("/search/person/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		if c.Param("query") == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
+			return
+		}
+		pageQ := c.Query("page")
+		pageNum := 1
+		if pageQ != "" {
+			num, err := strconv.Atoi(pageQ)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
+				return
+			}
+			pageNum = num
+		}
+		content, err := searchPeople(c.Param("query"), pageNum)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -150,7 +231,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get season details
-	content.GET("/tv/:id/season/:num", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/tv/:id/season/:num", func(c *gin.Context) {
 		if c.Param("id") == "" || c.Param("num") == "" {
 			c.Status(400)
 			return
@@ -161,7 +242,7 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, content)
-	}))
+	})
 
 	// Get person details
 	content.GET("/person/:id", cache.CachePage(b.ms, exp, func(c *gin.Context) {
@@ -921,6 +1002,22 @@ func (b *BaseRouter) addImportRoutes() {
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
+
+	imprt.POST("/trakt", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var ar TraktImportRequest
+		err := c.ShouldBindJSON(&ar)
+		if err == nil {
+			response, err := traktImportWatched(b.db, userId, ar.Username)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
 }
 
 func (b *BaseRouter) addServerRoutes() {
@@ -1392,5 +1489,33 @@ func (b *BaseRouter) addJobRoutes() {
 			return
 		}
 		c.JSON(http.StatusOK, *response)
+	})
+}
+
+func (b *BaseRouter) addTaskRoutes() {
+	task := b.rg.Group("/task").Use(AuthRequired(b.db), AdminRequired())
+
+	task.GET("/", func(c *gin.Context) {
+		response := getAllTasks()
+		c.JSON(http.StatusOK, response)
+	})
+
+	task.PUT(":name", func(c *gin.Context) {
+		if c.Param("name") == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "no task name provided"})
+			return
+		}
+		var rr TaskRescheduleRequest
+		err := c.ShouldBindJSON(&rr)
+		if err == nil {
+			err := rescheduleTask(c.Param("name"), rr)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 }

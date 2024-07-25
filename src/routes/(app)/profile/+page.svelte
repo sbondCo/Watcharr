@@ -27,6 +27,7 @@
   let hideSpoilersDisabled = false;
   let countryDisabled = false;
   let includePreviouslyWatchedDisabled = false;
+  let automateShowStatusesDisabled = false;
   let pwChangeModalOpen = false;
   let getProfilePromise = getProfile();
   let jellyfinSyncModalOpen = false;
@@ -133,12 +134,28 @@
 
   /**
    * Takes in number of minutes and converts to readable.
-   * eg into hours and minutes.
+   * eg into months, weeks, days, hours and minutes.
    */
-  function toFormattedMinutes(m: number) {
-    const hours = Math.floor(m / 60);
-    const minutes = m % 60;
-    return `${hours ? `${hours}h ` : ""}${minutes}m`;
+  function toFormattedTimeLong(m: number) {
+    // Considers a 30 days long month
+    const countInMinutes = [
+      ["month", 43200],
+      ["week", 10080],
+      ["day", 1440],
+      ["hour", 60]
+    ];
+
+    let ansString = "";
+    let tmp;
+    for (const c of countInMinutes) {
+      tmp = Math.floor(m / (c[1] as number));
+
+      // Ignore fields with fewer than 1 unit
+      if (tmp) ansString += `${tmp} ${c[0]}${tmp >= 2 ? "s, " : ", "}`;
+      m -= tmp * (c[1] as number);
+    }
+
+    return ansString.slice(0, -2);
   }
 </script>
 
@@ -162,10 +179,10 @@
         <Stat name="Joined" value={formatDate(new Date(profile.joined))} />
         <Stat name="Movies Watched" value={profile.moviesWatched} large />
         <Stat name="Shows Watched" value={profile.showsWatched} large />
-        <Stat name="Watching Movies" value={toFormattedMinutes(profile.moviesWatchedRuntime)} />
+        <Stat name="Watching Movies" value={toFormattedTimeLong(profile.moviesWatchedRuntime)} />
         <Stat
           name="Watching Shows"
-          value={toFormattedMinutes(profile.showsWatchedRuntime)}
+          value={toFormattedTimeLong(profile.showsWatchedRuntime)}
           disc="This is very inaccurate 🚀"
         />
       {:catch err}
@@ -255,6 +272,25 @@
             hideSpoilersDisabled = true;
             updateUserSetting("hideSpoilers", on, () => {
               hideSpoilersDisabled = false;
+            });
+          }}
+        />
+      </Setting>
+
+      <Setting
+        title="Automate Show Statuses"
+        desc="Do you want to automate show statuses (show, season, episode)?"
+        tag="experimental"
+        row
+      >
+        <Checkbox
+          name="automateShowStatusesDisabled"
+          disabled={automateShowStatusesDisabled}
+          value={settings?.automateShowStatuses}
+          toggled={(on) => {
+            automateShowStatusesDisabled = true;
+            updateUserSetting("automateShowStatuses", on, () => {
+              automateShowStatusesDisabled = false;
             });
           }}
         />

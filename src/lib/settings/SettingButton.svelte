@@ -45,5 +45,10 @@
     &:hover {
       border-style: solid;
     }
+
+    :global(svg) {
+      width: 24px;
+      min-width: 24px;
+    }
   }
 </style>

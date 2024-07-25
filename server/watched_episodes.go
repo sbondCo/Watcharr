@@ -31,7 +31,7 @@ type WatchedEpisodeAddRequest struct {
 	SeasonNumber    int           `json:"seasonNumber"`
 	EpisodeNumber   int           `json:"episodeNumber"`
 	Status          WatchedStatus `json:"status"`
-	Rating          int8          `json:"rating"`
+	Rating          int8          `json:"rating" binding:"max=10"`
 	addActivity     ActivityType  `json:"-"`
 	addActivityDate time.Time     `json:"-"`
 }
@@ -39,6 +39,8 @@ type WatchedEpisodeAddRequest struct {
 type WatchedEpisodeAddResponse struct {
 	WatchedEpisodes []WatchedEpisode `json:"watchedEpisodes"`
 	AddedActivity   Activity         `json:"addedActivity"`
+	// Response from hook
+	EpisodeStatusChangedHookResponse EpisodeStatusChangedHookResponse `json:"episodeStatusChangedHookResponse,omitempty"`
 }
 
 // Add/edit a watched episode.
@@ -115,10 +117,15 @@ func addWatchedEpisodes(db *gorm.DB, userId uint, ar WatchedEpisodeAddRequest) (
 		}
 		addedActivity, _ = addActivity(db, userId, act)
 	}
-	return WatchedEpisodeAddResponse{
+	episodeAddResp := WatchedEpisodeAddResponse{
 		WatchedEpisodes: w.WatchedEpisodes,
 		AddedActivity:   addedActivity,
-	}, nil
+	}
+	if ar.Status != "" {
+		slog.Debug("addWatchedEpisodes: Episode status was changed, calling hook.")
+		episodeAddResp.EpisodeStatusChangedHookResponse = hookEpisodeStatusChanged(db, userId, ar.WatchedID, ar.SeasonNumber, ar.EpisodeNumber, ar.Status)
+	}
+	return episodeAddResp, nil
 }
 
 // Remove a watched episode
@@ -146,4 +153,12 @@ func rmWatchedEpisode(db *gorm.DB, userId uint, id uint) (Activity, error) {
 		return addedActivity, nil
 	}
 	return Activity{}, errors.New("removed, but failed to add activity entry")
+}
+
+func getNumberOfWatchedEpisodesInSeason(db *gorm.DB, userId uint, watchedId uint, seasonNumber int, acceptableStatus []WatchedStatus) (int64, error) {
+	var count int64
+	if res := db.Model(&WatchedEpisode{}).Where("user_id = ? AND watched_id = ? AND season_number = ? AND status IN ?", userId, watchedId, seasonNumber, acceptableStatus).Count(&count); res.Error != nil {
+		return 0, res.Error
+	}
+	return count, nil
 }

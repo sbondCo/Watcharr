@@ -38,10 +38,12 @@ var activeJobs = make(map[string]*Job)
 
 // Add a job to our activeJobs map.
 // Returns id of job on success, or error if failed to add.
+// Only return safe errors for display to users, log serious errors.
 func addJob(name string, userId uint) (string, error) {
 	idk, err := generateString(8)
 	if err != nil {
-		return "", err
+		slog.Error("addJob: Failed to generate a job id!", "error", err)
+		return "", errors.New("failed to generate a job id, please try again")
 	}
 	_, ok := activeJobs[idk]
 	if ok {
@@ -54,6 +56,22 @@ func addJob(name string, userId uint) (string, error) {
 		UserId: userId,
 	}
 	return idk, nil
+}
+
+// Add a job, but only if one with the same `name` isn't already running.
+// Only return safe errors for display to users.
+func addUniqueJob(name string, userId uint) (string, error) {
+	found := false
+	for _, v := range activeJobs {
+		if v.UserId == userId && v.Name == name && (v.Status == JOB_CREATED || v.Status == JOB_RUNNING) {
+			found = true
+			break
+		}
+	}
+	if found {
+		return "", errors.New("a job of this type is already running, please wait for the existing job to finish")
+	}
+	return addJob(name, userId)
 }
 
 func rmJob(id string, userId uint) {
@@ -91,11 +109,11 @@ func updateJobStatus(id string, userId uint, status JobStatus) error {
 	}
 	j.Status = status
 	// If job is set to done, remove it after 1 minute.
-	if status == JOB_DONE {
-		slog.Debug("updateJobStatus: Job set to done. Will be removed after 1m.", "id", id)
+	if status == JOB_DONE || status == JOB_CANCELLED {
+		slog.Debug("updateJobStatus: Job set to done or cancelled. Will be removed after 30m.", "id", id, "status", status)
 		go func() {
-			time.Sleep(1 * time.Minute)
-			slog.Debug("updateJobStatus: Job done. waited 1m.. removing job now.", "id", id)
+			time.Sleep(30 * time.Minute)
+			slog.Debug("updateJobStatus: Job done. waited 30m.. removing job now.", "id", id)
 			rmJob(id, userId)
 		}()
 	}

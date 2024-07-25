@@ -42,12 +42,17 @@ export type Icon =
   | "eye"
   | "star"
   | "movary"
+  | "ryot"
+  | "trakt"
+  | "myanimelist"
+  | "themoviedb"
   | "refresh"
   | "gamepad"
   | "film"
   | "tv"
   | "pin"
-  | "unpin";
+  | "unpin"
+  | "sparkles";
 
 export type Theme = "light" | "dark";
 
@@ -153,6 +158,14 @@ export interface WatchedSeasonAddResponse {
 export interface WatchedEpisodeAddResponse {
   watchedEpisodes: WatchedEpisode[];
   addedActivity: Activity;
+  episodeStatusChangedHookResponse?: EpisodeStatusChangedHookResponse;
+}
+
+export interface EpisodeStatusChangedHookResponse {
+  newShowStatus?: WatchedStatus;
+  watchedSeason?: WatchedSeason;
+  addedActivities?: Activity[];
+  errors?: string[];
 }
 
 export interface Profile {
@@ -169,6 +182,7 @@ export interface UserSettings {
   hideSpoilers: boolean;
   includePreviouslyWatched: boolean;
   country: string;
+  automateShowStatuses: boolean;
 }
 
 export interface ChangePasswordForm {
@@ -686,6 +700,7 @@ export interface TMDBRegions {
   }[];
 }
 
+// ContentSearch* interfaces are for tmdb 'multi' search results.
 export interface ContentSearch {
   page: number;
   results: (ContentSearchMovie | ContentSearchTv | ContentSearchPerson)[];
@@ -736,6 +751,86 @@ export interface ContentSearchPerson {
   known_for?: ContentSearchMovie | ContentSearchTv;
   name?: string;
   popularity?: number;
+}
+
+export interface MoviesSearchResponse {
+  page: number;
+  results: {
+    adult: boolean;
+    backdrop_path: string;
+    genre_ids: number[];
+    id: number;
+    original_language: string;
+    original_title: string;
+    overview: string;
+    popularity: number;
+    poster_path: string;
+    release_date: string;
+    title: string;
+    video: boolean;
+    vote_average: number;
+    vote_count: number;
+    media_type: "movie";
+  }[];
+  total_pages: number;
+  total_results: number;
+}
+
+export interface ShowsSearchResponse {
+  page: number;
+  results: {
+    adult: boolean;
+    backdrop_path: string;
+    genre_ids: number[];
+    id: number;
+    origin_country: string[];
+    original_language: string;
+    original_name: string;
+    overview: string;
+    popularity: number;
+    poster_path: string;
+    first_air_date: string;
+    name: string;
+    vote_average: number;
+    vote_count: number;
+    media_type: "tv";
+  }[];
+  total_pages: number;
+  total_results: number;
+}
+
+export interface PeopleSearchResponse {
+  page: number;
+  results: {
+    adult: boolean;
+    gender: number;
+    id: number;
+    known_for_department: string;
+    name: string;
+    original_name: string;
+    popularity: number;
+    profile_path: string;
+    media_type: "person";
+    known_for: {
+      adult: boolean;
+      backdrop_path: string;
+      id: number;
+      title: string;
+      original_language: string;
+      original_title: string;
+      overview: string;
+      poster_path: string;
+      media_type: string;
+      genre_ids: number[];
+      popularity: number;
+      release_date: string;
+      video: boolean;
+      vote_average: number;
+      vote_count: number;
+    }[];
+  }[];
+  total_pages: number;
+  total_results: number;
 }
 
 export interface GameSearch {
@@ -1073,4 +1168,14 @@ export interface GetJobResponse {
   status: JobStatus;
   currentTask?: string;
   errors: string[];
+}
+
+export interface TaskRescheduleRequest {
+  seconds: number;
+}
+
+export interface AllTasksResponse {
+  name: string;
+  nextRun: Date;
+  seconds: number;
 }

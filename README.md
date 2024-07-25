@@ -25,6 +25,7 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 - [Screenshots](#screenshots)
 - [Setup](#set-up)
 - [Contributing](CONTRIBUTING.md)
+- [Community Made Tools](#community-made-tools)
 - [Getting Help](#getting-help)
 
 # Screenshots
@@ -52,6 +53,16 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 # Set Up
 
 [Checkout our documentation](https://watcharr.app/docs/category/installation) for an up to date guide on setup! If you hate manuals, but love docker, this [docker-compose.yml](./docker-compose.yml) file is your friend.
+
+# Community Made Tools
+
+Third-party tools made by the community for enhancing your Watcharr experience!
+
+- [Kodi Plugin](https://github.com/airdogvan/watcharr_kodi) by [airdogvan](https://github.com/airdogvan) for automatically tracking your watched shows/movies.
+
+Thanks to anyone that has made a script or tool for Watcharr. Feel free to add your own to the list if you have one!
+
+**Note:** I cannot provide any assurances for these tools or stay on top of them (code review, etc), if you have any problems please open an issue in the project for the tool so that they can stay organized.
 
 # Getting Help
 

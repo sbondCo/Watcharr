@@ -1,7 +1,4 @@
 <script lang="ts">
-  // The original JobWatcherModal.svelte component.
-  // This could eventually end up using that component or we could keep sync jobs here.
-
   import Icon from "@/lib/Icon.svelte";
   import Modal from "@/lib/Modal.svelte";
   import Spinner from "@/lib/Spinner.svelte";
@@ -11,31 +8,36 @@
   import { onDestroy, onMount } from "svelte";
   import { watchedList } from "@/store";
 
-  export let type: "jellyfin" | "plex" = "jellyfin";
+  export let modalTitle: string;
+  // Promise that returns the job id to watch.
+  export let getJobId: () => Promise<{ jobId: string } | undefined>;
   export let onClose: () => void;
+  export let messages: {
+    starting: string;
+  };
 
   let step: "starting" | "errored" | "job-running" | "done" | "modal-closing" = "starting";
   let jobId: string | undefined;
   let currentTask: string | undefined;
   let latestJobStatus: GetJobResponse | undefined;
+  let jobFailError: string | undefined;
 
   async function startSync() {
     try {
-      const r = await axios.get<JobCreatedResponse>(
-        type === "jellyfin" ? "/jellyfin/sync" : "/plex/sync"
-      );
-      console.log("startSync: Response:", r.data);
-      if (!r.data.jobId) {
+      const r = await getJobId();
+      console.log("startSync: Response:", r);
+      if (!r?.jobId) {
         step = "errored";
         console.error("startSync: No jobId returned!");
         return;
       }
-      jobId = r.data.jobId;
+      jobId = r.jobId;
       step = "job-running";
       startJobWatcher();
-    } catch (err) {
+    } catch (err: any) {
       console.error("startSync failed!", err);
       step = "errored";
+      jobFailError = err?.response ? err?.response?.data?.error : String(err);
     }
   }
 
@@ -115,15 +117,7 @@
   });
 </script>
 
-<Modal
-  title="{type === 'jellyfin'
-    ? localStorage.getItem('useEmby')
-      ? 'Emby'
-      : 'Jellyfin'
-    : 'Plex'} Sync"
-  maxWidth="700px"
-  onClose={modalClose}
->
+<Modal title={modalTitle} maxWidth="700px" onClose={modalClose}>
   <div class="ctr">
     {#if step === "done"}
       <Icon i="check" wh={60} />
@@ -135,16 +129,16 @@
     <div>
       {#if step === "starting"}
         <h4 class="norm">Starting</h4>
-        <span>We are requesting a full sync</span>
+        <span>{messages.starting}</span>
       {:else if step === "job-running"}
-        <h4 class="norm">Syncing</h4>
+        <h4 class="norm">Running</h4>
         {#if currentTask}
           <span>{currentTask}</span>
         {/if}
       {:else if step === "done"}
         {#if !latestJobStatus?.errors || latestJobStatus?.errors?.length <= 0}
           <h4 class="norm">Finished</h4>
-          <span>We have finished syncing. Looks like there were no errors!</span>
+          <span>We have finished. Looks like there were no errors!</span>
         {:else}
           <h4 class="norm">
             Finished With {latestJobStatus?.errors?.length} Error{latestJobStatus?.errors
@@ -152,7 +146,7 @@
               ? ""
               : "s"}
           </h4>
-          <span>Syncing has finished, but with errors:</span>
+          <span>Job finished, but with errors:</span>
           <ul>
             {#each latestJobStatus?.errors as e}
               <li>{e}</li>
@@ -161,10 +155,21 @@
         {/if}
       {:else if step === "errored"}
         <h4 class="norm">We Errored!</h4>
-        <span>We errored before starting sync or the sync job was cancelled.</span>
+        {#if jobFailError}
+          <span>{jobFailError}</span>
+        {:else}
+          <span>We errored before starting the job or the job was cancelled.</span>
+        {/if}
+        {#if latestJobStatus?.errors && latestJobStatus?.errors?.length > 0}
+          <ul>
+            {#each latestJobStatus?.errors as e}
+              <li>{e}</li>
+            {/each}
+          </ul>
+        {/if}
       {:else}
         <h4 class="norm">Unknown State!</h4>
-        <span>We're not sure of the current sync status.</span>
+        <span>We're not sure of the current job status.</span>
       {/if}
     </div>
   </div>

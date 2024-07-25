@@ -2,6 +2,8 @@
   import type { Activity } from "@/types";
   import { getOrdinalSuffix, months, seasonAndEpToReadable } from "./util/helpers";
   import ActivityEditor from "./ActivityEditor.svelte";
+  import Icon from "./Icon.svelte";
+  import tooltip from "./actions/tooltip";
 
   export let activity: Activity[] | undefined;
   export let wListId: number;
@@ -36,6 +38,12 @@
           return `Status Changed to ${toFullTitleCase(a.data)}`;
         }
         return "Status Changed";
+      case "STATUS_CHANGED_AUTO":
+        if (a.data) {
+          const data = JSON.parse(a.data);
+          return `Status Changed to ${toFullTitleCase(data.status)}`;
+        }
+        return "Status Changed";
       case "THOUGHTS_CHANGED":
         return "Thoughts Changed";
       case "THOUGHTS_REMOVED":
@@ -60,6 +68,7 @@
       case "IMPORTED_ADDED_WATCHED_PLEX":
         return "Imported Watch Date";
       case "SEASON_ADDED":
+      case "SEASON_ADDED_AUTO":
         if (a.data) {
           const data = JSON.parse(a.data);
           return `Season ${data.season} Added as ${toFullTitleCase(data.status)}`;
@@ -79,6 +88,7 @@
         }
         return "Season Rating Changed";
       case "SEASON_STATUS_CHANGED":
+      case "SEASON_STATUS_CHANGED_AUTO":
         if (a.data) {
           const data = JSON.parse(a.data);
           return `Changed Season ${data.season} Status to ${toFullTitleCase(data.status)}`;
@@ -172,6 +182,16 @@
     isActivityEditorVisible = true;
     return;
   }
+
+  function getActivityDataParsed(a: Activity) {
+    try {
+      if (a.data) {
+        return JSON.parse(a.data);
+      }
+    } catch (err) {
+      console.error("getActivityDataParsed: Failed!", err);
+    }
+  }
 </script>
 
 {#if isActivityEditorVisible}
@@ -197,6 +217,21 @@
               <span title={d.toDateString()}>{toDayTime(d)}</span>
               <span>{getMsg(a)}</span>
             </button>
+            {#if a.type?.endsWith("_AUTO")}
+              {@const data = getActivityDataParsed(a)}
+              <i
+                use:tooltip={{
+                  text:
+                    data && data.reason
+                      ? `Automated because ${data.reason}`
+                      : "Completed by an automation.",
+                  pos: "bot"
+                }}
+                style="width: 20px; height: 20px;"
+              >
+                <Icon i="sparkles" wh={20} />
+              </i>
+            {/if}
           </li>
         {/each}
       {/each}
@@ -235,6 +270,11 @@
       }
 
       li {
+        display: flex;
+        flex-flow: row;
+        gap: 8px;
+        align-items: center;
+
         button {
           all: unset;
           display: flex;
@@ -254,7 +294,7 @@
             min-width: max-content;
           }
 
-          &:last-child {
+          &:last-of-type {
             background-color: $accent-color;
             color: $text-color;
             border-radius: 8px;
@@ -273,11 +313,6 @@
   }
 
   h2 {
-    font-family:
-      sans-serif,
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont;
     font-size: 30px;
     font-weight: bold;
     margin-left: 30px;

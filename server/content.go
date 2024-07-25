@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gin-contrib/cache/persistence"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -18,6 +19,8 @@ const (
 	MOVIE ContentType = "movie"
 	SHOW  ContentType = "tv"
 )
+
+var ContentStore = persistence.NewInMemoryStore(time.Hour * 24)
 
 // For storing cached content, so we can serve the basic local data for watched list to work
 type Content struct {
@@ -240,12 +243,63 @@ func transformProviders(c *interface{}, country string) {
 	}
 }
 
-func searchContent(query string) (TMDBSearchMultiResponse, error) {
+func searchContent(query string, pageNum int) (TMDBSearchMultiResponse, error) {
 	resp := new(TMDBSearchMultiResponse)
-	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": "1"}, &resp)
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete multi search request!", "error", err.Error())
 		return TMDBSearchMultiResponse{}, errors.New("failed to complete multi search request")
+	}
+	return *resp, nil
+}
+
+func searchMovies(query string, pageNum int) (TMDBSearchMoviesResponse, error) {
+	resp := new(TMDBSearchMoviesResponse)
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	err := tmdbRequest("/search/movie", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete movie search request!", "error", err.Error())
+		return TMDBSearchMoviesResponse{}, errors.New("failed to complete movie search request")
+	}
+	for i := range resp.Results {
+		resp.Results[i].MediaType = "movie"
+	}
+	return *resp, nil
+}
+
+func searchTv(query string, pageNum int) (TMDBSearchShowsResponse, error) {
+	resp := new(TMDBSearchShowsResponse)
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	err := tmdbRequest("/search/tv", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete tv search request!", "error", err.Error())
+		return TMDBSearchShowsResponse{}, errors.New("failed to complete tv search request")
+	}
+	for i := range resp.Results {
+		resp.Results[i].MediaType = "tv"
+	}
+	return *resp, nil
+}
+
+func searchPeople(query string, pageNum int) (TMDBSearchPeopleResponse, error) {
+	resp := new(TMDBSearchPeopleResponse)
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	err := tmdbRequest("/search/person", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	if err != nil {
+		slog.Error("Failed to complete people search request!", "error", err.Error())
+		return TMDBSearchPeopleResponse{}, errors.New("failed to complete people search request")
+	}
+	for i := range resp.Results {
+		resp.Results[i].MediaType = "person"
 	}
 	return *resp, nil
 }
@@ -294,12 +348,25 @@ func tvCredits(id string) (TMDBContentCredits, error) {
 	return *resp, nil
 }
 
+// This method is manually cached, so it can be easily used in other places (on the server) with cache benefits
 func seasonDetails(tvId string, seasonNumber string) (TMDBSeasonDetails, error) {
+	var cacheKey = "contentstore-seasondetails-" + tvId + "-" + seasonNumber
 	resp := new(TMDBSeasonDetails)
+	if err := ContentStore.Get(cacheKey, &resp); err != nil {
+		if err != persistence.ErrCacheMiss {
+			slog.Error("seasonDetails: Cache failed for some reason", "error", err)
+		}
+	} else {
+		slog.Debug("seasonDetails: Returning cache.")
+		return *resp, nil
+	}
 	err := tmdbRequest("/tv/"+tvId+"/season/"+seasonNumber, map[string]string{}, &resp)
 	if err != nil {
-		slog.Error("Failed to complete season details request!", "error", err.Error())
+		slog.Error("seasonDetails: Failed to complete season details request!", "error", err.Error())
 		return TMDBSeasonDetails{}, errors.New("failed to complete season details request")
+	}
+	if err := ContentStore.Set(cacheKey, resp, time.Hour*24); err != nil {
+		slog.Error("seasonDetails: Failed to set cache!", "error", err)
 	}
 	return *resp, nil
 }

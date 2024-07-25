@@ -21,7 +21,7 @@ const (
 	FINISHED WatchedStatus = "FINISHED"
 	WATCHING WatchedStatus = "WATCHING"
 	PLANNED  WatchedStatus = "PLANNED"
-	HOLD     WatchedStatus = "ONHOLD"
+	HOLD     WatchedStatus = "HOLD"
 	DROPPED  WatchedStatus = "DROPPED"
 )
 
@@ -75,6 +75,17 @@ func getWatched(db *gorm.DB, userId uint) []Watched {
 		panic(res.Error)
 	}
 	return *watched
+}
+
+// Get a watched list item by id (must be for `userId`).
+func getWatchedItemById(db *gorm.DB, userId uint, id uint) (Watched, error) {
+	watched := new(Watched)
+	res := db.Model(&Watched{}).Preload("Content").Where("user_id = ? AND id = ?", userId, id).Find(&watched)
+	if res.Error != nil {
+		slog.Error("getWatchedItemById: Failed!", "error", res.Error)
+		return Watched{}, res.Error
+	}
+	return *watched, nil
 }
 
 // Get another users **public** watchlist.

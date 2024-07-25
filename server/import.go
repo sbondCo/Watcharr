@@ -30,7 +30,7 @@ type ImportRequest struct {
 	Name             string           `json:"name"`
 	TmdbID           int              `json:"tmdbId"`
 	Type             ContentType      `json:"type"`
-	Rating           int8             `json:"rating"`
+	Rating           int8             `json:"rating" binding:"max=10"`
 	RatingCustomDate *time.Time       `json:"ratingCustomDate"`
 	Status           WatchedStatus    `json:"status"`
 	Thoughts         string           `json:"thoughts"`
@@ -70,7 +70,8 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 			return successfulImport(db, userId, cr.ID, SHOW, ar)
 		}
 	}
-	sr, err := searchContent(ar.Name)
+	// tmdbId not passed.. search for the content by name.
+	sr, err := searchContent(ar.Name, 1)
 	if err != nil {
 		slog.Error("import: content search failed", "error", err)
 		return ImportResponse{}, errors.New("Content search failed")
