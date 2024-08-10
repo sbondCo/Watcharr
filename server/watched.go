@@ -39,6 +39,7 @@ type Watched struct {
 	Activity        []Activity       `json:"activity"`
 	WatchedSeasons  []WatchedSeason  `json:"watchedSeasons,omitempty"`  // For shows
 	WatchedEpisodes []WatchedEpisode `json:"watchedEpisodes,omitempty"` // For shows
+	Tags            []Tag            `json:"tags,omitempty" gorm:"many2many:watched_tags;"`
 }
 
 type WatchedAddRequest struct {

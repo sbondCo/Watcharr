@@ -44,7 +44,8 @@ export type Icon =
   | "tv"
   | "pin"
   | "unpin"
-  | "sparkles";
+  | "sparkles"
+  | "tag";
 
 export type Theme = "light" | "dark";
 
@@ -1170,4 +1171,10 @@ export interface AllTasksResponse {
   name: string;
   nextRun: Date;
   seconds: number;
+}
+
+export interface Tag {
+  name: string;
+  color: string;
+  bgColor: string;
 }

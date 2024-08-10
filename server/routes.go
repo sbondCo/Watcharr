@@ -1519,3 +1519,33 @@ func (b *BaseRouter) addTaskRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 }
+
+func (b *BaseRouter) addTagRoutes() {
+	tag := b.rg.Group("/tag").Use(AuthRequired(nil))
+
+	tag.GET("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		tags, err := getTags(b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, tags)
+	})
+
+	tag.POST("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var tr TagAddRequest
+		err := c.ShouldBindJSON(&tr)
+		if err == nil {
+			response, err := addTag(b.db, userId, tr)
+			if err != nil {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}

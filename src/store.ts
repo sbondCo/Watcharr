@@ -5,6 +5,7 @@ import type {
   ImportedList,
   PrivateUser,
   ServerFeatures,
+  Tag,
   Theme,
   UserSettings,
   WLDetailedViewOption,
@@ -32,6 +33,7 @@ export const searchQuery = writable<string>("");
 export const serverFeatures = writable<ServerFeatures>();
 export const follows = writable<Follow[]>();
 export const wlDetailedView = writable<WLDetailedViewOption[]>([]);
+export const tags = writable<Tag[]>();
 
 export const clearAllStores = () => {
   watchedList.set([]);
@@ -45,6 +47,7 @@ export const clearAllStores = () => {
   userSettings.set(undefined);
   follows.set([]);
   wlDetailedView.set([]);
+  tags.set([]);
 };
 
 if (browser) {
