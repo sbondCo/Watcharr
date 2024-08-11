@@ -269,21 +269,6 @@
           <DetailedMenu />
         {/if}
       {/if}
-      {#if $page.url?.pathname === "/"}
-        <button
-          class="plain other tag"
-          on:click={() => {
-            closeAllSubMenus("tag");
-            tagMenuShown = !tagMenuShown;
-          }}
-          use:tooltip={{ text: "Tags", pos: "bot", condition: !tagMenuShown }}
-        >
-          <Icon i="tag" />
-        </button>
-        {#if tagMenuShown}
-          <TagMenu />
-        {/if}
-      {/if}
       <!-- Show on watched list and shared/followed watched lists -->
       {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/")}
         <button
@@ -319,6 +304,19 @@
         {#if filterMenuShown}
           <FilterMenu />
         {/if}
+      {/if}
+      <button
+        class="plain other tag"
+        on:click={() => {
+          closeAllSubMenus("tag");
+          tagMenuShown = !tagMenuShown;
+        }}
+        use:tooltip={{ text: "Tags", pos: "bot", condition: !tagMenuShown }}
+      >
+        <Icon i="tag" />
+      </button>
+      {#if tagMenuShown}
+        <TagMenu />
       {/if}
       <button
         class="plain other discover"
@@ -621,7 +619,7 @@
         }
       }
 
-      button:not(.face) {
+      & > button:not(.face) {
         margin-right: 12px;
       }
 

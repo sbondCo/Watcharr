@@ -6,7 +6,7 @@
   .settings {
     display: flex;
     flex-flow: column;
-    gap: 20px;
+    gap: 15px;
     width: 100%;
   }
 </style>

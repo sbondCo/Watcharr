@@ -1,18 +1,22 @@
 <script lang="ts">
   import { tags } from "@/store";
-  import type { WLDetailedViewOption } from "@/types";
+  import Icon from "../Icon.svelte";
+  import CreateTagModal from "../tag/CreateTagModal.svelte";
 
-  function detailClicked(d: WLDetailedViewOption) {}
+  function tagClicked() {}
 
   $: allTags = $tags;
 </script>
 
 <div class={`menu`}>
   <div class="inner">
-    <h4 class="norm sm-caps">My Tags</h4>
+    <div class="title">
+      <h4 class="norm sm-caps">My Tags</h4>
+      <button class="plain"><Icon i="add" wh={22} /></button>
+    </div>
     {#if allTags && allTags.length > 0}
       {#each allTags as t}
-        <button class={`plain`} on:click={() => detailClicked("statusRating")}>
+        <button class={`plain`} on:click={() => tagClicked()}>
           {t.name}
         </button>
       {/each}
@@ -21,6 +25,8 @@
     {/if}
   </div>
 </div>
+
+<CreateTagModal />
 
 <style lang="scss">
   div.menu {
@@ -34,10 +40,26 @@
 
   div.inner {
     h4 {
-      margin-bottom: 8px;
-
       &:not(:first-of-type) {
         margin-top: 8px;
+      }
+    }
+
+    .title {
+      display: flex;
+      flex-flow: row;
+      align-items: center;
+      margin-bottom: 8px;
+
+      button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: min-content;
+        height: min-content;
+        margin-left: auto;
+        padding: 2px 3px;
+        border-radius: 8px;
       }
     }
 
