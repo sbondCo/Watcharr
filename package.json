@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.0.1",
-    "@sveltejs/kit": "^2.5.10",
+    "@sveltejs/kit": "^2.5.22",
     "@types/papaparse": "^5.3.14",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.8.0",
