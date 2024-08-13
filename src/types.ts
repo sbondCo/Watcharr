@@ -1178,3 +1178,9 @@ export interface Tag {
   color: string;
   bgColor: string;
 }
+
+export interface TagAddRequest {
+  name: string;
+  color: string;
+  bgColor: string;
+}

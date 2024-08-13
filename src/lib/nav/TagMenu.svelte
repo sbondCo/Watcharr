@@ -2,31 +2,36 @@
   import { tags } from "@/store";
   import Icon from "../Icon.svelte";
   import CreateTagModal from "../tag/CreateTagModal.svelte";
-
-  function tagClicked() {}
+  import Tag from "../tag/Tag.svelte";
 
   $: allTags = $tags;
+
+  let tagModalOpen = false;
 </script>
 
 <div class={`menu`}>
   <div class="inner">
     <div class="title">
       <h4 class="norm sm-caps">My Tags</h4>
-      <button class="plain"><Icon i="add" wh={22} /></button>
+      <button class="plain" on:click={() => (tagModalOpen = !tagModalOpen)}>
+        <Icon i="add" wh={22} />
+      </button>
     </div>
     {#if allTags && allTags.length > 0}
-      {#each allTags as t}
-        <button class={`plain`} on:click={() => tagClicked()}>
-          {t.name}
-        </button>
-      {/each}
+      <div class="list">
+        {#each allTags as t}
+          <Tag tag={t} />
+        {/each}
+      </div>
     {:else}
-      <span>You have no tags yet!</span>
+      <span style="margin-top: 0;">You have no tags yet!</span>
     {/if}
   </div>
 </div>
 
-<CreateTagModal />
+{#if tagModalOpen}
+  <CreateTagModal onClose={() => (tagModalOpen = false)} />
+{/if}
 
 <style lang="scss">
   div.menu {
@@ -63,11 +68,10 @@
       }
     }
 
-    & > button {
-      text-transform: capitalize;
-      position: relative;
-      width: max-content;
-      border-radius: 8px;
+    .list {
+      display: flex;
+      flex-flow: column;
+      gap: 5px;
     }
   }
 </style>
