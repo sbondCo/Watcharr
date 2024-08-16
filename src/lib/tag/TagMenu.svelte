@@ -1,18 +1,21 @@
 <script lang="ts">
   import { tags } from "@/store";
   import Icon from "../Icon.svelte";
-  import CreateTagModal from "../tag/CreateTagModal.svelte";
-  import Tag from "../tag/Tag.svelte";
+  import CreateTagModal from "./CreateTagModal.svelte";
+  import Tag from "./Tag.svelte";
+
+  export let titleText: string | undefined = undefined;
+  export let classes: string | undefined = undefined;
 
   $: allTags = $tags;
 
   let tagModalOpen = false;
 </script>
 
-<div class={`menu`}>
+<div class={[`menu`, classes].join(" ")}>
   <div class="inner">
     <div class="title">
-      <h4 class="norm sm-caps">My Tags</h4>
+      <h4 class="norm sm-caps">{titleText ? titleText : "My Tags"}</h4>
       <button class="plain" on:click={() => (tagModalOpen = !tagModalOpen)}>
         <Icon i="add" wh={22} />
       </button>
@@ -41,10 +44,23 @@
     &:before {
       left: 3px;
     }
+
+    &.from-add-to-tag-btn {
+      top: 50px;
+      right: -78px;
+
+      &:before {
+        left: 87px;
+        /* The place where this button will be is always dark, so white works for both themes */
+        border-bottom-color: white;
+      }
+    }
   }
 
   div.inner {
     h4 {
+      color: $text-color;
+
       &:not(:first-of-type) {
         margin-top: 8px;
       }

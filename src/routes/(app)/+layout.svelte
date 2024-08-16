@@ -9,7 +9,7 @@
   import FilterMenu from "@/lib/nav/FilterMenu.svelte";
   import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
   import SortMenu from "@/lib/nav/SortMenu.svelte";
-  import TagMenu from "@/lib/nav/TagMenu.svelte";
+  import TagMenu from "@/lib/tag/TagMenu.svelte";
   import { isTouch, parseTokenPayload, userHasPermission } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import {
