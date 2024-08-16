@@ -52,3 +52,37 @@ func addTag(db *gorm.DB, userId uint, tr TagAddRequest) (Tag, error) {
 	slog.Debug("Adding tag", "added_tag", tag)
 	return tag, nil
 }
+
+// Add watched content to a tag (user must own the tag and watched entry).
+func addWatchedToTag(db *gorm.DB, userId uint, tagId uint, watchedId uint) error {
+	slog.Debug("addWatchedToTag: Adding", "userId", userId, "watchedID", watchedId, "tagId", tagId)
+	// 1. Make sure watched item exists and is owned by this user
+	var w Watched
+	if resp := db.Where("id = ? AND user_id = ?", watchedId, userId).Preload("Tags").Find(&w); resp.Error != nil {
+		slog.Error("addWatchedToTag: failed to get watched item from db", "error", resp.Error)
+		return errors.New("failed when retrieving watched item")
+	}
+	if w.ID == 0 {
+		slog.Error("addWatchedToTag", "error", "watched item does not exist in db", "watchedID", watchedId)
+		return errors.New("watched entry does not exist")
+	}
+	// 2. Make sure tag exists
+	var t Tag
+	if resp := db.Where("id = ? AND user_id = ?", tagId, userId).Find(&t); resp.Error != nil {
+		slog.Error("addWatchedToTag: Failed to get tag from db", "error", resp.Error)
+		return errors.New("failed when retrieving tag")
+	}
+	if t.ID == 0 {
+		slog.Error("addWatchedToTag", "error", "tag does not exist in db", "tagId", tagId)
+		return errors.New("tag does not exist")
+	}
+	// 3. Save relation (unique restraint will fail if it already exists)
+	w.Tags = append(w.Tags, t)
+	resp := db.Save(&w)
+	if resp.Error != nil {
+		slog.Error("addWatchedToTag: Failed to tag watched item", "error", resp.Error)
+		return errors.New("failed to tag watched item")
+	}
+	slog.Debug("addWatchedToTag: watched content successfully linked to tag", "watchedID", watchedId, "tagId", tagId)
+	return nil
+}

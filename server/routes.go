@@ -553,6 +553,28 @@ func (b *BaseRouter) addWatchedRoutes() {
 		}
 		c.JSON(http.StatusOK, response)
 	})
+
+	watched.POST(":id/tag/:tagId", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			slog.Error("tag watched route failed to convert id param to int", "error", err)
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		tagId, err := strconv.Atoi(c.Param("tagId"))
+		if err != nil {
+			slog.Error("tag watched route failed to convert tagId param to int", "error", err)
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		userId := c.MustGet("userId").(uint)
+		err = addWatchedToTag(b.db, userId, uint(tagId), uint(id))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
 }
 
 func (b *BaseRouter) addActivityRoutes() {
