@@ -71,7 +71,16 @@ type WatchedRemoveResponse struct {
 
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
-	res := db.Model(&Watched{}).Preload("Content").Preload("Game").Preload("Game.Poster").Preload("Activity").Preload("WatchedSeasons").Preload("WatchedEpisodes").Where("user_id = ?", userId).Find(&watched)
+	res := db.Model(&Watched{}).
+		Preload("Content").
+		Preload("Game").
+		Preload("Game.Poster").
+		Preload("Activity").
+		Preload("WatchedSeasons").
+		Preload("WatchedEpisodes").
+		Preload("Tags").
+		Where("user_id = ?", userId).
+		Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}
