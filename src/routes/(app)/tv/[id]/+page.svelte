@@ -185,7 +185,7 @@
             {/if}
             {#if wListItem}
               <div class="other-side">
-                <AddToTagButton />
+                <AddToTagButton watchedItem={wListItem} />
                 <button
                   on:click={() => {
                     if (wListItem?.pinned) {

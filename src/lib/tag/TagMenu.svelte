@@ -6,6 +6,7 @@
 
   export let titleText: string | undefined = undefined;
   export let classes: string | undefined = undefined;
+  export let onTagClick: () => void | undefined = undefined!;
 
   $: allTags = $tags;
 
@@ -23,7 +24,7 @@
     {#if allTags && allTags.length > 0}
       <div class="list">
         {#each allTags as t}
-          <Tag tag={t} />
+          <Tag tag={t} onClick={onTagClick} />
         {/each}
       </div>
     {:else}

@@ -67,26 +67,32 @@
   }
 </script>
 
-<Modal title="Create A Tag" desc="Create a new tag" maxWidth="500px" {onClose} {error}>
-  <SettingsList>
-    <Setting title="Name" desc="What should we call this tag?">
-      <input type="text" name="name" placeholder="Name" bind:value={tagName} />
-    </Setting>
-    <Setting title="Text Color" desc="Color for your tags text." row>
-      <ColorSelector bind:value={textColor} style="max-width: 150px;" />
-    </Setting>
-    <Setting title="Background Color" desc="Color for your tags background." row>
-      <ColorSelector bind:value={bgColor} style="max-width: 150px;" />
-    </Setting>
-    <button class="add-tag-btn" on:click={() => addTag()} disabled={submitDisabled}>
-      Create Tag
-    </button>
-  </SettingsList>
-</Modal>
+<div class="wrap">
+  <Modal title="Create A Tag" desc="Create a new tag" maxWidth="500px" {onClose} {error}>
+    <SettingsList>
+      <Setting title="Name" desc="What should we call this tag?">
+        <input type="text" name="name" placeholder="Name" bind:value={tagName} />
+      </Setting>
+      <Setting title="Text Color" desc="Color for your tags text." row>
+        <ColorSelector bind:value={textColor} style="max-width: 150px;" />
+      </Setting>
+      <Setting title="Background Color" desc="Color for your tags background." row>
+        <ColorSelector bind:value={bgColor} style="max-width: 150px;" />
+      </Setting>
+      <button class="add-tag-btn" on:click={() => addTag()} disabled={submitDisabled}>
+        Create Tag
+      </button>
+    </SettingsList>
+  </Modal>
+</div>
 
 <style lang="scss">
   .add-tag-btn {
     width: max-content;
     margin-left: auto;
+  }
+
+  .wrap {
+    color: $text-color;
   }
 </style>
