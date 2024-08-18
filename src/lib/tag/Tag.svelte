@@ -49,6 +49,8 @@
     width: max-content;
     border-radius: 8px;
     padding: 5px 8px;
+    text-wrap: wrap;
+    word-break: break-word;
     transition: opacity 150ms ease-in-out;
 
     &:hover {

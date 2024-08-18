@@ -2,11 +2,13 @@
   import { tags } from "@/store";
   import Icon from "../Icon.svelte";
   import CreateTagModal from "./CreateTagModal.svelte";
+  import type { Tag as TagT } from "@/types";
   import Tag from "./Tag.svelte";
 
   export let titleText: string | undefined = undefined;
   export let classes: string | undefined = undefined;
-  export let onTagClick: () => void | undefined = undefined!;
+  export let onTagClick: (tag: TagT, remove: boolean) => void | undefined = undefined!;
+  export let selectedTags: TagT[] | undefined = undefined;
 
   $: allTags = $tags;
 
@@ -24,7 +26,17 @@
     {#if allTags && allTags.length > 0}
       <div class="list">
         {#each allTags as t}
-          <Tag tag={t} onClick={onTagClick} />
+          {@const isSelected = selectedTags
+            ? selectedTags.find((tag) => tag.id === t.id)
+              ? true
+              : false
+            : false}
+          <div>
+            <Tag tag={t} onClick={() => onTagClick(t, isSelected)} />
+            {#if isSelected}
+              <Icon i="check" wh={18} />
+            {/if}
+          </div>
         {/each}
       </div>
     {:else}
@@ -89,6 +101,17 @@
       display: flex;
       flex-flow: column;
       gap: 5px;
+
+      & > div {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: $text-color;
+
+        :global(svg) {
+          min-width: 18px;
+        }
+      }
     }
   }
 </style>

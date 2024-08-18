@@ -112,6 +112,7 @@ export interface Watched extends dbModel {
   pinned: boolean;
   watchedSeasons?: WatchedSeason[];
   watchedEpisodes?: WatchedEpisode[];
+  tags?: Tag[];
 }
 
 export interface WatchedAddRequest {
@@ -1173,7 +1174,7 @@ export interface AllTasksResponse {
   seconds: number;
 }
 
-export interface Tag {
+export interface Tag extends dbModel {
   name: string;
   color: string;
   bgColor: string;

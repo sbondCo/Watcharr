@@ -86,3 +86,36 @@ func addWatchedToTag(db *gorm.DB, userId uint, tagId uint, watchedId uint) error
 	slog.Debug("addWatchedToTag: watched content successfully linked to tag", "watchedID", watchedId, "tagId", tagId)
 	return nil
 }
+
+// Remove watched content from a tag (user must own the tag and watched entry).
+func rmWatchedFromTag(db *gorm.DB, userId uint, tagId uint, watchedId uint) error {
+	slog.Debug("rmWatchedFromTag: Removing", "userId", userId, "watchedID", watchedId, "tagId", tagId)
+	// 1. Make sure watched item exists and is owned by this user
+	var w Watched
+	if resp := db.Where("id = ? AND user_id = ?", watchedId, userId).Preload("Tags").Find(&w); resp.Error != nil {
+		slog.Error("rmWatchedFromTag: failed to get watched item from db", "error", resp.Error)
+		return errors.New("failed when retrieving watched item")
+	}
+	if w.ID == 0 {
+		slog.Error("rmWatchedFromTag", "error", "watched item does not exist in db", "watchedID", watchedId)
+		return errors.New("watched entry does not exist")
+	}
+	// 2. Make sure tag exists
+	var t Tag
+	if resp := db.Where("id = ? AND user_id = ?", tagId, userId).Find(&t); resp.Error != nil {
+		slog.Error("rmWatchedFromTag: Failed to get tag from db", "error", resp.Error)
+		return errors.New("failed when retrieving tag")
+	}
+	if t.ID == 0 {
+		slog.Error("rmWatchedFromTag", "error", "tag does not exist in db", "tagId", tagId)
+		return errors.New("tag does not exist")
+	}
+	// 3. Remove relation
+	err := db.Model(&w).Association("Tags").Delete(&t)
+	if err != nil {
+		slog.Error("rmWatchedFromTag: Failed to untag watched item", "error", err)
+		return errors.New("failed to untag watched item")
+	}
+	slog.Debug("rmWatchedFromTag: watched content successfully removed from tag", "watchedID", watchedId, "tagId", tagId)
+	return nil
+}

@@ -3,6 +3,7 @@
   import tooltip from "../actions/tooltip";
   import Icon from "../Icon.svelte";
   import TagMenu from "./TagMenu.svelte";
+  import { tagWatched, untagWatched } from "./api";
 
   export let watchedItem: Watched;
 
@@ -24,8 +25,14 @@
     <TagMenu
       titleText="Add To Tag"
       classes="from-add-to-tag-btn"
-      onTagClick={() => {
-        console.debug("Tag: Adding content to tag.");
+      selectedTags={watchedItem.tags}
+      onTagClick={(tag, remove) => {
+        console.debug("Tag: Adding content to tag. Remove?:", remove);
+        if (remove) {
+          untagWatched(watchedItem.id, tag);
+        } else {
+          tagWatched(watchedItem.id, tag);
+        }
       }}
     />
   {/if}
