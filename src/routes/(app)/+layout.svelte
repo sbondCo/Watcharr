@@ -316,7 +316,11 @@
         <Icon i="tag" />
       </button>
       {#if tagMenuShown}
-        <TagMenu />
+        <TagMenu
+          onTagClick={(tag) => {
+            goto(`/tag/${tag.id}`);
+          }}
+        />
       {/if}
       <button
         class="plain other discover"

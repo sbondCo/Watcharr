@@ -20,6 +20,8 @@ type Tag struct {
 	Color string `json:"color"`
 	// Hex of background color.
 	BgColor string `json:"bgColor"`
+	// All watched items.
+	Watched []Watched `json:"watched,omitempty" gorm:"many2many:watched_tags;"`
 }
 
 type TagAddRequest struct {
@@ -32,11 +34,25 @@ func getTags(db *gorm.DB, userId uint) ([]Tag, error) {
 	tags := new([]Tag)
 	res := db.Model(&Tag{}).Where("user_id = ?", userId).Find(&tags)
 	if res.Error != nil {
-		slog.Error("Failed getting tags from database", "error", res.Error.Error())
+		slog.Error("getTags: Failed getting tags from database", "error", res.Error.Error())
 		return []Tag{}, errors.New("failed getting tags")
 	}
 	return *tags, nil
 }
+
+// func getTag(db *gorm.DB, userId uint, tagId uint) (Tag, error) {
+// 	tag := new(Tag)
+// 	res := db.Model(&Tag{}).Where("id = ? AND user_id = ?", tagId, userId).Preload("Watched").Find(&tag)
+// 	if res.Error != nil {
+// 		slog.Error("getTag: Failed getting tag from database", "error", res.Error.Error())
+// 		return Tag{}, errors.New("failed getting tag")
+// 	}
+// 	if tag.ID == 0 {
+// 		slog.Error("getTag: Tag does not exist for this user.", "user_id", userId)
+// 		return Tag{}, errors.New("tag does not exist")
+// 	}
+// 	return *tag, nil
+// }
 
 // Let user create a tag.
 func addTag(db *gorm.DB, userId uint, tr TagAddRequest) (Tag, error) {

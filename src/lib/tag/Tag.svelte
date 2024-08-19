@@ -1,22 +1,12 @@
 <script lang="ts">
   import type { Tag } from "@/types";
-  import { onMount } from "svelte";
 
   export let tag: Tag;
   export let onClick: () => void | undefined = undefined!;
 
   let tagBtn: HTMLButtonElement;
 
-  /**
-   * Default on tag clicked action.
-   * Goes to tag.
-   */
-  function defaultOnClick() {
-    // TODO navigate to tag page
-    console.debug("Tag: Navigating to tag page.");
-  }
-
-  onMount(() => {
+  $: {
     if (tagBtn) {
       if (tag.color) {
         tagBtn.style.color = tag.color;
@@ -25,7 +15,7 @@
         tagBtn.style.background = tag.bgColor;
       }
     }
-  });
+  }
 </script>
 
 <button
@@ -34,8 +24,6 @@
   on:click={() => {
     if (typeof onClick === "function") {
       onClick();
-    } else {
-      defaultOnClick();
     }
   }}
 >

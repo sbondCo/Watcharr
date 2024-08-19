@@ -1567,6 +1567,7 @@ func (b *BaseRouter) addTaskRoutes() {
 func (b *BaseRouter) addTagRoutes() {
 	tag := b.rg.Group("/tag").Use(AuthRequired(nil))
 
+	// Get list of all our tags.
 	tag.GET("", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		tags, err := getTags(b.db, userId)
@@ -1577,6 +1578,24 @@ func (b *BaseRouter) addTagRoutes() {
 		c.JSON(http.StatusOK, tags)
 	})
 
+	// // Get all items within one of our tags.
+	// tag.GET(":id", func(c *gin.Context) {
+	// 	id, err := strconv.Atoi(c.Param("id"))
+	// 	if err != nil {
+	// 		slog.Error("getTag route failed to convert id param to int", "error", err)
+	// 		c.Status(http.StatusBadRequest)
+	// 		return
+	// 	}
+	// 	userId := c.MustGet("userId").(uint)
+	// 	tags, err := getTag(b.db, userId, uint(id))
+	// 	if err != nil {
+	// 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+	// 		return
+	// 	}
+	// 	c.JSON(http.StatusOK, tags)
+	// })
+
+	// Create a tag.
 	tag.POST("", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		var tr TagAddRequest
