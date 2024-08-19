@@ -4,10 +4,23 @@
   import Icon from "../Icon.svelte";
   import TagMenu from "./TagMenu.svelte";
   import { tagWatched, untagWatched } from "./api";
+  import { onMount } from "svelte";
 
   export let watchedItem: Watched;
 
   let menuOpen = false;
+
+  onMount(() => {
+    const onScroll = () => {
+      menuOpen = false;
+    };
+
+    window.addEventListener("scroll", onScroll);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  });
 </script>
 
 <div>
