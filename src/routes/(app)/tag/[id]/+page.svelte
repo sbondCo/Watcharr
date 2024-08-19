@@ -30,8 +30,18 @@
   {#if watcheds?.length > 0}
     <WatchedList list={watcheds} />
   {:else}
-    <span>This tag is empty!</span>
+    <div class="content">
+      <div class="inner">
+        <strong>This tag is empty!</strong>
+      </div>
+    </div>
   {/if}
+{:else}
+  <div class="content">
+    <div class="inner">
+      <strong>Tag does not exist!</strong>
+    </div>
+  </div>
 {/if}
 
 <style lang="scss">
