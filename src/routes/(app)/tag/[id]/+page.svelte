@@ -21,6 +21,7 @@
 {#if tag && watcheds}
   <div class="content">
     <div class="inner">
+      <strong>Viewing Tag:</strong>
       <div class="basic-ctr">
         <Tag {tag} />
       </div>
@@ -52,8 +53,8 @@
 
     .inner {
       display: flex;
-      flex-flow: row;
-      gap: 15px;
+      flex-flow: column;
+      gap: 5px;
       justify-content: center;
       align-items: center;
       width: 100%;
@@ -75,7 +76,8 @@
   }
 
   .basic-ctr {
+    display: flex;
     max-width: 300px;
-    overflow: hidden;
+    width: 100%;
   }
 </style>
