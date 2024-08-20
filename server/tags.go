@@ -69,6 +69,26 @@ func addTag(db *gorm.DB, userId uint, tr TagAddRequest) (Tag, error) {
 	return tag, nil
 }
 
+// Let user delete their own tag.
+func deleteTag(db *gorm.DB, userId uint, tagId uint) error {
+	if tagId == 0 {
+		return errors.New("no tag id provided")
+	}
+	slog.Debug("deleteTag:", "tag_id", tagId, "user_id", userId)
+	// Select("Watched") so relations in watched_tags table are removed too.
+	// ID is passed in the .Delete param so the .Select call can do it's job (relies on the primary key).
+	res := db.Unscoped().Where("id = ? AND user_id = ?", tagId, userId).Select("Watched").Delete(&Tag{GormModel: GormModel{ID: tagId}})
+	if res.Error != nil {
+		slog.Error("deleteTag: Error deleting tag from database", "error", res.Error.Error(), "tag_id", tagId, "user_id", userId)
+		return errors.New("failed deleting tag from database")
+	}
+	if res.RowsAffected == 0 {
+		slog.Error("deleteTag: Zero rows affected.. tag must not exist for user", "tag_id", tagId, "user_id", userId)
+		return errors.New("tag does not exist")
+	}
+	return nil
+}
+
 // Add watched content to a tag (user must own the tag and watched entry).
 func addWatchedToTag(db *gorm.DB, userId uint, tagId uint, watchedId uint) error {
 	slog.Debug("addWatchedToTag: Adding", "userId", userId, "watchedID", watchedId, "tagId", tagId)

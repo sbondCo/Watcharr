@@ -320,6 +320,7 @@
           onTagClick={(tag) => {
             goto(`/tag/${tag.id}`);
           }}
+          showManageBtn={true}
         />
       {/if}
       <button
