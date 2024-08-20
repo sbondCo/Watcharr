@@ -21,8 +21,8 @@
 {#if tag && watcheds}
   <div class="content">
     <div class="inner">
-      <strong>Viewing Tag:</strong>
       <div class="basic-ctr">
+        <Icon i="tag" wh={20} />
         <Tag {tag} />
       </div>
     </div>
@@ -77,6 +77,10 @@
 
   .basic-ctr {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
     max-width: 300px;
     width: 100%;
   }
