@@ -69,7 +69,7 @@
 <style lang="scss">
   div {
     width: 180px;
-    right: 53px;
+    right: 90px;
 
     &:before {
       left: 21px;
