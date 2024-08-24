@@ -319,6 +319,7 @@
         <TagMenu
           onTagClick={(tag) => {
             goto(`/tag/${tag.id}`);
+            tagMenuShown = false;
           }}
           showManageBtn={true}
         />
