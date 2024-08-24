@@ -42,6 +42,7 @@
     <div class="content">
       <div class="inner">
         <strong>This tag is empty!</strong>
+        <span>Add entries to this tag via it's page.</span>
       </div>
     </div>
   {/if}
