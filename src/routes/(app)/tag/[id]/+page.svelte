@@ -2,11 +2,14 @@
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
+  import CreateTagModal from "@/lib/tag/CreateTagModal.svelte";
   import Tag from "@/lib/tag/Tag.svelte";
   import WatchedList from "@/lib/WatchedList.svelte";
   import { tags, watchedList } from "@/store.js";
 
   export let data;
+
+  let tagEditModalShown = false;
 
   $: tag = $tags.find((t) => t.id === data.tagId);
   $: watcheds = $watchedList.filter((w) =>
@@ -15,7 +18,7 @@
 </script>
 
 <svelte:head>
-  <title>{tag ? `${tag.name}` : "Tag"}</title>
+  <title>{tag ? `${tag.name} - Tag` : "Tag"}</title>
 </svelte:head>
 
 {#if tag && watcheds}
@@ -23,7 +26,12 @@
     <div class="inner">
       <div class="basic-ctr">
         <Icon i="tag" wh={20} />
-        <Tag {tag} />
+        <Tag
+          {tag}
+          onClick={() => {
+            tagEditModalShown = !tagEditModalShown;
+          }}
+        />
       </div>
     </div>
   </div>
@@ -43,6 +51,10 @@
       <strong>Tag does not exist!</strong>
     </div>
   </div>
+{/if}
+
+{#if tagEditModalShown}
+  <CreateTagModal existingTag={tag} onClose={() => (tagEditModalShown = false)} />
 {/if}
 
 <style lang="scss">

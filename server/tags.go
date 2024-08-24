@@ -69,6 +69,25 @@ func addTag(db *gorm.DB, userId uint, tr TagAddRequest) (Tag, error) {
 	return tag, nil
 }
 
+// Let user update one of their tags (replaces).
+func updateTag(db *gorm.DB, userId uint, tagId uint, tr TagAddRequest) error {
+	if tr.Name == "" {
+		return errors.New("tag must have a name")
+	}
+	tag := Tag{Name: tr.Name, Color: tr.Color, BgColor: tr.BgColor}
+	res := db.Where("id = ? AND user_id = ?", tagId, userId).Updates(&tag)
+	if res.Error != nil {
+		slog.Error("Error updating tag in database", "error", res.Error.Error())
+		return errors.New("failed updating tag in database")
+	}
+	if res.RowsAffected == 0 {
+		slog.Error("updateTag: Zero rows affected.. tag likely does not exist", "tag_id", tagId, "user_id", userId)
+		return errors.New("tag does not exist")
+	}
+	slog.Debug("updateTag:", "updated_tag", tag)
+	return nil
+}
+
 // Let user delete their own tag.
 func deleteTag(db *gorm.DB, userId uint, tagId uint) error {
 	if tagId == 0 {

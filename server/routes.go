@@ -1612,6 +1612,29 @@ func (b *BaseRouter) addTagRoutes() {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	})
 
+	// Update a tag.
+	tag.PUT(":id", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+		if err != nil {
+			c.Status(400)
+			slog.Error("tag update rote: failed to process tag id.", "error", err.Error(), "id", c.Param("id"))
+			return
+		}
+		var tr TagAddRequest
+		err = c.ShouldBindJSON(&tr)
+		if err == nil {
+			err := updateTag(b.db, userId, uint(id), tr)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
 	tag.DELETE(":id", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		id, err := strconv.ParseUint(c.Param("id"), 10, 32)
