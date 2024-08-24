@@ -24,19 +24,21 @@
       return;
     }
     deleteDisabled = true;
-    // const nid = notify({ text: "Deleting Tag", type: "loading" });
-    // try {
-    //   const resp = await axios.delete(`/tag/${tag.id}`);
-    //   console.log("deleteTag: Tag was deleted", resp.data);
-    //   const _tags = get(tags);
-    //   tags.update((t) => t);
-    //   notify({ id: nid, text: "Tag Deleted!", type: "success" });
-    //   onClose();
-    // } catch (err) {
-    //   console.error("deleteTag: Failed!", err);
-    //   notify({ id: nid, text: "Failed!", type: "error", time: 1 });
-    //   error = "Failed To Delete!";
-    // }
+    const nid = notify({ text: "Deleting Tag", type: "loading" });
+    try {
+      const resp = await axios.delete(`/tag/${tag.id}`);
+      console.log("deleteTag: Tag was deleted", resp.data);
+      const _tags = get(tags);
+      tags.update((t) => t);
+      const newList = _tags.filter((t) => t.id !== tag.id);
+      tags.update(() => newList);
+      notify({ id: nid, text: "Tag Deleted!", type: "success" });
+      onClose();
+    } catch (err) {
+      console.error("deleteTag: Failed!", err);
+      notify({ id: nid, text: "Failed!", type: "error", time: 1 });
+      error = "Failed To Delete!";
+    }
     deleteDisabled = false;
   }
 
@@ -50,7 +52,7 @@
 </script>
 
 <Modal
-  title="Delete Tag"
+  title="Permanently Delete Tag"
   desc="Are you sure you want to delete this tag?"
   maxWidth="500px"
   {onClose}
