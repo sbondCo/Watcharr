@@ -39,6 +39,7 @@ type Watched struct {
 	Activity        []Activity       `json:"activity"`
 	WatchedSeasons  []WatchedSeason  `json:"watchedSeasons,omitempty"`  // For shows
 	WatchedEpisodes []WatchedEpisode `json:"watchedEpisodes,omitempty"` // For shows
+	Tags            []Tag            `json:"tags,omitempty" gorm:"many2many:watched_tags;"`
 }
 
 type WatchedAddRequest struct {
@@ -70,7 +71,16 @@ type WatchedRemoveResponse struct {
 
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
-	res := db.Model(&Watched{}).Preload("Content").Preload("Game").Preload("Game.Poster").Preload("Activity").Preload("WatchedSeasons").Preload("WatchedEpisodes").Where("user_id = ?", userId).Find(&watched)
+	res := db.Model(&Watched{}).
+		Preload("Content").
+		Preload("Game").
+		Preload("Game.Poster").
+		Preload("Activity").
+		Preload("WatchedSeasons").
+		Preload("WatchedEpisodes").
+		Preload("Tags").
+		Where("user_id = ?", userId).
+		Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}

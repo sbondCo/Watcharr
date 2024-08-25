@@ -9,6 +9,7 @@
   import FilterMenu from "@/lib/nav/FilterMenu.svelte";
   import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
   import SortMenu from "@/lib/nav/SortMenu.svelte";
+  import TagMenu from "@/lib/tag/TagMenu.svelte";
   import { isTouch, parseTokenPayload, userHasPermission } from "@/lib/util/helpers";
   import { notify } from "@/lib/util/notify";
   import {
@@ -19,6 +20,7 @@
     follows,
     searchQuery,
     serverFeatures,
+    tags,
     userInfo,
     userSettings,
     watchedList
@@ -35,6 +37,7 @@
   let sortMenuShown = false;
   let followingMenuShown = false;
   let detailedMenuShown = false;
+  let tagMenuShown = false;
 
   $: settings = $userSettings;
   $: user = $userInfo;
@@ -140,12 +143,13 @@
 
   async function getInitialData() {
     if (localStorage.getItem("token")) {
-      const [w, u, s, f, fo] = await Promise.all([
+      const [w, u, s, f, fo, ts] = await Promise.all([
         axios.get("/watched"),
         axios.get("/user"),
         axios.get("/user/settings"),
         axios.get("/features"),
-        axios.get("/follow")
+        axios.get("/follow"),
+        axios.get("/tag")
       ]);
       if (w?.data?.length > 0) {
         watchedList.update((wl) => (wl = w.data));
@@ -162,6 +166,9 @@
       if (fo?.data) {
         follows.update((f) => (f = fo.data));
       }
+      if (ts?.data) {
+        tags.update((t) => (t = ts.data));
+      }
     } else {
       goto("/login?again=1");
     }
@@ -173,6 +180,7 @@
     if (except !== "sort") sortMenuShown = false;
     if (except !== "following") followingMenuShown = false;
     if (except !== "detailed") detailedMenuShown = false;
+    if (except !== "tag") tagMenuShown = false;
   }
 
   /**
@@ -180,7 +188,7 @@
    * on how big the main search bar is.
    */
   function decideOnNavSplit() {
-    if (window.innerWidth <= 260) {
+    if (window.innerWidth <= 305) {
       document.body.classList.add("split-nav");
       return;
     }
@@ -296,6 +304,25 @@
         {#if filterMenuShown}
           <FilterMenu />
         {/if}
+      {/if}
+      <button
+        class="plain other tag"
+        on:click={() => {
+          closeAllSubMenus("tag");
+          tagMenuShown = !tagMenuShown;
+        }}
+        use:tooltip={{ text: "Tags", pos: "bot", condition: !tagMenuShown }}
+      >
+        <Icon i="tag" />
+      </button>
+      {#if tagMenuShown}
+        <TagMenu
+          onTagClick={(tag) => {
+            goto(`/tag/${tag.id}`);
+            tagMenuShown = false;
+          }}
+          showManageBtn={true}
+        />
       {/if}
       <button
         class="plain other discover"
@@ -561,22 +588,13 @@
         }
       }
 
-      button.detailedView {
-        margin-right: 15px;
-      }
-
       button.filter {
-        margin-right: 15px;
         &:hover,
         &:focus-visible {
           :global(path) {
             stroke-width: 15px;
           }
         }
-      }
-
-      button.sort {
-        margin-right: 12px;
       }
 
       button.filter,
@@ -595,7 +613,6 @@
       }
 
       button.discover {
-        margin-right: 12px;
         transition:
           fill 150ms ease,
           stroke 150ms ease,
@@ -606,6 +623,10 @@
         &:focus-visible {
           transform: rotate(60deg);
         }
+      }
+
+      & > button:not(.face) {
+        margin-right: 12px;
       }
 
       button.following {

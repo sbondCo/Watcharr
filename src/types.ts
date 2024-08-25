@@ -44,7 +44,8 @@ export type Icon =
   | "tv"
   | "pin"
   | "unpin"
-  | "sparkles";
+  | "sparkles"
+  | "tag";
 
 export type Theme = "light" | "dark";
 
@@ -111,6 +112,7 @@ export interface Watched extends dbModel {
   pinned: boolean;
   watchedSeasons?: WatchedSeason[];
   watchedEpisodes?: WatchedEpisode[];
+  tags?: Tag[];
 }
 
 export interface WatchedAddRequest {
@@ -1170,4 +1172,16 @@ export interface AllTasksResponse {
   name: string;
   nextRun: Date;
   seconds: number;
+}
+
+export interface Tag extends dbModel {
+  name: string;
+  color: string;
+  bgColor: string;
+}
+
+export interface TagAddRequest {
+  name: string;
+  color: string;
+  bgColor: string;
 }

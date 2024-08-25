@@ -62,7 +62,10 @@ type User struct {
 	// Users third party integrations (minus jellyfin for now)
 	UserServices []UserServices `json:"-"`
 	Watched      []Watched
-	Permissions  int `gorm:"default:1" json:"-"`
+	// All Tags
+	Tags []Tag `json:"-"`
+	// Users permissions
+	Permissions int `gorm:"default:1" json:"-"`
 	// All user settings cols, in another struct for reusability
 	UserSettings
 }

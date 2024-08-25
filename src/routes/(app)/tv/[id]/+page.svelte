@@ -30,6 +30,7 @@
   import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
   import tooltip from "@/lib/actions/tooltip.js";
   import MyThoughts from "@/lib/content/MyThoughts.svelte";
+  import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 
   $: settings = $userSettings;
 
@@ -184,6 +185,7 @@
             {/if}
             {#if wListItem}
               <div class="other-side">
+                <AddToTagButton watchedItem={wListItem} />
                 <button
                   on:click={() => {
                     if (wListItem?.pinned) {

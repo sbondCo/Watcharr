@@ -553,6 +553,50 @@ func (b *BaseRouter) addWatchedRoutes() {
 		}
 		c.JSON(http.StatusOK, response)
 	})
+
+	watched.POST(":id/tag/:tagId", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			slog.Error("tag watched route failed to convert id param to int", "error", err)
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		tagId, err := strconv.Atoi(c.Param("tagId"))
+		if err != nil {
+			slog.Error("tag watched route failed to convert tagId param to int", "error", err)
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		userId := c.MustGet("userId").(uint)
+		err = addWatchedToTag(b.db, userId, uint(tagId), uint(id))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
+
+	watched.DELETE(":id/tag/:tagId", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			slog.Error("tag watched route failed to convert id param to int", "error", err)
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		tagId, err := strconv.Atoi(c.Param("tagId"))
+		if err != nil {
+			slog.Error("tag watched route failed to convert tagId param to int", "error", err)
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		userId := c.MustGet("userId").(uint)
+		err = rmWatchedFromTag(b.db, userId, uint(tagId), uint(id))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
 }
 
 func (b *BaseRouter) addActivityRoutes() {
@@ -1517,5 +1561,93 @@ func (b *BaseRouter) addTaskRoutes() {
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+}
+
+func (b *BaseRouter) addTagRoutes() {
+	tag := b.rg.Group("/tag").Use(AuthRequired(nil))
+
+	// Get list of all our tags.
+	tag.GET("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		tags, err := getTags(b.db, userId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, tags)
+	})
+
+	// // Get all items within one of our tags.
+	// tag.GET(":id", func(c *gin.Context) {
+	// 	id, err := strconv.Atoi(c.Param("id"))
+	// 	if err != nil {
+	// 		slog.Error("getTag route failed to convert id param to int", "error", err)
+	// 		c.Status(http.StatusBadRequest)
+	// 		return
+	// 	}
+	// 	userId := c.MustGet("userId").(uint)
+	// 	tags, err := getTag(b.db, userId, uint(id))
+	// 	if err != nil {
+	// 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+	// 		return
+	// 	}
+	// 	c.JSON(http.StatusOK, tags)
+	// })
+
+	// Create a tag.
+	tag.POST("", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		var tr TagAddRequest
+		err := c.ShouldBindJSON(&tr)
+		if err == nil {
+			response, err := addTag(b.db, userId, tr)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	// Update a tag.
+	tag.PUT(":id", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+		if err != nil {
+			c.Status(400)
+			slog.Error("tag update rote: failed to process tag id.", "error", err.Error(), "id", c.Param("id"))
+			return
+		}
+		var tr TagAddRequest
+		err = c.ShouldBindJSON(&tr)
+		if err == nil {
+			err := updateTag(b.db, userId, uint(id), tr)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+				return
+			}
+			c.Status(http.StatusOK)
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	})
+
+	tag.DELETE(":id", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
+		id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+		if err != nil {
+			c.Status(400)
+			slog.Error("tag delete rote: failed to process tag id.", "error", err.Error(), "id", c.Param("id"))
+			return
+		}
+		err = deleteTag(b.db, userId, uint(id))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.Status(http.StatusOK)
 	})
 }
