@@ -621,6 +621,8 @@
       border-radius: 10px;
       user-select: none;
       transition: 180ms ease-in-out;
+      color: $text-color;
+      fill: $text-color;
 
       &:hover,
       &.dragging-over {
