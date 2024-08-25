@@ -85,5 +85,6 @@
     gap: 10px;
     max-width: 300px;
     width: 100%;
+    fill: $text-color;
   }
 </style>
