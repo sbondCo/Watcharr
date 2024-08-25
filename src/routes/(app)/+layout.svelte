@@ -208,6 +208,7 @@
 
   afterNavigate(() => {
     decideOnNavSplit();
+    closeAllSubMenus();
   });
 
   onMount(() => {
