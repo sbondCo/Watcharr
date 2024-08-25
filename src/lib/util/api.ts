@@ -16,9 +16,16 @@ import {
 import axios from "axios";
 import { get } from "svelte/store";
 import { notify, unNotify } from "./notify";
+import { browser } from "$app/environment";
 const { MODE } = import.meta.env;
 
-export const baseURL = MODE === "development" ? "http://127.0.0.1:3080/api" : "/api";
+export const baseURL =
+  MODE === "development"
+    ? browser
+      ? `${location.protocol}//${location.hostname}:3080/api`
+      : "http://127.0.0.1:3080/api"
+    : "/api";
+console.log("api: baseURL constructed:", baseURL);
 
 /**
  * Updates watched item with new status, rating or thoughts.
