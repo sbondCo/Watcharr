@@ -77,17 +77,6 @@
     }
   }
 
-  button {
-    width: max-content;
-  }
-
-  textarea {
-    border: 0;
-    padding: 0;
-    resize: none;
-    text-overflow: ellipsis;
-  }
-
   .basic-ctr {
     display: flex;
     align-items: center;
