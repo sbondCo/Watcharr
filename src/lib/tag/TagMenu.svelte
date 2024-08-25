@@ -84,9 +84,10 @@
 <style lang="scss">
   div.menu {
     width: 200px;
+    right: 47px;
 
     &:before {
-      left: 42px;
+      left: 78px;
     }
 
     &.from-add-to-tag-btn {
