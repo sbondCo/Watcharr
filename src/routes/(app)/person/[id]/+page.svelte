@@ -22,7 +22,6 @@
 
   onMount(() => {
     const unsubscribe = page.subscribe((value) => {
-      console.log("sub", value);
       const params = value.params;
       if (params && params.id) {
         personId = Number(params.id);
