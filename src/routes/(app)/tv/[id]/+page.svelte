@@ -116,6 +116,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{show?.name ? `${show.name} - ` : ""}Show</title>
+</svelte:head>
+
 {#if pageError}
   <PageError pretty="Failed to load tv show!" error={pageError} />
 {:else if !show}
