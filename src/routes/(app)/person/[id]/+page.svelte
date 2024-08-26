@@ -127,26 +127,26 @@
           </div>
         </div>
       </div>
+
+      {#await getPersonCredits()}
+        <Spinner />
+      {:then credits}
+        <div class="page">
+          <PosterList>
+            {#each credits?.cast as c}
+              <Poster media={c} {...getWatchedDependedProps(c.id, c.media_type, wList)} fluidSize />
+            {/each}
+          </PosterList>
+        </div>
+      {:catch err}
+        <Error pretty="Failed to load credits!" error={err} />
+      {/await}
     {:else}
       person not found
     {/if}
   {:else}
     <Error error="Person not found" pretty="Person not found" />
   {/if}
-
-  {#await getPersonCredits()}
-    <Spinner />
-  {:then credits}
-    <div class="page">
-      <PosterList>
-        {#each credits?.cast as c}
-          <Poster media={c} {...getWatchedDependedProps(c.id, c.media_type, wList)} fluidSize />
-        {/each}
-      </PosterList>
-    </div>
-  {:catch err}
-    <Error pretty="Failed to load credits!" error={err} />
-  {/await}
 </div>
 
 <style lang="scss">
