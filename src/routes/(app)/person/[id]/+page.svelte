@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from "$app/stores";
   import Error from "@/lib/Error.svelte";
   import PageError from "@/lib/PageError.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
@@ -9,13 +10,46 @@
   import { watchedList } from "@/store";
   import type { TMDBPersonCombinedCredits, TMDBPersonDetails } from "@/types";
   import axios from "axios";
+  import { onMount } from "svelte";
 
   export let data;
 
   $: wList = $watchedList;
 
-  async function getPerson() {
-    return (await axios.get(`/content/person/${data.personId}`)).data as TMDBPersonDetails;
+  let personId: number | undefined;
+  let person: TMDBPersonDetails | undefined;
+  let pageError: Error | undefined;
+
+  onMount(() => {
+    const unsubscribe = page.subscribe((value) => {
+      const params = value.params;
+      if (params && params.id) {
+        personId = Number(params.id);
+      }
+    });
+
+    return unsubscribe;
+  });
+
+  $: {
+    (async () => {
+      try {
+        person = undefined;
+        pageError = undefined;
+        if (!personId) {
+          return;
+        }
+        const data = await getPerson(personId);
+        person = data;
+      } catch (err: any) {
+        person = undefined;
+        pageError = err;
+      }
+    })();
+  }
+
+  async function getPerson(id: number) {
+    return (await axios.get(`/content/person/${id}`)).data as TMDBPersonDetails;
   }
 
   async function getPersonCredits() {
@@ -26,10 +60,16 @@
   }
 </script>
 
+<svelte:head>
+  <title>{person?.name ? `${person.name} - ` : ""}Person</title>
+</svelte:head>
+
 <div>
-  {#await getPerson()}
+  {#if pageError}
+    <PageError pretty="Failed to load person!" error={pageError} />
+  {:else if !person}
     <Spinner />
-  {:then person}
+  {:else if Object.keys(person).length > 0}
     {#if Object.keys(person).length > 0}
       <div class="content">
         <img
@@ -90,9 +130,9 @@
     {:else}
       person not found
     {/if}
-  {:catch err}
-    <PageError pretty="Failed to load tv person!" error={err} />
-  {/await}
+  {:else}
+    <Error error="Person not found" pretty="Person not found" />
+  {/if}
 
   {#await getPersonCredits()}
     <Spinner />
@@ -100,14 +140,7 @@
     <div class="page">
       <PosterList>
         {#each credits?.cast as c}
-          <Poster
-            media={c}
-            onStatusChanged={(t) => updateWatched(c.id, c.media_type, t)}
-            onRatingChanged={(r) => updateWatched(c.id, c.media_type, undefined, r)}
-            onDeleteClicked={() => removeWatched(c.id)}
-            {...getWatchedDependedProps(c.id, c.media_type, wList)}
-            fluidSize
-          />
+          <Poster media={c} {...getWatchedDependedProps(c.id, c.media_type, wList)} fluidSize />
         {/each}
       </PosterList>
     </div>

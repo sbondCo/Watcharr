@@ -159,6 +159,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>My Profile</title>
+</svelte:head>
+
 <div class="content">
   <div class="inner">
     <div class="user-basic-info">

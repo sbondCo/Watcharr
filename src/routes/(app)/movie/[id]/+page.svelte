@@ -118,6 +118,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{movie?.title ? `${movie.title} - ` : ""}Movie</title>
+</svelte:head>
+
 {#if pageError}
   <PageError pretty="Failed to load movie!" error={pageError} />
 {:else if !movie}

@@ -85,6 +85,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{game?.name ? `${game.name} - ` : ""}Game</title>
+</svelte:head>
+
 {#if pageError}
   <PageError pretty="Failed to load game!" error={pageError} />
 {:else if !game}
