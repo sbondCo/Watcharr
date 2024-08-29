@@ -18,17 +18,40 @@
 
   export let tvId: number;
   export let seasons: TMDBShowSeason[];
-  export let watchedItem: Watched; // Watched list item id
+  export let watchedItem: Watched | undefined;
 
   let activeSeason = 1;
   let seasonDetailsReq: Promise<TMDBSeasonDetails>;
 
   async function sdr(seasonNum: number) {
-    return (await axios.get(`/content/tv/${tvId}/season/${seasonNum}`)).data as TMDBSeasonDetails;
+    const resp = await axios.get(`/content/tv/${tvId}/season/${seasonNum}`, {
+      params: {
+        watchedId: watchedItem?.id
+      }
+    });
+    try {
+      if (watchedItem?.id) {
+        // If we sent a watched id, expect a 'watcharr-lastviewedseason-saved' header in the response.
+        const hVal = resp.headers["watcharr-lastviewedseason-saved"];
+        if (!hVal) {
+          console.error(
+            "SeasonList: sdr: No header in response indicating that the lastviewedseason was saved."
+          );
+          notify({ type: "error", text: "Failed when saving last viewed season" });
+        }
+      }
+    } catch (err) {
+      console.error("SeasonList: sdr: Failed to process lastviewedseason-saved header.", err);
+    }
+    return resp.data as TMDBSeasonDetails;
   }
 
   // Add/update watched season
   function updateWatchedSeason(seasonNumber: number, status?: WatchedStatus, rating?: number) {
+    if (!watchedItem) {
+      console.error("updateWatchedSeason: No watched item.");
+      return;
+    }
     const nid = notify({ text: `Saving`, type: "loading" });
     axios
       .post<WatchedSeasonAddResponse>(`/watched/season`, {
@@ -66,6 +89,10 @@
   }
 
   function handleStatusClick(type: WatchedStatus | "DELETE", seasonNumber: number) {
+    if (!watchedItem) {
+      console.error("handleStatusClick: No watched item.");
+      return;
+    }
     if (type === "DELETE") {
       const ws = watchedItem.watchedSeasons?.find((s) => s.seasonNumber === seasonNumber);
       if (!ws) {

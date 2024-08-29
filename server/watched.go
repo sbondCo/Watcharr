@@ -40,6 +40,9 @@ type Watched struct {
 	WatchedSeasons  []WatchedSeason  `json:"watchedSeasons,omitempty"`  // For shows
 	WatchedEpisodes []WatchedEpisode `json:"watchedEpisodes,omitempty"` // For shows
 	Tags            []Tag            `json:"tags,omitempty" gorm:"many2many:watched_tags;"`
+	// The last season that was viewed by the user for this watched entry.
+	// Only applies to tv shows of course.
+	LastViewedSeason *int `json:"lastViewedSeason,omitempty"`
 }
 
 type WatchedAddRequest struct {
@@ -238,6 +241,24 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: THOUGHTS_REMOVED, Data: originalThoughts})
 	}
 	return WatchedUpdateResponse{NewActivity: addedActivity}, nil
+}
+
+func updateWatchedLastViewedSeason(db *gorm.DB, userId uint, id uint, seasonNum int) error {
+	slog.Debug("UpdateWatchedLastViewedSeason", "user_id", userId, "id", id, "season_num", seasonNum)
+	res := db.
+		Model(&Watched{}).
+		Where("id = ? AND user_id = ?", id, userId).
+		Update("last_viewed_season", seasonNum)
+	if res.Error != nil {
+		slog.Error("updateWatchedLastViewedSeason: Failed when updating.", "error", res.Error)
+		return errors.New("failed to update db")
+	}
+	if res.RowsAffected == 0 {
+		// likely the watched entry does not exist or is not owned by this `userId`.
+		slog.Error("updateWatchedLastViewedSeason: Watched entry does not exist.")
+		return errors.New("watched entry does not exist")
+	}
+	return nil
 }
 
 func removeWatched(db *gorm.DB, userId uint, id uint) (WatchedRemoveResponse, error) {
