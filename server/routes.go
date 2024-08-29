@@ -231,6 +231,7 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get season details
+	// Supports `watchedId` query parameter for saving the requested season as `LastViewedSeason`.
 	content.GET("/tv/:id/season/:num", func(c *gin.Context) {
 		if c.Param("id") == "" || c.Param("num") == "" {
 			c.Status(400)
@@ -240,6 +241,28 @@ func (b *BaseRouter) addContentRoutes() {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
+		}
+		// If a `watchedId` is passed, we should update it with this season
+		// number, so the LastViewedSeason field is up to date (this seemed
+		// better than making a new request for just saving this).
+		// We will attach a `watcharr-lastviewedseason-saved` header if
+		// this part succeeds so the client can decide on showing an error.
+		if watchedIdQ := c.Query("watchedId"); watchedIdQ != "" {
+			userId := c.MustGet("userId").(uint)
+			watchedId, err := strconv.ParseUint(watchedIdQ, 10, 64)
+			if err != nil {
+				slog.Error("get season details route: Processing watchedId param failed", "error", err.Error(), "id", watchedIdQ)
+			} else {
+				if seasonNum, err := strconv.ParseInt(c.Param("num"), 10, 64); err == nil {
+					if err = updateWatchedLastViewedSeason(b.db, userId, uint(watchedId), int(seasonNum)); err == nil {
+						c.Header("watcharr-lastviewedseason-saved", "1")
+					}
+				} else {
+					slog.Error("get season details route: Parsing season number as int failed", "error", err.Error(), "season_num", c.Param("num"))
+				}
+			}
+		} else {
+			slog.Debug("get season details route: No watchedId parameter found.. not doing anything.")
 		}
 		c.JSON(http.StatusOK, content)
 	})

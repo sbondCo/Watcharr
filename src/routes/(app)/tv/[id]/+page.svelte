@@ -292,7 +292,9 @@
       {#if wListItem}
         <Activity wListId={wListItem.id} activity={wListItem.activity} />
       {/if}
-      <SeasonsList tvId={data.tvId} seasons={show.seasons} watchedItem={wListItem} />
+      {#if data?.tvId}
+        <SeasonsList tvId={data.tvId} seasons={show.seasons} watchedItem={wListItem} />
+      {/if}
     </div>
   </div>
 {:else}
