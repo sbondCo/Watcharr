@@ -20,7 +20,8 @@
   export let seasons: TMDBShowSeason[];
   export let watchedItem: Watched | undefined;
 
-  let activeSeason = 1;
+  let activeSeason =
+    typeof watchedItem?.lastViewedSeason === "number" ? watchedItem?.lastViewedSeason : 1;
   let seasonDetailsReq: Promise<TMDBSeasonDetails>;
 
   async function sdr(seasonNum: number) {
@@ -33,7 +34,10 @@
       if (watchedItem?.id) {
         // If we sent a watched id, expect a 'watcharr-lastviewedseason-saved' header in the response.
         const hVal = resp.headers["watcharr-lastviewedseason-saved"];
-        if (!hVal) {
+        if (hVal) {
+          watchedItem.lastViewedSeason = seasonNum;
+          watchedList.update((w) => w);
+        } else {
           console.error(
             "SeasonList: sdr: No header in response indicating that the lastviewedseason was saved."
           );

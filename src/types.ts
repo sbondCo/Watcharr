@@ -113,6 +113,7 @@ export interface Watched extends dbModel {
   watchedSeasons?: WatchedSeason[];
   watchedEpisodes?: WatchedEpisode[];
   tags?: Tag[];
+  lastViewedSeason?: number;
 }
 
 export interface WatchedAddRequest {
