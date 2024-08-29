@@ -261,6 +261,8 @@ func (b *BaseRouter) addContentRoutes() {
 					slog.Error("get season details route: Parsing season number as int failed", "error", err.Error(), "season_num", c.Param("num"))
 				}
 			}
+		} else {
+			slog.Debug("get season details route: No watchedId parameter found.. not doing anything.")
 		}
 		c.JSON(http.StatusOK, content)
 	})
