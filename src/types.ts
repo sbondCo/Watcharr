@@ -8,6 +8,7 @@ export type Icon =
   | "clock"
   | "calendar"
   | "thumb-down"
+  | "thumb-up"
   | "play"
   | "pause"
   | "jellyfin"
@@ -178,6 +179,20 @@ export interface UserSettings {
   includePreviouslyWatched: boolean;
   country: string;
   automateShowStatuses: boolean;
+  ratingSystem?: RatingSystem;
+  /**
+   * A rating step decided by the user, only
+   * applicable for OutOf10 and OutOf5 rating systems.
+   * Supported: 1, 0.5, 0.1 (must validate).
+   */
+  ratingStep?: number;
+}
+
+export enum RatingSystem {
+  OutOf10, // default
+  OutOf100,
+  OutOf5,
+  Thumbs
 }
 
 export interface ChangePasswordForm {

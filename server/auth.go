@@ -96,6 +96,8 @@ type UserSettings struct {
 	Country *string `gorm:"default:'US'" json:"country"`
 	// Does the user want show, season and episode automations enabled.
 	AutomateShowStatuses *bool `gorm:"default:true" json:"automateShowStatuses"`
+
+	// TODO RatingStep - Make sure only supported steps can be saved, max will be 1 (supported = 1, 0.5, 0.1)
 }
 
 // Holds third party service auth tokens for users.

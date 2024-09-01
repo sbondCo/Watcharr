@@ -16,6 +16,7 @@
   import PwChangeModal from "@/routes/(app)/profile/modals/PwChangeModal.svelte";
   import SyncModal from "./modals/SyncModal.svelte";
   import RegionDropDown from "@/lib/RegionDropDown.svelte";
+  import RatingSetting from "@/lib/rating/RatingSetting.svelte";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -319,6 +320,8 @@
           }}
         />
       </Setting>
+
+      <RatingSetting />
 
       <div class="row btns">
         <button on:click={() => goto("/import")}>Import</button>
