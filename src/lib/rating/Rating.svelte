@@ -10,6 +10,7 @@
 
   let hoveredRating: number | undefined;
   let shownRating: number | undefined;
+  let shownPerc: number | undefined;
   let ratingContainer: HTMLDivElement;
   let ratingText: HTMLSpanElement;
   let highlightContainer: HTMLDivElement;
@@ -36,18 +37,42 @@
     "Masterpiece"
   ];
 
-  function handleStarClick(r: number) {
+  function saveSelectedRating() {
+    console.log("saveSelectedRating:", hoveredRating);
     return;
-    if (r === rating) return;
-    onChange(r);
+    if (!hoveredRating || hoveredRating === rating) return;
+    onChange(hoveredRating);
   }
 
   $: {
-    if (hoveredRating !== undefined) shownRating = hoveredRating;
-    else if (rating !== undefined) {
+    if (hoveredRating !== undefined) {
+      console.debug("showRatingCaller: We have a hoveredRating.");
+      shownRating = hoveredRating;
+      showRating(
+        Math.round(
+          (hoveredRating * 100) / (settings?.ratingSystem === RatingSystem.OutOf5 ? 5 : 10)
+        )
+      );
+    } else if (rating !== undefined) {
+      console.debug("showRatingCaller: We have a rating.");
       shownRating = rating;
       resetRatingText();
-    } else shownRating = undefined;
+      showRating(Math.round((rating * 100) / 10));
+    } else {
+      console.debug("showRatingCaller: We have nothing.");
+      shownRating = undefined;
+      showRating(0);
+    }
+  }
+
+  function setHoveredRatingFromPerc(perc: number) {
+    let hovR = perc;
+    if (settings?.ratingSystem === RatingSystem.OutOf5) {
+      hovR = hovR / 20;
+    } else {
+      hovR = hovR / 10;
+    }
+    hoveredRating = Math.max(Math.min(hovR, stars[0]), 0);
   }
 
   function resetRatingText() {
@@ -56,22 +81,21 @@
       return;
     }
     if (typeof rating === "number" && rating > 0) {
-      ratingText.innerText = ratingDesc[rating - 1];
+      ratingText.innerText = ratingDesc[Math.floor(rating) - 1];
     } else {
       ratingText.innerText = "Select Your Rating";
     }
   }
 
   function handleStarHover(
-    ev: MouseEvent & {
+    ev: (TouchEvent | MouseEvent) & {
       currentTarget: EventTarget & HTMLButtonElement;
     },
     r: number
   ) {
-    // hoveredRating = r;
     // We set innerText instead of letting svelte update dom for us
     // since we need the new width of span right now.
-    ratingText.innerText = ratingDesc[r - 1];
+    ratingText.innerText = ratingDesc[Math.floor(r) - 1];
     const start = ratingContainer?.getBoundingClientRect()?.x;
     const starl = ev?.currentTarget?.getBoundingClientRect()?.left;
     const rb = ratingText?.getBoundingClientRect();
@@ -91,41 +115,64 @@
       currentTarget: EventTarget & HTMLDivElement;
     }
   ) {
-    // console.log(ev);
     const rect = ev.currentTarget.getBoundingClientRect();
     const x = (ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX) - rect.left; // rel to start of container
     const perc = Math.ceil(Math.round((x * 100) / rect.width) / starStep) * starStep;
-    // console.log("PERC", Math.round((x * 100) / rect.width), perc);
-    if (perc > 1) {
-      let percToHighlight = perc;
-      let percToHide = 100 - perc;
-      if (starStep == 5) {
-        // On step of 5, it looks nicer when we take highlight back one percent,
-        // otherwise more than half the star looks highlighted... ew. This is only visual.
-        percToHighlight--;
-        percToHide++;
+    setHoveredRatingFromPerc(perc);
+  }
+
+  function handleKeyDown(
+    ev: KeyboardEvent & {
+      currentTarget: EventTarget & HTMLDivElement;
+    }
+  ) {
+    console.log("handleKeyDown:", ev);
+    if (ev.code === "ArrowRight") {
+      console.debug("handleKeyDown: Increasing selected rating.");
+      setHoveredRatingFromPerc((shownPerc ?? 0) + starStep);
+    } else if (ev.code === "ArrowLeft") {
+      console.debug("handleKeyDown: Decreasing selected rating.");
+      setHoveredRatingFromPerc(shownPerc ? shownPerc - starStep : 0);
+    } else if (ev.key === "Enter") {
+      console.debug("handleKeyDown: Enter pressed.. saving rating.");
+      saveSelectedRating();
+    }
+  }
+
+  function showRating(perc: number) {
+    try {
+      console.debug("showRating:", perc);
+      if (!highlightContainer || !normalContainer) {
+        console.warn("showRating: Containers not defined yet.");
+        return;
       }
-      highlightContainer.style.display = "flex";
-      highlightContainer.style.width = `${percToHighlight}%`;
-      // We shrink this container too because of what seems to be a bug
-      // where the text-stroke draws on the upper layer too, instead
-      // of being hidden by the highlighted stars overlay.
-      normalContainer.style.width = `${percToHide}%`;
-    } else {
-      highlightContainer.style.display = "none";
-      highlightContainer.style.width = "0";
-      normalContainer.style.width = "100%";
+      console.log("showRating: perc", perc);
+      perc = Math.max(Math.min(Math.ceil(perc / starStep) * starStep, 100), 0);
+      console.log("showRating: perc2", perc);
+      if (perc > 1) {
+        let percToHighlight = perc;
+        let percToHide = 100 - perc;
+        if (starStep == 5) {
+          // On step of 5, it looks nicer when we take highlight back one percent,
+          // otherwise more than half the star looks highlighted... ew. This is only visual.
+          percToHighlight--;
+          percToHide++;
+        }
+        highlightContainer.style.display = "flex";
+        highlightContainer.style.width = `${percToHighlight}%`;
+        // We shrink this container too because of what seems to be a bug
+        // where the text-stroke draws on the upper layer too, instead
+        // of being hidden by the highlighted stars overlay.
+        normalContainer.style.width = `${percToHide}%`;
+      } else {
+        highlightContainer.style.display = "none";
+        highlightContainer.style.width = "0";
+        normalContainer.style.width = "100%";
+      }
+      shownPerc = perc;
+    } catch (err) {
+      console.error("showRating: Failed!", err);
     }
-    let hovR = perc;
-    if (settings?.ratingSystem === RatingSystem.OutOf5) {
-      hovR = hovR / 20;
-    } else {
-      hovR = hovR / 10;
-    }
-    hoveredRating = hovR;
-    // console.log(rect);
-    // console.log(x, `${perc}%`);
-    // console.log(ev);
   }
 
   $: {
@@ -180,13 +227,16 @@
 
   onMount(() => {
     resetRatingText();
+    if (rating) showRating(Math.round((rating * 100) / 10));
   });
 </script>
 
-<!-- {settings?.ratingSystem}
+{settings?.ratingSystem}
 step: {starStep}
-stepSetting: {settings?.ratingStep}
-hoveredRating: {hoveredRating} -->
+stepSetting: {settings?.ratingStep}<br />
+hoveredRating: {hoveredRating}<br />
+shownPerc: {shownPerc}<br />
+RATING: {rating}<br />
 
 <!-- TODO make sure stars work good on mobile, should be able to hold down and adjust like a slider -->
 
@@ -196,36 +246,43 @@ hoveredRating: {hoveredRating} -->
     class="rating-wrap"
     on:pointermove={(ev) => handleMouseOver(ev)}
     on:touchmove={(ev) => handleMouseOver(ev)}
-    on:mouseleave={() => handleStarHoverEnd()}
-    on:touchend={() => handleStarHoverEnd()}
+    on:mouseleave={() => {
+      console.debug("rating-wrap: mouseleave");
+      handleStarHoverEnd();
+    }}
+    on:touchend={() => {
+      console.debug("rating-wrap: touchend");
+      handleStarHoverEnd();
+    }}
+    on:blur={() => {
+      console.debug("rating-wrap: blur");
+      handleStarHoverEnd();
+    }}
+    on:click={() => saveSelectedRating()}
+    on:keydown={(ev) => handleKeyDown(ev)}
     role="button"
     tabindex="0"
   >
     <!-- The unlit stars. -->
-    <div bind:this={normalContainer} class="rating the-normal-one">
-      {#each stars as v}
-        <button
-          class="plain{shownRating === v ? ' TODOREMOVElit' : ''}"
-          on:mouseenter={(ev) => handleStarHover(ev, v)}
-          on:touchstart={(ev) => handleStarHover(ev, v)}
-        >
-          *
-        </button>
+    <div bind:this={normalContainer} class="rating the-normal-one" tabindex="-1">
+      {#each stars as _}
+        <button class="plain" tabindex="-1">*</button>
       {/each}
     </div>
     <!-- Overlays on stars above to show them as highlighted. -->
-    <div bind:this={highlightContainer} class="rating the-highlight-one">
+    <div bind:this={highlightContainer} class="rating the-highlight-one" tabindex="-1">
       {#each stars as _}
-        <button class="plain lit">*</button>
+        <button class="plain lit" tabindex="-1">*</button>
       {/each}
     </div>
     <!-- Hidden stars, just to keep correct layout since the two above are abolute. -->
-    <div class="rating the-hidden-one-for-layout-reasons">
-      {#each stars as v}
-        <button class="plain" style="opacity: 0;" on:click={() => handleStarClick(v)}>*</button>
+    <div class="rating the-hidden-one-for-layout-reasons" tabindex="-1">
+      {#each stars as _}
+        <button class="plain" style="opacity: 0; pointer-events: none;" tabindex="-1">*</button>
       {/each}
     </div>
   </div>
+  <span class="keyboard-tip">Left/Right Arrows to change rating, Enter to save.</span>
 </div>
 
 <style lang="scss">
@@ -254,6 +311,20 @@ hoveredRating: {hoveredRating} -->
     width: max-content;
     margin-left: auto;
     margin-right: auto;
+
+    &:focus-visible {
+      + .keyboard-tip {
+        display: unset;
+      }
+    }
+  }
+
+  .keyboard-tip {
+    // For when the rating-wrap is accessed via keyboard.
+    font-size: 12px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    display: none;
   }
 
   .rating {
