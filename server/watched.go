@@ -27,8 +27,11 @@ const (
 
 type Watched struct {
 	GormModel
-	Status          WatchedStatus    `json:"status"`
-	Rating          int8             `json:"rating"`
+	Status WatchedStatus `json:"status"`
+	// float so we can support decimal ratings.
+	// Ratings should still always be saved as out of 10.0,
+	// so they can be viewed with any ratings setting in the client.
+	Rating          float32          `json:"rating"`
 	Thoughts        string           `json:"thoughts"`
 	Pinned          bool             `json:"pinned" gorm:"default:false;not null"`
 	UserID          uint             `json:"-" gorm:"uniqueIndex:usernctnidx;uniqueIndex:userngamidx"`
@@ -47,7 +50,7 @@ type Watched struct {
 
 type WatchedAddRequest struct {
 	Status      WatchedStatus `json:"status"`
-	Rating      int8          `json:"rating" binding:"max=10"`
+	Rating      float32       `json:"rating" binding:"max=10"`
 	Thoughts    string        `json:"thoughts"`
 	ContentID   int           `json:"contentId" binding:"required"`
 	ContentType ContentType   `json:"contentType" binding:"required,oneof=movie tv"`
@@ -58,7 +61,7 @@ type WatchedAddRequest struct {
 
 type WatchedUpdateRequest struct {
 	Status         WatchedStatus `json:"status" binding:"required_without_all=Rating Thoughts RemoveThoughts Pinned"`
-	Rating         int8          `json:"rating" binding:"max=10,required_without_all=Status Thoughts RemoveThoughts Pinned"`
+	Rating         float32       `json:"rating" binding:"max=10,required_without_all=Status Thoughts RemoveThoughts Pinned"`
 	Thoughts       string        `json:"thoughts" binding:"required_without_all=Status Rating RemoveThoughts Pinned"`
 	RemoveThoughts bool          `json:"removeThoughts"`
 	Pinned         *bool         `json:"pinned" binding:"required_without_all=Status Rating Thoughts RemoveThoughts"`
