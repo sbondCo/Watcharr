@@ -105,7 +105,8 @@
     ratingText.style.transform = "unset";
   }
 
-  function handleStarHoverEnd() {
+  function handleRatingHoverEnd() {
+    console.debug("handleRatingHoverEnd");
     hoveredRating = undefined;
     ratingText.style.left = "50%";
     ratingText.style.transform = "translateX(-50%)";
@@ -248,17 +249,24 @@ RATING: {rating}<br />
     class="rating-wrap"
     on:pointermove={(ev) => handleMouseOver(ev)}
     on:touchmove={(ev) => handleMouseOver(ev)}
-    on:mouseleave={() => {
+    on:mouseleave={(ev) => {
+      if (!ev.relatedTarget) {
+        // When not focused on the browser, and then clicking a star directly
+        // without first focusing the browser, this event can be triggered,
+        // which causes hoveredRating to reset. This check seems to fix that.
+        console.debug("rating-wrap: mouseleave event triggered, but me think mistake.. ignoring.");
+        return;
+      }
       console.debug("rating-wrap: mouseleave");
-      handleStarHoverEnd();
+      handleRatingHoverEnd();
     }}
     on:touchend={() => {
       console.debug("rating-wrap: touchend");
-      handleStarHoverEnd();
+      handleRatingHoverEnd();
     }}
     on:blur={() => {
       console.debug("rating-wrap: blur");
-      handleStarHoverEnd();
+      handleRatingHoverEnd();
     }}
     on:click={() => saveSelectedRating()}
     on:keydown={(ev) => handleKeyDown(ev)}
