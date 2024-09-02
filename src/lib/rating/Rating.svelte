@@ -39,8 +39,10 @@
 
   function saveSelectedRating() {
     console.log("saveSelectedRating:", hoveredRating);
-    return;
-    if (!hoveredRating || hoveredRating === rating) return;
+    if (!hoveredRating || hoveredRating === rating) {
+      console.warn("saveSelectedRating: Rating not changed or is not set, ignoring call.");
+      return;
+    }
     onChange(hoveredRating);
   }
 
