@@ -266,6 +266,19 @@
           text: "Processing failed!. Please report this issue if it persists."
         });
       }
+    } else if (list?.type === "todomovies") {
+      importText = "TodoMovies";
+      try {
+        const s = JSON.parse(list.data);
+        // Builds imported list in previous step for ease.
+        rList = s;
+      } catch (err) {
+        console.error("TodoMovies import processing failed!", err);
+        notify({
+          type: "error",
+          text: "Processing failed!. Please report this issue if it persists."
+        });
+      }
     }
     // TODO: remove duplicate names in list
     return list;
@@ -456,6 +469,15 @@
                   disabled={isImporting}
                 />
               </td>
+              <td class="type">
+                <DropDown
+                  options={["FINISHED", "PLANNING", "WATCHING", "HOLD", "DROPPED"]}
+                  bind:active={l.status}
+                  placeholder="Status"
+                  blendIn={true}
+                  disabled={isImporting}
+                />
+              </td>
               {#if !isImporting}
                 <td>
                   <button
@@ -477,6 +499,7 @@
                 <input class="plain" id="addYear" placeholder="YYYY" type="number" />
               </td>
               <td class="type"></td>
+              <td class="status"></td>
               <td></td>
             </tr>
           {/if}

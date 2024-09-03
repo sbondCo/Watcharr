@@ -37,6 +37,7 @@ export type Icon =
   | "ryot"
   | "trakt"
   | "myanimelist"
+  | "todomovies"
   | "themoviedb"
   | "refresh"
   | "gamepad"
@@ -869,6 +870,7 @@ export interface ImportedList {
   activity?: Activity[];
   watchedEpisodes?: WatchedEpisode[];
   watchedSeasons?: WatchedSeason[];
+  tags?: TagAddRequest[];
 }
 
 export interface Filters {
@@ -1047,6 +1049,48 @@ export interface MovaryRatings extends MovaryExportBase {
 
 export interface MovaryWatchlist extends MovaryExportBase {
   addedAt: string;
+}
+
+export interface TodoMoviesExport {
+  Movie: TodoMoviesMovie[];
+  MovieList: TodoMoviesCustomList[];
+}
+
+export interface TodoMoviesMovie {
+  Attrs: {
+    tmdbID: number;
+    title: string;
+    isWatched: number;
+    insertionDate: {
+      Value: number;
+      Class: string;
+    };
+    myScore: number;
+  };
+  Rels: {
+    lists: {
+      Items: string[];
+      Entity: string;
+    };
+  };
+  ObjectID: string;
+}
+
+export interface TodoMoviesCustomList {
+  Attrs: {
+    colorInHex: string;
+    order: number;
+    iconFileName: string;
+    featuredListID: number;
+    name: string;
+  };
+  Rels: {
+    movies: {
+      Items: string[];
+      Entity: string;
+    };
+  };
+  ObjectID: string;
 }
 
 export interface Game {

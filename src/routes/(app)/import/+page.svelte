@@ -19,7 +19,11 @@
     MovaryRatings,
     MovaryWatchlist,
     Watched,
-    WatchedStatus
+    WatchedStatus,
+    TodoMoviesExport,
+    TagAddRequest,
+    TodoMoviesCustomList,
+    TodoMoviesMovie
   } from "@/types";
   import Icon from "@/lib/Icon.svelte";
 
@@ -510,6 +514,120 @@
     }
   }
 
+  async function processTodoMoviesFile(files?: FileList | null) {
+    try {
+      console.log("processFilesTodoMovies", files);
+      if (!files || files?.length <= 0) {
+        console.error("processFilesTodoMovies", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
+        });
+        isDragOver = false;
+        return;
+      }
+      isLoading = true;
+      if (files.length > 1) {
+        notify({
+          type: "error",
+          text: "Only one file at a time is supported. Continuing with the first.",
+          time: 6000
+        });
+      }
+
+      // Currently only support for importing one file at a time
+      const file = files[0];
+      if (file.type !== "" && !file.name.endsWith(".todomovieslist")) {
+        notify({
+          type: "error",
+          text: "Must be a TodoMovies backup file (.todomovieslist)"
+        });
+        isLoading = false;
+        isDragOver = false;
+        return;
+      }
+
+      // Read file data into strings
+      let exportTodoMoviesStr: string | undefined;
+      const r = new FileReader();
+      exportTodoMoviesStr = await readFile(r, file);
+      if (!exportTodoMoviesStr) {
+        notify({
+          type: "error",
+          text: "Failed to read export file. Ensure you have attached the correct file.",
+          time: 6000
+        });
+        isDragOver = false;
+        isLoading = false;
+        return;
+      }
+      console.log("Loaded file");
+
+      const exportTodoMovies: TodoMoviesExport = JSON.parse(exportTodoMoviesStr);
+
+      console.log("exportTodoMovies:", exportTodoMovies);
+
+      const movieList: TodoMoviesMovie[] = exportTodoMovies.Movie;
+      const customLists: TodoMoviesCustomList[] = exportTodoMovies.MovieList;
+
+      // Build toImport array
+      const toImport: ImportedList[] = [];
+
+      // Convert the timestamp to seconds (NSDate uses seconds since 2001-01-01 00:00:00 UTC)
+      const referenceDate = new Date(2001, 0, 1);
+
+      // Add all history movies. There is only one entry for every movie.
+      // Movies which have already been watched but which have been added back in planning are also included, as this could also have ratings and comments.
+      for (let i = 0; i < movieList.length; i++) {
+        const h = movieList[i];
+        // Skip if no tmdb id.
+        if (!h.Attrs.tmdbID) {
+          continue;
+        }
+        // Skip if already added. The first time it is added we get all info needed from other entries.
+        if (toImport.filter((ti) => ti.tmdbId == Number(h.Attrs.tmdbID)).length > 0) {
+          continue;
+        }
+
+        const nsInsertionDate = h.Attrs.insertionDate.Value;
+        const date = new Date(referenceDate.getTime() + nsInsertionDate * 1000);
+        const tagsIds = h.Rels.lists.Items;
+        const tags = tagsIds.map((tagId) => {
+          const tag = customLists.find((list) => list.ObjectID == tagId);
+          return {
+            name: "TodoMovies list: " + tag?.Attrs.name,
+            color: "#000000",
+            bgColor: tag?.Attrs.colorInHex
+          } as TagAddRequest;
+        });
+        const t: ImportedList = {
+          name: h.Attrs.title,
+          tmdbId: Number(h.Attrs.tmdbID),
+          status: h.Attrs.isWatched == 1 ? "FINISHED" : "PLANNED",
+          type: "movie", // TodoMovies only supports movies
+          datesWatched: [date], // use activities instead
+          thoughts: "", // no comments in TodoMovies
+          rating: h.Attrs.myScore,
+          tags: tags
+        };
+        toImport.push(t);
+      }
+
+      console.log("toImport:", toImport);
+      importedList.set({
+        data: JSON.stringify(toImport),
+        type: "todomovies"
+      });
+
+      goto("/import/process");
+    } catch (err) {
+      isLoading = false;
+      notify({ type: "error", text: "Failed to read files!" });
+      console.error("import: Failed to read files!", err);
+    }
+  }
+
   onMount(() => {
     if (!localStorage.getItem("token")) {
       goto("/login");
@@ -554,6 +672,12 @@
         />
 
         <DropFileButton icon="ryot" text="Ryot Exports" filesSelected={(f) => processRyotFile(f)} />
+
+        <DropFileButton
+          icon="todomovies"
+          text="TodoMovies"
+          filesSelected={(f) => processTodoMoviesFile(f)}
+        />
 
         <button class="plain" on:click={() => goto("/import/trakt")}>
           <Icon i="trakt" wh="100%" />
