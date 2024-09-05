@@ -9,9 +9,27 @@
 </script>
 
 <div class="thumbs-ctr">
-  <button use:tooltip={{ text: "Liked", pos: "top" }}><Icon i="thumb-down" /></button>
-  <button use:tooltip={{ text: "Mediocre", pos: "top" }}><span>-</span></button>
-  <button use:tooltip={{ text: "Disliked", pos: "top" }}><Icon i="thumb-up" /></button>
+  <button
+    use:tooltip={{ text: "Liked", pos: "top" }}
+    on:click={() => onChange(1)}
+    class={rating && rating > 0 && rating < 5 ? "active" : ""}
+  >
+    <Icon i="thumb-down" />
+  </button>
+  <button
+    use:tooltip={{ text: "Mediocre", pos: "top" }}
+    on:click={() => onChange(5)}
+    class={rating && rating > 4 && rating < 9 ? "active" : ""}
+  >
+    <span>-</span>
+  </button>
+  <button
+    use:tooltip={{ text: "Disliked", pos: "top" }}
+    on:click={() => onChange(9)}
+    class={rating && rating > 8 ? "active" : ""}
+  >
+    <Icon i="thumb-up" />
+  </button>
 </div>
 
 <style lang="scss">
