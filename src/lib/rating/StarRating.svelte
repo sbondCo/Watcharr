@@ -120,6 +120,24 @@
       // We set innerText instead of letting svelte update dom for us
       // since we need the new width of span right now.
       ratingText.innerText = ratingDesc[Math.floor(r) - 1];
+      try {
+        if (
+          settings?.ratingSystem === RatingSystem.OutOf100 ||
+          settings?.ratingStep === RatingStep.Point1
+        ) {
+          // To make it possible to give an exact rating on 0.1 increment
+          // settings, show the shownPerc(entage) in rating text on hover.
+          if (settings?.ratingSystem === RatingSystem.OutOf100) {
+            ratingText.innerText += ` (${Math.round(shownPerc)})`;
+          } else if (settings?.ratingSystem === RatingSystem.OutOf10) {
+            ratingText.innerText += ` (${Math.round(shownPerc) / 10})`;
+          } else if (settings?.ratingSystem === RatingSystem.OutOf5) {
+            ratingText.innerText += ` (${Math.round(shownPerc) / 20})`;
+          }
+        }
+      } catch (err) {
+        console.error("moveRatingText: Showing rating on text failed!", err);
+      }
       const start = ratingContainer?.getBoundingClientRect()?.x;
       const starl = ev?.currentTarget?.getBoundingClientRect()?.left;
       const rb = ratingText?.getBoundingClientRect();
