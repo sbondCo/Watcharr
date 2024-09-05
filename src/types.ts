@@ -185,7 +185,7 @@ export interface UserSettings {
    * applicable for OutOf10 and OutOf5 rating systems.
    * Supported: 1, 0.5, 0.1 (must validate).
    */
-  ratingStep?: number;
+  ratingStep?: RatingStep;
 }
 
 export enum RatingSystem {
@@ -193,6 +193,12 @@ export enum RatingSystem {
   OutOf100,
   OutOf5,
   Thumbs
+}
+
+export enum RatingStep {
+  One, // default
+  Point5,
+  Point1
 }
 
 export interface ChangePasswordForm {

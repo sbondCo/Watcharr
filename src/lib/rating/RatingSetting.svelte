@@ -1,7 +1,8 @@
 <script lang="ts">
   import { userSettings } from "@/store";
   import Setting from "../settings/Setting.svelte";
-  import { RatingSystem } from "@/types";
+  import { RatingStep, RatingSystem } from "@/types";
+  import { updateUserSetting } from "../util/api";
 
   $: settings = $userSettings;
 
@@ -10,8 +11,9 @@
       console.error("No settings.");
       return;
     }
-    settings.ratingSystem = v;
-    // userSettings.update((u) => u);
+    updateUserSetting("ratingSystem", v, () => {
+      settings.ratingSystem = v;
+    });
   }
 
   function updateStep(v: number) {
@@ -19,7 +21,9 @@
       console.error("No settings.");
       return;
     }
-    settings.ratingStep = v;
+    updateUserSetting("ratingStep", v, () => {
+      settings.ratingStep = v;
+    });
   }
 </script>
 
@@ -59,22 +63,23 @@
   <Setting title="Rating Step" desc="How would you like to increment through the stars?">
     <div class="rat-wrap">
       <button
-        class={["plain", settings?.ratingStep === 0.1 ? "active" : ""].join(" ")}
-        on:click={() => updateStep(0.1)}
+        class={["plain", settings?.ratingStep === RatingStep.Point1 ? "active" : ""].join(" ")}
+        on:click={() => updateStep(RatingStep.Point1)}
       >
         0.1
       </button>
       <button
-        class={["plain", settings?.ratingStep === 0.5 ? "active" : ""].join(" ")}
-        on:click={() => updateStep(0.5)}
+        class={["plain", settings?.ratingStep === RatingStep.Point5 ? "active" : ""].join(" ")}
+        on:click={() => updateStep(RatingStep.Point5)}
       >
         0.5
       </button>
       <button
-        class={["plain", !settings?.ratingStep || settings?.ratingStep === 1 ? "active" : ""].join(
-          " "
-        )}
-        on:click={() => updateStep(1)}
+        class={[
+          "plain",
+          settings?.ratingStep === RatingStep.One || !settings?.ratingStep ? "active" : ""
+        ].join(" ")}
+        on:click={() => updateStep(RatingStep.One)}
       >
         1
       </button>
