@@ -234,14 +234,16 @@
   });
 </script>
 
+<!-- TODO make sure stars work good on mobile, should be able to hold down and adjust like a slider -->
+<!-- TODO 0.1 increments need to work better - eg: 5.8 looks the same as 6.0 -->
+<!-- TODO 1.0 increments need to work better - eg: rating of 8 shows like 1px of yellow onto the 9th star.. JARRING -->
+
 {settings?.ratingSystem}
 step: {starStep}
 stepSetting: {settings?.ratingStep}<br />
 hoveredRating: {hoveredRating}<br />
 shownPerc: {shownPerc}<br />
 RATING: {rating}<br />
-
-<!-- TODO make sure stars work good on mobile, should be able to hold down and adjust like a slider -->
 
 <div class="rating-container" bind:this={ratingContainer}>
   <span bind:this={ratingText}></span>

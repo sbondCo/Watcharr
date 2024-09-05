@@ -30,7 +30,7 @@ type ImportRequest struct {
 	Name             string           `json:"name"`
 	TmdbID           int              `json:"tmdbId"`
 	Type             ContentType      `json:"type"`
-	Rating           float32          `json:"rating" binding:"max=10"`
+	Rating           float64          `json:"rating" binding:"max=10"`
 	RatingCustomDate *time.Time       `json:"ratingCustomDate"`
 	Status           WatchedStatus    `json:"status"`
 	Thoughts         string           `json:"thoughts"`

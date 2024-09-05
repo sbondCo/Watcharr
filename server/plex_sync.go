@@ -79,7 +79,7 @@ func startPlexSync(
 					Status:      FINISHED,
 					ContentID:   tmdbId,
 					ContentType: MOVIE,
-					Rating:      float32(movie.UserRating),
+					Rating:      float64(movie.UserRating),
 					WatchedDate: lastViewedAt,
 				}, IMPORTED_WATCHED_PLEX)
 				if err != nil {
@@ -146,7 +146,7 @@ func startPlexSync(
 					Status:      FINISHED,
 					ContentID:   tmdbId,
 					ContentType: SHOW,
-					Rating:      float32(show.UserRating),
+					Rating:      float64(show.UserRating),
 					WatchedDate: lastViewedAt,
 				}, IMPORTED_WATCHED_PLEX)
 				if err != nil {
