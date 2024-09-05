@@ -40,12 +40,19 @@
   ];
 
   function saveSelectedRating() {
-    console.log("saveSelectedRating:", hoveredRating);
-    if (!hoveredRating || hoveredRating === rating) {
-      console.warn("saveSelectedRating: Rating not changed or is not set, ignoring call.");
+    if (!shownPerc) {
+      console.warn("saveSelectedRating: Rating not set, ignoring call.");
       return;
     }
-    onChange(hoveredRating);
+    // Rating needs to always scale to out of 10 before saving,
+    // scaling down the shown percentage will work.
+    const r = Math.round(shownPerc) / 10;
+    console.log("saveSelectedRating:", shownPerc, "=", r);
+    if (r === rating) {
+      console.warn("saveSelectedRating: Rating not changed, ignoring call.");
+      return;
+    }
+    onChange(r);
   }
 
   $: {
