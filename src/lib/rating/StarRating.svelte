@@ -98,20 +98,34 @@
     }
   }
 
-  function handleStarHover(
+  function moveRatingText(
     ev: (TouchEvent | MouseEvent) & {
-      currentTarget: EventTarget & HTMLButtonElement;
-    },
-    r: number
+      currentTarget: EventTarget & HTMLDivElement;
+    }
   ) {
+    if (!shownPerc) {
+      return;
+    }
+    // Get star number we are putting text above
+    let r: number;
+    if (settings?.ratingSystem === RatingSystem.OutOf5) {
+      r = Math.ceil(shownPerc / 20);
+    } else {
+      r = Math.ceil(shownPerc / 10);
+    }
+    console.log(r);
     // We set innerText instead of letting svelte update dom for us
     // since we need the new width of span right now.
     ratingText.innerText = ratingDesc[Math.floor(r) - 1];
     const start = ratingContainer?.getBoundingClientRect()?.x;
     const starl = ev?.currentTarget?.getBoundingClientRect()?.left;
     const rb = ratingText?.getBoundingClientRect();
-    ratingText.style.left = `${starl - start - rb.width / 2 + 11.5}px`;
+    const oneStarWidth = 37.5;
+    const offset = (r - 1) * oneStarWidth;
+    ratingText.style.left = `${starl + offset - start - rb.width / 2 + 11.5}px`;
     ratingText.style.transform = "unset";
+
+    console.log(ev?.currentTarget);
   }
 
   function handleRatingHoverEnd() {
@@ -131,6 +145,7 @@
     const x = (ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX) - rect.left; // rel to start of container
     const perc = Math.ceil(Math.round((x * 100) / rect.width) / starStep) * starStep;
     setHoveredRatingFromPerc(perc);
+    moveRatingText(ev);
   }
 
   function handleKeyDown(
@@ -317,8 +332,8 @@ shownPerc: {shownPerc}<br />
     & > span {
       position: relative;
       transition:
-        left 100ms ease-in,
-        transform 100ms ease-in;
+        left 50ms ease-in,
+        transform 50ms ease-in;
       max-width: max-content;
       left: 50%;
       transform: translateX(-50%);
