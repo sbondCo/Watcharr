@@ -155,14 +155,13 @@
 
   function showRating(perc: number) {
     try {
-      console.debug("showRating:", perc);
       if (!highlightContainer || !normalContainer) {
         console.warn("showRating: Containers not defined yet.");
         return;
       }
-      console.log("showRating: perc", perc);
-      perc = Math.max(Math.min(Math.ceil(perc / starStep) * starStep, 100), 0);
-      console.log("showRating: perc2", perc);
+      console.debug("showRating: perc", perc, starStep);
+      perc = Math.max(Math.min(Math.round(perc / starStep) * starStep, 100), 0);
+      console.debug("showRating: perc2", perc);
       if (perc > 1) {
         let percToHighlight = perc;
         let percToHide = 100 - perc;
@@ -261,10 +260,22 @@ shownPerc: {shownPerc}<br />
   <span bind:this={ratingText}>
     {#if hoveredRating}
       {ratingDesc[Math.ceil(hoveredRating) - 1]}
-      ({hoveredRating})
+      {#if settings?.ratingSystem === RatingSystem.OutOf100}
+        ({shownPerc})
+      {:else}
+        ({hoveredRating})
+      {/if}
     {:else if typeof rating === "number" && rating > 0}
       {ratingDesc[Math.floor(rating) - 1]}
-      ({rating})
+      {#if shownPerc}
+        {#if settings?.ratingSystem === RatingSystem.OutOf100}
+          ({shownPerc})
+        {:else if settings?.ratingSystem === RatingSystem.OutOf5}
+          ({shownPerc / 20})
+        {:else}
+          ({shownPerc / 10})
+        {/if}
+      {/if}
     {:else}
       Select Your Rating
     {/if}
