@@ -67,7 +67,6 @@
     } else if (rating !== undefined) {
       console.debug("showRatingCaller: We have a rating.");
       shownRating = rating;
-      resetRatingText();
       showRating(Math.round((rating * 100) / 10));
     } else {
       console.debug("showRatingCaller: We have nothing.");
@@ -86,18 +85,6 @@
     hoveredRating = Math.max(Math.min(hovR, stars[0]), 0);
   }
 
-  function resetRatingText() {
-    if (!ratingText) {
-      console.warn("resetRatingText: ratingText is not defined yet.");
-      return;
-    }
-    if (typeof rating === "number" && rating > 0) {
-      ratingText.innerText = ratingDesc[Math.floor(rating) - 1];
-    } else {
-      ratingText.innerText = "Select Your Rating";
-    }
-  }
-
   /**
    * Show RatingText over hovered star.
    */
@@ -107,36 +94,15 @@
     }
   ) {
     try {
-      if (!shownPerc) {
+      if (!hoveredRating) {
         return;
       }
       // Get star number we are putting text above
       let r: number;
       if (settings?.ratingSystem === RatingSystem.OutOf5) {
-        r = Math.ceil(shownPerc / 20);
+        r = Math.ceil(hoveredRating);
       } else {
-        r = Math.ceil(shownPerc / 10);
-      }
-      // We set innerText instead of letting svelte update dom for us
-      // since we need the new width of span right now.
-      ratingText.innerText = ratingDesc[Math.floor(r) - 1];
-      try {
-        if (
-          settings?.ratingSystem === RatingSystem.OutOf100 ||
-          settings?.ratingStep === RatingStep.Point1
-        ) {
-          // To make it possible to give an exact rating on 0.1 increment
-          // settings, show the shownPerc(entage) in rating text on hover.
-          if (settings?.ratingSystem === RatingSystem.OutOf100) {
-            ratingText.innerText += ` (${Math.round(shownPerc)})`;
-          } else if (settings?.ratingSystem === RatingSystem.OutOf10) {
-            ratingText.innerText += ` (${Math.round(shownPerc) / 10})`;
-          } else if (settings?.ratingSystem === RatingSystem.OutOf5) {
-            ratingText.innerText += ` (${Math.round(shownPerc) / 20})`;
-          }
-        }
-      } catch (err) {
-        console.error("moveRatingText: Showing rating on text failed!", err);
+        r = Math.ceil(hoveredRating);
       }
       const start = ratingContainer?.getBoundingClientRect()?.x;
       const starl = ev?.currentTarget?.getBoundingClientRect()?.left;
@@ -155,7 +121,6 @@
     hoveredRating = undefined;
     ratingText.style.left = "50%";
     ratingText.style.transform = "translateX(-50%)";
-    resetRatingText();
   }
 
   function handleMouseOver(
@@ -283,7 +248,6 @@
   }
 
   onMount(() => {
-    resetRatingText();
     if (rating) showRating(Math.round((rating * 100) / 10));
   });
 </script>
@@ -294,7 +258,17 @@ hoveredRating: {hoveredRating}<br />
 shownPerc: {shownPerc}<br />
 
 <div class="rating-container" bind:this={ratingContainer}>
-  <span bind:this={ratingText}></span>
+  <span bind:this={ratingText}>
+    {#if hoveredRating}
+      {ratingDesc[Math.ceil(hoveredRating) - 1]}
+      ({hoveredRating})
+    {:else if typeof rating === "number" && rating > 0}
+      {ratingDesc[Math.floor(rating) - 1]}
+      ({rating})
+    {:else}
+      Select Your Rating
+    {/if}
+  </span>
   <div
     class="rating-wrap"
     on:pointermove={(ev) => handleMouseOver(ev)}
