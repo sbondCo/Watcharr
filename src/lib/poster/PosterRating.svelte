@@ -150,9 +150,27 @@
       </div>
     {/if}
   {:else if rating}
-    <span>
+    <span class="rating-text">
       {rating}
     </span>
+  {/if}
+
+  <!-- Ratings popup for usage with `minimal` -->
+  {#if minimal && ratingsShown}
+    <div class={["small-scrollbar", direction, isUsingThumbs ? "is-using-thumbs" : ""].join(" ")}>
+      {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
+        <button
+          class="plain{rating === v ? ' active' : ''}"
+          on:click={(ev) => {
+            ev.stopPropagation();
+            handleStarClick(v);
+            ratingsShown = false;
+          }}
+        >
+          {v}
+        </button>
+      {/each}
+    </div>
   {/if}
 </button>
 
