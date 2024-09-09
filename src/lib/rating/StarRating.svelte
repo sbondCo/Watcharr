@@ -159,9 +159,9 @@
         console.warn("showRating: Containers not defined yet.");
         return;
       }
-      console.debug("showRating: perc", perc, starStep);
+      // console.debug("showRating: perc", perc, starStep);
       perc = Math.max(Math.min(Math.round(perc / starStep) * starStep, 100), 0);
-      console.debug("showRating: perc2", perc);
+      // console.debug("showRating: perc2", perc);
       if (perc > 1) {
         let percToHighlight = perc;
         let percToHide = 100 - perc;
