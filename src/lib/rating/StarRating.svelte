@@ -56,7 +56,7 @@
   }
 
   $: {
-    if (hoveredRating !== undefined) {
+    if (hoveredRating !== undefined && hoveredRating > 0) {
       console.debug("showRatingCaller: We have a hoveredRating.");
       shownRating = hoveredRating;
       showRating(
@@ -95,6 +95,7 @@
   ) {
     try {
       if (!hoveredRating) {
+        handleRatingHoverEnd();
         return;
       }
       // Get star number we are putting text above
