@@ -335,8 +335,8 @@ shownPerc: {shownPerc}<br />
     & > span {
       position: relative;
       transition:
-        left 50ms ease-in,
-        transform 50ms ease-in;
+        left 100ms ease-in,
+        transform 100ms ease-in;
       max-width: max-content;
       left: 50%;
       transform: translateX(-50%);
