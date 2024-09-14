@@ -3,6 +3,7 @@
   import tooltip from "../actions/tooltip";
   import { RatingStep, RatingSystem } from "@/types";
   import Icon from "../Icon.svelte";
+  import { toShowableRating, toWhichThumb } from "../rating/helpers";
 
   export let rating: number | undefined = undefined;
   export let handleStarClick: (rating: number) => void;
@@ -20,34 +21,6 @@
 
   $: settings = $userSettings;
   $: isUsingThumbs = settings && settings.ratingSystem === RatingSystem.Thumbs;
-
-  function toShowableRating(r: number) {
-    if (!settings || (!settings.ratingSystem && !settings.ratingStep)) {
-      return Math.round(r);
-    }
-    if (settings.ratingSystem === RatingSystem.OutOf100) {
-      return r * 10;
-    }
-    if (settings.ratingSystem === RatingSystem.OutOf5) {
-      if (settings.ratingStep === RatingStep.Point5) {
-        return Math.ceil((r / 2) * 2) / 2;
-      }
-      if (settings.ratingStep === RatingStep.Point1) {
-        return r / 2;
-      }
-      return Math.round(r / 2);
-    }
-    if (settings.ratingSystem === RatingSystem.OutOf10) {
-      if (settings.ratingStep === RatingStep.Point5) {
-        return Math.ceil(r * 2) / 2;
-      }
-      if (settings.ratingStep === RatingStep.Point1) {
-        return r;
-      }
-      return Math.round(r);
-    }
-    return Math.round(r);
-  }
 </script>
 
 <button
@@ -73,16 +46,16 @@
     <span class={[!rating && disableInteraction ? "unrated-text" : "", "rating-text"].join(" ")}>
       {#if rating}
         {#if isUsingThumbs}
-          {@const r = rating ? Math.round(rating) : 0}
-          {#if r > 0 && r <= 4}
+          {@const r = toWhichThumb(rating)}
+          {#if r === -1}
             <Icon i="thumb-down" />
-          {:else if r >= 4 && r <= 7}
+          {:else if r === 0}
             <span
               style="display: flex; transform: translate(2px, -7px); font-size: 40px; font-family: 'Shrikhand';"
             >
               -
             </span>
-          {:else if r >= 8}
+          {:else if r === 1}
             <Icon i="thumb-up" />
           {/if}
         {:else}

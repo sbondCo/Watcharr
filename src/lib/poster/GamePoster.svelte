@@ -1,13 +1,11 @@
 <script lang="ts">
-  import type { ExtraDetails, ExtraDetailsGame, Image, WatchedStatus } from "@/types";
-  import Icon from "../Icon.svelte";
+  import type { PosterExtraDetails, Image, WatchedStatus } from "@/types";
   import {
     addClassToParent,
     calculateTransformOrigin,
     getOrdinalSuffix,
     isTouch,
-    monthsShort,
-    watchedStatuses
+    monthsShort
   } from "@/lib/util/helpers";
   import { goto } from "$app/navigation";
   import { baseURL, removeWatched, updatePlayed } from "../util/api";
@@ -16,8 +14,8 @@
   import PosterStatus from "./PosterStatus.svelte";
   import PosterRating from "./PosterRating.svelte";
   import { wlDetailedView } from "@/store";
-  import { page } from "$app/stores";
   import { decode } from "blurhash";
+  import ExtraDetails from "./ExtraDetails.svelte";
 
   export let id: number | undefined = undefined; // Watched list id
   export let media: {
@@ -33,7 +31,7 @@
   export let small = false;
   export let disableInteraction = false;
   export let hideButtons = false;
-  export let extraDetails: ExtraDetailsGame | undefined = undefined;
+  export let extraDetails: PosterExtraDetails | undefined = undefined;
   export let fluidSize = false;
   export let pinned = false;
   // When provided, default click handlers will instead run this callback.
@@ -159,18 +157,9 @@
         }}
       />
     {/if}
-    {#if $page.url?.pathname === "/" && extraDetails && dve && dve.length > 0}
-      <div class="extra-details">
-        <!--
-          This is one line because svelte leaves whitespace,
-          which causes the :empty css tag to not work.
-          Can be reverted when its possible to trim whitespace in svelte
-          OR when :empty tag is updated in browsers to new spec and counts whitespace as empty.
-          So ye this is probably gonna be one line until the end of time.
-        -->
-        <!-- prettier-ignore -->
-        <div>{#if dve.includes("dateAdded")}<span title="Date added to watch list"><i><Icon i="calendar" /></i><span>{formatDate(Date.parse(extraDetails.dateAdded))}</span></span>{/if}{#if dve.includes("dateModified")}<span title="Date last modified"><i><Icon i="pencil" wh={15} /></i><span>{formatDate(Date.parse(extraDetails.dateModified))}</span></span>{/if}{#if dve.includes("statusRating")}<span class="status-rating" title="Status and Rating"><i><Icon i="star" /></i><span>{rating}</span>{#if status}<i><Icon i={watchedStatuses[status]} wh={15} /></i>{/if}</span>{/if}</div>
-      </div>
+    {#if id && !posterActive}
+      <!-- Must be on watched list, and poster not hovered -->
+      <ExtraDetails details={extraDetails} {status} {rating} />
     {/if}
     <div
       on:click={() => {
@@ -289,54 +278,6 @@
       }
     }
 
-    .extra-details {
-      position: absolute;
-      bottom: 5px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-flow: column;
-      justify-content: center;
-      align-items: center;
-      font-size: 14px;
-      width: 160px;
-      color: white;
-      background-color: $poster-extra-detail-bg-color;
-      border-radius: 10px;
-      transition: opacity 100ms ease-out;
-
-      & > div {
-        padding: 8px 3px;
-
-        &:empty {
-          padding: 0px;
-        }
-
-        & > span {
-          display: flex;
-          flex-flow: row;
-          align-items: center;
-          gap: 8px;
-          height: 15px;
-          font-weight: bold;
-
-          &:not(:last-child) {
-            margin-bottom: 5px;
-          }
-
-          i {
-            display: flex;
-            width: 15px;
-            fill: white;
-          }
-        }
-      }
-
-      .status-rating i:last-of-type {
-        margin-left: auto;
-      }
-    }
-
     .inner {
       position: absolute;
       opacity: 0;
@@ -398,10 +339,6 @@
     &:focus-within {
       transform: scale(1.3);
       z-index: 99;
-
-      .extra-details {
-        opacity: 0;
-      }
     }
 
     &.small:hover,

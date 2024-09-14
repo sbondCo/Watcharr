@@ -51,8 +51,14 @@ export type Icon =
 export type Theme = "light" | "dark";
 
 export type WLDetailedViewOption = "statusRating" | "lastWatched" | "dateAdded" | "dateModified";
-export type ExtraDetails = { lastWatched: string; dateAdded: string; dateModified: string };
-export type ExtraDetailsGame = { dateAdded: string; dateModified: string };
+export type PosterExtraDetails = {
+  dateAdded?: string;
+  dateModified?: string;
+  /**
+   * Only for shows.
+   */
+  lastWatched?: string;
+};
 
 export enum UserType {
   // Assume watcharr user if none of these...
