@@ -14,6 +14,7 @@
   let shownRating: number | undefined;
   let shownPerc: number | undefined;
   let ratingContainer: HTMLDivElement;
+  let ratingWrapEl: HTMLDivElement;
   let ratingText: HTMLSpanElement;
   let highlightContainer: HTMLDivElement;
   let normalContainer: HTMLDivElement;
@@ -88,11 +89,7 @@
   /**
    * Show RatingText over hovered star.
    */
-  function moveRatingText(
-    ev: (TouchEvent | MouseEvent) & {
-      currentTarget: EventTarget & HTMLDivElement;
-    }
-  ) {
+  function moveRatingText() {
     try {
       if (!hoveredRating) {
         handleRatingHoverEnd();
@@ -106,12 +103,10 @@
         r = Math.ceil(hoveredRating);
       }
       const start = ratingContainer?.getBoundingClientRect()?.x;
-      const starl = ev?.currentTarget?.getBoundingClientRect()?.left;
-      const rb = ratingText?.getBoundingClientRect();
+      const starl = ratingWrapEl?.getBoundingClientRect()?.left;
       const oneStarWidth = 37.5;
       const offset = (r - 1) * oneStarWidth;
-      ratingText.style.left = `${starl + offset - start - rb.width / 2 + 11.5}px`;
-      ratingText.style.transform = "unset";
+      ratingText.style.left = `${starl + offset - start + 11.5}px`;
     } catch (err) {
       console.error("moveRatingText: Failed!", err);
     }
@@ -121,7 +116,6 @@
     console.debug("handleRatingHoverEnd");
     hoveredRating = undefined;
     ratingText.style.left = "50%";
-    ratingText.style.transform = "translateX(-50%)";
   }
 
   function handleMouseOver(
@@ -133,7 +127,7 @@
     const x = (ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX) - rect.left; // rel to start of container
     const perc = Math.ceil(Math.round((x * 100) / rect.width) / starStep) * starStep;
     setHoveredRatingFromPerc(perc);
-    moveRatingText(ev);
+    moveRatingText();
   }
 
   function handleKeyDown(
@@ -283,6 +277,7 @@ shownPerc: {shownPerc}<br />
   </span>
   <div
     class="rating-wrap"
+    bind:this={ratingWrapEl}
     on:pointermove={(ev) => handleMouseOver(ev)}
     on:touchmove={(ev) => handleMouseOver(ev)}
     on:mouseleave={(ev) => {
