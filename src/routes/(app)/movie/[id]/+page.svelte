@@ -434,6 +434,7 @@
     display: flex;
     flex-flow: column;
     gap: 10px;
+    width: 100%;
     max-width: 380px;
 
     @media screen and (max-width: 420px) {

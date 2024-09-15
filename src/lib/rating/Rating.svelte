@@ -26,7 +26,10 @@ RATING: {rating}<br />
 
 <style lang="scss">
   .wrap {
-    /* TODO responsivise for smol screenz */
     width: 377px;
+
+    @media screen and (max-width: 420px) {
+      width: 100%;
+    }
   }
 </style>

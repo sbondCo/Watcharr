@@ -429,12 +429,8 @@ shownPerc: {shownPerc}<br />
         -webkit-text-stroke: 1.5px gold;
       }
 
-      @media screen and (max-width: 450px) {
-        font-size: 50px;
-      }
-
       @media screen and (max-width: 420px) {
-        font-size: 45px;
+        letter-spacing: 6px;
       }
     }
   }
