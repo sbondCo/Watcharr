@@ -307,6 +307,7 @@ shownPerc: {shownPerc}<br />
     }}
     on:touchend={() => {
       console.debug("rating-wrap: touchend");
+      saveSelectedRating();
       handleRatingHoverEnd();
     }}
     on:blur={() => {
