@@ -106,7 +106,17 @@
       const starl = ratingWrapEl?.getBoundingClientRect()?.left;
       const oneStarWidth = 37.5;
       const offset = (r - 1) * oneStarWidth;
-      ratingText.style.left = `${starl + offset - start + 11.5}px`;
+      let prospectLeft = starl + offset - start + 11.5;
+      const bodyRect = document.body.getBoundingClientRect();
+      const bodyXX = bodyRect.width - 120;
+      if (bodyXX < prospectLeft) {
+        // Move text back if going off right
+        prospectLeft = prospectLeft - 30;
+      } else if (bodyRect.x + 20 > prospectLeft && starl < 60) {
+        // This should stop the first star text from going off left
+        prospectLeft = prospectLeft + 30;
+      }
+      ratingText.style.left = `${prospectLeft}px`;
     } catch (err) {
       console.error("moveRatingText: Failed!", err);
     }
