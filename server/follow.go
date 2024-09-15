@@ -28,7 +28,7 @@ type FollowThoughts struct {
 	FollowedUser PublicUser    `json:"followedUser"`
 	Thoughts     string        `json:"thoughts"`
 	Status       WatchedStatus `json:"status"`
-	Rating       int8          `json:"rating"`
+	Rating       float64       `json:"rating"`
 }
 
 func followUser(db *gorm.DB, currentUserId uint, toFollowUserId uint) (FollowPublic, error) {

@@ -1,15 +1,26 @@
 <script lang="ts">
+  import { userSettings } from "@/store";
   import tooltip from "../actions/tooltip";
+  import { RatingStep, RatingSystem } from "@/types";
+  import Icon from "../Icon.svelte";
+  import { toShowableRating, toWhichThumb } from "../rating/helpers";
 
   export let rating: number | undefined = undefined;
   export let handleStarClick: (rating: number) => void;
   export let disableInteraction: boolean = false;
+  /**
+   * When not minimal, we will use user settings to
+   * display ratings as they want.
+   */
   export let minimal = false;
   export let direction: "top" | "bot" = "top";
   export let btnTooltip: string = "";
   export let hideStarWhenRated = false;
 
   let ratingsShown = false;
+
+  $: settings = $userSettings;
+  $: isUsingThumbs = settings && settings.ratingSystem === RatingSystem.Thumbs;
 </script>
 
 <button
@@ -28,18 +39,98 @@
   }}
   use:tooltip={{ text: btnTooltip, pos: "top", condition: !!btnTooltip && !ratingsShown }}
 >
-  <span style={hideStarWhenRated && rating ? "display: none" : ""}>*</span>
+  {#if !isUsingThumbs}
+    <span class="star" style={hideStarWhenRated && rating ? "display: none" : ""}>*</span>
+  {/if}
   {#if !minimal}
-    <span class={!rating && disableInteraction ? "unrated-text" : ""}>
-      {rating ? rating : disableInteraction ? "Unrated" : "Rate"}
+    <span class={[!rating && disableInteraction ? "unrated-text" : "", "rating-text"].join(" ")}>
+      {#if rating}
+        {#if isUsingThumbs}
+          {@const r = toWhichThumb(rating)}
+          {#if r === -1}
+            <Icon i="thumb-down" />
+          {:else if r === 0}
+            <span
+              style="display: flex; transform: translate(2px, -7px); font-size: 40px; font-family: 'Shrikhand';"
+            >
+              -
+            </span>
+          {:else if r === 1}
+            <Icon i="thumb-up" />
+          {/if}
+        {:else}
+          {toShowableRating(rating)}
+        {/if}
+      {:else if disableInteraction}
+        Unrated
+      {:else}
+        Rate
+      {/if}
     </span>
+
+    {#if ratingsShown}
+      <div class={["small-scrollbar", direction, isUsingThumbs ? "is-using-thumbs" : ""].join(" ")}>
+        {#if isUsingThumbs}
+          <button
+            on:click={() => handleStarClick(1)}
+            class="plain{rating && rating > 0 && rating < 5 ? ' active' : ''}"
+            style="display: flex; justify-content: center;"
+          >
+            <i style="display: flex; width: 35px;"><Icon i="thumb-down" /></i>
+          </button>
+          <button
+            on:click={() => handleStarClick(5)}
+            class="plain{rating && rating > 4 && rating < 9 ? ' active' : ''}"
+            style="display: flex; justify-content: center;"
+          >
+            <span
+              style="display: flex; transform: translate(0px, -2px); font-size: 40px; height: 40px; font-family: 'Shrikhand';"
+            >
+              -
+            </span>
+          </button>
+          <button
+            on:click={() => handleStarClick(9)}
+            class="plain{rating && rating > 8 ? ' active' : ''}"
+            style="display: flex; justify-content: center;"
+          >
+            <i style="display: flex; width: 35px;"><Icon i="thumb-up" /></i>
+          </button>
+        {:else}
+          {@const stars =
+            settings?.ratingSystem == RatingSystem.OutOf5
+              ? [5, 4, 3, 2, 1]
+              : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]}
+          {#each stars as v}
+            <button
+              class="plain{rating === v ? ' active' : ''}"
+              on:click={(ev) => {
+                ev.stopPropagation();
+                handleStarClick(settings?.ratingSystem === RatingSystem.OutOf5 ? v * 2 : v);
+                ratingsShown = false;
+              }}
+            >
+              {#if settings?.ratingSystem === RatingSystem.OutOf100}
+                {v * 10}
+              {:else if settings?.ratingSystem === RatingSystem.OutOf5}
+                {v}
+              {:else}
+                {v}
+              {/if}
+            </button>
+          {/each}
+        {/if}
+      </div>
+    {/if}
   {:else if rating}
-    <span>
+    <span class="rating-text">
       {rating}
     </span>
   {/if}
-  {#if ratingsShown}
-    <div class={["small-scrollbar", direction].join(" ")}>
+
+  <!-- Ratings popup for usage with `minimal` -->
+  {#if minimal && ratingsShown}
+    <div class={["small-scrollbar", direction, isUsingThumbs ? "is-using-thumbs" : ""].join(" ")}>
       {#each [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as v}
         <button
           class="plain{rating === v ? ' active' : ''}"
@@ -92,7 +183,7 @@
     }
 
     span {
-      &:first-child {
+      &.star {
         color: $text-color;
         font-size: 39px;
         letter-spacing: 10px;
@@ -100,16 +191,22 @@
         height: 42px;
       }
 
-      &:nth-child(2) {
+      &.rating-text {
         color: $text-color;
         font-size: 22px;
         height: 35px; // quick fix to make the rating num look centered - text-stroke makes it look not centered
+
+        & :global(svg) {
+          height: 100%;
+          padding: 5px;
+        }
       }
     }
 
     &:hover span,
     &:focus-visible span {
       color: $poster-rating-color;
+      fill: $poster-rating-color;
     }
 
     div {
@@ -147,6 +244,16 @@
         &:hover,
         &:focus-visible {
           background-color: rgb(100, 100, 100, 0.25);
+        }
+      }
+
+      &.is-using-thumbs {
+        height: 150px;
+        top: calc(-100% - 120px);
+
+        button span {
+          /* Overriding color so dash for thumbs ratings stays text-color */
+          color: $text-color;
         }
       }
     }

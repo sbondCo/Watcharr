@@ -96,6 +96,11 @@ type UserSettings struct {
 	Country *string `gorm:"default:'US'" json:"country"`
 	// Does the user want show, season and episode automations enabled.
 	AutomateShowStatuses *bool `gorm:"default:true" json:"automateShowStatuses"`
+	// Rating system user wants to use (frontend only).
+	// RatingSystem enum in frontend maxes out at 3, so just max=3 on this and we should be gut.
+	RatingSystem *int `json:"ratingSystem" binding:"omitempty,max=3"`
+	// Rating step for supported rating systems (frontend only, enum goes up to 2).
+	RatingStep *int `json:"ratingStep" binding:"omitempty,max=2"`
 }
 
 // Holds third party service auth tokens for users.

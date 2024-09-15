@@ -64,6 +64,12 @@ func userUpdate(db *gorm.DB, userId uint, ur UserSettings) (UserSettings, error)
 	if ur.Country != nil {
 		user.Country = ur.Country
 	}
+	if ur.RatingSystem != nil {
+		user.RatingSystem = ur.RatingSystem
+	}
+	if ur.RatingStep != nil {
+		user.RatingStep = ur.RatingStep
+	}
 	db.Save(&user)
 	return UserSettings{
 		Private:                  user.Private,
@@ -90,6 +96,8 @@ func userGetSettings(db *gorm.DB, userId uint) (UserSettings, error) {
 		IncludePreviouslyWatched: user.IncludePreviouslyWatched,
 		AutomateShowStatuses:     user.AutomateShowStatuses,
 		Country:                  user.Country,
+		RatingSystem:             user.RatingSystem,
+		RatingStep:               user.RatingStep,
 	}, nil
 }
 

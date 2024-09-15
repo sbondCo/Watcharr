@@ -52,9 +52,7 @@
 
   .setting-ctr {
     margin: 0 15px;
-  }
 
-  div {
     &.row {
       display: flex;
       flex-flow: row;
@@ -63,6 +61,12 @@
 
       & > div:first-of-type {
         margin-right: auto;
+      }
+    }
+
+    &:not(.row) {
+      h5 {
+        margin-bottom: 5px;
       }
     }
   }

@@ -8,6 +8,7 @@ export type Icon =
   | "clock"
   | "calendar"
   | "thumb-down"
+  | "thumb-up"
   | "play"
   | "pause"
   | "jellyfin"
@@ -50,8 +51,14 @@ export type Icon =
 export type Theme = "light" | "dark";
 
 export type WLDetailedViewOption = "statusRating" | "lastWatched" | "dateAdded" | "dateModified";
-export type ExtraDetails = { lastWatched: string; dateAdded: string; dateModified: string };
-export type ExtraDetailsGame = { dateAdded: string; dateModified: string };
+export type PosterExtraDetails = {
+  dateAdded?: string;
+  dateModified?: string;
+  /**
+   * Only for shows.
+   */
+  lastWatched?: string;
+};
 
 export enum UserType {
   // Assume watcharr user if none of these...
@@ -178,6 +185,26 @@ export interface UserSettings {
   includePreviouslyWatched: boolean;
   country: string;
   automateShowStatuses: boolean;
+  ratingSystem?: RatingSystem;
+  /**
+   * A rating step decided by the user, only
+   * applicable for OutOf10 and OutOf5 rating systems.
+   * Supported: 1, 0.5, 0.1 (must validate).
+   */
+  ratingStep?: RatingStep;
+}
+
+export enum RatingSystem {
+  OutOf10, // default
+  OutOf100,
+  OutOf5,
+  Thumbs
+}
+
+export enum RatingStep {
+  One, // default
+  Point5,
+  Point1
 }
 
 export interface ChangePasswordForm {
