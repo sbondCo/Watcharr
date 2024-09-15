@@ -111,7 +111,7 @@
       const bodyXX = bodyRect.width - 120;
       if (bodyXX < prospectLeft) {
         // Move text back if going off right
-        prospectLeft = prospectLeft - 30;
+        prospectLeft = prospectLeft - (prospectLeft - bodyXX);
       } else if (bodyRect.x + 20 > prospectLeft && starl < 60) {
         // This should stop the first star text from going off left
         prospectLeft = prospectLeft + 30;
