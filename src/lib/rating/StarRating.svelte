@@ -254,14 +254,18 @@ shownPerc: {shownPerc}<br />
 <div class="rating-container" bind:this={ratingContainer}>
   <span bind:this={ratingText}>
     {#if hoveredRating}
-      {ratingDesc[Math.ceil(hoveredRating) - 1]}
+      {#if settings?.ratingSystem === RatingSystem.OutOf5 && shownPerc}
+        {ratingDesc[Math.ceil(shownPerc / 10) - 1]}
+      {:else}
+        {ratingDesc[Math.ceil(hoveredRating) - 1]}
+      {/if}
       {#if settings?.ratingSystem === RatingSystem.OutOf100}
         ({shownPerc})
       {:else}
         ({hoveredRating})
       {/if}
     {:else if typeof rating === "number" && rating > 0}
-      {ratingDesc[Math.floor(rating) - 1]}
+      {ratingDesc[Math.ceil(rating) - 1]}
       {#if shownPerc}
         {#if settings?.ratingSystem === RatingSystem.OutOf100}
           ({shownPerc})
