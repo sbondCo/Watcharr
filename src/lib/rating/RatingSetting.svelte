@@ -93,7 +93,7 @@
     flex-flow: row;
     /* gap: 5px; */
     border-radius: 10px;
-    overflow: hidden;
+    overflow: auto;
 
     button {
       display: flex;
