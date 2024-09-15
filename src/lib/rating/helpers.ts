@@ -24,7 +24,7 @@ export function toShowableRating(r?: number) {
       return Math.ceil((r / 2) * 2) / 2;
     }
     if (settings.ratingStep === RatingStep.Point1) {
-      return r / 2;
+      return Math.round((r / 2) * 10) / 10;
     }
     return Math.round(r / 2);
   }
