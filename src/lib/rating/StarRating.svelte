@@ -104,10 +104,10 @@
       }
       const start = ratingContainer?.getBoundingClientRect()?.x;
       const starl = ratingWrapEl?.getBoundingClientRect()?.left;
-      const oneStarWidth = 37.5;
+      const bodyRect = document.body.getBoundingClientRect();
+      const oneStarWidth = bodyRect.width <= 420 ? 33.5 : 37.5;
       const offset = (r - 1) * oneStarWidth;
       let prospectLeft = starl + offset - start + 11.5;
-      const bodyRect = document.body.getBoundingClientRect();
       const bodyXX = bodyRect.width - 120;
       if (bodyXX < prospectLeft) {
         // Move text back if going off right
