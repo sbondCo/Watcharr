@@ -7,7 +7,7 @@
   $: settings = $userSettings;
 
   export let rating: number | undefined;
-  export let onChange: (newRating: number) => void;
+  export let onChange: (newRating: number) => Promise<boolean>;
 </script>
 
 DO THE TODO COMMENTS<br />

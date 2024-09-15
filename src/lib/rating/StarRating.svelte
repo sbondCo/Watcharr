@@ -8,7 +8,7 @@
   $: settings = $userSettings;
 
   export let rating: number | undefined;
-  export let onChange: (newRating: number) => void;
+  export let onChange: (newRating: number) => Promise<boolean>;
 
   let hoveredRating: number | undefined;
   let shownRating: number | undefined;
@@ -40,7 +40,7 @@
     "Masterpiece"
   ];
 
-  function saveSelectedRating() {
+  async function saveSelectedRating() {
     if (!shownPerc) {
       console.warn("saveSelectedRating: Rating not set, ignoring call.");
       return;
@@ -53,7 +53,7 @@
       console.warn("saveSelectedRating: Rating not changed, ignoring call.");
       return;
     }
-    onChange(r);
+    return await onChange(r);
   }
 
   $: {
@@ -294,6 +294,15 @@ shownPerc: {shownPerc}<br />
     bind:this={ratingWrapEl}
     on:pointermove={(ev) => handleMouseOver(ev)}
     on:touchmove={(ev) => handleMouseOver(ev)}
+    on:touchstart={(ev) => {
+      // Prevent `click` event from triggering.
+      // Mainly for firefox mobile, these events dont work the same
+      // there (as chromium mobile), so forcing touch devices to use
+      // this flow (touchstart -> touchend) for clicks too will
+      // workaround that difference.
+      ev.preventDefault();
+      handleMouseOver(ev);
+    }}
     on:mouseleave={(ev) => {
       if (!ev.relatedTarget) {
         // When not focused on the browser, and then clicking a star directly
@@ -305,16 +314,18 @@ shownPerc: {shownPerc}<br />
       console.debug("rating-wrap: mouseleave");
       handleRatingHoverEnd();
     }}
-    on:touchend={() => {
+    on:touchend={async () => {
       console.debug("rating-wrap: touchend");
-      saveSelectedRating();
+      await saveSelectedRating();
       handleRatingHoverEnd();
     }}
     on:blur={() => {
       console.debug("rating-wrap: blur");
       handleRatingHoverEnd();
     }}
-    on:click={() => saveSelectedRating()}
+    on:click={() => {
+      saveSelectedRating();
+    }}
     on:keydown={(ev) => handleKeyDown(ev)}
     role="button"
     tabindex="0"

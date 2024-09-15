@@ -5,7 +5,7 @@
   import tooltip from "../actions/tooltip";
 
   export let rating: number | undefined;
-  export let onChange: (newRating: number) => void;
+  export let onChange: (newRating: number) => Promise<boolean>;
 
   $: r = rating ? Math.round(rating) : 0;
 </script>
