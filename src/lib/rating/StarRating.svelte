@@ -365,6 +365,8 @@ shownPerc: {shownPerc}<br />
     width: max-content;
     margin-left: auto;
     margin-right: auto;
+    /* For chromium on mobile, looks a lil gross */
+    -webkit-tap-highlight-color: transparent;
 
     &:focus-visible {
       + .keyboard-tip {
