@@ -10,11 +10,6 @@
   export let onChange: (newRating: number) => Promise<boolean>;
 </script>
 
-DO THE TODO COMMENTS<br />
-
-{settings?.ratingSystem}<br />
-RATING: {rating}<br />
-
 <div class="wrap">
   {#if settings?.ratingSystem === RatingSystem.Thumbs}
     <ThumbRating {rating} {onChange} />

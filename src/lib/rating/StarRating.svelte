@@ -256,10 +256,10 @@
   });
 </script>
 
-step: {starStep}
+<!-- step: {starStep}
 stepSetting: {settings?.ratingStep}<br />
 hoveredRating: {hoveredRating}<br />
-shownPerc: {shownPerc}<br />
+shownPerc: {shownPerc}<br /> -->
 
 <div class="rating-container" bind:this={ratingContainer}>
   <span bind:this={ratingText}>
