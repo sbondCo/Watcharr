@@ -25,7 +25,10 @@ export const activeSort = writable<string[]>(defaultSort);
 export const activeFilters = writable<Filters>({ type: [], status: [] });
 export const appTheme = writable<Theme>();
 export const importedList = writable<
-  | { data: string; type: "text-list" | "tmdb" | "movary" | "watcharr" | "myanimelist" | "ryot" }
+  | {
+      data: string;
+      type: "text-list" | "tmdb" | "movary" | "watcharr" | "myanimelist" | "ryot" | "todomovies";
+    }
   | undefined
 >();
 export const parsedImportedList = writable<ImportedList[] | undefined>();

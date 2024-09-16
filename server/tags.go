@@ -54,6 +54,24 @@ func getTags(db *gorm.DB, userId uint) ([]Tag, error) {
 // 	return *tag, nil
 // }
 
+// This method should only be used when we don't have the tagId
+// (eg: when we are importing data) because this is not technically
+// reliable, since users can have multiple tags with the same name/colors
+// (realistically they probably won't, but...).
+func getTagByNameAndColor(db *gorm.DB, userId uint, tagName string, tagColor string, tagBgColor string) (Tag, error) {
+	tag := new(Tag)
+	res := db.Model(&Tag{}).Where("name = ? AND user_id = ? AND color = ? AND bg_color = ?", tagName, userId, tagColor, tagBgColor).Preload("Watched").Find(&tag)
+	if res.Error != nil {
+		slog.Error("getTagByNameAndColor: Failed getting tag from database", "error", res.Error.Error())
+		return Tag{}, errors.New("failed getting tag")
+	}
+	if tag.ID == 0 {
+		slog.Error("getTagByNameAndColor: Tag does not exist for this user.", "user_id", userId)
+		return Tag{}, errors.New("tag does not exist")
+	}
+	return *tag, nil
+}
+
 // Let user create a tag.
 func addTag(db *gorm.DB, userId uint, tr TagAddRequest) (Tag, error) {
 	if tr.Name == "" {

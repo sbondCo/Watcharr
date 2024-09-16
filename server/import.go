@@ -38,6 +38,7 @@ type ImportRequest struct {
 	Activity         []Activity       `json:"activity"`
 	WatchedEpisodes  []WatchedEpisode `json:"watchedEpisodes"`
 	WatchedSeason    []WatchedSeason  `json:"watchedSeasons"`
+	Tags             []TagAddRequest  `json:"tags"`
 }
 
 type ImportResponse struct {
@@ -226,6 +227,40 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 				continue
 			}
 			w.WatchedEpisodes = ws.WatchedEpisodes
+		}
+	}
+	// Import tags, if any
+	if len(ar.Tags) > 0 {
+		// Create tags if they dont exist
+		slog.Debug("successfulImport: Importing tags")
+		for _, v := range ar.Tags {
+			// Check if tag exists
+			var t Tag
+			t, err := getTagByNameAndColor(db, userId, v.Name, v.Color, v.BgColor)
+			if err != nil && err.Error() != "tag does not exist" {
+				slog.Error("successfulImport: Failed to check for an existing tag", "name", v.Name, "error", err)
+				continue
+			}
+			if t.ID == 0 {
+				tag, err := addTag(db, userId, TagAddRequest{
+					Name:    v.Name,
+					Color:   v.Color,
+					BgColor: v.BgColor,
+				})
+				if err != nil {
+					slog.Error("successfulImport: Failed to add a tag.", "name", v.Name, "error", err)
+					continue
+				}
+				t = tag
+			}
+
+			// Associate the watched entry with the tag
+			err = addWatchedToTag(db, userId, t.ID, w.ID)
+			if err != nil {
+				slog.Error("successfulImport: Failed to associate watched entry with tag.", "error", err)
+				continue
+			}
+			w.Tags = append(w.Tags, t)
 		}
 	}
 	return ImportResponse{Type: IMPORT_SUCCESS, WatchedEntry: w}, nil
