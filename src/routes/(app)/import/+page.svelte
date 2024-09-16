@@ -658,6 +658,11 @@
           filesSelected={(f) => processFiles(f)}
         />
 
+        <button class="plain" on:click={() => goto("/import/trakt")}>
+          <Icon i="trakt" wh="100%" />
+          <h4 class="norm">Trakt Import</h4>
+        </button>
+
         <DropFileButton
           icon="movary"
           text="Movary Exports"
@@ -678,11 +683,6 @@
           text="TodoMovies"
           filesSelected={(f) => processTodoMoviesFile(f)}
         />
-
-        <button class="plain" on:click={() => goto("/import/trakt")}>
-          <Icon i="trakt" wh="100%" />
-          <h4 class="norm">Trakt Import</h4>
-        </button>
       {/if}
     </div>
   </div>
