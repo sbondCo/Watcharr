@@ -427,6 +427,7 @@
             <th>Name</th>
             <th>Year</th>
             <th>Type</th>
+            <th>Status</th>
             {#if !isImporting}
               <th></th>
             {/if}
@@ -471,7 +472,7 @@
               </td>
               <td class="type">
                 <DropDown
-                  options={["FINISHED", "PLANNING", "WATCHING", "HOLD", "DROPPED"]}
+                  options={["FINISHED", "PLANNED", "WATCHING", "HOLD", "DROPPED"]}
                   bind:active={l.status}
                   placeholder="Status"
                   blendIn={true}
