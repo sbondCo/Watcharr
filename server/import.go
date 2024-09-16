@@ -236,24 +236,24 @@ func successfulImport(db *gorm.DB, userId uint, contentId int, contentType Conte
 		for _, v := range ar.Tags {
 			// Check if tag exists
 			var t Tag
-			t, err := getTag(db, userId, v.Name, v.Color, v.BgColor)
+			t, err := getTagByNameAndColor(db, userId, v.Name, v.Color, v.BgColor)
 			if err != nil && err.Error() != "tag does not exist" {
-				slog.Error("successfulImport: Failed to get tags", "error", err)
+				slog.Error("successfulImport: Failed to check for an existing tag", "name", v.Name, "error", err)
 				continue
 			}
 			if t.ID == 0 {
 				tag, err := addTag(db, userId, TagAddRequest{
-					Name:      v.Name,
-					Color:     v.Color,
-					BgColor:   v.BgColor,
+					Name:    v.Name,
+					Color:   v.Color,
+					BgColor: v.BgColor,
 				})
 				if err != nil {
-					slog.Error("successfulImport: Failed to add tag.", "error", err)
+					slog.Error("successfulImport: Failed to add a tag.", "name", v.Name, "error", err)
 					continue
 				}
 				t = tag
 			}
-			
+
 			// Associate the watched entry with the tag
 			err = addWatchedToTag(db, userId, t.ID, w.ID)
 			if err != nil {
