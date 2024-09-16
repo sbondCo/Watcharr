@@ -346,72 +346,11 @@
   </svg>
 {:else if i === "todomovies"}
   <svg xmlns="http://www.w3.org/2000/svg" width={wh} height={wh} viewBox="100 20 600 570">
-    <!-- todo ugh please help -->
-    <g>
-      <path fill="#fff" stroke="#000" opacity="NaN" d="m32,126.5" id="svg_3" />
-      <rect
-        transform="rotate(45, 430, 318)"
-        stroke-width="0"
-        id="svg_2"
-        height="252.64824"
-        width="71.31014"
-        y="191.6759"
-        x="394.34494"
-        stroke="#000"
-        fill="#fff"
-      />
-      <rect
-        transform="rotate(-45, 325.25, 340.25)"
-        stroke-width="0"
-        id="svg_4"
-        height="184.05888"
-        width="71.31014"
-        y="248.22059"
-        x="289.59494"
-        stroke="#000"
-        fill="#fff"
-      />
-      <path
-        id="svg_5"
-        d="m283.80273,8.45091"
-        opacity="NaN"
-        stroke-width="0"
-        stroke="#000"
-        fill="#fff"
-      />
-      <path
-        id="svg_7"
-        d="m264.78863,66.90165"
-        opacity="NaN"
-        stroke-width="0"
-        stroke="#000"
-        fill="#fff"
-      />
-      <path
-        id="svg_10"
-        d="m95.77442,15.49316l187.32438,0.70403c0.70394,0.00019 -5.63409,276.76097 -188.73283,488.02874"
-        opacity="NaN"
-        stroke-width="0"
-        stroke="#000"
-        fill="#fff"
-      />
-      <path
-        id="svg_11"
-        d="m700.70513,14.78894l-187.2429,0.70403c-0.70363,0.00019 5.63164,276.76097 188.65074,488.02874"
-        opacity="NaN"
-        stroke-width="0"
-        stroke="#000"
-        fill="#fff"
-      />
-      <path
-        id="svg_14"
-        d="m694.36643,52.11291"
-        opacity="NaN"
-        stroke-width="0"
-        stroke="#000"
-        fill="#fff"
-      />
-    </g>
+    <path d="m494.113 203.464 50.423 50.423-178.649 178.65-50.423-50.424z" />
+    <path d="m234.964 300.388 50.424-50.424 130.149 130.15-50.424 50.423z" />
+    <path
+      d="m95.774 15.493 187.325.704c.704 0-5.634 276.761-188.733 488.029M700.705 14.789l-187.243.704c-.703 0 5.632 276.76 188.651 488.029"
+    />
   </svg>
 {:else if i === "themoviedb"}
   <svg xmlns="http://www.w3.org/2000/svg" width={wh} height={wh} viewBox="0 0 24 24">
