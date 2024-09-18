@@ -186,8 +186,15 @@
             {/if}
           {/if}
           {#if availableProviders?.findIndex((provider) => provider == "proxy") > -1}
-            <button type="button" name="proxy" class="other" on:click={() => { proxyLogin() }}>
-                SSO
+            <button
+              type="button"
+              name="proxy"
+              class="other"
+              on:click={() => {
+                proxyLogin();
+              }}
+            >
+              SSO
             </button>
           {/if}
         </div>
