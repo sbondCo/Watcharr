@@ -712,6 +712,19 @@ func (b *BaseRouter) addAuthRoutes() {
 		c.Status(400)
 	})
 
+	// Proxy Login
+	auth.POST("/proxy", func(c *gin.Context) {
+		var user User
+
+		user.Username = c.GetHeader("X-authentik-username")
+		response, err := loginProxy(&user, b.db)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+		}
+		c.JSON(http.StatusOK, response)
+		return
+	})
+
 	// Jellyfin login
 	auth.POST("/jellyfin", func(c *gin.Context) {
 		var user User
@@ -766,6 +779,9 @@ func (b *BaseRouter) addAuthRoutes() {
 		if Config.PLEX_HOST != "" && Config.PLEX_MACHINE_ID != "" {
 			availableAuthProviders = append(availableAuthProviders, "plex")
 		}
+
+                availableAuthProviders = append(availableAuthProviders, "proxy")
+
 		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
 			AvailableAuthProviders: availableAuthProviders,
 			SignupEnabled:          Config.SIGNUP_ENABLED,

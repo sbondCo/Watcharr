@@ -370,6 +370,26 @@ func login(user *User, db *gorm.DB) (AuthResponse, error) {
 	return AuthResponse{Token: token}, nil
 }
 
+func loginProxy(user *User, db *gorm.DB) (AuthResponse, error) {
+	slog.Debug("A User Is Logging In", "username", user.Username)
+	dbUser := new(User)
+	res := db.Where("username = ? AND (type IS NULL OR type = 0)", user.Username).Take(&dbUser)
+	if res.Error != nil {
+		slog.Error("Failed to select user from database for login", "error", res.Error)
+
+		// TODO Create User if it doesn't exist
+
+		return AuthResponse{}, errors.New("User does not exist")
+	}
+
+	token, err := signJWT(dbUser)
+	if err != nil {
+		slog.Error("Failed to sign new jwt", "error", err)
+		return AuthResponse{}, errors.New("failed to get auth token")
+	}
+	return AuthResponse{Token: token}, nil
+}
+
 func loginJellyfin(user *User, db *gorm.DB) (AuthResponse, error) {
 	if Config.JELLYFIN_HOST == "" {
 		slog.Error("Request made to login via Jellyfin, but JELLYFIN_HOST has not been configured.")
