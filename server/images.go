@@ -25,7 +25,7 @@ import (
 
 // For user uploaded images
 type Image struct {
-	ID        uint      `gorm:"primarykey" json:"-"`
+	ID        uint       `gorm:"primarykey" json:"-"`
 	CreatedAt time.Time `json:"createdAt"`
 	Hash      string    `gorm:"uniqueIndex;not null" json:"-"`
 	BlurHash  string    `json:"blurHash"`
