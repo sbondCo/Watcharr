@@ -1,4 +1,4 @@
-name: Test PR Changes
+name: Test PR (server)
 
 on:
   pull_request:
@@ -6,27 +6,11 @@ on:
       - "**"
     tags-ignore:
       - v*
+    paths:
+      #- ".github/workflows/test-pr-server.yml"
+      - "server/**"
 
 jobs:
-  linter_check:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Get dependencies
-        run: npm i
-
-      - name: Check for linting/formatting errors
-        run: npm run lint
-
   format_check_go:
     runs-on: ubuntu-latest
 

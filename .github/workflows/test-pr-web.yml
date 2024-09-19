@@ -1,0 +1,31 @@
+name: Test PR (web)
+
+on:
+  pull_request:
+    branches:
+      - "**"
+    tags-ignore:
+      - v*
+    paths:
+      - ".github/workflows/test-pr-web.yml"
+      - "src/**"
+
+jobs:
+  linter_check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Get dependencies
+        run: npm i
+
+      - name: Check for linting/formatting errors
+        run: npm run lint
