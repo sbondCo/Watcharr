@@ -117,6 +117,8 @@
       align-items: center;
       margin-bottom: 8px;
       gap: 5px;
+      /* Always height of when clear filters btn is shown so there is no jump */
+      min-height: 26px;
 
       button {
         display: flex;
