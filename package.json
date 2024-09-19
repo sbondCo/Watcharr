@@ -13,7 +13,7 @@
     "server": "cd ./server && MODE=DEV go run ."
   },
   "devDependencies": {
-    "@sveltejs/adapter-node": "^5.0.1",
+    "@sveltejs/adapter-node": "^5.2.3",
     "@sveltejs/kit": "^2.5.27",
     "@types/papaparse": "^5.3.14",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
