@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { activeFilters, serverFeatures } from "@/store";
+  import { activeFilters, clearActiveFeatures, serverFeatures } from "@/store";
   import type { Filters } from "@/types";
   import { get } from "svelte/store";
+  import Icon from "../Icon.svelte";
+  import tooltip from "../actions/tooltip";
 
   function filterClicked(type: keyof Filters, f: string) {
     const af = get(activeFilters);
@@ -19,7 +21,18 @@
 
 <div class="menu">
   <div class="inner">
-    <h4 class="norm sm-caps">type</h4>
+    <div class="title">
+      <h4 class="norm sm-caps">type</h4>
+      {#if filter?.type?.length > 0 || filter?.status?.length > 0}
+        <button
+          class={["plain"].join(" ")}
+          use:tooltip={{ text: "Clear", pos: "left" }}
+          on:click={() => clearActiveFeatures()}
+        >
+          <Icon i="close-circle" wh={18} />
+        </button>
+      {/if}
+    </div>
     <div class="type-filter">
       <button
         class={`${filter.type.includes("tv") ? "active" : ""}`}
@@ -93,11 +106,35 @@
   }
 
   div.inner {
-    h4 {
+    & > h4 {
+      margin-top: 8px;
       margin-bottom: 8px;
+    }
 
-      &:not(:first-of-type) {
-        margin-top: 8px;
+    .title {
+      display: flex;
+      flex-flow: row;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 5px;
+
+      button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 26px;
+        padding: 2px 3px;
+        border-radius: 8px;
+
+        &.manage-on {
+          color: #f3555a;
+          background-color: $text-color;
+        }
+
+        &:first-of-type {
+          margin-left: auto;
+        }
       }
     }
 

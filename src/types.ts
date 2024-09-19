@@ -16,6 +16,7 @@ export type Icon =
   | "plex"
   | "trash"
   | "close"
+  | "close-circle"
   | "filter"
   | "filter-circle"
   | "reel"
