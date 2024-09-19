@@ -3,7 +3,13 @@
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
-  import { activeFilters, activeSort, serverFeatures, userSettings } from "@/store";
+  import {
+    activeFilters,
+    activeSort,
+    clearActiveFilters,
+    serverFeatures,
+    userSettings
+  } from "@/store";
   import type { Watched } from "@/types";
   import GamePoster from "./poster/GamePoster.svelte";
   import { get } from "svelte/store";
@@ -217,6 +223,7 @@
         <Icon i="filter-circle" wh={80} />
         <h2 class="norm">Filters are hiding all results!</h2>
         <h4 class="norm">Try changing or removing your active filters.</h4>
+        <button on:click={() => clearActiveFilters()}>Clear Filters</button>
       {:else}
         <Icon i="reel" wh={80} />
         {#if isPublicList}
