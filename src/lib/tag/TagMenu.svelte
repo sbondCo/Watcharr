@@ -24,7 +24,7 @@
   let tagToDelete: TagT | undefined = undefined;
 
   function deleteTag(t: TagT) {
-    // TODO 1. confirmation 2. run delete req 3. remove from local state & from watcheds state
+    // This will show the DeleteTagModal (look below).
     tagToDelete = t;
   }
 </script>
@@ -32,7 +32,7 @@
 <div class={[`menu`, classes].join(" ")}>
   <div class="inner">
     <div class="title">
-      <h4 class="norm sm-caps">{titleText ? titleText : "My Tags"}</h4>
+      <h4 class="norm sm-caps">{titleText ? titleText : "my tags"}</h4>
       {#if showManageBtn}
         <button
           class={["plain", inManageMode ? "manage-on" : ""].join(" ")}

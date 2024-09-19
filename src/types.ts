@@ -16,7 +16,9 @@ export type Icon =
   | "plex"
   | "trash"
   | "close"
+  | "close-circle"
   | "filter"
+  | "filter-circle"
   | "reel"
   | "compass"
   | "document"
@@ -47,7 +49,8 @@ export type Icon =
   | "pin"
   | "unpin"
   | "sparkles"
-  | "tag";
+  | "tag"
+  | "ticket";
 
 export type Theme = "light" | "dark";
 

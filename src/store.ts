@@ -42,7 +42,6 @@ export const clearAllStores = () => {
   watchedList.set([]);
   notifications.set([]);
   activeSort.set(defaultSort);
-  activeFilters.set({ type: [], status: [] });
   importedList.set(undefined);
   parsedImportedList.set(undefined);
   searchQuery.set("");
@@ -51,6 +50,11 @@ export const clearAllStores = () => {
   follows.set([]);
   wlDetailedView.set([]);
   tags.set([]);
+  clearActiveFilters();
+};
+
+export const clearActiveFilters = () => {
+  activeFilters.set({ type: [], status: [] });
 };
 
 if (browser) {
