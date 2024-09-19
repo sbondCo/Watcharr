@@ -7,7 +7,7 @@ on:
     tags-ignore:
       - v*
     paths:
-      #- ".github/workflows/test-pr-server.yml"
+      - ".github/workflows/test-pr-server.yml"
       - "server/**"
 
 jobs:
