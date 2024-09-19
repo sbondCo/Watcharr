@@ -25,7 +25,7 @@
       <h4 class="norm sm-caps">type</h4>
       {#if filter?.type?.length > 0 || filter?.status?.length > 0}
         <button
-          class={["plain"].join(" ")}
+          class="plain"
           use:tooltip={{ text: "Clear", pos: "left" }}
           on:click={() => clearActiveFilters()}
         >
