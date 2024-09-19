@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { activeFilters, clearActiveFeatures, serverFeatures } from "@/store";
+  import { activeFilters, clearActiveFilters, serverFeatures } from "@/store";
   import type { Filters } from "@/types";
   import { get } from "svelte/store";
   import Icon from "../Icon.svelte";
@@ -27,7 +27,7 @@
         <button
           class={["plain"].join(" ")}
           use:tooltip={{ text: "Clear", pos: "left" }}
-          on:click={() => clearActiveFeatures()}
+          on:click={() => clearActiveFilters()}
         >
           <Icon i="close-circle" wh={18} />
         </button>

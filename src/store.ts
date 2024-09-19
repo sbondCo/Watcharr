@@ -50,10 +50,10 @@ export const clearAllStores = () => {
   follows.set([]);
   wlDetailedView.set([]);
   tags.set([]);
-  clearActiveFeatures();
+  clearActiveFilters();
 };
 
-export const clearActiveFeatures = () => {
+export const clearActiveFilters = () => {
   activeFilters.set({ type: [], status: [] });
 };
 
