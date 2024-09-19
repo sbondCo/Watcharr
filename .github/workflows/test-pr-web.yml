@@ -1,4 +1,4 @@
-name: Test PR Changes
+name: Test PR (web)
 
 on:
   pull_request:
@@ -6,6 +6,9 @@ on:
       - "**"
     tags-ignore:
       - v*
+    paths:
+      - ".github/workflows/test-pr-web.yml"
+      - "src/**"
 
 jobs:
   linter_check:
