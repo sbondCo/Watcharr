@@ -17,6 +17,7 @@ export type Icon =
   | "trash"
   | "close"
   | "filter"
+  | "filter-circle"
   | "reel"
   | "compass"
   | "document"
