@@ -25,7 +25,6 @@
   }}
   on:mouseleave={(ev) => {
     statusesShown = false;
-    ev.currentTarget.blur();
   }}
   use:tooltip={{ text: btnTooltip, pos: "top", condition: !!btnTooltip && !statusesShown }}
 >
