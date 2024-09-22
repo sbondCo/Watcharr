@@ -173,7 +173,7 @@
       id="ilikemoviessueme"
       class="inner"
       role="button"
-      tabindex="0"
+      tabindex="-1"
     >
       <h2>
         {#if typeof onClick === "undefined" && link}
