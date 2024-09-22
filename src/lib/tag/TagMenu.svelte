@@ -5,6 +5,7 @@
   import type { Tag as TagT } from "@/types";
   import Tag from "./Tag.svelte";
   import DeleteTagModal from "./DeleteTagModal.svelte";
+  import stayInView from "../actions/stayInView";
 
   export let titleText: string | undefined = undefined;
   export let classes: string | undefined = undefined;
@@ -29,7 +30,8 @@
   }
 </script>
 
-<div class={[`menu`, classes].join(" ")}>
+<div class={[`menu`, classes].join(" ")} use:stayInView={{ elToShiftSelector: "& > .arrow" }}>
+  <i class="arrow"></i>
   <div class="inner">
     <div class="title">
       <h4 class="norm sm-caps">{titleText ? titleText : "my tags"}</h4>
@@ -86,7 +88,7 @@
     width: 200px;
     right: 47px;
 
-    &:before {
+    .arrow {
       left: 78px;
     }
 
@@ -94,7 +96,7 @@
       top: 50px;
       right: -78px;
 
-      &:before {
+      .arrow {
         left: 87px;
         /* The place where this button will be is always dark, so white works for both themes */
         border-bottom-color: white;
