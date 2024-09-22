@@ -336,18 +336,18 @@
     }
 
     &:hover,
-    &:focus-within {
+    &:has(:focus-visible) {
       transform: scale(1.3);
       z-index: 99;
     }
 
     &.small:hover,
-    &.small:focus-within {
+    &.small:has(:focus-visible) {
       transform: scale(1.1);
     }
 
     &:hover,
-    &:focus-within,
+    &:has(:focus-visible),
     &:global(.details-shown) {
       img {
         filter: blur(4px) grayscale(80%);
