@@ -129,7 +129,11 @@
   }}
   on:focusin={(e) => {
     if (!posterActive) calculateTransformOrigin(e);
+    if (!isTouch()) {
+      posterActive = true;
+    }
   }}
+  on:focusout={() => (posterActive = false)}
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
   on:keypress={() => console.log("on kpress")}
