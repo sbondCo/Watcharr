@@ -8,7 +8,7 @@ export interface StayInViewOptions {
 }
 
 export default function stayInView(node: HTMLElement, opts: StayInViewOptions) {
-  console.log("stayInView: Initial opts:", opts);
+  console.debug("stayInView: Initial opts:", opts);
   let { elToShiftSelector } = opts;
   let viewDeb: ReturnType<typeof setTimeout>;
 
@@ -22,10 +22,10 @@ export default function stayInView(node: HTMLElement, opts: StayInViewOptions) {
   const getInView = () => {
     const nrect = node.getBoundingClientRect();
     const brect = document.body.getBoundingClientRect();
-    console.log("stayInView->getInView: Called.", nrect, brect);
+    console.debug("stayInView->getInView: Called.", nrect, brect);
     if (nrect.x <= brect.x) {
       const diff = nrect.x - brect.x + 10;
-      console.log(
+      console.debug(
         "stayInView->getInView: Node is out of bounds on the left, shifting forwards to:",
         diff
       );
@@ -33,7 +33,7 @@ export default function stayInView(node: HTMLElement, opts: StayInViewOptions) {
       if (elToShiftSelector) {
         const elToShift = node.querySelector(elToShiftSelector) as HTMLElement;
         if (elToShift) {
-          console.log("stayInView->getInView: Shifting elToShift.");
+          console.debug("stayInView->getInView: Shifting elToShift.");
           const nrectNew = node.getBoundingClientRect();
           const arrowDiff = nrectNew.left - nrect.left;
           elToShift.style.left = `${elToShift.offsetLeft - arrowDiff}px`;
@@ -54,7 +54,7 @@ export default function stayInView(node: HTMLElement, opts: StayInViewOptions) {
 
   return {
     update(opts: StayInViewOptions) {
-      console.log("updated", opts);
+      console.debug("stayInView: Opts updated", opts);
       elToShiftSelector = opts.elToShiftSelector;
       getInView();
     },
