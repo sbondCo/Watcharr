@@ -103,6 +103,7 @@
     background-color: $poster-extra-detail-bg-color;
     border-radius: 10px;
     transition: opacity 100ms ease-out;
+    pointer-events: none !important;
 
     & > div {
       padding: 8px 3px;

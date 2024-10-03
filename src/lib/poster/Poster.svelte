@@ -101,9 +101,39 @@
   }}
   on:focusin={(e) => {
     if (!posterActive) calculateTransformOrigin(e);
+    if (!isTouch()) {
+      posterActive = true;
+    }
   }}
-  on:mouseleave={() => (posterActive = false)}
+  on:focusout={() => {
+    if (!isTouch()) {
+      // Only on !isTouch (to match focusin) to avoid breaking a tap and hold on link on mobile.
+      posterActive = false;
+    }
+  }}
+  on:mouseleave={() => {
+    posterActive = false;
+    const ae = document.activeElement;
+    if (
+      ae &&
+      ae instanceof HTMLElement &&
+      (ae.parentElement?.id === "ilikemoviessueme" ||
+        ae.parentElement?.parentElement?.id === "ilikemoviessueme")
+    ) {
+      // Stops the poster being re-focused after the browser window
+      // loses focus, then regains it (ex: you middle click the poster,
+      // go to the opened tab (or lose browser window focus, then when
+      // you come back the poster is sent `focusin` and stuck activated
+      // until mouseleave again).
+      ae.blur();
+    }
+  }}
   on:click={() => (posterActive = true)}
+  on:keyup={(e) => {
+    if (e.key === "Tab") {
+      e.currentTarget.scrollIntoView({ block: "center" });
+    }
+  }}
   on:keypress={() => console.log("on kpress")}
   class={`${posterActive ? "active " : ""}${pinned ? "pinned " : ""}`}
 >
@@ -130,9 +160,11 @@
       <ExtraDetails details={extraDetails} {status} {rating} />
     {/if}
     <div
-      on:click={() => {
+      on:click={(e) => {
         if (typeof onClick !== "undefined") {
           onClick();
+          // Prevent the link inside this div from being clicked in this case.
+          e.preventDefault();
           return;
         }
         if (posterActive && link) goto(link);
@@ -141,21 +173,17 @@
       id="ilikemoviessueme"
       class="inner"
       role="button"
-      tabindex="0"
+      tabindex="-1"
     >
-      <h2>
-        {#if typeof onClick === "undefined" && link}
-          <a data-sveltekit-preload-data="tap" href={link}>
-            {title}
-          </a>
-        {:else}
+      <a data-sveltekit-preload-data="tap" href={link}>
+        <h2>
           {title}
-        {/if}
-        {#if year}
-          <time>{year}</time>
-        {/if}
-      </h2>
-      <span>{media.overview}</span>
+          {#if year}
+            <time>{year}</time>
+          {/if}
+        </h2>
+        <span>{media.overview}</span>
+      </a>
 
       {#if !hideButtons}
         <div class="buttons">
@@ -174,6 +202,15 @@
 
   li.pinned:not(.active) .container {
     outline: 3px solid gold;
+  }
+
+  li {
+    &:not(.active) {
+      .container .inner,
+      .container .inner .buttons {
+        pointer-events: none !important;
+      }
+    }
   }
 
   .container {
@@ -238,6 +275,10 @@
       background-color: transparent;
       transition: opacity 150ms cubic-bezier(0.19, 1, 0.22, 1);
 
+      & > a {
+        height: 100%;
+      }
+
       h2 {
         font-family:
           sans-serif,
@@ -283,19 +324,16 @@
       font-size: 11px;
     }
 
-    &:hover,
-    &:focus-within {
+    .active & {
       transform: scale(1.3);
       z-index: 99;
     }
 
-    &.small:hover,
-    &.small:focus-within {
+    .active &.small {
       transform: scale(1.1);
     }
 
-    &:hover,
-    &:focus-within,
+    .active &,
     &:global(.details-shown) {
       img {
         filter: blur(4px) grayscale(80%);
