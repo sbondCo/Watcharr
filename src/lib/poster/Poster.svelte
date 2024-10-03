@@ -113,6 +113,11 @@
   }}
   on:mouseleave={() => (posterActive = false)}
   on:click={() => (posterActive = true)}
+  on:keyup={(e) => {
+    if (e.key === "Tab") {
+      e.currentTarget.scrollIntoView({ block: "center" });
+    }
+  }}
   on:keypress={() => console.log("on kpress")}
   class={`${posterActive ? "active " : ""}${pinned ? "pinned " : ""}`}
 >
@@ -139,9 +144,11 @@
       <ExtraDetails details={extraDetails} {status} {rating} />
     {/if}
     <div
-      on:click={() => {
+      on:click={(e) => {
         if (typeof onClick !== "undefined") {
           onClick();
+          // Prevent the link inside this div from being clicked in this case.
+          e.preventDefault();
           return;
         }
         if (posterActive && link) goto(link);
@@ -152,19 +159,15 @@
       role="button"
       tabindex="-1"
     >
-      <h2>
-        {#if typeof onClick === "undefined" && link}
-          <a data-sveltekit-preload-data="tap" href={link}>
-            {title}
-          </a>
-        {:else}
+      <a data-sveltekit-preload-data="tap" href={link}>
+        <h2>
           {title}
-        {/if}
-        {#if year}
-          <time>{year}</time>
-        {/if}
-      </h2>
-      <span>{media.overview}</span>
+          {#if year}
+            <time>{year}</time>
+          {/if}
+        </h2>
+        <span>{media.overview}</span>
+      </a>
 
       {#if !hideButtons}
         <div class="buttons">
@@ -183,6 +186,15 @@
 
   li.pinned:not(.active) .container {
     outline: 3px solid gold;
+  }
+
+  li {
+    &:not(.active) {
+      .container .inner,
+      .container .inner .buttons {
+        pointer-events: none !important;
+      }
+    }
   }
 
   .container {
@@ -247,6 +259,10 @@
       background-color: transparent;
       transition: opacity 150ms cubic-bezier(0.19, 1, 0.22, 1);
 
+      & > a {
+        height: 100%;
+      }
+
       h2 {
         font-family:
           sans-serif,
@@ -292,19 +308,16 @@
       font-size: 11px;
     }
 
-    &:hover,
-    &:has(:focus-visible) {
+    .active & {
       transform: scale(1.3);
       z-index: 99;
     }
 
-    &.small:hover,
-    &.small:has(:focus-visible) {
+    .active &.small {
       transform: scale(1.1);
     }
 
-    &:hover,
-    &:has(:focus-visible),
+    .active &,
     &:global(.details-shown) {
       img {
         filter: blur(4px) grayscale(80%);

@@ -33,30 +33,35 @@
   {:else}
     <span class={["no-icon", small ? "small" : ""].join(" ")}>+</span>
   {/if}
-  {#if statusesShown}
-    <div class={["small-scrollbar", status ? "has-status" : "", direction].join(" ")}>
-      {#each Object.entries(watchedStatuses) as [statusName, icon]}
-        <button
-          class="plain{status && status !== statusName ? ' not-active' : ''}"
-          on:click={() => handleStatusClick(statusName)}
-          use:tooltip={{
-            text: toUnderstandableStatus(statusName, isForGame)
-          }}
-        >
-          <Icon i={icon} />
-        </button>
-      {/each}
-      {#if status}
-        <button
-          class="plain not-active"
-          on:click={() => handleStatusClick("DELETE")}
-          use:tooltip={{ text: "Delete" }}
-        >
-          <Icon i="trash" />
-        </button>
-      {/if}
-    </div>
-  {/if}
+  <div
+    class={[
+      statusesShown ? "shown" : "",
+      "small-scrollbar",
+      status ? "has-status" : "",
+      direction
+    ].join(" ")}
+  >
+    {#each Object.entries(watchedStatuses) as [statusName, icon]}
+      <button
+        class="plain{status && status !== statusName ? ' not-active' : ''}"
+        on:click={() => handleStatusClick(statusName)}
+        use:tooltip={{
+          text: toUnderstandableStatus(statusName, isForGame)
+        }}
+      >
+        <Icon i={icon} />
+      </button>
+    {/each}
+    {#if status}
+      <button
+        class="plain not-active"
+        on:click={() => handleStatusClick("DELETE")}
+        use:tooltip={{ text: "Delete" }}
+      >
+        <Icon i="trash" />
+      </button>
+    {/if}
+  </div>
 </button>
 
 <style lang="scss">
@@ -110,6 +115,10 @@
       scrollbar-width: thin;
       z-index: 40;
       box-shadow: 0px 0px 1px #000;
+
+      &:not(.shown) {
+        display: none;
+      }
 
       &.bot {
         top: calc(100% + 2px);

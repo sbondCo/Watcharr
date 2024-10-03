@@ -67,60 +67,65 @@
       {/if}
     </span>
 
-    {#if ratingsShown}
-      <div class={["small-scrollbar", direction, isUsingThumbs ? "is-using-thumbs" : ""].join(" ")}>
-        {#if isUsingThumbs}
-          <button
-            on:click={() => handleStarClick(1)}
-            class="plain{rating && rating > 0 && rating < 5 ? ' active' : ''}"
-            style="display: flex; justify-content: center;"
+    <div
+      class={[
+        ratingsShown ? "shown" : "",
+        "small-scrollbar",
+        direction,
+        isUsingThumbs ? "is-using-thumbs" : ""
+      ].join(" ")}
+    >
+      {#if isUsingThumbs}
+        <button
+          on:click={() => handleStarClick(1)}
+          class="plain{rating && rating > 0 && rating < 5 ? ' active' : ''}"
+          style="display: flex; justify-content: center;"
+        >
+          <i style="display: flex; width: 35px;"><Icon i="thumb-down" /></i>
+        </button>
+        <button
+          on:click={() => handleStarClick(5)}
+          class="plain{rating && rating > 4 && rating < 9 ? ' active' : ''}"
+          style="display: flex; justify-content: center;"
+        >
+          <span
+            style="display: flex; transform: translate(0px, -2px); font-size: 40px; height: 40px; font-family: 'Shrikhand';"
           >
-            <i style="display: flex; width: 35px;"><Icon i="thumb-down" /></i>
-          </button>
+            -
+          </span>
+        </button>
+        <button
+          on:click={() => handleStarClick(9)}
+          class="plain{rating && rating > 8 ? ' active' : ''}"
+          style="display: flex; justify-content: center;"
+        >
+          <i style="display: flex; width: 35px;"><Icon i="thumb-up" /></i>
+        </button>
+      {:else}
+        {@const stars =
+          settings?.ratingSystem == RatingSystem.OutOf5
+            ? [5, 4, 3, 2, 1]
+            : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]}
+        {#each stars as v}
           <button
-            on:click={() => handleStarClick(5)}
-            class="plain{rating && rating > 4 && rating < 9 ? ' active' : ''}"
-            style="display: flex; justify-content: center;"
+            class="plain{rating === v ? ' active' : ''}"
+            on:click={(ev) => {
+              ev.stopPropagation();
+              handleStarClick(settings?.ratingSystem === RatingSystem.OutOf5 ? v * 2 : v);
+              ratingsShown = false;
+            }}
           >
-            <span
-              style="display: flex; transform: translate(0px, -2px); font-size: 40px; height: 40px; font-family: 'Shrikhand';"
-            >
-              -
-            </span>
+            {#if settings?.ratingSystem === RatingSystem.OutOf100}
+              {v * 10}
+            {:else if settings?.ratingSystem === RatingSystem.OutOf5}
+              {v}
+            {:else}
+              {v}
+            {/if}
           </button>
-          <button
-            on:click={() => handleStarClick(9)}
-            class="plain{rating && rating > 8 ? ' active' : ''}"
-            style="display: flex; justify-content: center;"
-          >
-            <i style="display: flex; width: 35px;"><Icon i="thumb-up" /></i>
-          </button>
-        {:else}
-          {@const stars =
-            settings?.ratingSystem == RatingSystem.OutOf5
-              ? [5, 4, 3, 2, 1]
-              : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]}
-          {#each stars as v}
-            <button
-              class="plain{rating === v ? ' active' : ''}"
-              on:click={(ev) => {
-                ev.stopPropagation();
-                handleStarClick(settings?.ratingSystem === RatingSystem.OutOf5 ? v * 2 : v);
-                ratingsShown = false;
-              }}
-            >
-              {#if settings?.ratingSystem === RatingSystem.OutOf100}
-                {v * 10}
-              {:else if settings?.ratingSystem === RatingSystem.OutOf5}
-                {v}
-              {:else}
-                {v}
-              {/if}
-            </button>
-          {/each}
-        {/if}
-      </div>
-    {/if}
+        {/each}
+      {/if}
+    </div>
   {:else if rating}
     <span class="rating-text">
       {rating}
@@ -222,6 +227,10 @@
       scrollbar-width: thin;
       z-index: 40;
       box-shadow: 0px 0px 1px #000;
+
+      &:not(.shown) {
+        display: none;
+      }
 
       &.bot {
         top: calc(100% + 2px);
