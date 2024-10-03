@@ -111,7 +111,23 @@
       posterActive = false;
     }
   }}
-  on:mouseleave={() => (posterActive = false)}
+  on:mouseleave={() => {
+    posterActive = false;
+    const ae = document.activeElement;
+    if (
+      ae &&
+      ae instanceof HTMLElement &&
+      (ae.parentElement?.id === "ilikemoviessueme" ||
+        ae.parentElement?.parentElement?.id === "ilikemoviessueme")
+    ) {
+      // Stops the poster being re-focused after the browser window
+      // loses focus, then regains it (ex: you middle click the poster,
+      // go to the opened tab (or lose browser window focus, then when
+      // you come back the poster is sent `focusin` and stuck activated
+      // until mouseleave again).
+      ae.blur();
+    }
+  }}
   on:click={() => (posterActive = true)}
   on:keyup={(e) => {
     if (e.key === "Tab") {
