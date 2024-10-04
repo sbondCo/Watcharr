@@ -175,7 +175,7 @@
       role="button"
       tabindex="-1"
     >
-      <a data-sveltekit-preload-data="tap" href={link}>
+      <a data-sveltekit-preload-data="tap" href={link} class="small-scrollbar">
         <h2>
           {title}
           {#if year}
@@ -277,6 +277,7 @@
 
       & > a {
         height: 100%;
+        overflow: auto;
       }
 
       h2 {
