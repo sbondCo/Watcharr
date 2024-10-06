@@ -13,7 +13,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -207,7 +206,7 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 		}
 		// Parse token
 		token, err := jwt.ParseWithClaims(atoken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(os.Getenv("JWT_SECRET")), nil
+			return []byte(Config.JWT_SECRET), nil
 		})
 		if err != nil {
 			slog.Error("AuthRequired failed to parse token", "error", err)
@@ -587,7 +586,7 @@ func signJWT(user *User) (token string, err error) {
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	return jwt.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	return jwt.SignedString([]byte(Config.JWT_SECRET))
 }
 
 func hashPassword(password string, p *ArgonParams) (encodedHash string, err error) {
