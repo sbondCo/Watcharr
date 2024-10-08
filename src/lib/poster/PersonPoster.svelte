@@ -143,7 +143,7 @@
 
     &:not(.no-zoom) {
       &:hover,
-      &:focus-within {
+      &:has(:focus-visible) {
         transform: scale(1.3);
         z-index: 99;
       }
@@ -151,13 +151,13 @@
 
     &:not(:not(.no-zoom)) {
       &:hover,
-      &:focus-within {
+      &:has(:focus-visible) {
         outline: 3px solid $text-color;
       }
     }
 
     &:hover,
-    &:focus-within,
+    &:has(:focus-visible),
     &:global(.details-shown) {
       .inner {
         color: white;

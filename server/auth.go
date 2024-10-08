@@ -13,7 +13,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -62,7 +61,10 @@ type User struct {
 	// Users third party integrations (minus jellyfin for now)
 	UserServices []UserServices `json:"-"`
 	Watched      []Watched
-	Permissions  int `gorm:"default:1" json:"-"`
+	// All Tags
+	Tags []Tag `json:"-"`
+	// Users permissions
+	Permissions int `gorm:"default:1" json:"-"`
 	// All user settings cols, in another struct for reusability
 	UserSettings
 }
@@ -93,6 +95,11 @@ type UserSettings struct {
 	Country *string `gorm:"default:'US'" json:"country"`
 	// Does the user want show, season and episode automations enabled.
 	AutomateShowStatuses *bool `gorm:"default:true" json:"automateShowStatuses"`
+	// Rating system user wants to use (frontend only).
+	// RatingSystem enum in frontend maxes out at 3, so just max=3 on this and we should be gut.
+	RatingSystem *int `json:"ratingSystem" binding:"omitempty,max=3"`
+	// Rating step for supported rating systems (frontend only, enum goes up to 2).
+	RatingStep *int `json:"ratingStep" binding:"omitempty,max=2"`
 }
 
 // Holds third party service auth tokens for users.
@@ -199,7 +206,7 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 		}
 		// Parse token
 		token, err := jwt.ParseWithClaims(atoken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(os.Getenv("JWT_SECRET")), nil
+			return []byte(Config.JWT_SECRET), nil
 		})
 		if err != nil {
 			slog.Error("AuthRequired failed to parse token", "error", err)
@@ -579,7 +586,7 @@ func signJWT(user *User) (token string, err error) {
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	return jwt.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	return jwt.SignedString([]byte(Config.JWT_SECRET))
 }
 
 func hashPassword(password string, p *ArgonParams) (encodedHash string, err error) {

@@ -27,8 +27,11 @@ const (
 
 type Watched struct {
 	GormModel
-	Status          WatchedStatus    `json:"status"`
-	Rating          int8             `json:"rating"`
+	Status WatchedStatus `json:"status"`
+	// float so we can support decimal ratings.
+	// Ratings should still always be saved as out of 10.0,
+	// so they can be viewed with any ratings setting in the client.
+	Rating          float64          `json:"rating" gorm:"type:numeric(2,1)"`
 	Thoughts        string           `json:"thoughts"`
 	Pinned          bool             `json:"pinned" gorm:"default:false;not null"`
 	UserID          uint             `json:"-" gorm:"uniqueIndex:usernctnidx;uniqueIndex:userngamidx"`
@@ -39,11 +42,15 @@ type Watched struct {
 	Activity        []Activity       `json:"activity"`
 	WatchedSeasons  []WatchedSeason  `json:"watchedSeasons,omitempty"`  // For shows
 	WatchedEpisodes []WatchedEpisode `json:"watchedEpisodes,omitempty"` // For shows
+	Tags            []Tag            `json:"tags,omitempty" gorm:"many2many:watched_tags;"`
+	// The last season that was viewed by the user for this watched entry.
+	// Only applies to tv shows of course.
+	LastViewedSeason *int `json:"lastViewedSeason,omitempty"`
 }
 
 type WatchedAddRequest struct {
 	Status      WatchedStatus `json:"status"`
-	Rating      int8          `json:"rating" binding:"max=10"`
+	Rating      float64       `json:"rating" binding:"max=10"`
 	Thoughts    string        `json:"thoughts"`
 	ContentID   int           `json:"contentId" binding:"required"`
 	ContentType ContentType   `json:"contentType" binding:"required,oneof=movie tv"`
@@ -54,7 +61,7 @@ type WatchedAddRequest struct {
 
 type WatchedUpdateRequest struct {
 	Status         WatchedStatus `json:"status" binding:"required_without_all=Rating Thoughts RemoveThoughts Pinned"`
-	Rating         int8          `json:"rating" binding:"max=10,required_without_all=Status Thoughts RemoveThoughts Pinned"`
+	Rating         float64       `json:"rating" binding:"max=10,required_without_all=Status Thoughts RemoveThoughts Pinned"`
 	Thoughts       string        `json:"thoughts" binding:"required_without_all=Status Rating RemoveThoughts Pinned"`
 	RemoveThoughts bool          `json:"removeThoughts"`
 	Pinned         *bool         `json:"pinned" binding:"required_without_all=Status Rating Thoughts RemoveThoughts"`
@@ -70,7 +77,16 @@ type WatchedRemoveResponse struct {
 
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
-	res := db.Model(&Watched{}).Preload("Content").Preload("Game").Preload("Game.Poster").Preload("Activity").Preload("WatchedSeasons").Preload("WatchedEpisodes").Where("user_id = ?", userId).Find(&watched)
+	res := db.Model(&Watched{}).
+		Preload("Content").
+		Preload("Game").
+		Preload("Game.Poster").
+		Preload("Activity").
+		Preload("WatchedSeasons").
+		Preload("WatchedEpisodes").
+		Preload("Tags").
+		Where("user_id = ?", userId).
+		Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}
@@ -228,6 +244,24 @@ func updateWatched(db *gorm.DB, userId uint, id uint, ar WatchedUpdateRequest) (
 		addedActivity, _ = addActivity(db, userId, ActivityAddRequest{WatchedID: id, Type: THOUGHTS_REMOVED, Data: originalThoughts})
 	}
 	return WatchedUpdateResponse{NewActivity: addedActivity}, nil
+}
+
+func updateWatchedLastViewedSeason(db *gorm.DB, userId uint, id uint, seasonNum int) error {
+	slog.Debug("UpdateWatchedLastViewedSeason", "user_id", userId, "id", id, "season_num", seasonNum)
+	res := db.
+		Model(&Watched{}).
+		Where("id = ? AND user_id = ?", id, userId).
+		Update("last_viewed_season", seasonNum)
+	if res.Error != nil {
+		slog.Error("updateWatchedLastViewedSeason: Failed when updating.", "error", res.Error)
+		return errors.New("failed to update db")
+	}
+	if res.RowsAffected == 0 {
+		// likely the watched entry does not exist or is not owned by this `userId`.
+		slog.Error("updateWatchedLastViewedSeason: Watched entry does not exist.")
+		return errors.New("watched entry does not exist")
+	}
+	return nil
 }
 
 func removeWatched(db *gorm.DB, userId uint, id uint) (WatchedRemoveResponse, error) {

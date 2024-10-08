@@ -310,7 +310,7 @@ func startTraktImport(db *gorm.DB, jobId string, userId uint, traktUsername stri
 						addJobError(jobId, userId, fmt.Sprintf("episode rating of %d for %s not imported. The episode does not exist in your history or watchlist.", v.Rating, title))
 					}
 				} else {
-					mv.Rating = int8(v.Rating)
+					mv.Rating = float64(v.Rating)
 					toImport[mapKey] = mv
 				}
 			} else {

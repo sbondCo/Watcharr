@@ -38,7 +38,7 @@ type Game struct {
 
 type PlayedAddRequest struct {
 	Status WatchedStatus `json:"status"`
-	Rating int8          `json:"rating" binding:"max=10"`
+	Rating float64       `json:"rating" binding:"max=10"`
 	IgdbID int           `json:"igdbId" binding:"required"`
 }
 

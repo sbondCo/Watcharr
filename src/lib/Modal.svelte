@@ -5,6 +5,7 @@
   export let desc: string | undefined = undefined;
   export let onClose: (() => void) | undefined = undefined;
   export let maxWidth = "1000px";
+  export let error: string | undefined = undefined; // TODO This property is new, mimics what we do with other modals by showing an error at top.. we could migrate to use this in other places.
 </script>
 
 <div class="backdrop"></div>
@@ -16,6 +17,9 @@
     <h3 class="norm">{title}</h3>
     {#if desc}
       <h5 class="norm">{desc}</h5>
+    {/if}
+    {#if error}
+      <span class="error">{error}</span>
     {/if}
     <slot />
   </div>
@@ -74,6 +78,19 @@
 
       @media screen and (max-width: 680px) {
         margin: 20px;
+      }
+
+      .error {
+        position: sticky;
+        top: 0;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        padding: 10px;
+        background-color: rgb(221, 48, 48);
+        text-transform: capitalize;
+        color: white;
+        margin-bottom: 15px;
       }
     }
   }

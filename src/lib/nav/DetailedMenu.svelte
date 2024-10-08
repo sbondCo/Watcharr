@@ -50,7 +50,7 @@
 <style lang="scss">
   div.menu {
     width: 200px;
-    right: 58px;
+    right: 92px;
 
     &:before {
       left: 3px;

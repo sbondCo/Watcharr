@@ -253,18 +253,27 @@
   }
 
   .small-scrollbar {
-    &::-webkit-scrollbar {
-      width: 4.5px;
-    }
+    @supports selector(::-webkit-scrollbar) {
+      &::-webkit-scrollbar {
+        width: 4.5px;
+      }
 
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
 
-    &::-webkit-scrollbar-thumb {
-      background-color: rgba(155, 155, 155, 0.5);
-      border-radius: 20px;
-      border: transparent;
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba(155, 155, 155, 0.5);
+        border-radius: 20px;
+        border: transparent;
+      }
+
+      // The scrollbar-width property will always override
+      // -webkit-scrollbar, but since the scrollbars in
+      // chromium look ugly af, we will try to unset scrollbar-width
+      // in these cases and use our manual styling instead to try
+      // mimicking beatiful firefox.
+      scrollbar-width: auto !important;
     }
   }
 }
@@ -283,7 +292,11 @@
   z-index: 50;
 
   // The lil arrow, adjust its pos under each specific menu.
-  &:before {
+  &:not(:has(> .arrow)):before,
+  :global(.arrow) {
+    // Works by showing arrow in ::before pseudoelement,
+    // or if more control is needed, applies to any .arrow
+    // element.
     content: "";
     position: absolute;
     bottom: 100%;

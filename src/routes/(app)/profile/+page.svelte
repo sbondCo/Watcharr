@@ -16,6 +16,7 @@
   import PwChangeModal from "@/routes/(app)/profile/modals/PwChangeModal.svelte";
   import SyncModal from "./modals/SyncModal.svelte";
   import RegionDropDown from "@/lib/RegionDropDown.svelte";
+  import RatingSetting from "@/lib/rating/RatingSetting.svelte";
 
   $: user = $userInfo;
   $: settings = $userSettings;
@@ -158,6 +159,10 @@
     return ansString.slice(0, -2);
   }
 </script>
+
+<svelte:head>
+  <title>My Profile</title>
+</svelte:head>
 
 <div class="content">
   <div class="inner">
@@ -315,6 +320,8 @@
           }}
         />
       </Setting>
+
+      <RatingSetting />
 
       <div class="row btns">
         <button on:click={() => goto("/import")}>Import</button>

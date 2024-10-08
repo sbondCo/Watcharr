@@ -80,7 +80,11 @@ export function getPlayedDependedProps(wid: number, list: Watched[]) {
   return {
     id: wel.id,
     status: wel.status,
-    rating: wel.rating
+    rating: wel.rating,
+    extraDetails: {
+      dateAdded: wel.createdAt,
+      dateModified: wel.updatedAt
+    }
   };
 }
 

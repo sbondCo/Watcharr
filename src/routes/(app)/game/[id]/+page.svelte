@@ -1,7 +1,7 @@
 <script lang="ts">
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/poster/PersonPoster.svelte";
-  import Rating from "@/lib/Rating.svelte";
+  import Rating from "@/lib/rating/Rating.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
@@ -21,6 +21,7 @@
   import tooltip from "@/lib/actions/tooltip.js";
   import Icon from "@/lib/Icon.svelte";
   import MyThoughts from "@/lib/content/MyThoughts.svelte";
+  import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 
   export let data;
 
@@ -83,6 +84,10 @@
     return await updatePlayed(gameId, newStatus, newRating, newThoughts, pinned);
   }
 </script>
+
+<svelte:head>
+  <title>{game?.name ? `${game.name} - ` : ""}Game</title>
+</svelte:head>
 
 {#if pageError}
   <PageError pretty="Failed to load game!" error={pageError} />
@@ -161,6 +166,7 @@
             {/if}
             {#if wListItem}
               <div class="other-side">
+                <AddToTagButton watchedItem={wListItem} />
                 <button
                   on:click={() => {
                     if (wListItem?.pinned) {
@@ -377,6 +383,7 @@
     display: flex;
     flex-flow: column;
     gap: 10px;
+    width: 100%;
     max-width: 380px;
 
     @media screen and (max-width: 420px) {

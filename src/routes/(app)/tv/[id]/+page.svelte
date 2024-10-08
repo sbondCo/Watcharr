@@ -6,7 +6,7 @@
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/poster/PersonPoster.svelte";
-  import Rating from "@/lib/Rating.svelte";
+  import Rating from "@/lib/rating/Rating.svelte";
   import SeasonsList from "@/lib/SeasonsList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
@@ -30,6 +30,7 @@
   import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
   import tooltip from "@/lib/actions/tooltip.js";
   import MyThoughts from "@/lib/content/MyThoughts.svelte";
+  import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 
   $: settings = $userSettings;
 
@@ -115,6 +116,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{show?.name ? `${show.name} - ` : ""}Show</title>
+</svelte:head>
+
 {#if pageError}
   <PageError pretty="Failed to load tv show!" error={pageError} />
 {:else if !show}
@@ -184,6 +189,7 @@
             {/if}
             {#if wListItem}
               <div class="other-side">
+                <AddToTagButton watchedItem={wListItem} />
                 <button
                   on:click={() => {
                     if (wListItem?.pinned) {
@@ -286,7 +292,9 @@
       {#if wListItem}
         <Activity wListId={wListItem.id} activity={wListItem.activity} />
       {/if}
-      <SeasonsList tvId={data.tvId} seasons={show.seasons} watchedItem={wListItem} />
+      {#if data?.tvId}
+        <SeasonsList tvId={data.tvId} seasons={show.seasons} watchedItem={wListItem} />
+      {/if}
     </div>
   </div>
 {:else}
@@ -436,6 +444,7 @@
     display: flex;
     flex-flow: column;
     gap: 10px;
+    width: 100%;
     max-width: 380px;
 
     @media screen and (max-width: 420px) {

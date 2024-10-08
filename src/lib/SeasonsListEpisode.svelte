@@ -17,7 +17,7 @@
   $: settings = $userSettings;
 
   export let ep: TMDBSeasonDetailsEpisode;
-  export let watchedItem: Watched;
+  export let watchedItem: Watched | undefined;
 
   let isHidden = false;
 
@@ -26,6 +26,10 @@
   }
 
   function updateWatchedEpisode(status?: WatchedStatus, rating?: number) {
+    if (!watchedItem) {
+      console.error("SeasonListEpisode: updateWatchedEpisode: No watched item.");
+      return;
+    }
     const nid = notify({ text: `Saving`, type: "loading" });
     axios
       .post<WatchedEpisodeAddResponse>(`/watched/episode`, {
@@ -105,6 +109,10 @@
   }
 
   function handleStatusClick(type: WatchedStatus | "DELETE") {
+    if (!watchedItem) {
+      console.error("SeasonListEpisode: handleStatusClick: No watched item.");
+      return;
+    }
     if (type === "DELETE") {
       const ws = watchedItem.watchedEpisodes?.find(
         (s) => s.seasonNumber === ep.season_number && s.episodeNumber === ep.episode_number

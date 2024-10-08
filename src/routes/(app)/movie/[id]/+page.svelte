@@ -1,7 +1,7 @@
 <script lang="ts">
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/poster/PersonPoster.svelte";
-  import Rating from "@/lib/Rating.svelte";
+  import Rating from "@/lib/rating/Rating.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
   import HorizontalList from "@/lib/HorizontalList.svelte";
@@ -30,6 +30,7 @@
   import ArrRequestButton from "@/lib/request/ArrRequestButton.svelte";
   import tooltip from "@/lib/actions/tooltip.js";
   import MyThoughts from "@/lib/content/MyThoughts.svelte";
+  import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
 
   $: settings = $userSettings;
 
@@ -117,6 +118,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{movie?.title ? `${movie.title} - ` : ""}Movie</title>
+</svelte:head>
+
 {#if pageError}
   <PageError pretty="Failed to load movie!" error={pageError} />
 {:else if !movie}
@@ -184,6 +189,7 @@
             {/if}
             {#if wListItem}
               <div class="other-side">
+                <AddToTagButton watchedItem={wListItem} />
                 <button
                   on:click={() => {
                     if (wListItem?.pinned) {
@@ -428,6 +434,7 @@
     display: flex;
     flex-flow: column;
     gap: 10px;
+    width: 100%;
     max-width: 380px;
 
     @media screen and (max-width: 420px) {

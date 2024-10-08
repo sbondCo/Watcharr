@@ -16,6 +16,7 @@ export type Icon =
   | "clock"
   | "calendar"
   | "thumb-down"
+  | "thumb-up"
   | "play"
   | "pause"
   | "jellyfin"
@@ -23,7 +24,9 @@ export type Icon =
   | "plex"
   | "trash"
   | "close"
+  | "close-circle"
   | "filter"
+  | "filter-circle"
   | "reel"
   | "compass"
   | "document"
@@ -45,6 +48,7 @@ export type Icon =
   | "ryot"
   | "trakt"
   | "myanimelist"
+  | "todomovies"
   | "themoviedb"
   | "refresh"
   | "gamepad"
@@ -52,13 +56,21 @@ export type Icon =
   | "tv"
   | "pin"
   | "unpin"
-  | "sparkles";
+  | "sparkles"
+  | "tag"
+  | "ticket";
 
 export type Theme = "light" | "dark";
 
 export type WLDetailedViewOption = "statusRating" | "lastWatched" | "dateAdded" | "dateModified";
-export type ExtraDetails = { lastWatched: string; dateAdded: string; dateModified: string };
-export type ExtraDetailsGame = { dateAdded: string; dateModified: string };
+export type PosterExtraDetails = {
+  dateAdded?: string;
+  dateModified?: string;
+  /**
+   * Only for shows.
+   */
+  lastWatched?: string;
+};
 
 export enum UserType {
   // Assume watcharr user if none of these...
@@ -119,6 +131,8 @@ export interface Watched extends dbModel {
   pinned: boolean;
   watchedSeasons?: WatchedSeason[];
   watchedEpisodes?: WatchedEpisode[];
+  tags?: Tag[];
+  lastViewedSeason?: number;
 }
 
 export interface WatchedAddRequest {
@@ -183,6 +197,26 @@ export interface UserSettings {
   includePreviouslyWatched: boolean;
   country: string;
   automateShowStatuses: boolean;
+  ratingSystem?: RatingSystem;
+  /**
+   * A rating step decided by the user, only
+   * applicable for OutOf10 and OutOf5 rating systems.
+   * Supported: 1, 0.5, 0.1 (must validate).
+   */
+  ratingStep?: RatingStep;
+}
+
+export enum RatingSystem {
+  OutOf10, // default
+  OutOf100,
+  OutOf5,
+  Thumbs
+}
+
+export enum RatingStep {
+  One, // default
+  Point5,
+  Point1
 }
 
 export interface ChangePasswordForm {
@@ -874,6 +908,7 @@ export interface ImportedList {
   activity?: Activity[];
   watchedEpisodes?: WatchedEpisode[];
   watchedSeasons?: WatchedSeason[];
+  tags?: TagAddRequest[];
 }
 
 export interface Filters {
@@ -1054,6 +1089,48 @@ export interface MovaryWatchlist extends MovaryExportBase {
   addedAt: string;
 }
 
+export interface TodoMoviesExport {
+  Movie: TodoMoviesMovie[];
+  MovieList: TodoMoviesCustomList[];
+}
+
+export interface TodoMoviesMovie {
+  Attrs: {
+    tmdbID: number;
+    title: string;
+    isWatched: number;
+    insertionDate: {
+      Value: number;
+      Class: string;
+    };
+    myScore: number;
+  };
+  Rels: {
+    lists: {
+      Items: string[];
+      Entity: string;
+    };
+  };
+  ObjectID: string;
+}
+
+export interface TodoMoviesCustomList {
+  Attrs: {
+    colorInHex: string;
+    order: number;
+    iconFileName: string;
+    featuredListID: number;
+    name: string;
+  };
+  Rels: {
+    movies: {
+      Items: string[];
+      Entity: string;
+    };
+  };
+  ObjectID: string;
+}
+
 export interface Game {
   id: number;
   updatedAt: string;
@@ -1178,4 +1255,16 @@ export interface AllTasksResponse {
   name: string;
   nextRun: Date;
   seconds: number;
+}
+
+export interface Tag extends dbModel {
+  name: string;
+  color: string;
+  bgColor: string;
+}
+
+export interface TagAddRequest {
+  name: string;
+  color: string;
+  bgColor: string;
 }
