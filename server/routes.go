@@ -716,11 +716,25 @@ func (b *BaseRouter) addAuthRoutes() {
 	auth.POST("/proxy", func(c *gin.Context) {
 		var user User
 
-		user.Username = c.GetHeader("X-authentik-username")
+		if Config.PROXY_AUTH_HEADER == "" {
+			slog.Error("Request made to login via Proxy, but PROXY_AUTH_HEADER has not been configured.")
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Proxy authentication disabled"})
+			return
+		}
+
+		user.Username = c.GetHeader(Config.PROXY_AUTH_HEADER)
+                if user.Username == "" {
+			slog.Error("Request made to login via Proxy, but authentication header was not provided")
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Authentication header missing"})
+			return
+        }
+
 		response, err := loginProxy(&user, b.db)
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
 		}
+
 		c.JSON(http.StatusOK, response)
 		return
 	})
@@ -779,8 +793,9 @@ func (b *BaseRouter) addAuthRoutes() {
 		if Config.PLEX_HOST != "" && Config.PLEX_MACHINE_ID != "" {
 			availableAuthProviders = append(availableAuthProviders, "plex")
 		}
-
-                availableAuthProviders = append(availableAuthProviders, "proxy")
+		if Config.PROXY_AUTH_HEADER != "" {
+			availableAuthProviders = append(availableAuthProviders, "proxy")
+		}
 
 		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
 			AvailableAuthProviders: availableAuthProviders,
