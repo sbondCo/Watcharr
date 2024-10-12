@@ -6,7 +6,7 @@
   import Icon from "@/lib/Icon.svelte";
   import PageError from "@/lib/PageError.svelte";
   import PersonPoster from "@/lib/poster/PersonPoster.svelte";
-  import Rating from "@/lib/Rating.svelte";
+  import Rating from "@/lib/rating/Rating.svelte";
   import SeasonsList from "@/lib/SeasonsList.svelte";
   import Spinner from "@/lib/Spinner.svelte";
   import Status from "@/lib/Status.svelte";
@@ -444,6 +444,7 @@
     display: flex;
     flex-flow: column;
     gap: 10px;
+    width: 100%;
     max-width: 380px;
 
     @media screen and (max-width: 420px) {

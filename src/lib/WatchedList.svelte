@@ -3,7 +3,13 @@
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
-  import { activeFilters, activeSort, serverFeatures, userSettings } from "@/store";
+  import {
+    activeFilters,
+    activeSort,
+    clearActiveFilters,
+    serverFeatures,
+    userSettings
+  } from "@/store";
   import type { Watched } from "@/types";
   import GamePoster from "./poster/GamePoster.svelte";
   import { get } from "svelte/store";
@@ -211,14 +217,23 @@
     {/each}
   {:else}
     <div class="empty-list">
-      <Icon i="reel" wh={80} />
-      {#if isPublicList}
-        <h2 class="norm">This watched list is empty!</h2>
-        <h4 class="norm">Come back later to see if they have added anything.</h4>
+      {#if list?.length > 0}
+        <!-- `watched` (filtered list) is empty, but `list` (unfiltered) isn't,
+          so we should let the user know why there is nothing to show. -->
+        <Icon i="filter-circle" wh={80} />
+        <h2 class="norm">Filters are hiding all results!</h2>
+        <h4 class="norm">Try changing or removing your active filters.</h4>
+        <button on:click={() => clearActiveFilters()}>Clear Filters</button>
       {:else}
-        <h2 class="norm">Your watched list is empty!</h2>
-        <h4 class="norm">Try searching for something you would like to add.</h4>
-        <button on:click={() => goto("/import")}>Import</button>
+        <Icon i="reel" wh={80} />
+        {#if isPublicList}
+          <h2 class="norm">This watched list is empty!</h2>
+          <h4 class="norm">Come back later to see if they have added anything.</h4>
+        {:else}
+          <h2 class="norm">Your watched list is empty!</h2>
+          <h4 class="norm">Try searching for something you would like to add.</h4>
+          <button on:click={() => goto("/import")}>Import</button>
+        {/if}
       {/if}
     </div>
   {/if}

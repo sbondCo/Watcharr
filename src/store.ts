@@ -25,7 +25,10 @@ export const activeSort = writable<string[]>(defaultSort);
 export const activeFilters = writable<Filters>({ type: [], status: [] });
 export const appTheme = writable<Theme>();
 export const importedList = writable<
-  | { data: string; type: "text-list" | "tmdb" | "movary" | "watcharr" | "myanimelist" | "ryot" }
+  | {
+      data: string;
+      type: "text-list" | "tmdb" | "movary" | "watcharr" | "myanimelist" | "ryot" | "todomovies";
+    }
   | undefined
 >();
 export const parsedImportedList = writable<ImportedList[] | undefined>();
@@ -39,7 +42,6 @@ export const clearAllStores = () => {
   watchedList.set([]);
   notifications.set([]);
   activeSort.set(defaultSort);
-  activeFilters.set({ type: [], status: [] });
   importedList.set(undefined);
   parsedImportedList.set(undefined);
   searchQuery.set("");
@@ -48,6 +50,11 @@ export const clearAllStores = () => {
   follows.set([]);
   wlDetailedView.set([]);
   tags.set([]);
+  clearActiveFilters();
+};
+
+export const clearActiveFilters = () => {
+  activeFilters.set({ type: [], status: [] });
 };
 
 if (browser) {

@@ -39,10 +39,11 @@
   {#if watcheds?.length > 0}
     <WatchedList list={watcheds} />
   {:else}
-    <div class="content">
+    <div class="content empty-tag">
       <div class="inner">
-        <strong>This tag is empty!</strong>
-        <span>Add entries to this tag via it's page.</span>
+        <Icon i="ticket" wh={80} />
+        <h2 class="norm">This tag is empty!</h2>
+        <h4 class="norm">Add entries to this tag via it's page.</h4>
       </div>
     </div>
   {/if}
@@ -74,6 +75,16 @@
       max-width: 1200px;
       margin: 20px 30px;
       margin-top: 0;
+    }
+  }
+
+  .empty-tag {
+    h2 {
+      margin-top: 10px;
+    }
+
+    h4 {
+      font-weight: normal;
     }
   }
 

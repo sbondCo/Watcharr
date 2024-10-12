@@ -271,7 +271,7 @@
         {/if}
       {/if}
       <!-- Show on watched list and shared/followed watched lists -->
-      {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/")}
+      {#if $page.url?.pathname === "/" || $page.url?.pathname.includes("/lists/") || $page.url?.pathname.includes("/tag/")}
         <button
           class="plain other sort"
           on:click={() => {

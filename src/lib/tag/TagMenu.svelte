@@ -5,6 +5,7 @@
   import type { Tag as TagT } from "@/types";
   import Tag from "./Tag.svelte";
   import DeleteTagModal from "./DeleteTagModal.svelte";
+  import stayInView from "../actions/stayInView";
 
   export let titleText: string | undefined = undefined;
   export let classes: string | undefined = undefined;
@@ -24,15 +25,16 @@
   let tagToDelete: TagT | undefined = undefined;
 
   function deleteTag(t: TagT) {
-    // TODO 1. confirmation 2. run delete req 3. remove from local state & from watcheds state
+    // This will show the DeleteTagModal (look below).
     tagToDelete = t;
   }
 </script>
 
-<div class={[`menu`, classes].join(" ")}>
+<div class={[`menu`, classes].join(" ")} use:stayInView={{ elToShiftSelector: "& > .arrow" }}>
+  <i class="arrow"></i>
   <div class="inner">
     <div class="title">
-      <h4 class="norm sm-caps">{titleText ? titleText : "My Tags"}</h4>
+      <h4 class="norm sm-caps">{titleText ? titleText : "my tags"}</h4>
       {#if showManageBtn}
         <button
           class={["plain", inManageMode ? "manage-on" : ""].join(" ")}
@@ -86,7 +88,7 @@
     width: 200px;
     right: 47px;
 
-    &:before {
+    .arrow {
       left: 78px;
     }
 
@@ -94,7 +96,7 @@
       top: 50px;
       right: -78px;
 
-      &:before {
+      .arrow {
         left: 87px;
         /* The place where this button will be is always dark, so white works for both themes */
         border-bottom-color: white;
