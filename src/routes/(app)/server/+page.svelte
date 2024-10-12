@@ -37,6 +37,7 @@
   // Disabled vars for disabling inputs until api request completes
   let signupDisabled = false;
   let debugDisabled = false;
+  let proxyHeaderDisabled = false;
   let jfDisabled = false;
   let tmdbkDisabled = false;
   let plexHostDisabled = false;
@@ -153,6 +154,23 @@
                 countryDisabled = false;
               });
             }}
+          />
+        </Setting>
+        <Setting
+          title="Authentication Header"
+          desc="Name of the authentication header for proxy authentication. Only set this if Watcharr is running behind a trusted proxy"
+        >
+          <input
+            type="text"
+            placeholder="X-User"
+            on:blur={() => {
+              proxyHeaderDisabled = true;
+              updateServerConfig("PROXY_AUTH_HEADER", serverConfig.PROXY_AUTH_HEADER, () => {
+                proxyHeaderDisabled = false;
+              });
+            }}
+            disabled={proxyHeaderDisabled}
+            bind:value={serverConfig.PROXY_AUTH_HEADER}
           />
         </Setting>
         <Setting

@@ -29,6 +29,7 @@ var (
 	// Assume watcharr user if none of these...
 	JELLYFIN_USER UserType = 1
 	PLEX_USER     UserType = 2
+	PROXY_USER    UserType = 3
 )
 
 // User Perms
@@ -364,6 +365,38 @@ func login(user *User, db *gorm.DB) (AuthResponse, error) {
 	if !match {
 		slog.Error("User failed to provide correct password for login", "hash_matched", match)
 		return AuthResponse{}, errors.New("incorrect details")
+	}
+
+	token, err := signJWT(dbUser)
+	if err != nil {
+		slog.Error("Failed to sign new jwt", "error", err)
+		return AuthResponse{}, errors.New("failed to get auth token")
+	}
+	return AuthResponse{Token: token}, nil
+}
+
+func loginProxy(user *User, db *gorm.DB) (AuthResponse, error) {
+	slog.Debug("A User Is Logging In", "username", user.Username)
+	dbUser := new(User)
+	res := db.Where("username = ? AND (type IS NULL OR type = 0 OR type = ?)", user.Username, PROXY_USER).Take(&dbUser)
+	if res.Error != nil {
+		slog.Debug("Creating new User from authentication header", "username", user.Username)
+
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			// Record not found, so we should create the user
+			// dbUser will be empty, so we can just reuse it for this purpose.
+			dbUser.Username = user.Username
+			dbUser.Type = PROXY_USER
+			dbUser.Country = &Config.DEFAULT_COUNTRY
+
+			res = db.Create(&dbUser)
+			if res.Error != nil {
+				slog.Error("Failed to create new user in db from authentication header", "error", res.Error)
+				return AuthResponse{}, errors.New("failed to create new user from authentication header")
+			}
+		} else {
+			return AuthResponse{}, errors.New("error locating user in db")
+		}
 	}
 
 	token, err := signJWT(dbUser)

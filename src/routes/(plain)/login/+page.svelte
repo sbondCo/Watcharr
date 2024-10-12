@@ -81,6 +81,28 @@
       });
   }
 
+  function proxyLogin() {
+    const nid = notify({ text: "Logging in", type: "loading" });
+    noAuthAxios
+      .post(`/auth/proxy`)
+      .then((resp) => {
+        if (resp.data?.token) {
+          console.log("Received token... logging in.");
+          localStorage.setItem("token", resp.data.token);
+          goto("/");
+          notify({ id: nid, text: `Welcome!`, type: "success" });
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          error = err.response.data.error;
+        } else {
+          error = err.message;
+        }
+        unNotify(nid);
+      });
+  }
+
   async function plexLogin() {
     try {
       const { preparePlexAuth, doPlexLogin, plexPinPoll } = await import("@/lib/util/plex");
@@ -162,6 +184,18 @@
                 </button>
               {/if}
             {/if}
+          {/if}
+          {#if availableProviders?.findIndex((provider) => provider == "proxy") > -1}
+            <button
+              type="button"
+              name="proxy"
+              class="other"
+              on:click={() => {
+                proxyLogin();
+              }}
+            >
+              SSO
+            </button>
           {/if}
         </div>
         {#if availableProviders?.findIndex((provider) => provider == "plex") > -1}

@@ -30,6 +30,10 @@ type ServerConfig struct {
 	// region to get correct content streaming providers.
 	DEFAULT_COUNTRY string `json:",omitempty"`
 
+	// Optional: Name of the authentication header
+	// to enable proxy authentication
+	PROXY_AUTH_HEADER string `json:",omitempty"`
+
 	// Optional: Point to your Jellyfin install
 	// to enable it as an auth provider.
 	JELLYFIN_HOST string `json:",omitempty"`
@@ -76,16 +80,17 @@ type ServerConfig struct {
 // not editable on frontend, so not needed).
 func (c *ServerConfig) GetSafe() ServerConfig {
 	return ServerConfig{
-		SIGNUP_ENABLED:  c.SIGNUP_ENABLED,
-		DEFAULT_COUNTRY: c.DEFAULT_COUNTRY,
-		JELLYFIN_HOST:   c.JELLYFIN_HOST,
-		USE_EMBY:        c.USE_EMBY,
-		TMDB_KEY:        c.TMDB_KEY,
-		PLEX_HOST:       c.PLEX_HOST,
-		PLEX_MACHINE_ID: c.PLEX_MACHINE_ID,
-		DEBUG:           c.DEBUG,
-		SONARR:          c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
-		RADARR:          c.RADARR, // Dont act safe, this contains radarr api key, needed for config
+		SIGNUP_ENABLED:    c.SIGNUP_ENABLED,
+		DEFAULT_COUNTRY:   c.DEFAULT_COUNTRY,
+		PROXY_AUTH_HEADER: c.PROXY_AUTH_HEADER,
+		JELLYFIN_HOST:     c.JELLYFIN_HOST,
+		USE_EMBY:          c.USE_EMBY,
+		TMDB_KEY:          c.TMDB_KEY,
+		PLEX_HOST:         c.PLEX_HOST,
+		PLEX_MACHINE_ID:   c.PLEX_MACHINE_ID,
+		DEBUG:             c.DEBUG,
+		SONARR:            c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
+		RADARR:            c.RADARR, // Dont act safe, this contains radarr api key, needed for config
 		TWITCH: game.IGDB{
 			ClientID:     c.TWITCH.ClientID,
 			ClientSecret: c.TWITCH.ClientSecret,
@@ -155,7 +160,9 @@ func updateConfig(k string, v any) error {
 	if v == nil {
 		return errors.New("invalid value")
 	}
-	if k == "JELLYFIN_HOST" {
+	if k == "PROXY_AUTH_HEADER" {
+		Config.PROXY_AUTH_HEADER = v.(string)
+	} else if k == "JELLYFIN_HOST" {
 		Config.JELLYFIN_HOST = v.(string)
 	} else if k == "USE_EMBY" {
 		Config.USE_EMBY = v.(bool)
