@@ -27,7 +27,8 @@
   class={[
     "rating",
     minimal ? (!rating ? "minimal" : "minimal-space") : "",
-    disableInteraction ? "interaction-disabled" : ""
+    disableInteraction ? "interaction-disabled" : "",
+    minimal ? "is-minimal" : ""
   ].join(" ")}
   on:click={(ev) => {
     ev.stopPropagation();
@@ -132,11 +133,15 @@
 
 <style lang="scss">
   button {
-    padding: 3px 8px;
+    padding: 3px;
     position: relative;
     font-family: "Rampart One";
     width: 100%;
     height: 100%;
+
+    &.is-minimal {
+      padding: 3px 8px;
+    }
 
     &.interaction-disabled {
       pointer-events: none;
