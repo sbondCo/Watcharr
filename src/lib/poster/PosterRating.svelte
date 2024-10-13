@@ -132,7 +132,7 @@
 
 <style lang="scss">
   button {
-    padding: 3px;
+    padding: 3px 8px;
     position: relative;
     font-family: "Rampart One";
     width: 100%;
