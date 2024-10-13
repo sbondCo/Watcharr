@@ -179,7 +179,7 @@
             (s) => s.seasonNumber === season.season_number
           )}
           {#if ws}
-            <div class="rating" style={ws?.rating ? "width: 65px" : "width: 45px"}>
+            <div class="rating">
               <PosterRating
                 rating={ws?.rating}
                 btnTooltip="Season Rating"
