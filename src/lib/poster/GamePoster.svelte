@@ -41,6 +41,8 @@
 
   // If poster is active (scaled up)
   let posterActive = false;
+  // If mouse in on poster. Added to fix #656.
+  let mouseOverPoster = false;
 
   let containerEl: HTMLDivElement;
   let bhCanvas: HTMLCanvasElement;
@@ -72,7 +74,6 @@
   }
 
   function handleInnerKeyUp(e: KeyboardEvent) {
-    console.log(e.target);
     if (e.key === "Enter" && (e.target as HTMLElement)?.id === "ilikemoviessueme") {
       if (typeof onClick !== "undefined") {
         onClick();
@@ -122,6 +123,7 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <li
   on:mouseenter={(e) => {
+    mouseOverPoster = true;
     if (!posterActive) calculateTransformOrigin(e);
     if (!isTouch()) {
       posterActive = true;
@@ -134,12 +136,15 @@
     }
   }}
   on:focusout={() => {
-    if (!isTouch()) {
+    if (!isTouch() && !mouseOverPoster) {
       // Only on !isTouch (to match focusin) to avoid breaking a tap and hold on link on mobile.
+      // and only if mouse isn't still over the poster, fixes focusout on click of rating/status
+      // poster buttons causing poster to shrink until refocused with click/mouse out & in again.
       posterActive = false;
     }
   }}
   on:mouseleave={() => {
+    mouseOverPoster = false;
     posterActive = false;
     const ae = document.activeElement;
     if (
