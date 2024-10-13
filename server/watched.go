@@ -282,45 +282,67 @@ func removeWatched(db *gorm.DB, userId uint, id uint) (WatchedRemoveResponse, er
 	return WatchedRemoveResponse{NewActivity: addedActivity}, nil
 }
 
-func download(url string, outf string) (err error) {
-	slog.Debug("Attempting to download file", "url", url, "outf", outf)
-
-	// Create the file
-	out, err := os.Create(outf)
-	if err != nil {
-		if os.IsNotExist(err) {
-			err = os.MkdirAll(path.Dir(outf), 0764)
-			if err != nil {
-				return err
-			}
-			// If dirs made, try making file again
-			out, err = os.Create(outf)
-			if err != nil {
-				return err
-			}
+// Download file over http (used for downloading poster images)
+// url - The remote file url.
+// outf - Where should we store the downloaded file.
+// force - Should we overwrite an existing file? If false, existing files will be skipped.
+func download(url string, outf string, force bool) (err error) {
+	slog.Debug("download: Attempting to download file", "url", url, "outf", outf, "force", force)
+	// If not forced, skip call if file already exists to save unnecessary requests.
+	if !force {
+		if _, err := os.Stat(outf); !errors.Is(err, os.ErrNotExist) {
+			slog.Debug("download: Skipping file, it already exists locally.", "outf", outf, "error", err)
+			return nil
 		} else {
-			return err
+			slog.Debug("download: Continuing to download file, it does not already exist.", "outf", outf, "error", err)
 		}
 	}
-	defer out.Close()
 
 	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
+		slog.Error("download: Failed to make request.", "outf", outf, "error", err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	// Check server response
 	if resp.StatusCode != http.StatusOK {
+		slog.Error("download: Request failed. Non OK response.", "outf", outf, "status", resp.Status, "error", err)
 		return fmt.Errorf("bad status: %s", resp.Status)
 	}
+
+	// Create the file
+	out, err := os.Create(outf)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			slog.Warn("download: Failed to create out file, trying to recover by ensuring directories exist.", "outf", outf)
+			err = os.MkdirAll(path.Dir(outf), 0764)
+			if err != nil {
+				slog.Error("download: Failed to create dir(s) in recovery attempt.", "outf", outf, "error", err)
+				return err
+			}
+			// If dirs made, try making file again
+			out, err = os.Create(outf)
+			if err != nil {
+				slog.Error("download: Failed to create out file again in recovery attempt.", "outf", outf, "error", err)
+				return err
+			}
+			slog.Info("download: recovered by creating dir(s).", "outf", outf)
+		} else {
+			slog.Error("download: Failed to create out file. No known recovery path possible.", "outf", outf, "error", err)
+			return err
+		}
+	}
+	defer out.Close()
 
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
+		slog.Error("download: Failed to write file to our file.", "outf", outf, "error", err)
 		return err
 	}
 
+	slog.Debug("download: Successfully downloaded file", "outf", outf)
 	return nil
 }

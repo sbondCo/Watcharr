@@ -90,7 +90,7 @@ func saveContent(db *gorm.DB, c *Content, onlyUpdate bool) error {
 	// If row created, download the image
 	if res.RowsAffected > 0 {
 		slog.Debug("saveContent: Downloading poster.")
-		err := download("https://image.tmdb.org/t/p/w500"+c.PosterPath, path.Join(DataPath, "img", c.PosterPath))
+		err := download("https://image.tmdb.org/t/p/w500"+c.PosterPath, path.Join(DataPath, "img", c.PosterPath), false)
 		if err != nil {
 			slog.Error("saveContent: Failed to download content image!", "error", err.Error())
 		}
