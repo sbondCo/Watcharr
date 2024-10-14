@@ -3,13 +3,8 @@
   import Icon from "@/lib/Icon.svelte";
   import Poster from "@/lib/poster/Poster.svelte";
   import PosterList from "@/lib/poster/PosterList.svelte";
-  import {
-    activeFilters,
-    activeSort,
-    clearActiveFilters,
-    serverFeatures,
-    userSettings
-  } from "@/store";
+  import { activeFilters, activeSort, serverFeatures, userSettings } from "@/store";
+  import { WatchedStatus } from "@/types";
   import type { Watched } from "@/types";
   import GamePoster from "./poster/GamePoster.svelte";
   import { get } from "svelte/store";
@@ -166,81 +161,81 @@
   }
 </script>
 
-<PosterList>
-  {#if watched?.length > 0}
-    {#each watched as w (w.id)}
-      {#if w.game}
-        <GamePoster
-          id={w.id}
-          rating={w.rating}
-          status={w.status}
-          media={{
-            id: w.game.igdbId,
-            coverId: w.game.coverId,
-            name: w.game.name,
-            summary: w.game.summary,
-            firstReleaseDate: w.game.releaseDate,
-            poster: w.game.poster
-          }}
-          disableInteraction={isPublicList}
-          extraDetails={{
-            dateAdded: w.createdAt,
-            dateModified: w.updatedAt
-          }}
-          fluidSize={true}
-          pinned={w.pinned}
-        />
-      {:else if w.content}
-        <Poster
-          id={w.id}
-          media={{
-            id: w.content.tmdbId,
-            poster_path: w.content.poster_path,
-            title: w.content.title,
-            overview: w.content.overview,
-            media_type: w.content.type,
-            release_date: w.content.release_date,
-            first_air_date: w.content.first_air_date
-          }}
-          rating={w.rating}
-          status={w.status}
-          disableInteraction={isPublicList}
-          extraDetails={{
-            dateAdded: w.createdAt,
-            dateModified: w.updatedAt,
-            lastWatched: getLatestWatchedInTv(w.watchedSeasons, w.watchedEpisodes)
-          }}
-          fluidSize={true}
-          pinned={w.pinned}
-        />
-      {/if}
-    {/each}
-  {:else}
-    <div class="empty-list">
-      {#if list?.length > 0}
-        <!-- `watched` (filtered list) is empty, but `list` (unfiltered) isn't,
-          so we should let the user know why there is nothing to show. -->
-        <Icon i="filter-circle" wh={80} />
-        <h2 class="norm">Filters are hiding all results!</h2>
-        <h4 class="norm">Try changing or removing your active filters.</h4>
-        <button on:click={() => clearActiveFilters()}>Clear Filters</button>
-      {:else}
-        <Icon i="reel" wh={80} />
-        {#if isPublicList}
-          <h2 class="norm">This watched list is empty!</h2>
-          <h4 class="norm">Come back later to see if they have added anything.</h4>
-        {:else}
-          <h2 class="norm">Your watched list is empty!</h2>
-          <h4 class="norm">Try searching for something you would like to add.</h4>
-          <button on:click={() => goto("/import")}>Import</button>
+{#if watched?.length === 0}
+  <div class="central-div">
+    <Icon i="reel" wh={80} />
+    {#if isPublicList}
+      <h2 class="norm">This watched list is empty!</h2>
+      <h4 class="norm">Come back later to see if they have added anything.</h4>
+    {:else}
+      <h2 class="norm">Your watched list is empty!</h2>
+      <h4 class="norm">Try searching for something you would like to add.</h4>
+      <button on:click={() => goto("/import")}>Import</button>
+    {/if}
+  </div>
+{:else}
+  {#each filters.status.length > 0 ? ["ALL"] : Object.values(WatchedStatus) as status}
+    {#if filters.status.length === 0}
+      <div class="central-div">
+        <h2 class="norm first-upper-case">{status}</h2>
+      </div>
+    {/if}
+    <PosterList>
+      {#each watched as w (w.id)}
+        {#if status.includes(w.status) || filters.status.length > 0}
+          {#if w.game}
+            <GamePoster
+              id={w.id}
+              rating={w.rating}
+              status={w.status}
+              media={{
+                id: w.game.igdbId,
+                coverId: w.game.coverId,
+                name: w.game.name,
+                summary: w.game.summary,
+                firstReleaseDate: w.game.releaseDate,
+                poster: w.game.poster
+              }}
+              disableInteraction={isPublicList}
+              extraDetails={{
+                dateAdded: w.createdAt,
+                dateModified: w.updatedAt
+              }}
+              fluidSize={true}
+              pinned={w.pinned}
+            />
+          {:else if w.content}
+            <Poster
+              id={w.id}
+              media={{
+                id: w.content.tmdbId,
+                poster_path: w.content.poster_path,
+                title: w.content.title,
+                overview: w.content.overview,
+                media_type: w.content.type,
+                release_date: w.content.release_date,
+                first_air_date: w.content.first_air_date
+              }}
+              rating={w.rating}
+              status={w.status}
+              disableInteraction={isPublicList}
+              extraDetails={{
+                dateAdded: w.createdAt,
+                dateModified: w.updatedAt,
+                lastWatched: getLatestWatchedInTv(w.watchedSeasons, w.watchedEpisodes)
+              }}
+              fluidSize={true}
+              pinned={w.pinned}
+            />
+          {/if}
         {/if}
-      {/if}
-    </div>
-  {/if}
-</PosterList>
+      {/each}
+    </PosterList>
+  {/each}
+{/if}
 
 <style lang="scss">
-  .empty-list {
+  .central-div {
     display: flex;
     flex-flow: column;
     gap: 5px;
@@ -260,5 +255,13 @@
       padding-right: 20px;
       margin-top: 15px;
     }
+  }
+
+  .first-upper-case {
+    text-transform: lowercase;
+  }
+
+  .first-upper-case::first-letter {
+    text-transform: uppercase;
   }
 </style>

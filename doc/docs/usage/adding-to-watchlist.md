@@ -30,7 +30,7 @@ To get started, you can follow along with these steps to add your first movie/sh
 
 If you prefer, you can also do this by clicking/tapping on the active poster again.
 This will take you to the contents full page. Here you can see all the options, including
-adding `Thoughts` for the content.
+adding `Thoughts` for the content and pinning it to the top of your list.
 
 ![Content full page](./img/content-full-page.png)
 
