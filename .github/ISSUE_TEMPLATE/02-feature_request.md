@@ -7,6 +7,8 @@ assignees: ''
 
 ---
 
+<!-- Feature requests can be hard to track when two or more unrelated ideas are included in one issue. Please make a new issue for each idea (make as many as you need to). -->
+
 **Idea Overview**
 A quick overview of the idea you are proposing.
 
