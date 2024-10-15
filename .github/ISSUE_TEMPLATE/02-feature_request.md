@@ -1,10 +1,9 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: ''
+title: ""
 labels: enhancement
-assignees: ''
-
+assignees: ""
 ---
 
 <!-- Feature requests can be hard to track when two or more unrelated ideas are included in one issue. Please make a new issue for each idea (make as many as you need to). -->
