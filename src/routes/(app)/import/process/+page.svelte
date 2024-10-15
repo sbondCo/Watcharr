@@ -339,7 +339,11 @@
       parsedImportedList.set(rList);
       goto("/import/some-failed");
     } else {
-      notify({ type: "success", text: "All content successfully imported!" });
+      notify({
+        type: "success",
+        text: "All content successfully imported! Try refreshing if you are missing data.",
+        time: 15000
+      });
       goto("/");
     }
   }
