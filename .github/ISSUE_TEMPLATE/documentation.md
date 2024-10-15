@@ -1,10 +1,9 @@
 ---
 name: Documentation
 about: Help us with our documentation. Is something important missing?
-title: ''
+title: ""
 labels: documentation
 assignees: IRHM
-
 ---
 
 <!-- Did you know: You can click `Edit this page` at the bottom of any page on the docs to propose exact changes? If this doesn't apply to you, continue below and fill out the issue. -->

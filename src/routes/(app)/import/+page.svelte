@@ -478,26 +478,30 @@
               : [],
 
           // Episode ratings are on a separate field: "reviews"
-          watchedEpisodes: v.seen_history?.map((episode: any) => ({
-            status: episode.progress === "100" ? "FINISHED" : "WATCHING",
+          watchedEpisodes:
+            v.lot === "show"
+              ? v.seen_history?.map((episode: any) => ({
+                  status: episode.progress === "100" ? "FINISHED" : "WATCHING",
 
-            // Linear :( search the reviews for a match
-            rating:
-              validifyRating(
-                Number(
-                  (
-                    v.reviews?.find(
-                      (review: any) =>
-                        review.show_season_number === episode.show_season_number &&
-                        review.show_episode_number === episode.show_episode_number
-                    ) || {}
-                  )?.rating
-                )
-              ) || null,
+                  // Linear :( search the reviews for a match
+                  rating:
+                    validifyRating(
+                      Number(
+                        (
+                          v.reviews?.find(
+                            (review: any) =>
+                              review.show_season_number === episode.show_season_number &&
+                              review.show_episode_number === episode.show_episode_number
+                          ) || {}
+                        )?.rating
+                      )
+                    ) || null,
 
-            seasonNumber: episode.show_season_number,
-            episodeNumber: episode.show_episode_number
-          }))
+                  seasonNumber: episode.show_season_number,
+                  episodeNumber: episode.show_episode_number,
+                  createdAt: episode.ended_on ? new Date(episode.ended_on) : undefined
+                }))
+              : undefined
         };
         toImport.push(t);
       }
