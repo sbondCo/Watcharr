@@ -499,7 +499,7 @@
 
                   seasonNumber: episode.show_season_number,
                   episodeNumber: episode.show_episode_number,
-                  createdAt: new Date(episode.ended_on)
+                  createdAt: episode.ended_on ? new Date(episode.ended_on) : undefined
                 }))
               : undefined
         };
