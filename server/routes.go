@@ -712,6 +712,33 @@ func (b *BaseRouter) addAuthRoutes() {
 		c.Status(400)
 	})
 
+	// Proxy Login
+	auth.POST("/proxy", func(c *gin.Context) {
+		var user User
+
+		if Config.PROXY_AUTH_HEADER == "" {
+			slog.Error("Request made to login via Proxy, but PROXY_AUTH_HEADER has not been configured.")
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Proxy authentication disabled"})
+			return
+		}
+
+		user.Username = c.GetHeader(Config.PROXY_AUTH_HEADER)
+                if user.Username == "" {
+			slog.Error("Request made to login via Proxy, but authentication header was not provided")
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Authentication header missing"})
+			return
+        }
+
+		response, err := loginProxy(&user, b.db)
+		if err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, response)
+		return
+	})
+
 	// Jellyfin login
 	auth.POST("/jellyfin", func(c *gin.Context) {
 		var user User
@@ -766,6 +793,10 @@ func (b *BaseRouter) addAuthRoutes() {
 		if Config.PLEX_HOST != "" && Config.PLEX_MACHINE_ID != "" {
 			availableAuthProviders = append(availableAuthProviders, "plex")
 		}
+		if Config.PROXY_AUTH_HEADER != "" {
+			availableAuthProviders = append(availableAuthProviders, "proxy")
+		}
+
 		c.JSON(http.StatusOK, &AvailableAuthProvidersResponse{
 			AvailableAuthProviders: availableAuthProviders,
 			SignupEnabled:          Config.SIGNUP_ENABLED,
