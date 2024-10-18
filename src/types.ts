@@ -1,4 +1,12 @@
-export type WatchedStatus = "PLANNED" | "WATCHING" | "FINISHED" | "HOLD" | "DROPPED";
+export const WatchedStatus = {
+  WATCHING: "WATCHING",
+  PLANNED: "PLANNED",
+  FINISHED: "FINISHED",
+  HOLD: "ON HOLD",
+  DROPPED: "DROPPED"
+} as const;
+
+export type WatchedStatus = (typeof WatchedStatus)[keyof typeof WatchedStatus];
 export type ContentType = "tv" | "movie";
 export type MediaType = ContentType | "person";
 
