@@ -11,6 +11,7 @@
   import type { TMDBPersonCombinedCredits, TMDBPersonDetails } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
+  import Checkbox from "@/lib/Checkbox.svelte";
 
   export let data;
 
@@ -20,7 +21,9 @@
   let person: TMDBPersonDetails | undefined;
   let pageError: Error | undefined;
   let sortOption = "Vote count";
+  let cachedCredits: TMDBPersonCombinedCredits | undefined;
   let credits: TMDBPersonCombinedCredits | undefined;
+  let onMyListFilter = false;
 
   onMount(() => {
     const unsubscribe = page.subscribe((value) => {
@@ -35,6 +38,10 @@
 
   $: if (personId) {
     fetchPersonData();
+  }
+
+  $: if (onMyListFilter !== undefined && credits) {
+    filterCredits(onMyListFilter);
   }
 
   $: if (sortOption && credits) {
@@ -65,6 +72,18 @@
     credits = (await axios.get(`/content/person/${data.personId}/credits`))
       .data as TMDBPersonCombinedCredits;
     credits.cast = credits.cast.filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i); // remove duplicate entries. If an actor has multiple roles in a single movie, it would otherwise show up multiple times
+    cachedCredits = JSON.parse(JSON.stringify(credits));
+  }
+
+  function filterCredits(onMyListFilter: boolean) {
+    if (!credits || !credits.cast || !cachedCredits) return;
+    if (!onMyListFilter) {
+      credits.cast = [...cachedCredits.cast];
+    } else {
+      credits.cast = [...cachedCredits.cast].filter((c) =>
+        wList.some((w) => w.content?.tmdbId === c.id)
+      );
+    }
   }
 
   function sortCredits(sortOption: string) {
@@ -170,6 +189,10 @@
         </div>
       </div>
       <div class="filters">
+        <div class="listFilter">
+          <span>On my list</span>
+          <Checkbox name="On my list" bind:value={onMyListFilter} />
+        </div>
         <DropDown
           bind:active={sortOption}
           placeholder="Vote count"
@@ -206,6 +229,16 @@
     padding-left: 20px;
     padding-right: 20px;
     width: 100%;
+    .listFilter {
+      display: flex;
+      margin-right: 30px;
+      span {
+        margin-left: 5px;
+        margin-right: 5px;
+        margin-top: auto;
+        margin-bottom: auto;
+      }
+    }
     /* Same as in PosterList */
     max-width: 1200px;
   }
