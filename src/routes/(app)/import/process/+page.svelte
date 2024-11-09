@@ -22,7 +22,12 @@
     type ImportResponse,
     type ContentSearchTv,
     type ContentSearchMovie,
-    type ImportedList
+    type ImportedList,
+    type AniListExport,
+    type AniListItem,
+    AniListStatus,
+    convertAniListStatusToWatchedStatus,
+    AniListSeriesType
   } from "@/types";
   import axios from "axios";
   import { onDestroy } from "svelte";
@@ -279,9 +284,187 @@
           text: "Processing failed!. Please report this issue if it persists."
         });
       }
+    } else if (list?.type === "anilist") {
+      importText = "AniList";
+      try {
+        const exportData: AniListExport = JSON.parse(list.data);
+
+        const items: AniListItem[] = exportData.lists.filter(
+          (item) => item.series_type == AniListSeriesType.ANIME
+        );
+
+        const customLists = exportData.user.custom_lists.anime;
+
+        let toImport: any[] = [];
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+
+          const dateStr = String(item.finished_on);
+          const year = dateStr.substring(0, 4);
+          const month = dateStr.substring(4, 6);
+          const day = dateStr.substring(6, 8);
+          const date = new Date(`${year}-${month}-${day}`);
+
+          // custom lists is an array of 0 and 1 of length of custom lists. 1 means the list is set for the item.
+          // Example: [0,0,1] and customLists is ["list1", "list2", "list3"]
+          // Then the item is on "list3"
+          const itemCustomList = JSON.parse(item.custom_lists);
+          const tags = itemCustomList
+            .map((enabled: number, index: number) => {
+              if (enabled == 1) {
+                return { name: customLists[index], color: "#ffffff", bgColor: "#04a9ff" };
+              }
+            })
+            .filter((t: any) => t);
+          const adjustedRating = item.score / 10; // TODO: update with different scales
+          const t = {
+            anilistId: item.series_id,
+            status: convertAniListStatusToWatchedStatus(item.status),
+            datesWatched: [date],
+            thoughts: item.notes,
+            rating: adjustedRating,
+            tags: tags
+          };
+          toImport.push(t);
+        }
+
+        const anilistIds = toImport.map((el) => el.anilistId);
+        const allMedia = await doAniListQueryAll(anilistIds);
+        console.log("allMedia", allMedia);
+        for (let i = 0; i < toImport.length; i++) {
+          try {
+            const el = toImport[i] as any;
+            if (el) {
+              const l: ImportedList = { ...el };
+              const media = allMedia.find((m) => m.id === el.anilistId);
+              if (media) {
+                l.name = media.name;
+                l.type = media.type;
+                l.year = media.year;
+                l.status = el.status;
+              }
+              rList.push(l);
+            }
+          } catch (err) {
+            console.error("Failed to process an item!", err);
+            notify({
+              type: "error",
+              text: "Failed to process an item!"
+            });
+          }
+        }
+      } catch (err) {
+        console.error("AniList import processing failed!", err);
+        notify({
+          type: "error",
+          text: "Processing failed!. Please report this issue if it persists."
+        });
+      }
     }
     // TODO: remove duplicate names in list
     return list;
+  }
+
+  async function doAniListQueryAll(anilistIds: number[]) {
+    let allMedia: any[] = [];
+    let page = 1;
+    const perPage = 50;
+    while (true) {
+      const res = await doAniListQuery(anilistIds, page, perPage);
+
+      if (res) {
+        allMedia.push(...res);
+        page++;
+      } else {
+        break;
+      }
+    }
+    return allMedia;
+  }
+
+  async function doAniListQuery(
+    anilistIds: number[],
+    page: number,
+    perPage: number,
+    retryCount = 0
+  ) {
+    const query = `
+      query ($ids: [Int], $page: Int, $perPage: Int) {
+        Page(page: $page, perPage: $perPage) {
+          media(id_in: $ids) {
+            id
+            title {
+              english
+              romaji
+              native
+            }
+            format
+            seasonYear
+            startDate {
+              year
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      const response = await axios.post(
+        "https://graphql.anilist.co",
+        {
+          query: query,
+          variables: {
+            ids: anilistIds,
+            page: page,
+            perPage: perPage
+          }
+        },
+        {
+          transformRequest: (data: any, headers: any) => {
+            delete headers["Authorization"]; // remove jwt authorization header to prevent 403
+            headers["Content-Type"] = "application/json";
+            return JSON.stringify(data);
+          }
+        }
+      );
+
+      const mediaList = response.data?.data?.Page?.media;
+      if (mediaList) {
+        return mediaList.map((media: any) => ({
+          id: media.id,
+          name: media.title.english || media.title.romaji || media.title.native,
+          type: media.format === "MOVIE" ? "movie" : "tv",
+          year: media.seasonYear ? media.seasonYear : media.startDate?.year
+        }));
+      }
+    } catch (err: any) {
+      if (err.response?.status === 429) {
+        const maxRetries = 3;
+        if (retryCount >= maxRetries) {
+          console.error("Max retries reached for AniList query");
+          notify({
+            type: "error",
+            text: "Rate limit reached. Please try again later."
+          });
+          return null;
+        }
+
+        // Exponential backoff: 2^retry * 1000ms (1s, 2s, 4s)
+        const delay = Math.pow(2, retryCount) * 1000;
+        console.log(
+          `Rate limited. Waiting ${delay}ms before retry ${retryCount + 1}/${maxRetries}`
+        );
+
+        await sleep(delay);
+        return doAniListQuery(anilistIds, page, perPage, retryCount + 1);
+      }
+      console.error("AniList GraphQL query failed:", err);
+      notify({
+        type: "error",
+        text: "Failed to fetch anime details from AniList"
+      });
+    }
+    return null;
   }
 
   function addRow(ev: FocusEvent & { currentTarget: EventTarget & HTMLInputElement }) {
@@ -523,7 +706,10 @@
   {#if importMultiItem}
     <Modal
       title="Multiple Results Found"
-      desc="Select the correct item for {importMultiItem.original.name}"
+      desc="Select the correct item for {importMultiItem.original.name} {importMultiItem.original
+        .year
+        ? `(${importMultiItem.original.year})`
+        : ''}"
       onClose={() => {
         importMultiItem?.callback("closed results modal");
         importMultiItem = undefined;

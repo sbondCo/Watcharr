@@ -41,6 +41,7 @@ export type Icon =
   | "trakt"
   | "myanimelist"
   | "todomovies"
+  | "anilist"
   | "themoviedb"
   | "refresh"
   | "gamepad"
@@ -1084,6 +1085,79 @@ export interface MovaryWatchlist extends MovaryExportBase {
 export interface TodoMoviesExport {
   Movie: TodoMoviesMovie[];
   MovieList: TodoMoviesCustomList[];
+}
+export enum AniListStatus {
+  WATCHING = 0,
+  PLANNING = 1,
+  COMPLETED = 2,
+  DROPPED = 3,
+  PAUSED = 4
+  //Todo perhaps 6 is rewatching? - check
+}
+
+export function convertAniListStatusToWatchedStatus(status: AniListStatus): WatchedStatus {
+  switch (status) {
+    case AniListStatus.PLANNING:
+      return "PLANNED";
+    case AniListStatus.WATCHING:
+      return "WATCHING";
+    case AniListStatus.COMPLETED:
+      return "FINISHED";
+    case AniListStatus.DROPPED:
+      return "DROPPED";
+    case AniListStatus.PAUSED:
+      return "DROPPED";
+  }
+}
+
+export enum AniListSeriesType {
+  ANIME = 0,
+  MANGA = 1
+}
+
+export interface AniListItem {
+  id: number;
+  series_type: AniListSeriesType;
+  series_id: number;
+  status: AniListStatus;
+  score: number;
+  progress: number;
+  progress_volume: number;
+  priority: number;
+  repeat: number;
+  private: number;
+  notes: string | undefined;
+  custom_lists: string;
+  // advanced_scores: string;
+  hidden_default: number;
+  started_on: number;
+  finished_on: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export enum AniListScoreType {
+  POINT_3 = 1,
+  POINT_5 = 2,
+  POINT_10 = 3,
+  POINT_10_DECIMAL = 4, // TODO only this is sure, check others
+  POINT_100 = 5
+}
+
+export interface AniListExport {
+  user: {
+    score_type: number; // https://docs.anilist.co/reference/enum/scoreformat
+    custom_lists: {
+      anime: string[];
+      manga: string[];
+    };
+    // advanced_scores: {
+    //   names: string[];
+    // };
+  };
+  lists: AniListItem[];
+  activity: {}; // todo do later. Import activities for each series, add them as imported entries for each episode.
+  favourites: {};
 }
 
 export interface TodoMoviesMovie {
