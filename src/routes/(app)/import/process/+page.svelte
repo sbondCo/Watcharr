@@ -33,6 +33,7 @@
   import { onDestroy } from "svelte";
   import { get } from "svelte/store";
   import papa from "papaparse";
+  import Title from "@/lib/content/Title.svelte";
 
   const wList = get(watchedList);
 
@@ -312,8 +313,12 @@
           const tags = itemCustomList
             .map((enabled: number, index: number) => {
               if (enabled == 1) {
-                return { name: customLists[index], color: "#ffffff", bgColor: "#04a9ff" };
-              }
+                return {
+                  name: "AniList list: " + customLists[index],
+                  color: "#ffffff",
+                  bgColor: "#04a9ff"
+                };
+              } // todo go over favorites, also add a tag for that.
             })
             .filter((t: any) => t);
           const adjustedRating = item.score / 10; // TODO: update with different scales
@@ -330,7 +335,6 @@
 
         const anilistIds = toImport.map((el) => el.anilistId);
         const allMedia = await doAniListQueryAll(anilistIds);
-        console.log("allMedia", allMedia);
         for (let i = 0; i < toImport.length; i++) {
           try {
             const el = toImport[i] as any;
@@ -369,10 +373,12 @@
     let allMedia: any[] = [];
     let page = 1;
     const perPage = 50;
-    while (true) {
+    const totalIds = anilistIds.length;
+
+    while (allMedia.length < totalIds) {
       const res = await doAniListQuery(anilistIds, page, perPage);
 
-      if (res) {
+      if (res && res.length > 0) {
         allMedia.push(...res);
         page++;
       } else {
@@ -536,7 +542,11 @@
       item.state = ImportResponseType.IMPORT_NOTFOUND;
       rList = rList;
       return;
-    }
+    } // TODO: this also means that thoughts shuold be appended, not replace the other seasons ones; and ratings and status too
+    // on AniList, each season is a different entry. On TMDB, it's usually the same entry - having "season" in the title prevents us from finding the right element.
+    item.name = item.name.toLowerCase().includes("season")
+      ? item.name.substring(0, item.name.toLowerCase().indexOf("season")).trim()
+      : item.name;
     const resp = await axios.post<ImportResponse>("/import", item);
     return new Promise((res, rej) => {
       if (resp.data.type === ImportResponseType.IMPORT_MULTI) {
