@@ -12,6 +12,7 @@
   import axios from "axios";
   import { onMount } from "svelte";
   import Checkbox from "@/lib/Checkbox.svelte";
+  import Icon from "@/lib/Icon.svelte";
 
   export let data;
 
@@ -71,7 +72,6 @@
 
   function sortCredits(sortOption: string) {
     if (!credits || !credits.cast) return;
-
     switch (sortOption) {
       case "Vote count":
         credits.cast.sort((a, b) => b.vote_count - a.vote_count);
@@ -172,32 +172,40 @@
           </div>
         </div>
       </div>
-      <div class="filters">
-        <div class="listFilter">
-          <span>On my list</span>
-          <Checkbox name="On my list" bind:value={onMyListFilter} />
-        </div>
-        <DropDown
-          bind:active={sortOption}
-          placeholder="Vote count"
-          options={["Vote count", "Newest", "Oldest"]}
-          isDropDownItem={false}
-          showActiveElementsInOptions={true}
-        />
-      </div>
       {#if credits}
-        <div class="page">
-          <PosterList>
-            {#each credits.cast as c (c.id)}
-              <Poster
-                media={c}
-                {...getWatchedDependedProps(c.id, c.media_type, wList)}
-                fluidSize
-                hideIfNotOnList={onMyListFilter}
-              />
-            {/each}
-          </PosterList>
-        </div>
+        {#if credits?.cast?.length > 0}
+          <div class="filters">
+            <div class="listFilter">
+              <span>On my list</span>
+              <Checkbox name="On my list" bind:value={onMyListFilter} />
+            </div>
+            <DropDown
+              bind:active={sortOption}
+              placeholder="Vote count"
+              options={["Vote count", "Newest", "Oldest"]}
+              isDropDownItem={false}
+              showActiveElementsInOptions={true}
+            />
+          </div>
+          <div class="page">
+            <PosterList>
+              {#each credits.cast as c (c.id)}
+                <Poster
+                  media={c}
+                  {...getWatchedDependedProps(c.id, c.media_type, wList)}
+                  fluidSize
+                  hideIfNotOnList={onMyListFilter}
+                />
+              {/each}
+            </PosterList>
+          </div>
+        {:else}
+          <div class="no-credits-message">
+            <Icon i="star" wh={80} />
+            <h2 class="norm">We found no credits!</h2>
+            <h4 class="norm">It seems that this person has no credits.</h4>
+          </div>
+        {/if}
       {:else}
         <Spinner />
       {/if}
@@ -335,5 +343,28 @@
     align-items: center;
     gap: 30px;
     padding: 10px 0px;
+  }
+
+  .no-credits-message {
+    display: flex;
+    flex-flow: column;
+    gap: 5px;
+    align-items: center;
+    margin-top: 20px;
+
+    h2 {
+      margin-top: 10px;
+    }
+
+    h4 {
+      font-weight: normal;
+    }
+
+    button {
+      width: max-content;
+      padding-left: 20px;
+      padding-right: 20px;
+      margin-top: 15px;
+    }
   }
 </style>
