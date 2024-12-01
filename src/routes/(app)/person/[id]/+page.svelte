@@ -359,12 +359,5 @@
     h4 {
       font-weight: normal;
     }
-
-    button {
-      width: max-content;
-      padding-left: 20px;
-      padding-right: 20px;
-      margin-top: 15px;
-    }
   }
 </style>
