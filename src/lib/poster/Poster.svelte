@@ -28,6 +28,15 @@
   export let extraDetails: PosterExtraDetails | undefined = undefined;
   export let fluidSize = false;
   export let pinned = false;
+  /**
+   * If the poster should be hidden if not on users watched list (no `id`).
+   * Doing it this way so we can quickly hide posters with css and avoid
+   * triggering the #each block again where we create poster lists,
+   * which makes this functionality more performant (because we don't have
+   * support for virtual lists yet, we are re-creating all posters in places).
+   * Notably 'On my list' feature (eg on person page).
+   */
+  export let hideIfNotOnList = false;
   // When provided, default click handlers will instead run this callback.
   export let onClick: (() => void) | undefined = undefined;
 
@@ -140,7 +149,7 @@
     }
   }}
   on:keypress={() => console.log("on kpress")}
-  class={`${posterActive ? "active " : ""}${pinned ? "pinned " : ""}`}
+  class={`${posterActive ? "active " : ""}${pinned ? "pinned " : ""}${hideIfNotOnList && !id ? "hidden " : ""}`}
 >
   <div
     class={`container${!poster || !media.poster_path ? " details-shown" : ""}`}
@@ -201,6 +210,10 @@
 </li>
 
 <style lang="scss">
+  li.hidden {
+    display: none;
+  }
+
   li.active {
     cursor: pointer;
   }

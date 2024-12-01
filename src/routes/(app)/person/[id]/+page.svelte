@@ -11,6 +11,7 @@
   import type { TMDBPersonCombinedCredits, TMDBPersonDetails } from "@/types";
   import axios from "axios";
   import { onMount } from "svelte";
+  import Checkbox from "@/lib/Checkbox.svelte";
 
   export let data;
 
@@ -21,6 +22,7 @@
   let pageError: Error | undefined;
   let sortOption = "Vote count";
   let credits: TMDBPersonCombinedCredits | undefined;
+  let onMyListFilter = false;
 
   onMount(() => {
     const unsubscribe = page.subscribe((value) => {
@@ -69,6 +71,7 @@
 
   function sortCredits(sortOption: string) {
     if (!credits || !credits.cast) return;
+
     switch (sortOption) {
       case "Vote count":
         credits.cast.sort((a, b) => b.vote_count - a.vote_count);
@@ -170,6 +173,10 @@
         </div>
       </div>
       <div class="filters">
+        <div class="listFilter">
+          <span>On my list</span>
+          <Checkbox name="On my list" bind:value={onMyListFilter} />
+        </div>
         <DropDown
           bind:active={sortOption}
           placeholder="Vote count"
@@ -181,8 +188,13 @@
       {#if credits}
         <div class="page">
           <PosterList>
-            {#each credits.cast as c}
-              <Poster media={c} {...getWatchedDependedProps(c.id, c.media_type, wList)} fluidSize />
+            {#each credits.cast as c (c.id)}
+              <Poster
+                media={c}
+                {...getWatchedDependedProps(c.id, c.media_type, wList)}
+                fluidSize
+                hideIfNotOnList={onMyListFilter}
+              />
             {/each}
           </PosterList>
         </div>
@@ -202,12 +214,19 @@
     align-items: center;
     display: flex;
     justify-content: flex-end;
+    gap: 30px;
     margin: 0 auto;
     padding-left: 20px;
     padding-right: 20px;
     width: 100%;
     /* Same as in PosterList */
     max-width: 1200px;
+
+    .listFilter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
   }
 
   .content {
