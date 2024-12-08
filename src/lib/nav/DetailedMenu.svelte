@@ -17,7 +17,7 @@
   $: dve = $wlDetailedView;
 </script>
 
-<div class={`menu${$page.url?.pathname.startsWith("/search/") ? " on-search-page" : ""}`}>
+<div class={`menu${$page.url?.pathname.startsWith("/search") ? " on-search-page" : ""}`}>
   <div class="inner">
     <h4 class="norm sm-caps">Shown Details</h4>
     <button

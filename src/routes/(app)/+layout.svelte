@@ -74,7 +74,7 @@
           // Using autofocus seems to work. Disables after goto runs.
           // https://github.com/sbondCo/Watcharr/issues/169
           target.autofocus = true;
-          goto(`/search/${query}`).then(() => {
+          goto(`/search?q=${encodeURIComponent(query)}`).then(() => {
             // Use mainSearchEl if nav not split, otherwise use ev target.
             if (!document.body.classList.contains("split-nav")) {
               mainSearchEl?.focus();
@@ -252,7 +252,7 @@
     </div>
     <div class="btns">
       <!-- Detailed posters only supported on own watched list currently -->
-      {#if $page.url?.pathname === "/" || $page.url?.pathname.startsWith("/search/")}
+      {#if $page.url?.pathname === "/" || $page.url?.pathname.startsWith("/search")}
         <button
           class="plain other detailedView"
           on:click={() => {

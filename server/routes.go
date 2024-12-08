@@ -79,8 +79,9 @@ func (b *BaseRouter) addContentRoutes() {
 	exp := time.Hour * 24
 
 	// Search for content
-	content.GET("/search/multi/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
-		if c.Param("query") == "" {
+	content.GET("/search/multi", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		query := c.Query("q")
+		if query == "" {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
@@ -94,7 +95,7 @@ func (b *BaseRouter) addContentRoutes() {
 			}
 			pageNum = num
 		}
-		content, err := searchContent(c.Param("query"), pageNum)
+		content, err := searchContent(query, pageNum)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -103,8 +104,9 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Search for movies
-	content.GET("/search/movie/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
-		if c.Param("query") == "" {
+	content.GET("/search/movie", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		query := c.Query("q")
+		if query == "" {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
@@ -118,7 +120,7 @@ func (b *BaseRouter) addContentRoutes() {
 			}
 			pageNum = num
 		}
-		content, err := searchMovies(c.Param("query"), pageNum)
+		content, err := searchMovies(query, pageNum)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -127,8 +129,9 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Search for shows
-	content.GET("/search/tv/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
-		if c.Param("query") == "" {
+	content.GET("/search/tv", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		query := c.Query("q")
+		if query == "" {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
@@ -142,7 +145,7 @@ func (b *BaseRouter) addContentRoutes() {
 			}
 			pageNum = num
 		}
-		content, err := searchTv(c.Param("query"), pageNum)
+		content, err := searchTv(query, pageNum)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -151,8 +154,9 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Search for people
-	content.GET("/search/person/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
-		if c.Param("query") == "" {
+	content.GET("/search/person", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		query := c.Query("q")
+		if query == "" {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
@@ -166,7 +170,7 @@ func (b *BaseRouter) addContentRoutes() {
 			}
 			pageNum = num
 		}
-		content, err := searchPeople(c.Param("query"), pageNum)
+		content, err := searchPeople(query, pageNum)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -389,12 +393,13 @@ func (b *BaseRouter) addGameRoutes() {
 	}
 
 	// Search for games
-	gamer.GET("/search/:query", cache.CachePage(b.ms, exp, func(c *gin.Context) {
-		if c.Param("query") == "" {
-			c.Status(400)
+	gamer.GET("/search", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+		query := c.Query("q")
+		if query == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
-		games, err := igdb.Search(c.Param("query"))
+		games, err := igdb.Search(query)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
@@ -946,9 +951,14 @@ func (b *BaseRouter) addUserRoutes() {
 	})
 
 	// Search users
-	u.GET("/search/:query", func(c *gin.Context) {
+	u.GET("/search", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
-		response, err := userSearch(b.db, userId, c.Param("query"))
+		query := c.Query("q")
+		if query == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
+			return
+		}
+		response, err := userSearch(b.db, userId, query)
 		if err != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
 			return

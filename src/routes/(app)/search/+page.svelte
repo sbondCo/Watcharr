@@ -4,7 +4,7 @@
   import { searchQuery, serverFeatures, watchedList } from "@/store";
   import PageError from "@/lib/PageError.svelte";
   import Spinner from "@/lib/Spinner.svelte";
-  import axios, { type GenericAbortSignal } from "axios";
+  import axios from "axios";
   import { getWatchedDependedProps, getPlayedDependedProps } from "@/lib/util/helpers";
   import PersonPoster from "@/lib/poster/PersonPoster.svelte";
   import type {
@@ -49,17 +49,19 @@
   const infiniteScrollThreshold = 150;
   let reqController = new AbortController();
 
+  $: query = data?.query;
   $: searchQ = $searchQuery;
   $: wList = $watchedList;
 
   async function searchMovies(query: string, page: number) {
     try {
-      const movies = await axios.get<MoviesSearchResponse>(
-        `/content/search/movie/${query}?page=${page}`,
-        {
-          signal: reqController.signal
-        }
-      );
+      const movies = await axios.get<MoviesSearchResponse>(`/content/search/movie`, {
+        params: {
+          q: encodeURIComponent(query),
+          page
+        },
+        signal: reqController.signal
+      });
       return movies;
     } catch (err) {
       console.error("Movies search failed!", err);
@@ -69,12 +71,13 @@
 
   async function searchTv(query: string, page: number) {
     try {
-      const shows = await axios.get<ShowsSearchResponse>(
-        `/content/search/tv/${query}?page=${page}`,
-        {
-          signal: reqController.signal
-        }
-      );
+      const shows = await axios.get<ShowsSearchResponse>(`/content/search/tv`, {
+        params: {
+          q: encodeURIComponent(query),
+          page
+        },
+        signal: reqController.signal
+      });
       return shows;
     } catch (err) {
       console.error("Tv search failed!", err);
@@ -84,12 +87,13 @@
 
   async function searchPeople(query: string, page: number) {
     try {
-      const people = await axios.get<PeopleSearchResponse>(
-        `/content/search/person/${query}?page=${page}`,
-        {
-          signal: reqController.signal
-        }
-      );
+      const people = await axios.get<PeopleSearchResponse>(`/content/search/person`, {
+        params: {
+          q: encodeURIComponent(query),
+          page
+        },
+        signal: reqController.signal
+      });
       return people;
     } catch (err) {
       console.error("People search failed!", err);
@@ -99,7 +103,11 @@
 
   async function searchMulti(query: string, page: number) {
     try {
-      return await axios.get<ContentSearch>(`/content/search/multi/${query}?page=${page}`, {
+      return await axios.get<ContentSearch>(`/content/search/multi`, {
+        params: {
+          q: encodeURIComponent(query),
+          page
+        },
         signal: reqController.signal
       });
     } catch (err) {
@@ -120,7 +128,11 @@
         console.debug("game search is not enabled on this server");
         return { data: [] };
       }
-      const games = await axios.get<GameSearch[]>(`/game/search/${query}`, {
+      const games = await axios.get<GameSearch[]>(`/game/search`, {
+        params: {
+          q: encodeURIComponent(query),
+          page
+        },
         signal: reqController.signal
       });
       return {
@@ -321,7 +333,7 @@
   }
 
   async function doCleanSearch() {
-    if (!data.slug) {
+    if (!query) {
       console.error("doCleanSearch: No query to use.");
       return;
     }
@@ -329,11 +341,11 @@
     curPage = 0;
     allSearchResults = [];
     searchResults = [];
-    search(data.slug);
+    search(query);
   }
 
   async function searchUsers(query: string) {
-    return (await axios.get(`/user/search/${query}`)).data as PublicUser[];
+    return (await axios.get(`/user/search`, { params: { q: query } })).data as PublicUser[];
   }
 
   function setActiveSearchFilter(to: SearchFilterTypes) {
@@ -356,15 +368,15 @@
     ) {
       console.log("reached end");
       window.removeEventListener("scroll", infiniteScroll);
-      if (data.slug) await search(data.slug);
+      if (query) await search(query);
       window.addEventListener("scroll", infiniteScroll);
       console.debug(`Page: ${curPage} / ${maxContentPage}`);
     }
   }
 
   onMount(() => {
-    if (!searchQ && data.slug) {
-      searchQuery.set(data.slug);
+    if (!searchQ && query) {
+      searchQuery.set(query);
     }
     doCleanSearch();
 
@@ -378,7 +390,7 @@
   });
 
   afterNavigate((e) => {
-    if (!e.from?.route?.id?.toLowerCase()?.includes("/search/")) {
+    if (!e.from?.route?.id?.toLowerCase()?.includes("/search")) {
       // AfterNavigate will also be called when this page is mounted,
       // but that won't work for us since the OnMount hook also runs
       // a clean search, which can cause errors when both ran at same
@@ -388,7 +400,7 @@
       // use that. The only alternative to only run this hook after a
       // navigation on the search page (query change), seems to be
       // checking the `from` property an making sure it's from the
-      // `/search/` route already.
+      // `/search` route already.
       return;
     }
     console.log("Query changed (or just loaded first query), performing search");
@@ -405,15 +417,14 @@
 </script>
 
 <svelte:head>
-  <title>Search Results{data?.slug ? ` for '${data?.slug}'` : ""}</title>
+  <title>Search Results{query ? ` for '${query}'` : ""}</title>
 </svelte:head>
 
 <!-- <span style="position: sticky;top: 70px;">{curPage} / {maxContentPage}</span> -->
-
 <div class="content">
   <div class="inner">
-    {#if data.slug}
-      {#await searchUsers(data.slug) then results}
+    {#if query}
+      {#await searchUsers(query) then results}
         {#if results?.length > 0}
           <UsersList users={results} />
         {/if}
@@ -496,7 +507,7 @@
             error={contentSearchErr}
             onRetry={() => {
               contentSearchErr = undefined;
-              search(data.slug);
+              search(query);
             }}
           />
         </div>

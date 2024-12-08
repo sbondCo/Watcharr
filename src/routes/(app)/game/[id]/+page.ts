@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import type { PageLoad } from "../../search/[query]/$types";
+import type { PageLoad } from "./$types";
 
 export const load = (async ({ params }) => {
   const { id } = params;
