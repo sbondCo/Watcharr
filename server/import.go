@@ -39,6 +39,7 @@ type ImportRequest struct {
 	WatchedEpisodes  []WatchedEpisode `json:"watchedEpisodes"`
 	WatchedSeason    []WatchedSeason  `json:"watchedSeasons"`
 	Tags             []TagAddRequest  `json:"tags"`
+	Year             int              `json:"year"`
 }
 
 type ImportResponse struct {
@@ -72,15 +73,75 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		}
 	}
 	// tmdbId not passed.. search for the content by name.
-	sr, err := searchContent(ar.Name, 1)
-	if err != nil {
-		slog.Error("import: content search failed", "error", err)
-		return ImportResponse{}, errors.New("Content search failed")
-	}
+	// if a type is passed, use that type to filter the search results.
 	pMatches := []TMDBSearchMultiResults{}
-	for _, r := range sr.Results {
-		if r.MediaType != "person" {
-			pMatches = append(pMatches, r)
+	if ar.Type == MOVIE {
+		movieRes, err := searchMoviesWithYear(ar.Name, 1, ar.Year)
+		if err != nil {
+			slog.Error("import: content search failed", "error", err)
+			return ImportResponse{}, errors.New("Content search failed")
+		}
+		for _, m := range movieRes.Results {
+			// Convert []int to []int64
+			genreIds := make([]int64, len(m.GenreIds))
+			for i, id := range m.GenreIds {
+				genreIds[i] = int64(id)
+			}
+			pMatches = append(pMatches, TMDBSearchMultiResults{
+				Adult:            m.Adult,
+				BackdropPath:     m.BackdropPath,
+				GenreIds:         genreIds,
+				ID:               m.ID,
+				OriginalLanguage: m.OriginalLanguage,
+				Overview:         m.Overview,
+				Popularity:       float32(m.Popularity),
+				PosterPath:       m.PosterPath,
+				Title:            m.Title,
+				VoteAverage:      float32(m.VoteAverage),
+				VoteCount:        uint32(m.VoteCount),
+				MediaType:        "movie",
+			})
+		}
+	} else if ar.Type == SHOW {
+		tvRes, err := searchTvWithYear(ar.Name, 1, ar.Year)
+		if err != nil {
+			slog.Error("import: content search failed", "error", err)
+			return ImportResponse{}, errors.New("Content search failed")
+		}
+		for _, m := range tvRes.Results {
+			genreIds := make([]int64, len(m.GenreIds))
+			for i, id := range m.GenreIds {
+				genreIds[i] = int64(id)
+			}
+			pMatches = append(pMatches, TMDBSearchMultiResults{
+				Adult:            m.Adult,
+				BackdropPath:     m.BackdropPath,
+				GenreIds:         genreIds,
+				ID:               m.ID,
+				OriginalLanguage: m.OriginalLanguage,
+				OriginalName:     m.OriginalName,
+				OriginCountry:    m.OriginCountry,
+				Overview:         m.Overview,
+				Popularity:       float32(m.Popularity),
+				PosterPath:       m.PosterPath,
+				FirstAirDate:     m.FirstAirDate,
+				Name:             m.Name,
+				VoteAverage:      float32(m.VoteAverage),
+				VoteCount:        uint32(m.VoteCount),
+				MediaType:        "tv",
+			})
+		}
+	}
+	if len(pMatches) == 0 {
+		sr, err := searchContent(ar.Name, 1)
+		if err != nil {
+			slog.Error("import: content search failed", "error", err)
+			return ImportResponse{}, errors.New("Content search failed")
+		}
+		for _, r := range sr.Results {
+			if r.MediaType != "person" {
+				pMatches = append(pMatches, r)
+			}
 		}
 	}
 	resLen := len(pMatches)

@@ -27,7 +27,15 @@ export const appTheme = writable<Theme>();
 export const importedList = writable<
   | {
       data: string;
-      type: "text-list" | "tmdb" | "movary" | "watcharr" | "myanimelist" | "ryot" | "todomovies";
+      type:
+        | "text-list"
+        | "tmdb"
+        | "movary"
+        | "watcharr"
+        | "myanimelist"
+        | "ryot"
+        | "todomovies"
+        | "anilist";
     }
   | undefined
 >();

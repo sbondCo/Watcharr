@@ -257,11 +257,20 @@ func searchContent(query string, pageNum int) (TMDBSearchMultiResponse, error) {
 }
 
 func searchMovies(query string, pageNum int) (TMDBSearchMoviesResponse, error) {
+	return searchMoviesWithYear(query, pageNum, 0)
+}
+
+func searchMoviesWithYear(query string, pageNum int, year int) (TMDBSearchMoviesResponse, error) {
 	resp := new(TMDBSearchMoviesResponse)
 	if pageNum == 0 {
 		pageNum = 1
 	}
-	err := tmdbRequest("/search/movie", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	params := map[string]string{"query": query, "page": strconv.Itoa(pageNum)}
+	if year != 0 {
+		params["year"] = strconv.Itoa(year)
+	}
+	err := tmdbRequest("/search/movie", params, &resp)
+
 	if err != nil {
 		slog.Error("Failed to complete movie search request!", "error", err.Error())
 		return TMDBSearchMoviesResponse{}, errors.New("failed to complete movie search request")
@@ -273,11 +282,19 @@ func searchMovies(query string, pageNum int) (TMDBSearchMoviesResponse, error) {
 }
 
 func searchTv(query string, pageNum int) (TMDBSearchShowsResponse, error) {
+	return searchTvWithYear(query, pageNum, 0)
+}
+
+func searchTvWithYear(query string, pageNum int, year int) (TMDBSearchShowsResponse, error) {
 	resp := new(TMDBSearchShowsResponse)
 	if pageNum == 0 {
 		pageNum = 1
 	}
-	err := tmdbRequest("/search/tv", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	params := map[string]string{"query": query, "page": strconv.Itoa(pageNum)}
+	if year != 0 {
+		params["year"] = strconv.Itoa(year)
+	}
+	err := tmdbRequest("/search/tv", params, &resp)
 	if err != nil {
 		slog.Error("Failed to complete tv search request!", "error", err.Error())
 		return TMDBSearchShowsResponse{}, errors.New("failed to complete tv search request")

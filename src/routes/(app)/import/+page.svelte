@@ -13,17 +13,17 @@
   import { importedList } from "@/store";
   import { onMount } from "svelte";
   import papa from "papaparse";
-  import type {
-    ImportedList,
-    MovaryHistory,
-    MovaryRatings,
-    MovaryWatchlist,
-    Watched,
-    WatchedStatus,
-    TodoMoviesExport,
-    TagAddRequest,
-    TodoMoviesCustomList,
-    TodoMoviesMovie
+  import {
+    type ImportedList,
+    type MovaryHistory,
+    type MovaryRatings,
+    type MovaryWatchlist,
+    type Watched,
+    type WatchedStatus,
+    type TodoMoviesExport,
+    type TagAddRequest,
+    type TodoMoviesCustomList,
+    type TodoMoviesMovie
   } from "@/types";
   import Icon from "@/lib/Icon.svelte";
 
@@ -375,6 +375,65 @@
     }
   }
 
+  async function processAniListFile(files?: FileList | null) {
+    try {
+      console.log("processFilesAniList", files);
+      if (!files || files?.length <= 0) {
+        console.error("processFilesAniList", "No files to process!");
+        notify({
+          type: "error",
+          text: "File not found in dropped items. Please try again or refresh.",
+          time: 6000
+        });
+        isDragOver = false;
+        return;
+      }
+      isLoading = true;
+      if (files.length > 1) {
+        notify({
+          type: "error",
+          text: "Only one file at a time is supported. Continuing with the first.",
+          time: 6000
+        });
+      }
+
+      // Currently only support for importing one file at a time
+      const file = files[0];
+      if (file.type !== "" && !file.name.endsWith(".json")) {
+        notify({
+          type: "error",
+          text: "Must be a AniList GDPR Data Export (.json). https://anilist.co/gdpr/download"
+        });
+        isLoading = false;
+        isDragOver = false;
+        return;
+      }
+
+      // Read file data into strings
+      let exportAniListStr: string | undefined;
+      const r = new FileReader();
+      exportAniListStr = await readFile(r, file);
+      if (!exportAniListStr) {
+        notify({
+          type: "error",
+          text: "Failed to read export file. Ensure you have attached the correct file.",
+          time: 6000
+        });
+      }
+
+      importedList.set({
+        data: exportAniListStr,
+        type: "anilist"
+      });
+
+      goto("/import/process");
+    } catch (err) {
+      isLoading = false;
+      notify({ type: "error", text: "Failed to read files!" });
+      console.error("import: Failed to read files!", err);
+    }
+  }
+
   async function processRyotFile(files?: FileList | null) {
     try {
       console.log("processRyotFile", files);
@@ -686,6 +745,12 @@
           icon="todomovies"
           text="TodoMovies"
           filesSelected={(f) => processTodoMoviesFile(f)}
+        />
+
+        <DropFileButton
+          icon="anilist"
+          text="AniList"
+          filesSelected={(f) => processAniListFile(f)}
         />
       {/if}
     </div>
