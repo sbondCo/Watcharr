@@ -614,7 +614,9 @@
         </table>
         <div class="btns">
           <button on:click={() => goto("/import")}><Icon i="arrow" />Back</button>
-          <button on:click={() => changeAllStatuses()}>Change Statuses</button>
+          <button on:click={() => changeAllStatuses()} disabled={isImporting}>
+            Change Statuses
+          </button>
           <button on:click={startImport} disabled={isImporting}>Start Importing</button>
         </div>
         {#if typeof changeAllStatusesModalCb === "function"}
