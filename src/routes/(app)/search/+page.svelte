@@ -278,7 +278,7 @@
         } else {
           console.error("Active search filter is invalid:", activeSearchFilter);
         }
-        maxContentPage = cdata ? cdata.total_pages ?? 1 : 1;
+        maxContentPage = cdata ? (cdata.total_pages ?? 1) : 1;
         searchResults = allSearchResults;
         curPage++;
       } else {
