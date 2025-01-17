@@ -8,6 +8,7 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"prepare": "svelte-kit sync",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"server": "cd ./server && MODE=DEV go run ."
