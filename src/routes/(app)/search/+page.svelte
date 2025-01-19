@@ -26,10 +26,9 @@
 	import { onDestroy, onMount } from "svelte";
 	import Error from "@/lib/Error.svelte";
 	import GamePoster from "@/lib/poster/GamePoster.svelte";
-	import { get } from "svelte/store";
 	import Icon from "@/lib/Icon.svelte";
 	import { afterNavigate, goto } from "$app/navigation";
-	import { page } from "$app/stores";
+	import { page } from "$app/state";
 
 	type GameWithMediaType = GameSearch & { media_type: "game" };
 	type CombinedResult =
@@ -51,10 +50,6 @@
 
 	const infiniteScrollThreshold = 150;
 	let reqController = new AbortController();
-
-	// let query = $derived(data?.query);
-	// let searchQ = $derived($searchQuery);
-	// let wList = $derived($watchedList);
 
 	async function searchMovies(query: string, page: number) {
 		try {
@@ -347,11 +342,10 @@
 			// Smol timeout to give ui time to render so end of page calc
 			// can be accurate.
 			setTimeout(() => {
-				const p = get(page);
 				// Quick fix, if user navigates away from search page while response is loading,
 				// we don't want to call infiniteScroll or we could end up loading all pages
 				// in the background.
-				if (p.url?.pathname?.toLowerCase()?.startsWith("/search")) {
+				if (page.url?.pathname?.toLowerCase()?.startsWith("/search")) {
 					infiniteScroll();
 				} else {
 					console.debug(
@@ -382,11 +376,6 @@
 		search(store.searchQuery);
 	}
 
-	async function searchUsers(query: string) {
-		return (await axios.get(`/user/search`, { params: { q: query } }))
-			.data as PublicUser[];
-	}
-
 	function setActiveSearchFilter(to: SearchFilterTypes) {
 		if (activeSearchFilter === to) {
 			activeSearchFilter = undefined;
@@ -413,6 +402,11 @@
 			window.addEventListener("scroll", infiniteScroll);
 			console.debug(`Page: ${curPage} / ${maxContentPage}`);
 		}
+	}
+
+	async function searchUsers(query: string) {
+		return (await axios.get(`/user/search`, { params: { q: query } }))
+			.data as PublicUser[];
 	}
 
 	onMount(() => {
@@ -470,8 +464,10 @@
 <!-- <span style="position: sticky;top: 70px;">{curPage} / {maxContentPage}</span> -->
 <div class="content">
 	<div class="inner">
-		{#if store.searchQuery}
-			{#await searchUsers(store.searchQuery) then results}
+		{#if data?.query}
+			<!-- Uses data?.query instead of store.searchQuery,
+			 	so that the debounce of search is respected. -->
+			{#await searchUsers(data?.query) then results}
 				{#if results?.length > 0}
 					<UsersList users={results} />
 				{/if}
