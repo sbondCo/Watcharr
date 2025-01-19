@@ -17,8 +17,8 @@
 
 	let { img, avatarDropped = undefined }: Props = $props();
 
-	let bhCanvas: HTMLCanvasElement = $state();
-	let avatarInput: HTMLInputElement = $state();
+	let bhCanvas: HTMLCanvasElement | undefined = $state();
+	let avatarInput: HTMLInputElement | undefined = $state();
 
 	function avatarLoaded() {
 		console.log("avatar loaded.. removing canvas");

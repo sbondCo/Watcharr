@@ -23,13 +23,14 @@
 
 	let navEl: HTMLElement | undefined = $state();
 	let mainSearchEl: HTMLInputElement | undefined = $state();
-	let searchTimeout: NodeJS.Timeout;
+	let searchTimeout: number;
 	let subMenuShown = $state(false);
 	let filterMenuShown = $state(false);
 	let sortMenuShown = $state(false);
 	let followingMenuShown = $state(false);
 	let detailedMenuShown = $state(false);
 	let tagMenuShown = $state(false);
+	let scroll = window.scrollY;
 
 	function handleProfileClick() {
 		if (!localStorage.getItem("token")) {
@@ -52,7 +53,7 @@
 		)
 			return;
 		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(
+		searchTimeout = window.setTimeout(
 			() => {
 				const target = ev.target as HTMLInputElement;
 				const query = target?.value.trim();
@@ -136,15 +137,29 @@
 		const bigInput = navEl?.querySelector("input:not(.small)");
 		if (bigInput) {
 			const b = bigInput.getBoundingClientRect();
-			// console.debug("decideOnNavSplit: bigInput bounds:", b);
+			console.debug("decideOnNavSplit: bigInput width:", b.width);
 			if (b.width <= 45) {
 				document.body.classList.add("split-nav");
+				console.debug("decideOnNavSplit: Splitting nav.");
 			} else {
 				document.body.classList.remove("split-nav");
+				console.debug("decideOnNavSplit: Unsplitting nav.");
 			}
 		} else {
 			console.warn("decideOnNavSplit: bigInput not found!", bigInput);
 		}
+	}
+
+	function docOnScroll() {
+		if (scroll > window.scrollY) {
+			navEl?.classList.remove("scrolled-down");
+			document.body.classList.add("nav-shown");
+		} else {
+			navEl?.classList.add("scrolled-down");
+			document.body.classList.remove("nav-shown");
+			closeAllSubMenus();
+		}
+		scroll = window.scrollY;
 	}
 
 	afterNavigate(() => {
@@ -156,19 +171,12 @@
 		if (navEl) {
 			decideOnNavSplit();
 			window.addEventListener("resize", decideOnNavSplit);
+			window.document.addEventListener("scroll", docOnScroll);
 
-			let scroll = window.scrollY;
-			window.document.addEventListener("scroll", (ev: Event) => {
-				if (scroll > window.scrollY) {
-					navEl?.classList.remove("scrolled-down");
-					document.body.classList.add("nav-shown");
-				} else {
-					navEl?.classList.add("scrolled-down");
-					document.body.classList.remove("nav-shown");
-					closeAllSubMenus();
-				}
-				scroll = window.scrollY;
-			});
+			return () => {
+				window.removeEventListener("resize", decideOnNavSplit);
+				window.document.removeEventListener("scroll", docOnScroll);
+			};
 		} else {
 			console.error(
 				"navEl doesn't exist, failed to initialize up/down listener",
@@ -348,7 +356,7 @@
 			justify-content: space-between;
 			align-items: center;
 
-			@media screen and (max-width: 425px) {
+			@media screen and (max-width: 435px) {
 				gap: 15px;
 			}
 
@@ -448,7 +456,7 @@
 				}
 			}
 
-			@media screen and (max-width: 415px) {
+			@media screen and (max-width: 460px) {
 				:global(svg) {
 					display: block;
 				}
@@ -459,7 +467,7 @@
 			}
 		}
 
-		body.split-nav & {
+		:global(body.split-nav) & {
 			.search {
 				opacity: 0;
 				visibility: hidden;
