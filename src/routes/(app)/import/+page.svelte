@@ -27,7 +27,7 @@
 	} from "@/types";
 	import Icon from "@/lib/Icon.svelte";
 
-	let isDragOver = false;
+	let isDragOver = $state(false);
 	let isLoading = $state(false);
 
 	function processFiles(

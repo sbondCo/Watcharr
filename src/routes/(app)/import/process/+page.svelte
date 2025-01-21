@@ -27,7 +27,6 @@
 	} from "@/types";
 	import axios from "axios";
 	import { onDestroy } from "svelte";
-	import { get } from "svelte/store";
 	import papa from "papaparse";
 	import Status from "@/lib/Status.svelte";
 
@@ -37,10 +36,10 @@
 		callback: (err: Error | string | undefined) => void;
 	}
 
-	let rList: ImportedList[] = [];
-	let isImporting = false;
-	let cancelled = false;
-	let importText = "";
+	let rList: ImportedList[] = $state([]);
+	let isImporting = $state(false);
+	let importText = $state("");
+	let cancelled = $state(false);
 
 	onDestroy(() => {
 		cancelled = true;
@@ -48,12 +47,12 @@
 
 	// Set when current item being imported gets an IMPORT_MULTI
 	// response, which then shows the modal for user to pick correct item.
-	let importMultiItem: ImportedListItemMultiProblem | undefined;
+	let importMultiItem: ImportedListItemMultiProblem | undefined = $state();
 	// Set when user clicks 'Change Statuses' button for the change all
 	// statuses modal.
 	let changeAllStatusesModalCb:
 		| ((newStatus?: WatchedStatus) => void)
-		| undefined;
+		| undefined = $state();
 
 	async function getList() {
 		const list = store.importedList;
@@ -375,7 +374,6 @@
 			}
 		}
 		// TODO: remove duplicate names in list
-		return list;
 	}
 
 	function addRow(
@@ -501,7 +499,6 @@
 						item.year = String(new Date(Date.parse(release)).getFullYear());
 					item.type = w.content?.type;
 					store.watchedList.push(w);
-					// watchedList.update(() => wList);
 				}
 				rList = rList;
 				res(0);
@@ -546,11 +543,15 @@
 			changeAllStatusesModalCb = undefined;
 		};
 	}
+
+	// Not sure why this happens:
+	// https://github.com/sveltejs/svelte/discussions/14692#discussioncomment-11569475
+	const alist = getList();
 </script>
 
-{#await getList()}
+{#await alist}
 	<Spinner />
-{:then list}
+{:then}
 	<div class="content">
 		<div class="inner">
 			{#if rList}
@@ -641,7 +642,7 @@
 									<td>
 										<button
 											class="plain delete"
-											on:click={() => {
+											onclick={() => {
 												removeRow(l);
 											}}
 										>
@@ -657,7 +658,7 @@
 									><input
 										class="plain"
 										placeholder="Name"
-										on:blur={addRow}
+										onblur={addRow}
 									/></td
 								>
 								<td class="year">
@@ -676,13 +677,12 @@
 					</tbody>
 				</table>
 				<div class="btns">
-					<button on:click={() => goto("/import")}
-						><Icon i="arrow" />Back</button
+					<button onclick={() => goto("/import")}><Icon i="arrow" />Back</button
 					>
-					<button on:click={() => changeAllStatuses()} disabled={isImporting}>
+					<button onclick={() => changeAllStatuses()} disabled={isImporting}>
 						Change Statuses
 					</button>
-					<button on:click={startImport} disabled={isImporting}
+					<button onclick={startImport} disabled={isImporting}
 						>Start Importing</button
 					>
 				</div>

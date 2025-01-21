@@ -15,7 +15,6 @@
 	import { store } from "@/store.svelte";
 	import { ImportResponseType, type ImportedList } from "@/types";
 	import { onMount } from "svelte";
-	import { get } from "svelte/store";
 
 	let failed: ImportedList[] = $state([]);
 	let successCount = $state(0);
@@ -24,7 +23,7 @@
 		if (store.parsedImportedList) {
 			for (let i = 0; i < store.parsedImportedList.length; i++) {
 				const item = store.parsedImportedList[i];
-				console.log(item);
+				$state.snapshot(item);
 				if (
 					item.state === ImportResponseType.IMPORT_FAILED ||
 					item.state === ImportResponseType.IMPORT_NOTFOUND
