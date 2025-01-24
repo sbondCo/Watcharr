@@ -3,6 +3,7 @@
 		TMDBSeasonDetails,
 		TMDBShowSeason,
 		Watched,
+		WatchedSeason,
 		WatchedSeasonAddResponse,
 		WatchedStatus,
 	} from "@/types";
@@ -12,9 +13,10 @@
 	import SeasonsListEpisode from "./SeasonsListEpisode.svelte";
 	import PosterStatus from "./poster/PosterStatus.svelte";
 	import { notify } from "./util/notify";
-	import { get } from "svelte/store";
 	import { store } from "@/store.svelte";
 	import PosterRating from "./poster/PosterRating.svelte";
+	import Icon from "./Icon.svelte";
+	import { watchedStatuses } from "./util/helpers";
 
 	interface Props {
 		tvId: number;
@@ -23,6 +25,8 @@
 	}
 
 	let { tvId, seasons, watchedItem = $bindable() }: Props = $props();
+
+	$inspect(tvId, seasons, watchedItem);
 
 	let activeSeason = $state(
 		typeof watchedItem?.lastViewedSeason === "number"
@@ -168,6 +172,20 @@
 	function handleStarClick(rating: number, seasonNumber: number) {
 		updateWatchedSeason(seasonNumber, undefined, rating);
 	}
+
+	function checkSeasonStatus(
+		watchedSeasons: WatchedSeason[] | undefined,
+		currentSeason: TMDBShowSeason,
+	): WatchedStatus | undefined {
+		if (watchedSeasons) {
+			const watchedSeason = watchedSeasons.find(
+				(ws) => ws.seasonNumber === currentSeason.season_number,
+			);
+			console.log(watchedSeason?.status);
+			return watchedSeason?.status;
+		}
+		return undefined;
+	}
 </script>
 
 <div class="ctr">
@@ -179,11 +197,27 @@
 					activeSeason = season.season_number;
 				}}
 			>
-				<h1>{season.name}</h1>
+				<h1 class="season-name">{season.name}</h1>
+				{#if season.episode_count > 0}
+					<h2 class="season-episodes">({season.episode_count} Episodes)</h2>
+				{/if}
 				{#if season.air_date}
-					<h2>{new Date(Date.parse(season.air_date)).getFullYear()}</h2>
+					<h2 class="season-date">
+						{new Date(Date.parse(season.air_date)).getFullYear()}
+					</h2>
 				{:else if season.season_number > 0}
 					<h2>TBD</h2>
+				{/if}
+				{#if watchedItem}
+					{@const status = checkSeasonStatus(
+						watchedItem.watchedSeasons,
+						season,
+					)}
+					{#if status}
+						<div class="plain season-status">
+							<Icon i={watchedStatuses[status]} />
+						</div>
+					{/if}
 				{/if}
 			</button>
 		{/each}
@@ -272,43 +306,78 @@
 		transition: top 200ms ease-in-out;
 
 		button {
-			display: flex;
-			flex-flow: row;
-			flex-wrap: wrap;
-			gap: 0 18px;
+			display: grid;
+			grid-template: repeat(2, 1fr) / repeat(2, 1fr);
 			align-items: center;
-			padding: 10px;
 			border: 2px solid #302d2d;
 			border-radius: 8px;
+			padding: 2px 8px;
 			cursor: pointer;
-			max-width: 220px;
-			transition: background-color 100ms ease;
 
 			&:first-of-type {
 				margin-top: 10px;
 			}
 
+			.season-name,
+			.season-episodes {
+				grid-column: 1;
+				margin-right: auto;
+			}
+
+			.season-date,
+			.season-status {
+				grid-column: 2;
+				margin-left: auto;
+			}
+
+			.season-episodes,
+			.season-status {
+				grid-row: 2;
+			}
+			.season-episodes {
+				opacity: 0.7;
+			}
+
+			.season-status {
+				fill: $text-color;
+
+				:global(svg) {
+					width: 18px;
+					height: 18px;
+				}
+			}
+
 			h1 {
 				font-size: 18px;
-				font-family: sans-serif;
 			}
 
 			h2 {
 				font-size: 12px;
+			}
+
+			h1,
+			h2 {
 				font-family: sans-serif;
-				margin-left: auto;
 			}
 
 			&:hover,
 			&.active {
-				color: white;
-				background-color: black;
+				color: $bg-color;
+				background-color: $text-color;
+
+				.season-status {
+					fill: $bg-color;
+				}
 			}
 
 			&.active {
 				position: sticky;
 				top: 10px;
 				bottom: 10px;
+
+				.season-status {
+					fill: $bg-color;
+				}
 			}
 		}
 
