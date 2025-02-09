@@ -89,6 +89,14 @@ interface dbModel {
 	deletedAt: string;
 }
 
+export interface PaginationResponse<T> {
+	limit: number;
+	page: number;
+	totalPages: number;
+	totalResults: number;
+	results: T[];
+}
+
 export interface Content {
 	// id: number; // Not used
 	tmdbId: number;

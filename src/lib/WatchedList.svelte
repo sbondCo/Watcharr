@@ -8,7 +8,6 @@
 	import GamePoster from "./poster/GamePoster.svelte";
 	import { getLatestWatchedInTv } from "./util/helpers";
 	import { notify } from "./util/notify";
-	import { untrack } from "svelte";
 
 	interface Props {
 		list: Watched[];
@@ -22,24 +21,9 @@
 	let settings = $derived(store.userSettings);
 	let watched: Watched[] = $state([]);
 
-	$effect(() => {
-		if (list) {
-			watched = list;
-		}
-	});
-
-	$effect(() => {
-		if (list && filters.status && filters.type && sort) {
-			untrack(() => {
-				filt();
-			});
-		}
-	});
-
 	/**
 	 * Checks if content has been watched previously
-	 * by analyzing the watched entrys activity (with
-	 * the latest AI improvements added in of course.)
+	 * by analyzing the watched entrys activity.
 	 */
 	function contentWatchedPreviously(w: Watched) {
 		let wp = false;
@@ -222,8 +206,8 @@
 </script>
 
 <PosterList>
-	{#if watched?.length > 0}
-		{#each watched as w (w.id)}
+	{#if list?.length > 0}
+		{#each list as w (w.id)}
 			{#if w.game}
 				<GamePoster
 					id={w.id}

@@ -85,17 +85,13 @@
 
 	async function getInitialData() {
 		if (localStorage.getItem("token")) {
-			const [w, u, s, f, fo, ts] = await Promise.all([
-				axios.get("/watched"),
+			const [u, s, f, fo, ts] = await Promise.all([
 				axios.get("/user"),
 				axios.get("/user/settings"),
 				axios.get("/features"),
 				axios.get("/follow"),
 				axios.get("/tag"),
 			]);
-			if (w?.data?.length > 0) {
-				store.watchedList = w.data;
-			}
 			if (u?.data) {
 				store.userInfo = u.data;
 			}

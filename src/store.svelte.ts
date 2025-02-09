@@ -19,7 +19,6 @@ export const defaultSort = ["DATEADDED", "DOWN"];
 interface Store {
 	userInfo: PrivateUser | undefined;
 	userSettings: UserSettings | undefined;
-	watchedList: Watched[];
 	notifications: Notification[];
 	activeSort: string[];
 	activeFilters: Filters;
@@ -50,7 +49,6 @@ interface Store {
  * This is our actual (private) store.
  */
 const _store: Store = $state({
-	watchedList: [],
 	notifications: [],
 	activeSort: defaultSort,
 	activeFilters: { type: [], status: [] },
@@ -74,12 +72,6 @@ const _store: Store = $state({
  * they are updated.
  */
 export const store = {
-	get watchedList() {
-		return _store.watchedList;
-	},
-	set watchedList(w) {
-		_store.watchedList = w;
-	},
 	get notifications() {
 		return _store.notifications;
 	},
@@ -183,7 +175,6 @@ export const store = {
  * Reset everything in `store` back to default values.
  */
 export const clearAllStores = () => {
-	store.watchedList = [];
 	store.notifications = [];
 	store.activeSort = defaultSort;
 	store.appTheme = "light";
