@@ -29,6 +29,7 @@
 	import Icon from "@/lib/Icon.svelte";
 	import { afterNavigate, goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import infScroll from "@/lib/util/infScroll.js";
 
 	type GameWithMediaType = GameSearch & { media_type: "game" };
 	type CombinedResult =
@@ -48,7 +49,7 @@
 	let searchRunning = $state(false);
 	let contentSearchErr: any = $state();
 
-	const infiniteScrollThreshold = 150;
+	const scroll = infScroll({ callback: infiniteScroll });
 	let reqController = new AbortController();
 
 	async function searchMovies(query: string, page: number) {
@@ -404,7 +405,7 @@
 				// we don't want to call infiniteScroll or we could end up loading all pages
 				// in the background.
 				if (page.url?.pathname?.toLowerCase()?.startsWith("/search")) {
-					infiniteScroll();
+					scroll.run();
 				} else {
 					console.debug(
 						"No longer on search page, not calling infiniteScroll.",
@@ -448,18 +449,9 @@
 		if (contentSearchErr) {
 			return;
 		}
-		if (
-			window.innerHeight +
-				Math.round(window.scrollY) +
-				infiniteScrollThreshold >=
-			document.body.offsetHeight
-		) {
-			console.log("reached end");
-			window.removeEventListener("scroll", infiniteScroll);
-			if (store.searchQuery) await search(store.searchQuery);
-			window.addEventListener("scroll", infiniteScroll);
-			console.debug(`Page: ${curPage} / ${maxContentPage}`);
-		}
+		console.log("reached end");
+		if (store.searchQuery) await search(store.searchQuery);
+		console.debug(`Page: ${curPage} / ${maxContentPage}`);
 	}
 
 	async function searchUsers(query: string) {
@@ -472,14 +464,6 @@
 			store.searchQuery = data?.query;
 		}
 		doCleanSearch();
-
-		window.addEventListener("scroll", infiniteScroll);
-		window.addEventListener("resize", infiniteScroll);
-
-		return () => {
-			window.removeEventListener("scroll", infiniteScroll);
-			window.removeEventListener("resize", infiniteScroll);
-		};
 	});
 
 	afterNavigate((e) => {
@@ -507,6 +491,7 @@
 	onDestroy(() => {
 		console.debug("SEARCH PAGE DESTROYED");
 		store.searchQuery = "";
+		scroll.destroy();
 		reqController.abort("page destroyed");
 	});
 </script>
