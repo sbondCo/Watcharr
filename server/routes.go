@@ -482,8 +482,15 @@ func (b *BaseRouter) addGameRoutes() {
 func (b *BaseRouter) addWatchedRoutes() {
 	watched := b.rg.Group("/watched").Use(AuthRequired(nil))
 
-	watched.GET("", func(c *gin.Context) {
+	watched.GET("", PaginatedRequest(false), func(c *gin.Context) {
+		isPaginated := c.MustGet("paginationEnabled").(bool)
 		userId := c.MustGet("userId").(uint)
+		if isPaginated {
+			pp := c.MustGet("paginationParams").(PaginationParams)
+			c.JSON(http.StatusOK, getWatchedPage(b.db, userId, pp))
+			return
+		}
+		// Non paginated response
 		c.JSON(http.StatusOK, getWatched(b.db, userId))
 	})
 

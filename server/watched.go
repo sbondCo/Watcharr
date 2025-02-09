@@ -93,6 +93,23 @@ func getWatched(db *gorm.DB, userId uint) []Watched {
 	return *watched
 }
 
+func getWatchedPage(db *gorm.DB, userId uint, pp PaginationParams) []Watched {
+	slog.Debug("getWatchedPage: A page was requested.", "user_id", userId, "pagination_params", pp)
+	watched := new([]Watched)
+	res := db.Scopes(Paginate(pp)).
+		Model(&Watched{}).
+		Preload("Content").
+		Preload("Game").
+		Preload("Game.Poster").
+		Preload("Tags").
+		Where("user_id = ?", userId).
+		Find(&watched)
+	if res.Error != nil {
+		panic(res.Error)
+	}
+	return *watched
+}
+
 // Get a watched list item by id (must be for `userId`).
 func getWatchedItemById(db *gorm.DB, userId uint, id uint) (Watched, error) {
 	watched := new(Watched)
