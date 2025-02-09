@@ -1,6 +1,9 @@
 package main
 
 import (
+	"log/slog"
+	"math"
+
 	"gorm.io/gorm"
 )
 
@@ -16,26 +19,36 @@ type PaginationParams struct {
 }
 
 // Pagination response struct.
-type PaginationResponse struct {
+type PaginationResponse[T interface{}] struct {
 	PaginationParams
-	TotalRows  int64       `json:"total_rows"`
-	TotalPages int         `json:"total_pages"`
-	Rows       interface{} `json:"rows"`
+	// Max amount of pages we can produce from total_results
+	TotalPages   int   `json:"totalPages"`
+	TotalResults int64 `json:"totalResults"`
+	Results      []T   `json:"results"`
 }
 
-// func paginate(value interface{}, pagination *pkg.Pagination, db *gorm.DB) *gorm.DB {
-// 	var totalRows int64
-// 	db.Model(value).Count(&totalRows)
+// Call when finished with PaginationResponse, before returning to user.
+// Performs final calculations.
+func (r *PaginationResponse[T]) Finished(p PaginationParams) {
+	r.PaginationParams = p
+	if r.TotalResults != 0 && r.Limit != 0 {
+		r.TotalPages = int(math.Ceil(float64(r.TotalResults) / float64(r.Limit)))
+	} else {
+		slog.Warn(
+			"PaginationResponse->Finished: TotalPages not calculated.",
+			"total_results", r.TotalResults,
+			"limit", r.Limit,
+		)
+	}
+}
 
-// 	pagination.TotalRows = totalRows
-// 	totalPages := int(math.Ceil(float64(totalRows) / float64(pagination.Limit)))
-// 	pagination.TotalPages = totalPages
-
-// 	offset := (page - 1) * pageSize
-// 	return db.Offset(offset).Limit(pageSize)
-// }
-
-func Paginate(p PaginationParams) func(db *gorm.DB) *gorm.DB {
+// Pagination gorm scope.
+// Pass in `PaginationParams` and the `PaginationResponse` will be filled out,
+// just fill out the `Results` manually.
+func Paginate[T interface{}](
+	p PaginationParams,
+	r *PaginationResponse[T],
+) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		offset := (p.Page - 1) * p.Limit
 		return db.Offset(offset).Limit(p.Limit)

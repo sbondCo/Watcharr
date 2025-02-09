@@ -75,6 +75,7 @@ type WatchedRemoveResponse struct {
 	NewActivity Activity `json:"newActivity"`
 }
 
+// Get entire watched list
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
 	res := db.Model(&Watched{}).
@@ -93,21 +94,29 @@ func getWatched(db *gorm.DB, userId uint) []Watched {
 	return *watched
 }
 
-func getWatchedPage(db *gorm.DB, userId uint, pp PaginationParams) []Watched {
+// Returns a page of users watched list.
+func getWatchedPage(db *gorm.DB, userId uint, pp PaginationParams) PaginationResponse[Watched] {
 	slog.Debug("getWatchedPage: A page was requested.", "user_id", userId, "pagination_params", pp)
 	watched := new([]Watched)
-	res := db.Scopes(Paginate(pp)).
+	pRes := &PaginationResponse[Watched]{}
+	res := db.
 		Model(&Watched{}).
 		Preload("Content").
 		Preload("Game").
 		Preload("Game.Poster").
 		Preload("Tags").
+		// The order matters so that Count is correctly
+		// counted for all of users rows:
 		Where("user_id = ?", userId).
+		Count(&pRes.TotalResults).
+		Scopes(Paginate(pp, pRes)).
 		Find(&watched)
 	if res.Error != nil {
 		panic(res.Error)
 	}
-	return *watched
+	pRes.Results = *watched
+	pRes.Finished(pp)
+	return *pRes
 }
 
 // Get a watched list item by id (must be for `userId`).
