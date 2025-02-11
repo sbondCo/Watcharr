@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Error from "@/lib/Error.svelte";
+	import Spinner from "@/lib/Spinner.svelte";
 	import infScroll from "@/lib/util/infScroll";
 	import WatchedList from "@/lib/WatchedList.svelte";
 	import type { PaginationResponse, Watched } from "@/types";
@@ -84,6 +85,11 @@
 listPage: {listPage} listPageMax: {listPageMax} listLoading: {listLoading}
 
 <WatchedList {list} />
+{#if listLoading}
+	<div style="margin-bottom: 60px;">
+		<Spinner />
+	</div>
+{/if}
 {#if listLoadError}
 	<div style="margin-bottom: 60px;">
 		<Error
