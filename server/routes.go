@@ -3,6 +3,7 @@ package main
 import (
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -399,7 +400,12 @@ func (b *BaseRouter) addGameRoutes() {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
-		games, err := igdb.Search(query)
+		decodedQuery, err := url.QueryUnescape(query)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter invalid"})
+			return
+		}
+		games, err := igdb.Search(decodedQuery)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return

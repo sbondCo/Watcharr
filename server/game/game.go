@@ -33,6 +33,8 @@ func (i *IGDB) req(host string, ep string, p map[string]string, b string, resp i
 		return errors.New("using igdbHost without a clientID or accessToken")
 	}
 
+	slog.Debug("IGDB->req: Creating a request.", "ep", ep, "body", b)
+
 	base, err := url.Parse(host)
 	if err != nil {
 		return errors.New("failed to parse api uri")
