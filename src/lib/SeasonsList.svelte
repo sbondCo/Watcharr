@@ -26,8 +26,6 @@
 
 	let { tvId, seasons, watchedItem = $bindable() }: Props = $props();
 
-	$inspect(tvId, seasons, watchedItem);
-
 	let activeSeason = $state(
 		typeof watchedItem?.lastViewedSeason === "number"
 			? watchedItem?.lastViewedSeason
