@@ -181,7 +181,11 @@
 			const watchedSeason = watchedSeasons.find(
 				(ws) => ws.seasonNumber === currentSeason.season_number,
 			);
-			console.log(watchedSeason?.status);
+			console.debug(
+				"checkSeasonStatus:",
+				currentSeason.season_number,
+				watchedSeason?.status,
+			);
 			return watchedSeason?.status;
 		}
 		return undefined;
