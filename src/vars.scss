@@ -1,7 +1,9 @@
 :root {
 	--bg-color: white;
+	--bg-color-accent: rgb(180, 180, 180);
 	--nav-color: rgba(255, 255, 255, 0.8);
 	--text-color: black;
+	--text-color-accent: rgb(90, 90, 90);
 	--accent-color: rgba(128, 128, 128, 0.226);
 	--accent-color-hover: rgba(46, 46, 46);
 	--backdrop-filter: blur(4px) grayscale(80%);
@@ -14,8 +16,10 @@
 
 :root.theme-dark {
 	--bg-color: rgb(15, 15, 15);
+	--bg-color-accent: rgb(70, 70, 70);
 	--nav-color: rgba(15, 15, 15, 0.438);
 	--text-color: white;
+	--text-color-accent: rgb(255, 255, 255);
 	--accent-color: rgba(46, 46, 46);
 	--accent-color-hover: rgba(255, 255, 255, 0.8);
 	--backdrop-filter: blur(0.5px) grayscale(50%);
@@ -27,7 +31,9 @@
 }
 
 $bg-color: var(--bg-color);
+$bg-color-accent: var(--bg-color-accent);
 $text-color: var(--text-color);
+$text-color-accent: var(--text-color-accent);
 $placeholder-color: var(--placeholder-color);
 $accent-color: var(--accent-color);
 $accent-color-hover: var(--accent-color-hover);

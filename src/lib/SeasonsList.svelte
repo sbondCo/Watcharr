@@ -197,28 +197,33 @@
 					activeSeason = season.season_number;
 				}}
 			>
-				<h1 class="season-name">{season.name}</h1>
-				{#if season.episode_count > 0}
-					<h2 class="season-episodes">({season.episode_count} Episodes)</h2>
-				{/if}
-				{#if season.air_date}
-					<h2 class="season-date">
-						{new Date(Date.parse(season.air_date)).getFullYear()}
-					</h2>
-				{:else if season.season_number > 0}
-					<h2>TBD</h2>
-				{/if}
-				{#if watchedItem}
-					{@const status = checkSeasonStatus(
-						watchedItem.watchedSeasons,
-						season,
-					)}
-					{#if status}
-						<div class="plain season-status">
-							<Icon i={watchedStatuses[status]} />
-						</div>
+				<div>
+					<h1 class="season-name">{season.name}</h1>
+					{#if season.episode_count > 0}
+						<h2 class="season-episodes">{season.episode_count} Episodes</h2>
 					{/if}
-				{/if}
+				</div>
+				<div>
+					{#if season.air_date}
+						<h2 class="season-date">
+							{new Date(Date.parse(season.air_date)).getFullYear()}
+						</h2>
+					{:else if season.season_number > 0}
+						<h2>TBD</h2>
+					{/if}
+
+					{#if watchedItem}
+						{@const status = checkSeasonStatus(
+							watchedItem.watchedSeasons,
+							season,
+						)}
+						{#if status}
+							<div class="plain season-status">
+								<Icon i={watchedStatuses[status]} />
+							</div>
+						{/if}
+					{/if}
+				</div>
 			</button>
 		{/each}
 		<div class="last"></div>
@@ -306,44 +311,61 @@
 		transition: top 200ms ease-in-out;
 
 		button {
-			display: grid;
-			grid-template: repeat(2, 1fr) / repeat(2, 1fr);
+			display: flex;
+			flex-flow: row;
+			gap: 0 18px;
 			align-items: center;
 			border: 2px solid #302d2d;
 			border-radius: 8px;
-			padding: 2px 8px;
+			padding: 4px 8px;
 			cursor: pointer;
+			min-width: 160px;
+			max-width: 220px;
+			transition: background-color 100ms ease;
+
+			& > div {
+				&:first-of-type {
+					display: flex;
+					flex-flow: column;
+				}
+
+				&:last-of-type {
+					display: flex;
+					flex-flow: column;
+					margin-left: auto;
+					margin-bottom: auto;
+					padding-top: 5px;
+				}
+			}
 
 			&:first-of-type {
 				margin-top: 10px;
 			}
 
+			.season-name {
+				text-align: left;
+			}
+
 			.season-name,
 			.season-episodes {
-				grid-column: 1;
 				margin-right: auto;
 			}
 
 			.season-date,
 			.season-status {
-				grid-column: 2;
 				margin-left: auto;
 			}
 
-			.season-episodes,
-			.season-status {
-				grid-row: 2;
-			}
 			.season-episodes {
-				opacity: 0.7;
+				color: $text-color-accent;
 			}
 
 			.season-status {
 				fill: $text-color;
 
 				:global(svg) {
-					width: 18px;
-					height: 18px;
+					width: 20px;
+					height: 20px;
 				}
 			}
 
@@ -367,6 +389,10 @@
 
 				.season-status {
 					fill: $bg-color;
+				}
+
+				.season-episodes {
+					color: $bg-color-accent;
 				}
 			}
 
