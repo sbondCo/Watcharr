@@ -341,9 +341,8 @@
 		top: 0;
 		gap: 3px;
 		z-index: 99990;
-		backdrop-filter: blur(2.5px) saturate(120%);
-		background-color: $nav-color;
 		transition: top 200ms ease-in-out;
+		@include nav-blur;
 
 		&:global(.scrolled-down) {
 			top: -110px;

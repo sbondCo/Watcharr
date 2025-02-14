@@ -1,0 +1,4 @@
+@mixin nav-blur {
+	backdrop-filter: blur(2.5px) saturate(120%);
+	background-color: var(--nav-color);
+}
