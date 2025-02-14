@@ -457,10 +457,12 @@
 
 		ul.seasons {
 			flex-flow: row;
-			flex-wrap: wrap;
+			flex-wrap: nowrap;
 			position: unset;
 			height: unset;
-			justify-content: center;
+			justify-content: unset;
+			overflow: auto;
+			min-width: unset;
 
 			button {
 				&:first-of-type {
