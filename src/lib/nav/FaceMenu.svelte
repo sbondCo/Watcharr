@@ -93,13 +93,21 @@
 		<ProxyUserLogoutModal onClose={() => (proxyUserLogoutShown = false)} />
 	{/if}
 	<span style="color:black">
-		<a class="menu-footer" href="#" onclick={() => {
-			aboutModalOpen = !aboutModalOpen;
-		}}>
+		<a
+			class="menu-footer"
+			href="#"
+			onclick={() => {
+				aboutModalOpen = !aboutModalOpen;
+			}}
+		>
 			about
 		</a>
-		 | 
-		<a class="menu-footer" href="https://github.com/sbondCo/Watcharr/releases" target="_blank">
+		|
+		<a
+			class="menu-footer"
+			href="https://github.com/sbondCo/Watcharr/releases"
+			target="_blank"
+		>
 			v{__WATCHARR_VERSION__}
 		</a>
 	</span>
@@ -111,20 +119,29 @@
 			<div class="inner">
 				<h2>About Watcharr</h2>
 				<h5 class="norm">
-					Watcharr is an open source project developed by <a href="https://github.com/sbondCo/Watcharr/commits?author=IRHM">IRHM</a> 
+					Watcharr is an open source project developed by <a
+						href="https://github.com/sbondCo/Watcharr/commits?author=IRHM"
+						>IRHM</a
+					>
 					and other great people.
 				</h5>
 				<div class="horizontal-icon-list">
-					<a href="https://github.com/sbondCo/Watcharr" target="_blank" title="Github">
+					<a
+						href="https://github.com/sbondCo/Watcharr"
+						target="_blank"
+						title="Github"
+					>
 						<Icon i="github" wh={60} />
 					</a>
-					<a href="https://watcharr.app/" target="_blank" title="Watcharr Project Page">
+					<a
+						href="https://watcharr.app/"
+						target="_blank"
+						title="Watcharr Project Page"
+					>
 						<Icon i="website" wh={60} />
 					</a>
 				</div>
-				<h5 class="norm">
-					Watcharr uses following media databases
-				</h5>
+				<h5 class="norm">Watcharr uses following media databases</h5>
 				<div class="horizontal-icon-list">
 					<a href="https://www.themoviedb.org/" target="_blank" title="TMDB">
 						<Icon i="tmdb" wh={60} />
@@ -157,11 +174,11 @@
 		justify-content: center;
 		align-items: center;
 		padding-bottom: 20px;
-  		padding-top: 5px;
+		padding-top: 5px;
 	}
 
 	div.horizontal-icon-list > a {
 		display: inline;
-		margin: 0 10px
+		margin: 0 10px;
 	}
 </style>
