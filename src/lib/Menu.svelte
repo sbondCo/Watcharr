@@ -100,6 +100,21 @@
 					}
 				}
 
+				a.menu-footer {
+					font-size: 11px;
+					padding: 2px;
+					text-align: center;
+					transition: inherit;
+					color: gray;
+
+					&:hover,
+					&:focus-visible {
+						text-decoration: underline;
+						background-color: inherit;
+						color: inherit;
+					}
+				}
+
 				span {
 					margin-top: 8px;
 					font-size: 11px;

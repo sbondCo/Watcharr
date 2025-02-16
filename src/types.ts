@@ -57,7 +57,11 @@ export type Icon =
 	| "sparkles"
 	| "tag"
 	| "ticket"
-	| "lock-closed";
+	| "lock-closed"
+	| "github"
+	| "website"
+	| "tmdb"
+	| "igdb";
 
 export type Theme = "light" | "dark";
 
