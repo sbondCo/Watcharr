@@ -100,12 +100,18 @@
 					}
 				}
 
-				a.menu-footer {
+				a.menu-footer,
+				button.menu-footer {
 					font-size: 11px;
 					padding: 2px;
 					text-align: center;
 					transition: inherit;
 					color: gray;
+					cursor: pointer;
+					border: none;
+					display: inline;
+					font-weight: initial;
+					width: auto;
 
 					&:hover,
 					&:focus-visible {
