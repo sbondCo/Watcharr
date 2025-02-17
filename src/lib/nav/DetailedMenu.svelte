@@ -9,6 +9,7 @@
 			store.wlDetailedView = store.wlDetailedView.filter((a) => a !== d);
 		} else {
 			store.wlDetailedView.push(d);
+			store.wlDetailedView = store.wlDetailedView;
 		}
 	}
 </script>
