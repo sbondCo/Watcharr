@@ -222,18 +222,43 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Get tv details (for tv page)
-	content.GET("/tv/:id", WhereaboutsRequired(), cache.CachePage(b.ms, exp, func(c *gin.Context) {
-		if c.Param("id") == "" {
-			c.Status(400)
+	content.GET("/tv/:id", WhereaboutsRequired(), func(c *gin.Context) {
+		tmdbIdStr := c.Param("id")
+		if tmdbIdStr == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "must provide an 'id' parameter"})
 			return
 		}
-		content, err := tvDetails(b.db, c.Param("id"), c.MustGet("userCountry").(string), map[string]string{"append_to_response": "videos,watch/providers,similar,external_ids,keywords"})
+		tmdbId, err := strconv.ParseUint(tmdbIdStr, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "'id' parameter must be a number"})
+			return
+		}
+		userId := c.MustGet("userId").(uint)
+		resp := DataWithWatched[TMDBShowDetails]{}
+		// 1. Get details
+		content, err := tvDetails(
+			b.db,
+			c.Param("id"),
+			c.MustGet("userCountry").(string),
+			map[string]string{
+				"append_to_response": "videos,watch/providers,similar,external_ids,keywords",
+			},
+		)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, content)
-	}))
+		resp.Data = &content
+		// 2. append watched list entry if exists
+		if watchedEntry, err := getWatchedItemByTmdbId(b.db, userId, uint(tmdbId), SHOW); err != nil {
+			if err != gorm.ErrRecordNotFound {
+				resp.FailedToGetWatched = true
+			}
+		} else {
+			resp.Watched = &watchedEntry
+		}
+		c.JSON(http.StatusOK, resp)
+	})
 
 	// Get tv cast
 	content.GET("/tv/:id/credits", cache.CachePage(b.ms, exp, func(c *gin.Context) {

@@ -22,6 +22,7 @@ const (
 	SHOW_EPISODE ContentType = "tv_episode"
 )
 
+// TODO This should probably be replaced at some point (direct use of https://github.com/patrickmn/go-cache or with https://github.com/eko/gocache ?).
 var ContentStore = persistence.NewInMemoryStore(time.Hour * 24)
 
 // For storing cached content, so we can serve the basic local data for watched list to work
@@ -356,7 +357,16 @@ func movieCredits(id string) (TMDBContentCredits, error) {
 }
 
 func tvDetails(db *gorm.DB, id string, country string, rParams map[string]string) (TMDBShowDetails, error) {
+	var cacheKey = "contentstore-tvDetails-" + id + "-" + country
 	resp := new(TMDBShowDetails)
+	if err := ContentStore.Get(cacheKey, &resp); err != nil {
+		if err != persistence.ErrCacheMiss {
+			slog.Error("tvDetails: Cache failed for some reason", "error", err)
+		}
+	} else {
+		slog.Debug("tvDetails: Returning cache.")
+		return *resp, nil
+	}
 	err := tmdbRequest("/tv/"+id, rParams, &resp)
 	if err != nil {
 		slog.Error("Failed to complete tv details request!", "error", err.Error())
@@ -364,6 +374,9 @@ func tvDetails(db *gorm.DB, id string, country string, rParams map[string]string
 	}
 	transformProviders(&resp.WatchProviders, country)
 	go cacheContentTv(db, *resp, true)
+	if err := ContentStore.Set(cacheKey, resp, time.Hour*24); err != nil {
+		slog.Error("tvDetails: Failed to set cache!", "error", err)
+	}
 	return *resp, nil
 }
 

@@ -75,6 +75,20 @@ type WatchedRemoveResponse struct {
 	NewActivity Activity `json:"newActivity"`
 }
 
+// Generic for returning data of (T)ype along with any
+// related watched entry data.
+type DataWithWatched[T any] struct {
+	// The related watched entry.
+	Watched *Watched `json:"watched,omitempty"`
+	// If we failed to get the watched entry,
+	// set this to true, so the frontend can
+	// notify the user of why there is possibly
+	// missing watched list data.
+	FailedToGetWatched bool `json:"failedToGetWatched,omitempty"`
+	// The data going along with response.
+	Data *T `json:"data,omitempty"`
+}
+
 // Get entire watched list
 func getWatched(db *gorm.DB, userId uint) []Watched {
 	watched := new([]Watched)
