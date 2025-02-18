@@ -234,7 +234,7 @@ func (b *BaseRouter) addContentRoutes() {
 			return
 		}
 		userId := c.MustGet("userId").(uint)
-		resp := DataWithWatched[TMDBShowDetails]{}
+		resp := TMDBShowDetailsWithWatched{}
 		// 1. Get details
 		content, err := tvDetails(
 			b.db,
@@ -248,7 +248,7 @@ func (b *BaseRouter) addContentRoutes() {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		resp.Data = &content
+		resp.TMDBShowDetails = &content
 		// 2. append watched list entry if exists
 		if watchedEntry, err := getWatchedItemByTmdbId(b.db, userId, uint(tmdbId), SHOW); err != nil {
 			if err != gorm.ErrRecordNotFound {

@@ -75,9 +75,7 @@ type WatchedRemoveResponse struct {
 	NewActivity Activity `json:"newActivity"`
 }
 
-// Generic for returning data of (T)ype along with any
-// related watched entry data.
-type DataWithWatched[T any] struct {
+type WatchedAddedToContent struct {
 	// The related watched entry.
 	Watched *Watched `json:"watched,omitempty"`
 	// If we failed to get the watched entry,
@@ -85,8 +83,11 @@ type DataWithWatched[T any] struct {
 	// notify the user of why there is possibly
 	// missing watched list data.
 	FailedToGetWatched bool `json:"failedToGetWatched,omitempty"`
-	// The data going along with response.
-	Data *T `json:"data,omitempty"`
+}
+
+type TMDBShowDetailsWithWatched struct {
+	WatchedAddedToContent
+	*TMDBShowDetails
 }
 
 // Get entire watched list
