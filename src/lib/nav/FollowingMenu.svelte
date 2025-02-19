@@ -4,12 +4,13 @@
 
 	interface Props {
 		close: () => {};
+		clickOutsideCallback?: () => void;
 	}
 
-	let { close }: Props = $props();
+	let { close, clickOutsideCallback }: Props = $props();
 </script>
 
-<Menu conf={{ width: "180px", arrowRight: "53px" }}>
+<Menu {clickOutsideCallback} conf={{ width: "180px", arrowRight: "53px" }}>
 	{#if store.follows?.length > 0}
 		<h4 class="norm sm-caps">following</h4>
 		<div class="list">

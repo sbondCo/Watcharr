@@ -2,6 +2,12 @@
 	import { store } from "@/store.svelte";
 	import Menu from "../Menu.svelte";
 
+	interface Props {
+		clickOutsideCallback?: () => void;
+	}
+
+	let { clickOutsideCallback }: Props = $props();
+
 	function sortClicked(type: string, modeType: string = "UPDOWN") {
 		let mode: string;
 		if (modeType === "UPDOWN") {
@@ -28,7 +34,10 @@
 	}
 </script>
 
-<Menu conf={{ width: "180px", right: "90px", arrowLeft: "21px" }}>
+<Menu
+	{clickOutsideCallback}
+	conf={{ width: "180px", right: "90px", arrowLeft: "21px" }}
+>
 	<button
 		class={`plain ${store.activeSort[0] == "DATEADDED" ? store.activeSort[1].toLowerCase() : ""}`}
 		onclick={() => sortClicked("DATEADDED")}

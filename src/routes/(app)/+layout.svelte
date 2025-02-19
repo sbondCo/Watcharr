@@ -11,7 +11,7 @@
 	import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
 	import SortMenu from "@/lib/nav/SortMenu.svelte";
 	import TagMenu from "@/lib/tag/TagMenu.svelte";
-	import { isTouch } from "@/lib/util/helpers";
+	import { clickOutside, isTouch } from "@/lib/util/helpers";
 	import { store, defaultSort } from "@/store.svelte";
 	import axios from "axios";
 	import { onMount } from "svelte";
@@ -222,7 +222,10 @@
 					{/if}
 				</button>
 				{#if detailedMenuShown}
-					<DetailedMenu />
+					<DetailedMenu
+						clickOutsideCallback={() =>
+							(detailedMenuShown = !detailedMenuShown)}
+					/>
 				{/if}
 			{/if}
 			<!-- Show on watched list and shared/followed watched lists -->
@@ -259,10 +262,14 @@
 					{/if}
 				</button>
 				{#if sortMenuShown}
-					<SortMenu />
+					<SortMenu
+						clickOutsideCallback={() => (sortMenuShown = !sortMenuShown)}
+					/>
 				{/if}
 				{#if filterMenuShown}
-					<FilterMenu />
+					<FilterMenu
+						clickOutsideCallback={() => (filterMenuShown = !filterMenuShown)}
+					/>
 				{/if}
 			{/if}
 			<button
@@ -282,6 +289,7 @@
 						tagMenuShown = false;
 					}}
 					showManageBtn={true}
+					clickOutsideCallback={() => (tagMenuShown = !tagMenuShown)}
 				/>
 			{/if}
 			<button
@@ -306,11 +314,15 @@
 				<Icon i="people" wh={26} />
 			</button>
 			{#if followingMenuShown}
-				<FollowingMenu close={() => (followingMenuShown = false)} />
+				<FollowingMenu
+					clickOutsideCallback={() =>
+						(followingMenuShown = !followingMenuShown)}
+					close={() => (followingMenuShown = false)}
+				/>
 			{/if}
 			<button class="plain face" onclick={handleProfileClick}>:)</button>
 			{#if subMenuShown}
-				<FaceMenu />
+				<FaceMenu clickOutsideCallback={() => (subMenuShown = !subMenuShown)} />
 			{/if}
 		</div>
 	</div>
