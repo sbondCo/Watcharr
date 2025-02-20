@@ -1,8 +1,8 @@
 <!-- A menu designed to pop up around a
  	button after it is pressed. -->
 <script lang="ts">
+	import { clickOutside } from "@/lib/actions/clickOutside";
 	import stayInView from "./actions/stayInView";
-	import { clickOutside } from "./util/helpers";
 
 	export interface MenuConfig {
 		width?: string;
@@ -19,7 +19,7 @@
 		clickOutsideCallback?: () => void;
 	}
 
-	let { children, conf, clickOutsideCallback = () => {} }: Props = $props();
+	let { children, conf, clickOutsideCallback }: Props = $props();
 </script>
 
 <div

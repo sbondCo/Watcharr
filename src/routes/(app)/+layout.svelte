@@ -11,7 +11,7 @@
 	import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
 	import SortMenu from "@/lib/nav/SortMenu.svelte";
 	import TagMenu from "@/lib/tag/TagMenu.svelte";
-	import { clickOutside, isTouch } from "@/lib/util/helpers";
+	import { isTouch } from "@/lib/util/helpers";
 	import { store, defaultSort } from "@/store.svelte";
 	import axios from "axios";
 	import { onMount } from "svelte";
@@ -205,6 +205,7 @@
 			<!-- Detailed posters only supported on own watched list currently -->
 			{#if page.url?.pathname === "/" || page.url?.pathname.startsWith("/search")}
 				<button
+					id="exclude-outclick"
 					class="plain other detailedView"
 					onclick={() => {
 						closeAllSubMenus("detailed");
@@ -245,6 +246,7 @@
 					{/if}
 				</button>
 				<button
+					id="exclude-outclick"
 					class="plain other filter"
 					onclick={() => {
 						closeAllSubMenus("filter");
@@ -273,6 +275,7 @@
 				{/if}
 			{/if}
 			<button
+				id="exclude-outclick"
 				class="plain other tag"
 				onclick={() => {
 					closeAllSubMenus("tag");
@@ -300,6 +303,7 @@
 				<Icon i="compass" wh={26} />
 			</button>
 			<button
+				id="exclude-outclick"
 				class="plain other following"
 				onclick={() => {
 					closeAllSubMenus("following");
