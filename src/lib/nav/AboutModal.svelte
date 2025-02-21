@@ -62,10 +62,6 @@
 </Modal>
 
 <style lang="scss">
-	h2 {
-		margin-bottom: 16px;
-	}
-
 	p {
 		margin: 8px 0px;
 	}
