@@ -91,7 +91,7 @@
 	{#if proxyUserLogoutShown}
 		<ProxyUserLogoutModal onClose={() => (proxyUserLogoutShown = false)} />
 	{/if}
-	<span style="color:inherit">
+	<span>
 		<button
 			class="menu-footer"
 			onclick={() => {

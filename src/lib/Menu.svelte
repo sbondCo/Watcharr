@@ -106,7 +106,7 @@
 					padding: 2px;
 					text-align: center;
 					transition: inherit;
-					color: gray;
+					color: $text-color-accent;
 					cursor: pointer;
 					border: none;
 					display: inline;
@@ -116,15 +116,15 @@
 					&:hover,
 					&:focus-visible {
 						text-decoration: underline;
-						background-color: inherit;
-						color: inherit;
+						background-color: $bg-color;
+						color: $text-color;
 					}
 				}
 
 				span {
 					margin-top: 8px;
 					font-size: 11px;
-					color: gray;
+					color: $text-color-accent;
 					text-align: center;
 				}
 			}
