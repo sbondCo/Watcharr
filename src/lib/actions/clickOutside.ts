@@ -23,7 +23,7 @@ export function clickOutside(
 
 		const elements = document.querySelectorAll("#exclude-outclick");
 		for (const element of elements) {
-			if (element && target.contains(element)) {
+			if (element && element.contains(target)) {
 				clicked = true;
 				break;
 			}
@@ -36,7 +36,7 @@ export function clickOutside(
 		if (
 			(!event.defaultPrevented &&
 				node?.contains(event.target as HTMLElement)) ||
-			!isClickOnExcludedTarget(event.target)
+			isClickOnExcludedTarget(event.target)
 		) {
 			pointerDownStartedInside = true;
 			return;
