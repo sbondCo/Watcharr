@@ -232,6 +232,13 @@
 					>
 						dark
 					</button>
+					<button
+						class={`plain${selectedTheme === "system" ? " selected" : ""}`}
+						id="system"
+						onclick={() => toggleTheme("system")}
+					>
+						<span>system</span>
+					</button>
 				</div>
 			</div>
 
@@ -498,6 +505,20 @@
 				&#dark {
 					background-color: black;
 					outline-color: white;
+					&:hover {
+						color: white;
+						-webkit-text-stroke: 0.5px white;
+					}
+				}
+
+				&#system {
+					background: linear-gradient(to right bottom, white 50%, black 50.3%);
+					outline-color: black;
+
+					span {
+						mix-blend-mode: difference;
+					}
+
 					&:hover {
 						color: white;
 						-webkit-text-stroke: 0.5px white;

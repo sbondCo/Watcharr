@@ -54,7 +54,7 @@ const _store: Store = $state({
 	notifications: [],
 	activeSort: defaultSort,
 	activeFilters: { type: [], status: [] },
-	appTheme: "light",
+	appTheme: "system",
 	importedList: undefined,
 	parsedImportedList: undefined,
 	searchQuery: "",
@@ -186,7 +186,7 @@ export const clearAllStores = () => {
 	store.watchedList = [];
 	store.notifications = [];
 	store.activeSort = defaultSort;
-	store.appTheme = "light";
+	store.appTheme = "system";
 	store.importedList = undefined;
 	store.parsedImportedList = undefined;
 	store.searchQuery = "";
@@ -238,18 +238,15 @@ function rehydrateStore() {
 	const theme = localStorage.getItem("theme") as Theme;
 	if (theme) {
 		_store.appTheme = theme;
-		toggleTheme(theme, false);
+		toggleTheme(theme, true);
 		console.debug(
 			"rehydrateStore: Restored appTheme:",
 			$state.snapshot(store.appTheme),
 		);
 	} else {
-		let defTheme: Theme = "light";
-		if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-			defTheme = "dark";
-		}
+		let defTheme: Theme = "system";
 		_store.appTheme = defTheme;
-		toggleTheme(defTheme, false);
+		toggleTheme(defTheme, true);
 		console.debug(
 			"rehydrateStore: appTheme hydrated from system default (wont save):",
 			defTheme,

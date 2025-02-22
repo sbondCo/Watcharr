@@ -63,7 +63,7 @@ export type Icon =
 	| "tmdb"
 	| "igdb";
 
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "system";
 
 export type WLDetailedViewOption =
 	| "statusRating"
