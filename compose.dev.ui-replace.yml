@@ -1,0 +1,24 @@
+# This compose file will replace watcharrs
+# built in UI with a custom one provided in
+# a named volume (for use with ui-build image).
+
+services:
+  watcharr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: watcharr
+    ports:
+      - 3080:3080
+    volumes:
+      - ./container_data:/data
+      - type: volume
+        source: ui-build_watcharr-ui
+        target: /ui
+        volume:
+          nocopy: true
+          subpath: build
+
+volumes:
+  ui-build_watcharr-ui:
+    external: true

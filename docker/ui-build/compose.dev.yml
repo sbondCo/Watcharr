@@ -1,0 +1,14 @@
+# To test prod
+services:
+  watcharr-ui-build:
+    build:
+      context: ../../
+      dockerfile: ./docker/ui-build/Dockerfile
+    container_name: watcharr-ui-build
+    volumes:
+      - watcharr-ui:/ui
+    environment:
+      WATCHARR_BASE: "/sp"
+
+volumes:
+  watcharr-ui:

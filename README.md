@@ -54,7 +54,7 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 
 # Set Up
 
-[Checkout our documentation](https://watcharr.app/docs/category/installation) for an up to date guide on setup! If you hate manuals, but love docker, this [docker-compose.yml](./docker-compose.yml) file is your friend.
+[Checkout our documentation](https://watcharr.app/docs/category/installation) for an up to date guide on setup! If you hate manuals, but love docker, this [compose.yml](./compose.yml) file is your friend.
 
 # Community Made Tools
 

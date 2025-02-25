@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { afterNavigate, goto } from "$app/navigation";
+	import { base } from "$app/paths";
 	import { page } from "$app/state";
 	import Icon from "@/lib/Icon.svelte";
 	import PageError from "@/lib/PageError.svelte";
@@ -112,7 +113,7 @@
 				store.tags = ts.data;
 			}
 		} else {
-			goto("/login?again=1");
+			goto(base + "/login?again=1");
 		}
 	}
 
