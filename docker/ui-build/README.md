@@ -4,4 +4,4 @@ Accepts environment variables:
 
 - `WATCHARR_BASE`
 
-TODO: Add link to doc when made.
+https://watcharr.app/docs/installation/docker-compose-subpath
