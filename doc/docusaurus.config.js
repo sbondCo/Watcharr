@@ -81,9 +81,6 @@ const config = {
 						label: "Docs",
 					},
 					{
-						type: "docsVersionDropdown",
-					},
-					{
 						href: "https://beta.watcharr.app",
 						label: "Demo",
 						position: "right",
