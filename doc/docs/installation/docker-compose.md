@@ -9,7 +9,7 @@ description: Install and setup with Docker Compose.
 
 Installing Watcharr with a docker compose file is easy. You can copy the example below to get started:
 
-```yaml title="docker-compose.yml"
+```yaml title="compose.yml"
 services:
   watcharr:
     # The :latest tag is used for simplicity, it is recommended
@@ -51,7 +51,7 @@ Breaking changes are marked at the top of releases: https://github.com/sbondCo/W
 
 Updating your server can be done in two steps:
 
-1. Update the `image` version in your `docker-compose.yml` file.
+1. Update the `image` version in your `compose.yml` file.
    Skip this step if you are using the `latest` tag.
 
    ```yaml
