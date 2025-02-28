@@ -4,21 +4,21 @@
 
 services:
   watcharr:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # We dont need to build here too for testing if
+    # a custom ui works, so using latest prod image.
+    image: ghcr.io/sbondco/watcharr:latest
     container_name: watcharr
     ports:
       - 3080:3080
     volumes:
       - ./container_data:/data
       - type: volume
-        source: ui-build_watcharr-ui
+        source: watcharr-ui
         target: /ui
         volume:
           nocopy: true
           subpath: build
 
 volumes:
-  ui-build_watcharr-ui:
+  watcharr-ui:
     external: true

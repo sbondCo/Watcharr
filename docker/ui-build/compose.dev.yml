@@ -12,3 +12,4 @@ services:
 
 volumes:
   watcharr-ui:
+    name: "watcharr-ui"
