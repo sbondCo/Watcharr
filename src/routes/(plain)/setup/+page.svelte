@@ -1,30 +1,30 @@
 <script lang="ts">
-	import { preventDefault } from "svelte/legacy";
-
 	import { goto } from "$app/navigation";
 	import type { AvailableAuthProviders } from "@/types";
 	import { noAuthAxios } from "@/lib/util/api";
 	import { onMount } from "svelte";
 	import { notify, unNotify } from "@/lib/util/notify";
+	import { toBaseUrl } from "@/lib/util/url";
 
-	let error: string = $state();
+	let error: string | undefined = $state();
 
 	onMount(() => {
 		if (localStorage.getItem("token")) {
-			goto("/");
+			goto(toBaseUrl("/"));
 		}
 
 		noAuthAxios.get<AvailableAuthProviders>("/auth/available").then((r) => {
 			if (r?.data) {
 				if (!r?.data?.isInSetup) {
 					console.log("Server not in setup.. navigating to login page.");
-					goto("/login");
+					goto(toBaseUrl("/login"));
 				}
 			}
 		});
 	});
 
 	function handleLogin(ev: SubmitEvent) {
+		ev.preventDefault();
 		const fd = new FormData(ev.target! as HTMLFormElement);
 		const user = fd.get("username");
 		const pass = fd.get("password");
@@ -44,7 +44,7 @@
 				if (resp.data?.token) {
 					console.log("Received token... logging in.");
 					localStorage.setItem("token", resp.data.token);
-					goto("/");
+					goto(toBaseUrl("/"));
 					notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
 				}
 			})
@@ -74,7 +74,7 @@
 			<span class="error">{error}!</span>
 		{/if}
 
-		<form onsubmit={preventDefault(handleLogin)}>
+		<form onsubmit={handleLogin}>
 			<label for="username">Username</label>
 			<input type="text" name="username" placeholder="Username" />
 

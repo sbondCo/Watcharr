@@ -6,6 +6,7 @@
 	import Spinner from "../Spinner.svelte";
 	import { clearWatcharrData } from ".";
 	import { goto } from "$app/navigation";
+	import { toBaseUrl } from "../util/url";
 
 	interface Props {
 		onClose: () => void;
@@ -34,7 +35,7 @@
 
 	function logout() {
 		clearWatcharrData();
-		goto("/login?noAuto=1");
+		goto(toBaseUrl("/login?noAuto=1"));
 	}
 
 	function proxyLogout() {

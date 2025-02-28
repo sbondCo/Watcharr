@@ -26,6 +26,7 @@
 		TodoMoviesMovie,
 	} from "@/types";
 	import Icon from "@/lib/Icon.svelte";
+	import { toBaseUrl } from "@/lib/util/url";
 
 	let isDragOver = $state(false);
 	let isLoading = $state(false);
@@ -83,7 +84,7 @@
 							data: r.result.toString(),
 							type,
 						};
-						goto("/import/process");
+						goto(toBaseUrl("/import/process"));
 					}
 				},
 				false,
@@ -255,7 +256,7 @@
 				data: JSON.stringify(toImport),
 				type: "movary",
 			};
-			goto("/import/process");
+			goto(toBaseUrl("/import/process"));
 		} catch (err) {
 			isLoading = false;
 			notify({ type: "error", text: "Failed to read files!" });
@@ -331,7 +332,7 @@
 				data: JSON.stringify(toImport),
 				type: "watcharr",
 			};
-			goto("/import/process");
+			goto(toBaseUrl("/import/process"));
 		} catch (err) {
 			isLoading = false;
 			notify({ type: "error", text: "Failed to read file!" });
@@ -380,7 +381,7 @@
 							data: r.result.toString(),
 							type: "myanimelist",
 						};
-						goto("/import/process");
+						goto(toBaseUrl("/import/process"));
 					}
 				},
 				false,
@@ -539,7 +540,7 @@
 				data: JSON.stringify(toImport),
 				type: "ryot",
 			};
-			goto("/import/process");
+			goto(toBaseUrl("/import/process"));
 		} catch (err) {
 			isLoading = false;
 			notify({ type: "error", text: "Failed to read file!" });
@@ -657,7 +658,7 @@
 				type: "todomovies",
 			};
 
-			goto("/import/process");
+			goto(toBaseUrl("/import/process"));
 		} catch (err) {
 			isLoading = false;
 			notify({ type: "error", text: "Failed to read files!" });
@@ -667,7 +668,7 @@
 
 	onMount(() => {
 		if (!localStorage.getItem("token")) {
-			goto("/login");
+			goto(toBaseUrl("/login"));
 		}
 	});
 </script>
@@ -702,7 +703,7 @@
 					filesSelected={(f) => processFiles(f, "tmdb")}
 				/>
 
-				<button class="plain" onclick={() => goto("/import/trakt")}>
+				<button class="plain" onclick={() => goto(toBaseUrl("/import/trakt"))}>
 					<Icon i="trakt" wh="100%" />
 					<h4 class="norm">Trakt Import</h4>
 				</button>

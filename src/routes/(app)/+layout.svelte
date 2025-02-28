@@ -13,6 +13,7 @@
 	import SortMenu from "@/lib/nav/SortMenu.svelte";
 	import TagMenu from "@/lib/tag/TagMenu.svelte";
 	import { isTouch } from "@/lib/util/helpers";
+	import { toBaseUrl } from "@/lib/util/url";
 	import { store, defaultSort } from "@/store.svelte";
 	import axios from "axios";
 	import { onMount } from "svelte";
@@ -35,7 +36,7 @@
 
 	function handleProfileClick() {
 		if (!localStorage.getItem("token")) {
-			goto("/login");
+			goto(toBaseUrl("/login"));
 		} else {
 			closeAllSubMenus("sub");
 			subMenuShown = !subMenuShown;
@@ -65,7 +66,7 @@
 					// Using autofocus seems to work. Disables after goto runs.
 					// https://github.com/sbondCo/Watcharr/issues/169
 					target.autofocus = true;
-					goto(`/search?q=${encodeURIComponent(query)}`).then(() => {
+					goto(toBaseUrl(`/search?q=${encodeURIComponent(query)}`)).then(() => {
 						// Use mainSearchEl if nav not split, otherwise use ev target.
 						if (
 							!document.body.classList.contains("split-nav") &&
@@ -113,7 +114,7 @@
 				store.tags = ts.data;
 			}
 		} else {
-			goto(base + "/login?again=1");
+			goto(toBaseUrl("/login?again=1"));
 		}
 	}
 
@@ -188,7 +189,7 @@
 
 <nav bind:this={navEl}>
 	<div class="wrapper">
-		<a href="/">
+		<a href={toBaseUrl("/")}>
 			<span class="large">Watcharr</span>
 			<span class="small">W</span>
 		</a>
@@ -279,7 +280,7 @@
 			{#if tagMenuShown}
 				<TagMenu
 					onTagClick={(tag) => {
-						goto(`/tag/${tag.id}`);
+						goto(toBaseUrl(`/tag/${tag.id}`));
 						tagMenuShown = false;
 					}}
 					showManageBtn={true}
@@ -287,7 +288,7 @@
 			{/if}
 			<button
 				class="plain other discover"
-				onclick={() => goto("/discover")}
+				onclick={() => goto(toBaseUrl("/discover"))}
 				use:tooltip={{ text: "Discover", pos: "bot" }}
 			>
 				<Icon i="compass" wh={26} />

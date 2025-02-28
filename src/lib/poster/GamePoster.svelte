@@ -18,6 +18,7 @@
 	import PosterRating from "./PosterRating.svelte";
 	import { decode } from "blurhash";
 	import ExtraDetails from "./ExtraDetails.svelte";
+	import { toBaseUrl } from "../util/url";
 
 	interface Props {
 		id?: number | undefined; // Watched list id
@@ -72,7 +73,7 @@
 	const poster = media.poster?.path
 		? `${baseURL}/${media.poster.path}`
 		: `https://images.igdb.com/igdb/image/upload/t_cover_big/${media.coverId}.jpg`;
-	const link = media.id ? `/game/${media.id}` : undefined;
+	const link = media.id ? toBaseUrl(`/game/${media.id}`) : undefined;
 	const dateStr = media.firstReleaseDate;
 	const year = dateStr ? new Date(dateStr).getFullYear() : undefined;
 

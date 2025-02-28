@@ -8,6 +8,7 @@
 	import { clearWatcharrData } from "../logout";
 	import { notify } from "../util/notify";
 	import AboutModal from "./AboutModal.svelte";
+	import { toBaseUrl } from "../util/url";
 
 	let user = $derived(store.userInfo);
 	let proxyUserLogoutShown = $state(false);
@@ -20,23 +21,23 @@
 			return;
 		}
 		clearWatcharrData();
-		goto("/login");
+		goto(toBaseUrl("/login"));
 	}
 
 	function profile() {
-		goto("/profile");
+		goto(toBaseUrl("/profile"));
 	}
 
 	function serverSettings() {
-		goto("/server");
+		goto(toBaseUrl("/server"));
 	}
 
 	function userManagement() {
-		goto("/manage_users");
+		goto(toBaseUrl("/manage_users"));
 	}
 
 	function requestManagement() {
-		goto("/arr_requests");
+		goto(toBaseUrl("/arr_requests"));
 	}
 
 	function shareWatchedList() {
@@ -44,7 +45,9 @@
 		const ud = parseTokenPayload();
 		console.log(ud);
 		if (ud?.userId && ud?.username) {
-			const shareLink = `${window.location.origin}/lists/${ud.userId}/${ud.username}`;
+			const shareLink = `${window.location.origin}${toBaseUrl(
+				`/lists/${ud.userId}/${ud.username}`,
+			)}`;
 			navigator.clipboard
 				.writeText(shareLink)
 				.then(() => {

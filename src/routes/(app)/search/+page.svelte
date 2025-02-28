@@ -29,6 +29,7 @@
 	import Icon from "@/lib/Icon.svelte";
 	import { afterNavigate, goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import { toBaseUrl } from "@/lib/util/url.js";
 
 	type GameWithMediaType = GameSearch & { media_type: "game" };
 	type CombinedResult =
@@ -278,7 +279,7 @@
 							data[0],
 						);
 
-						goto(`/game/${data[0].id}`);
+						goto(toBaseUrl(`/game/${data[0].id}`));
 						return;
 					}
 					allSearchResults.push(...data);
@@ -290,7 +291,7 @@
 					// assuming that people paste the id in, this should work
 					// without the debounce going to an incomplete id.
 					// Flesh out if anyone has issues.
-					goto(`/${extProvider.provider}/${extProvider.id}`);
+					goto(toBaseUrl(`/${extProvider.provider}/${extProvider.id}`));
 					return;
 				} else {
 					// Else call tmdb `external id` endpoint
@@ -324,7 +325,11 @@
 								mediaType,
 							);
 						} else {
-							goto(`/${data.results[0].media_type}/${data.results[0].id}`);
+							goto(
+								toBaseUrl(
+									`/${data.results[0].media_type}/${data.results[0].id}`,
+								),
+							);
 							return;
 						}
 					}

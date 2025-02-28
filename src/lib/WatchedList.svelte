@@ -9,6 +9,7 @@
 	import { getLatestWatchedInTv } from "./util/helpers";
 	import { notify } from "./util/notify";
 	import { untrack } from "svelte";
+	import { toBaseUrl } from "./util/url";
 
 	interface Props {
 		list: Watched[];
@@ -296,7 +297,7 @@
 					<h4 class="norm">
 						Try searching for something you would like to add.
 					</h4>
-					<button onclick={() => goto("/import")}>Import</button>
+					<button onclick={() => goto(toBaseUrl("/import"))}>Import</button>
 				{/if}
 			{/if}
 		</div>

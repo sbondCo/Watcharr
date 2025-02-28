@@ -29,6 +29,7 @@
 	import { onDestroy } from "svelte";
 	import papa from "papaparse";
 	import Status from "@/lib/Status.svelte";
+	import { toBaseUrl } from "@/lib/util/url";
 
 	interface ImportedListItemMultiProblem {
 		original: ImportedList;
@@ -58,7 +59,7 @@
 		const list = store.importedList;
 		if (!list) {
 			console.log("import/process, no list, returning to /import");
-			goto("/import");
+			goto(toBaseUrl("/import"));
 			return;
 		}
 		console.log("getList", list);
@@ -431,14 +432,14 @@
 		) {
 			// Some items failed.. go to some-failed
 			store.parsedImportedList = rList;
-			goto("/import/some-failed");
+			goto(toBaseUrl("/import/some-failed"));
 		} else {
 			notify({
 				type: "success",
 				text: "All content successfully imported! Try refreshing if you are missing data.",
 				time: 15000,
 			});
-			goto("/");
+			goto(toBaseUrl("/"));
 		}
 	}
 
@@ -677,7 +678,8 @@
 					</tbody>
 				</table>
 				<div class="btns">
-					<button onclick={() => goto("/import")}><Icon i="arrow" />Back</button
+					<button onclick={() => goto(toBaseUrl("/import"))}
+						><Icon i="arrow" />Back</button
 					>
 					<button onclick={() => changeAllStatuses()} disabled={isImporting}>
 						Change Statuses

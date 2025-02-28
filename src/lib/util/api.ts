@@ -16,6 +16,7 @@ import {
 import axios from "axios";
 import { notify, unNotify } from "./notify";
 import { browser } from "$app/environment";
+import { toBaseUrl } from "./url";
 const { MODE } = import.meta.env;
 
 export const baseURL =
@@ -23,7 +24,7 @@ export const baseURL =
 		? browser
 			? `${location.protocol}//${location.hostname}:3080/api`
 			: "http://127.0.0.1:3080/api"
-		: "/api";
+		: toBaseUrl("/api");
 console.log("api: baseURL constructed:", baseURL);
 
 /**

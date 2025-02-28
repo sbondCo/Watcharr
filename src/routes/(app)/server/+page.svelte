@@ -24,6 +24,7 @@
 	import RegionDropDown from "@/lib/RegionDropDown.svelte";
 	import TaskScheduleModal from "./modals/TaskScheduleModal.svelte";
 	import TrustedHeaderAuthModal from "./modals/TrustedHeaderAuthModal.svelte";
+	import { toBaseUrl } from "@/lib/util/url";
 
 	let serverConfig: ServerConfig | undefined = $state();
 	let jellyfinOrEmby = $derived(serverConfig?.USE_EMBY ? "Emby" : "Jellyfin");
@@ -108,7 +109,12 @@
 				{#await getServerStats()}
 					<Spinner />
 				{:then stats}
-					<Stat name="Users" value={stats.users} href="/manage_users" large />
+					<Stat
+						name="Users"
+						value={stats.users}
+						href={toBaseUrl("/manage_users")}
+						large
+					/>
 					<Stat name="Private Users" value={stats.privateUsers} large />
 					<Stat name="Watched Movies" value={stats.watchedMovies} large />
 					<Stat name="Watched Shows" value={stats.watchedShows} large />
@@ -118,14 +124,14 @@
 						<Stat
 							name="Most Watched Movie"
 							value={stats.mostWatchedMovie.title}
-							href="/movie/{stats.mostWatchedMovie.tmdbId}"
+							href={toBaseUrl(`/movie/${stats.mostWatchedMovie.tmdbId}`)}
 						/>
 					{/if}
 					{#if stats.mostWatchedShow?.title}
 						<Stat
 							name="Most Watched Show"
 							value={stats.mostWatchedShow.title}
-							href="/tv/{stats.mostWatchedShow.tmdbId}"
+							href={toBaseUrl(`/tv/${stats.mostWatchedShow.tmdbId}`)}
 						/>
 					{/if}
 				{:catch err}

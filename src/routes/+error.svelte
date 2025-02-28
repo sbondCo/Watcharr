@@ -1,6 +1,7 @@
 <script>
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import { toBaseUrl } from "@/lib/util/url";
 </script>
 
 <div>
@@ -16,7 +17,7 @@
 			<h4 class="norm">We couldn't load this page</h4>
 		{/if}
 		<div class="btns">
-			<button onclick={() => goto("/")}>Home</button>
+			<button onclick={() => goto(toBaseUrl("/"))}>Home</button>
 			<button onclick={() => location.reload()}>Refresh</button>
 		</div>
 	</div>

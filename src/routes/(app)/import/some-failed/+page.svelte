@@ -12,6 +12,7 @@
 
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { toBaseUrl } from "@/lib/util/url";
 	import { store } from "@/store.svelte";
 	import { ImportResponseType, type ImportedList } from "@/types";
 	import { onMount } from "svelte";
@@ -36,7 +37,7 @@
 			}
 			console.log("failedlen", failed.length);
 		} else {
-			goto("/import");
+			goto(toBaseUrl("/import"));
 		}
 	});
 </script>

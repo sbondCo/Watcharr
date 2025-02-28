@@ -6,6 +6,7 @@
 	import { noAuthAxios } from "@/lib/util/api";
 	import { onMount } from "svelte";
 	import { notify, unNotify } from "@/lib/util/notify";
+	import { toBaseUrl } from "@/lib/util/url";
 
 	let error: string | undefined = $state();
 	let login = $state(true);
@@ -18,7 +19,7 @@
 
 	onMount(() => {
 		if (localStorage.getItem("token")) {
-			goto("/");
+			goto(toBaseUrl("/"));
 		}
 
 		if (!error && page.url.searchParams.get("again")) {
@@ -35,7 +36,7 @@
 			if (r?.data) {
 				if (r.data.isInSetup) {
 					console.log("Server is in setup.. navigating to web setup page.");
-					goto("/setup");
+					goto(toBaseUrl("/setup"));
 				}
 				availableProviders = r.data.available;
 				apHeader = availableProviders?.includes("header");
@@ -83,7 +84,7 @@
 					} else {
 						localStorage.removeItem("useEmby");
 					}
-					goto("/");
+					goto(toBaseUrl("/"));
 					notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
 				}
 			})
@@ -120,7 +121,7 @@
 						if (resp.data?.token) {
 							console.log("Received token... logging in.");
 							localStorage.setItem("token", resp.data.token);
-							goto("/");
+							goto(toBaseUrl("/"));
 							notify({ id: nid, text: `Welcome!`, type: "success" });
 						}
 					})
@@ -148,7 +149,7 @@
 				if (resp.data?.token) {
 					console.log("Received token... logging in.");
 					localStorage.setItem("token", resp.data.token);
-					goto("/");
+					goto(toBaseUrl("/"));
 					notify({ id: nid, text: `Welcome!`, type: "success" });
 				}
 			})

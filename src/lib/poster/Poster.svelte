@@ -13,6 +13,7 @@
 	import PosterStatus from "./PosterStatus.svelte";
 	import PosterRating from "./PosterRating.svelte";
 	import ExtraDetails from "./ExtraDetails.svelte";
+	import { toBaseUrl } from "../util/url";
 
 	interface Props {
 		id?: number | undefined; // Watched list id
@@ -84,7 +85,7 @@
 			: `https://image.tmdb.org/t/p/w500${media.poster_path}`,
 	);
 	let link = $derived(
-		media.id ? `/${media.media_type}/${media.id}` : undefined,
+		media.id ? toBaseUrl(`/${media.media_type}/${media.id}`) : undefined,
 	);
 	let dateStr = $derived(media.release_date || media.first_air_date);
 	let year = $derived(dateStr ? new Date(dateStr).getFullYear() : undefined);

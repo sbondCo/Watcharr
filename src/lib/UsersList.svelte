@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PublicUser } from "@/types";
+	import { toBaseUrl } from "./util/url";
 
 	interface Props {
 		users: PublicUser[];
@@ -13,7 +14,7 @@
 	<ul>
 		{#each users as user}
 			<li title={user.username}>
-				<a href="/lists/{user.id}/{user.username}">
+				<a href={toBaseUrl(`/lists/${user.id}/${user.username}`)}>
 					<span>{user.username}</span>
 				</a>
 			</li>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { notify } from "@/lib/util/notify";
+	import { toBaseUrl } from "@/lib/util/url";
 	import { store } from "@/store.svelte";
 	import { UserPermission } from "@/types";
 	import axios from "axios";
@@ -32,7 +33,7 @@
 				if (store.userInfo) {
 					store.userInfo.permissions = UserPermission.PERM_ADMIN;
 				}
-				goto("/");
+				goto(toBaseUrl("/"));
 			})
 			.catch((err) => {
 				console.error(

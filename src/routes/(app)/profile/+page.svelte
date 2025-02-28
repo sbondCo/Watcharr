@@ -21,6 +21,7 @@
 	import SyncModal from "./modals/SyncModal.svelte";
 	import RegionDropDown from "@/lib/RegionDropDown.svelte";
 	import RatingSetting from "@/lib/rating/RatingSetting.svelte";
+	import { toBaseUrl } from "@/lib/util/url";
 
 	let user = $derived(store.userInfo);
 	let settings = $derived(store.userSettings);
@@ -345,7 +346,7 @@
 			<RatingSetting />
 
 			<div class="row btns">
-				<button onclick={() => goto("/import")}>Import</button>
+				<button onclick={() => goto(toBaseUrl("/import"))}>Import</button>
 				<button onclick={() => downloadWatchedList()} disabled={exportDisabled}
 					>Export</button
 				>

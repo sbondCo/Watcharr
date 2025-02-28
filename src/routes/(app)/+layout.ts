@@ -7,6 +7,7 @@ import axios from "axios";
 import { baseURL } from "@/lib/util/api";
 import { notify } from "@/lib/util/notify";
 import { clearWatcharrData } from "@/lib/logout";
+import { toBaseUrl } from "@/lib/util/url";
 
 axios.interceptors.request.use(
 	(config) => {
@@ -18,7 +19,7 @@ axios.interceptors.request.use(
 			// Don't require token check if going to auth route (login/register)
 			if (!token && !config.url?.includes("/auth")) {
 				console.error("No token, going to login. Endpoint:", config.url);
-				goto("/login?again=1");
+				goto(toBaseUrl("/login?again=1"));
 				throw new axios.Cancel("No auth token found");
 			}
 			config.headers.set("Authorization", token);
@@ -40,7 +41,7 @@ axios.interceptors.response.use(
 			console.error("Recieved 401 response, going to login.");
 			notify({ text: "Request Authorization Failed!", type: "error" });
 			clearWatcharrData();
-			goto("/login?again=1");
+			goto(toBaseUrl("/login?again=1"));
 		}
 		return Promise.reject(error);
 	},

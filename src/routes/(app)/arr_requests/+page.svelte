@@ -6,6 +6,7 @@
 	import { baseURL } from "@/lib/util/api";
 	import { toRelativeDate } from "@/lib/util/helpers";
 	import { notify } from "@/lib/util/notify";
+	import { toBaseUrl } from "@/lib/util/url";
 	import {
 		type ArrRequestResponse,
 		type TMDBMovieDetails,
@@ -94,7 +95,7 @@
 							<h2 class="norm">
 								<a
 									data-sveltekit-preload-data="tap"
-									href={`/${r.content.type}/${r.content.tmdbId}`}
+									href={toBaseUrl(`/${r.content.type}/${r.content.tmdbId}`)}
 									class="plain"
 								>
 									{r.content.title}

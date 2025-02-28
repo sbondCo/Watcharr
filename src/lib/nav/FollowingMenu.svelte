@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { store } from "@/store.svelte";
 	import Menu from "../Menu.svelte";
+	import { toBaseUrl } from "../util/url";
 
 	interface Props {
 		close: () => {};
@@ -15,7 +16,9 @@
 		<div class="list">
 			{#each store.follows as f}
 				<a
-					href="/lists/{f.followedUser.id}/{f.followedUser.username}"
+					href={toBaseUrl(
+						`/lists/${f.followedUser.id}/${f.followedUser.username}`,
+					)}
 					onclick={() => close()}
 				>
 					{f.followedUser.username}

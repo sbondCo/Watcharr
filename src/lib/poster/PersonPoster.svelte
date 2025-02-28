@@ -4,6 +4,7 @@
 		addClassToParent,
 		calculateTransformOrigin,
 	} from "@/lib/util/helpers";
+	import { toBaseUrl } from "../util/url";
 
 	interface Props {
 		id: number | undefined;
@@ -24,7 +25,7 @@
 	const poster = path
 		? `https://image.tmdb.org/t/p/w300_and_h450_bestv2${path}`
 		: undefined;
-	const link = id ? `/person/${id}` : undefined;
+	const link = id ? toBaseUrl(`/person/${id}`) : undefined;
 </script>
 
 <!-- Quick fix to ignore error, should be fixed -->
