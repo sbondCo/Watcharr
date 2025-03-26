@@ -108,7 +108,6 @@
 			console.error("contentChanged: no show");
 			return false;
 		}
-		// TODO these parameters are ugly can we simplify this?
 		show.watched = await updateWatched(show.watched, {
 			contentId: data.tvId,
 			contentType: "tv",
