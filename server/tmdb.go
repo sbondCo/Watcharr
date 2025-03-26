@@ -252,6 +252,11 @@ type TMDBShowDetails struct {
 	Keywords       TMDBKeywords        `json:"keywords"`
 }
 
+type TMDBShowDetailsWithWatched struct {
+	WatchedAddedToContent
+	*TMDBShowDetails
+}
+
 type WatchProvider struct {
 	ProviderID      int    `json:"provider_id"`
 	ProviderName    string `json:"provider_name"`

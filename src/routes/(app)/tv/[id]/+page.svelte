@@ -23,7 +23,7 @@
 	import type {
 		TMDBContentCredits,
 		TMDBContentCreditsCrew,
-		TMDBShowDetails,
+		TMDBShowDetailsWithWatched,
 		WatchedStatus,
 	} from "@/types";
 	import axios from "axios";
@@ -36,17 +36,13 @@
 
 	let { data } = $props();
 
-	let wListItem = $derived(
-		store.watchedList.find(
-			(w) => w.content?.type === "tv" && w.content?.tmdbId === data.tvId,
-		),
-	);
+	// let wListItem: Watched | undefined = $state(undefined);
 	let trailer: string | undefined = $state();
 	let trailerShown = $state(false);
 	let requestModalShown = $state(false);
 	let jellyfinUrl: string | undefined = $state();
 	let arrRequestButtonComp: ArrRequestButton | undefined = $state();
-	let show: TMDBShowDetails | undefined = $state();
+	let show: TMDBShowDetailsWithWatched | undefined = $state();
 	let pageError: Error | undefined = $state();
 
 	$effect(() => {
@@ -61,23 +57,27 @@
 					await axios.get(`/content/tv/${data.tvId}`, {
 						params: { region: store.userSettings?.country },
 					})
-				).data as TMDBShowDetails;
-				if (resp.videos?.results?.length > 0) {
-					const t = resp.videos.results.find(
-						(v) => v.type?.toLowerCase() === "trailer",
-					);
-					if (t?.key) {
-						if (t?.site?.toLowerCase() === "youtube") {
-							trailer = `https://www.youtube.com/embed/${t?.key}`;
+				).data as TMDBShowDetailsWithWatched;
+				if (resp) {
+					if (resp?.videos?.results && resp?.videos?.results?.length > 0) {
+						const t = resp?.videos.results.find(
+							(v) => v.type?.toLowerCase() === "trailer",
+						);
+						if (t?.key) {
+							if (t?.site?.toLowerCase() === "youtube") {
+								trailer = `https://www.youtube.com/embed/${t?.key}`;
+							}
 						}
 					}
+					contentExistsOnJellyfin("tv", resp.name, resp.id).then((j) => {
+						if (j?.hasContent && j?.url !== "") {
+							jellyfinUrl = j.url;
+						}
+					});
+					show = resp;
+				} else {
+					show = undefined;
 				}
-				contentExistsOnJellyfin("tv", resp.name, resp.id).then((j) => {
-					if (j?.hasContent && j?.url !== "") {
-						jellyfinUrl = j.url;
-					}
-				});
-				show = resp;
 			} catch (err: any) {
 				show = undefined;
 				pageError = err;
@@ -99,19 +99,24 @@
 		newRating?: number,
 		newThoughts?: string,
 		pinned?: boolean,
-	): Promise<boolean> {
+	) {
 		if (!data.tvId) {
 			console.error("contentChanged: no tvId");
 			return false;
 		}
-		return await updateWatched(
-			data.tvId,
-			"tv",
-			newStatus,
-			newRating,
-			newThoughts,
-			pinned,
-		);
+		if (!show) {
+			console.error("contentChanged: no show");
+			return false;
+		}
+		// TODO these parameters are ugly can we simplify this?
+		show.watched = await updateWatched(show.watched, {
+			contentId: data.tvId,
+			contentType: "tv",
+			status: newStatus,
+			rating: newRating,
+			thoughts: newThoughts,
+			pinned: pinned,
+		});
 	}
 </script>
 
@@ -199,29 +204,29 @@
 								bind:this={arrRequestButtonComp}
 							/>
 						{/if}
-						{#if wListItem}
+						{#if show.watched}
 							<div class="other-side">
-								<AddToTagButton watchedItem={wListItem} />
+								<AddToTagButton watchedItem={show.watched} />
 								<button
 									onclick={() => {
-										if (wListItem?.pinned) {
+										if (show?.watched?.pinned) {
 											contentChanged(undefined, undefined, undefined, false);
 										} else {
 											contentChanged(undefined, undefined, undefined, true);
 										}
 									}}
 									use:tooltip={{
-										text: `${wListItem?.pinned ? "Unpin from" : "Pin to"} top of list`,
+										text: `${show.watched?.pinned ? "Unpin from" : "Pin to"} top of list`,
 										pos: "bot",
 									}}
 								>
-									<Icon i={wListItem?.pinned ? "unpin" : "pin"} wh={19} />
+									<Icon i={show.watched?.pinned ? "unpin" : "pin"} wh={19} />
 								</button>
 								<button
 									class="delete-btn"
 									onclick={() =>
-										wListItem
-											? removeWatched(wListItem.id)
+										show?.watched
+											? removeWatched(show?.watched.id)
 											: console.error("no wlistItem.. can't delete")}
 									use:tooltip={{ text: "Delete", pos: "bot" }}
 								>
@@ -252,17 +257,17 @@
 			<div class="review">
 				<!-- <span>What did you think?</span> -->
 				<Rating
-					rating={wListItem?.rating}
+					rating={show.watched?.rating}
 					onChange={(n) => contentChanged(undefined, n)}
 				/>
 				<Status
-					status={wListItem?.status}
+					status={show.watched?.status}
 					onChange={(n) => contentChanged(n)}
 				/>
-				{#if wListItem}
+				{#if show.watched}
 					<MyThoughts
 						contentTitle={show.name}
-						thoughts={wListItem?.thoughts}
+						thoughts={show.watched?.thoughts}
 						onChange={(newThoughts) => {
 							return contentChanged(undefined, undefined, newThoughts);
 						}}
@@ -305,16 +310,16 @@
 				<Error error={err} pretty="Failed to load cast!" />
 			{/await}
 
-			<SimilarContent type="tv" similar={show.similar} />
+			<!-- <SimilarContent type="tv" similar={show.similar} /> -->
 
-			{#if wListItem}
-				<Activity wListId={wListItem.id} activity={wListItem.activity} />
+			{#if show.watched}
+				<Activity wListId={show.watched.id} activity={show.watched.activity} />
 			{/if}
 			{#if data?.tvId}
 				<SeasonsList
 					tvId={data.tvId}
 					seasons={show.seasons}
-					watchedItem={wListItem}
+					watchedItem={show.watched}
 				/>
 			{/if}
 		</div>

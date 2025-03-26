@@ -75,6 +75,9 @@ type WatchedRemoveResponse struct {
 	NewActivity Activity `json:"newActivity"`
 }
 
+// This struct is for embedding inside content response structs.
+// This holds the watched entry response data that will go along
+// with the content responses.
 type WatchedAddedToContent struct {
 	// The related watched entry.
 	Watched *Watched `json:"watched,omitempty"`
@@ -83,11 +86,6 @@ type WatchedAddedToContent struct {
 	// notify the user of why there is possibly
 	// missing watched list data.
 	FailedToGetWatched bool `json:"failedToGetWatched,omitempty"`
-}
-
-type TMDBShowDetailsWithWatched struct {
-	WatchedAddedToContent
-	*TMDBShowDetails
 }
 
 // Get entire watched list
@@ -158,6 +156,26 @@ func getWatchedItemByTmdbId(db *gorm.DB, userId uint, tmdbId uint, contentType C
 		return Watched{}, res.Error
 	}
 	slog.Debug("getWatchedItemByTmdbId: Done.", "userId", userId, "tmdbId", tmdbId, "watched_item", watched)
+	return *watched, nil
+}
+
+// Same as `getWatchedItemByTmdbId` except for getting in bulk (multiple content ids).
+// `c` entries should be in format: [tmdb_id, ContentType] (Note: Couldn't figure out
+// if it's possible to type this to enforce [int, ContentType] type for entries)
+func getWatchedItemsByTmdbIds(db *gorm.DB, userId uint, c [][]any) ([]Watched, error) {
+	slog.Debug("getWatchedItemsByTmdbIds: Running.", "userId", userId, "c", c)
+	watched := new([]Watched)
+	res := db.Debug().Model(&Watched{}).
+		Joins("Content").
+		Where("user_id = ?", userId).
+		Where(
+			"(Content.tmdb_id, Content.type) IN ?", c).
+		Find(&watched)
+	if res.Error != nil {
+		slog.Error("getWatchedItemsByTmdbIds: Failed!", "error", res.Error)
+		return []Watched{}, res.Error
+	}
+	slog.Debug("getWatchedItemsByTmdbIds: Done.", "userId", userId, "watcheds_found", len(*watched), "wdev", *watched)
 	return *watched, nil
 }
 

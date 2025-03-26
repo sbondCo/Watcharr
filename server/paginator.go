@@ -10,8 +10,10 @@ import (
 // Parameters that the paginator uses to
 // know what to return.
 type PaginationParams struct {
+	// Page limit (max amount of items to get for each page).
 	Limit int `json:"limit"`
-	Page  int `json:"page"`
+	// Page number.
+	Page int `json:"page"`
 	// TODO sorting and filtering to be params?
 	// Have to think about if this is better in a reusable
 	// fashion (eg query params target db cols) or not.

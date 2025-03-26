@@ -12,6 +12,7 @@ import {
 	type Follow,
 	type PlayedAddRequest,
 	type ActivityUpdateRequest,
+	type WatchedAddedToContent,
 } from "@/types";
 import axios from "axios";
 import { notify, unNotify } from "./notify";
@@ -26,9 +27,21 @@ export const baseURL =
 		: "/api";
 console.log("api: baseURL constructed:", baseURL);
 
+interface UpdateWatchedOptions {
+	/**
+	 * TMDB ID.
+	 */
+	contentId: number;
+	contentType: MediaType;
+	status?: WatchedStatus;
+	rating?: number;
+	thoughts?: string;
+	pinned?: boolean;
+}
+
 /**
  * Updates watched item with new status, rating or thoughts.
- * @returns Was success?
+ * @param wEntry The watched entry to update. Updates properties in this object.
  */
 async function _updateWatched(
 	wEntry: Watched,
@@ -36,7 +49,7 @@ async function _updateWatched(
 	rating?: number,
 	thoughts?: string,
 	pinned?: boolean,
-): Promise<boolean> {
+) {
 	if (
 		!status &&
 		!rating &&
@@ -46,87 +59,92 @@ async function _updateWatched(
 		console.warn(
 			"_updateWatched: Nothing was provided, so nothing can be updated!!!!",
 		);
-		return false;
+		throw new Error("no updated values provided");
 	}
-	const nid = notify({ text: `Saving`, type: "loading" });
 	const obj = {} as WatchedUpdateRequest;
 	if (status) obj.status = status;
 	if (rating) obj.rating = rating;
 	if (typeof thoughts !== "undefined") obj.thoughts = thoughts;
 	if (thoughts === "") obj.removeThoughts = true;
 	if (typeof pinned !== "undefined") obj.pinned = pinned;
-	return await axios
-		.put<WatchedUpdateResponse>(`/watched/${wEntry.id}`, obj)
-		.then((resp) => {
-			if (status) wEntry.status = status;
-			if (rating) wEntry.rating = rating;
-			if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
-			if (typeof pinned !== "undefined") wEntry.pinned = pinned;
-			if (resp?.data?.newActivity && resp?.data?.newActivity?.id) {
-				if (wEntry.activity?.length > 0) {
-					wEntry.activity.push(resp.data.newActivity);
-				} else {
-					wEntry.activity = [resp.data.newActivity];
-				}
-				// We want to update the updatedAt field too (so
-				// change is reflected when filtering modified at)
-				// We can piggy back from this data for now.
-				wEntry.updatedAt = resp.data.newActivity.createdAt;
-			}
-			// watchedList.update((w) => w);
-			notify({ id: nid, text: `Saved!`, type: "success" });
-			return true;
-		})
-		.catch((err) => {
-			console.error(err);
-			notify({ id: nid, text: "Failed To Update!", type: "error" });
-			return false;
-		});
+	const resp = await axios.put<WatchedUpdateResponse>(
+		`/watched/${wEntry.id}`,
+		obj,
+	);
+	if (status) wEntry.status = status;
+	if (rating) wEntry.rating = rating;
+	if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
+	if (typeof pinned !== "undefined") wEntry.pinned = pinned;
+	if (resp?.data?.newActivity && resp?.data?.newActivity?.id) {
+		if (wEntry.activity?.length > 0) {
+			wEntry.activity.push(resp.data.newActivity);
+		} else {
+			wEntry.activity = [resp.data.newActivity];
+		}
+		// We want to update the updatedAt field too (so
+		// change is reflected when filtering modified at)
+		// We can piggy back from this data for now.
+		wEntry.updatedAt = resp.data.newActivity.createdAt;
+	}
 }
 
 /**
  * Add or update watched show/movie.
- * @param contentId TMDB ID
- * @param contentType show/movie
- * @param status
- * @param rating
- * @returns Was success?
+ * @param wEntry The watched entry (movie or tv only) we are updating.
+ * @param opts Update options.
+ * @returns Always returns Watched obj unless failed to add.
+ * If updating fails, existing Watched obj will always return.
  */
 export async function updateWatched(
-	contentId: number,
-	contentType: MediaType,
-	status?: WatchedStatus,
-	rating?: number,
-	thoughts?: string,
-	pinned?: boolean,
-): Promise<boolean> {
-	// If item is already in watched store, run update request instead
-	const wEntry = store.watchedList.find(
-		(w) => w.content?.tmdbId === contentId && w.content?.type === contentType,
-	);
-	if (wEntry?.id) {
-		return await _updateWatched(wEntry, status, rating, thoughts, pinned);
-	}
-	// Add new watched item
-	const nid = notify({ text: `Adding`, type: "loading" });
-	return await axios
-		.post("/watched", {
-			contentId,
-			contentType,
-			rating,
-			status,
-		} as WatchedAddRequest)
-		.then((resp) => {
+	wEntry: Watched | undefined,
+	opts: UpdateWatchedOptions,
+): Promise<Watched | undefined> {
+	const nid = notify({ text: `Saving`, type: "loading" });
+	try {
+		// If exists, run update request instead
+		if (wEntry?.id) {
+			try {
+				await _updateWatched(
+					wEntry,
+					opts.status,
+					opts.rating,
+					opts.thoughts,
+					opts.pinned,
+				);
+				notify({ id: nid, text: `Saved!`, type: "success" });
+			} catch (err) {
+				console.error("updateWatched: Failed to update!", err);
+				notify({ id: nid, text: `Saving Failed!`, type: "error" });
+			}
+			// We are updating, so a wEntry exists here.
+			// So we will always return the existing entry,
+			// regardless of if we fail above.
+			return wEntry;
+		}
+		try {
+			// Add new watched item
+			notify({ id: nid, text: `Adding`, type: "loading" });
+			const resp = await axios.post<Watched>("/watched", {
+				contentId: opts.contentId,
+				contentType: opts.contentType,
+				rating: opts.rating,
+				status: opts.status,
+			} as WatchedAddRequest);
 			console.log("Added watched:", resp.data);
-			store.watchedList.push(resp.data as Watched);
 			notify({ id: nid, text: `Added!`, type: "success" });
-			return true;
-		})
-		.catch((err) => {
-			console.error(err);
-			notify({ id: nid, text: "Failed To Add!", type: "error" });
-			return false;
-		});
+			return resp.data;
+		} catch (err) {
+			console.error("updateWatched: Failed to add!", err);
+			notify({ id: nid, text: `Adding Failed!`, type: "error" });
+			// Watched entry not added so returning undefined is fine,
+			// that will be the current value everywhere anyways.
+			return undefined;
+		}
+	} catch (err) {
+		console.error("updateWatched: Failed!", err);
+		notify({ id: nid, text: `Failed!`, type: "error" });
+		return wEntry;
+	}
 }
 
 /**

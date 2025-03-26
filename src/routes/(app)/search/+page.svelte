@@ -59,7 +59,7 @@
 				{
 					params: {
 						q: encodeURIComponent(query),
-						page,
+						p: page,
 					},
 					signal: reqController.signal,
 				},
@@ -76,7 +76,7 @@
 			const shows = await axios.get<ShowsSearchResponse>(`/content/search/tv`, {
 				params: {
 					q: encodeURIComponent(query),
-					page,
+					p: page,
 				},
 				signal: reqController.signal,
 			});
@@ -94,7 +94,7 @@
 				{
 					params: {
 						q: encodeURIComponent(query),
-						page,
+						p: page,
 					},
 					signal: reqController.signal,
 				},
@@ -111,7 +111,7 @@
 			return await axios.get<ContentSearch>(`/content/search/multi`, {
 				params: {
 					q: encodeURIComponent(query),
-					page,
+					p: page,
 				},
 				signal: reqController.signal,
 			});
@@ -135,7 +135,7 @@
 			const games = await axios.get<GameSearch[]>(`/game/search`, {
 				params: {
 					q: encodeURIComponent(query),
-					page,
+					p: page,
 				},
 				signal: reqController.signal,
 			});
