@@ -21,6 +21,11 @@ export interface ToolTipOptions {
  * this is used in is destroyed.
  * - `dataLoaded()` is ran after a page of data
  * is loaded.
+ * - `opts.callback()` has its own 'isLoading' logic
+ * to prevent itself from running extra times while
+ * still loading a previous request. This will be the
+ * thing stopping extra scrolls while data is still
+ * loading from causing extra data requests, etc.
  */
 export default function infScroll(opts: ToolTipOptions) {
 	let { threshold = 150, callback } = opts;
