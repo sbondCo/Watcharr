@@ -395,23 +395,7 @@
 			console.debug("allSearchResults:", allSearchResults);
 
 			searchRunning = false;
-			// If results don't fill the page enough to enable scrolling,
-			// the user could be stuck and not be able to get more results
-			// to show, run `infiniteScroll` to load more if we can.
-			// Smol timeout to give ui time to render so end of page calc
-			// can be accurate.
-			setTimeout(() => {
-				// Quick fix, if user navigates away from search page while response is loading,
-				// we don't want to call infiniteScroll or we could end up loading all pages
-				// in the background.
-				if (page.url?.pathname?.toLowerCase()?.startsWith("/search")) {
-					scroll.run();
-				} else {
-					console.debug(
-						"No longer on search page, not calling infiniteScroll.",
-					);
-				}
-			}, 250);
+			scroll.dataLoaded();
 		} catch (err: any) {
 			if (err?.code === "ERR_CANCELED") {
 				console.warn("search was cancelled, not showing error.");

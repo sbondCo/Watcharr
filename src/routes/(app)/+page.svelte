@@ -48,6 +48,7 @@
 			listPageMax = pl.data.totalPages;
 			list.push(...pl.data.results);
 			list = list;
+			scroll.dataLoaded();
 		} catch (err: any) {
 			if (err?.code === "ERR_CANCELED") {
 				console.warn("loadWatchedList: Cancelled, not showing error.");
