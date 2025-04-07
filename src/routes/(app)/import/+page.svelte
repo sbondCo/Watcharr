@@ -430,7 +430,7 @@
 			// Build toImport array
 			const toImport: ImportedList[] = [];
 			const fileText = await readFile(new FileReader(), file);
-			const jsonData = JSON.parse(fileText)["media"] as any[];
+			const jsonData = JSON.parse(fileText)["metadata"] as any[];
 			for (const v of jsonData) {
 				if (
 					!v.source_id ||
@@ -491,9 +491,8 @@
 							? v.reviews[0].review?.text
 							: "",
 
-					// Ryot does not support overall rating for shows
 					rating:
-						v.lot === "movie" && v.reviews?.length
+						v.reviews?.length
 							? validifyRating(Number(v.reviews[0].rating))
 							: undefined,
 
