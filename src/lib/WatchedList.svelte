@@ -6,7 +6,6 @@
 	import { store, clearActiveFilters } from "@/store.svelte";
 	import type { Watched } from "@/types";
 	import GamePoster from "./poster/GamePoster.svelte";
-	import { getLatestWatchedInTv } from "./util/helpers";
 	import { notify } from "./util/notify";
 
 	interface Props {
@@ -201,7 +200,7 @@
 	 */
 	function itemUpdated() {
 		console.debug("itemUpdated");
-		filt();
+		// filt();
 	}
 </script>
 
@@ -232,7 +231,7 @@
 				/>
 			{:else if w.content}
 				<Poster
-					id={w.id}
+					watched={w}
 					media={{
 						id: w.content.tmdbId,
 						poster_path: w.content.poster_path,
@@ -242,17 +241,7 @@
 						release_date: w.content.release_date,
 						first_air_date: w.content.first_air_date,
 					}}
-					rating={w.rating}
-					status={w.status}
 					disableInteraction={isPublicList}
-					extraDetails={{
-						dateAdded: w.createdAt,
-						dateModified: w.updatedAt,
-						lastWatched: getLatestWatchedInTv(
-							w.watchedSeasons,
-							w.watchedEpisodes,
-						),
-					}}
 					fluidSize={true}
 					pinned={w.pinned}
 					onUpdated={itemUpdated}
