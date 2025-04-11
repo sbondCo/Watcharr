@@ -57,7 +57,6 @@ export default function infScroll(opts: ToolTipOptions) {
 	};
 
 	const run = async () => {
-		console.debug("infiniteScroll()");
 		if (isAtBottom()) {
 			console.log("infiniteScroll: Reached end");
 			removeEvents();

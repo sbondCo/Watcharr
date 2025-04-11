@@ -150,26 +150,21 @@ export async function updateWatched(
 /**
  * Delete an item from watched list.
  * @param id Watched Entry ID
+ * @returns Deleted?
  */
-export function removeWatched(id: number) {
+export async function removeWatched(id: number): Promise<boolean> {
+	console.log("removeWatched: Removing:", id);
 	const nid = notify({ text: `Removing`, type: "loading" });
-	const wEntry = store.watchedList.find((w) => w.id === id);
-	if (!wEntry) {
-		console.log("Watched entry does not exist!");
-		notify({ text: "Item Doesn't Exist On Watched List!", type: "error" });
-		return;
+	try {
+		const resp = await axios.delete(`/watched/${id}`);
+		console.log("removeWatched: Removed resp:", resp.data);
+		notify({ id: nid, text: "Removed!", type: "error" });
+		return true;
+	} catch (err) {
+		console.error("removeWatched: Failed!", err);
+		notify({ id: nid, text: "Failed To Remove!", type: "error" });
 	}
-	axios
-		.delete(`/watched/${id}`)
-		.then((resp) => {
-			console.log("Removed watched:", resp.data);
-			store.watchedList = store.watchedList.filter((w) => w.id !== id);
-			notify({ id: nid, text: "Removed!", type: "error" });
-		})
-		.catch((err) => {
-			console.error(err);
-			notify({ id: nid, text: "Failed To Remove!", type: "error" });
-		});
+	return false;
 }
 
 export async function updatePlayed(

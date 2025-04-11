@@ -80,79 +80,110 @@ func (b *BaseRouter) addContentRoutes() {
 	exp := time.Hour * 24
 
 	// Search for content
-	content.GET("/search/multi", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/search/multi", PaginatedRequest(true), func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
 		query := c.Query("q")
 		if query == "" {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
-		pageQ := c.Query("page")
-		pageNum := 1
-		if pageQ != "" {
-			num, err := strconv.Atoi(pageQ)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
-				return
-			}
-			pageNum = num
-		}
-		content, err := searchContent(query, pageNum)
+		pp := c.MustGet("paginationParams").(PaginationParams)
+		content, err := searchContent(query, pp.Page)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
+		// TODO can we move the following to a reusable function for search/movie,tv,etc?
+		contentIdAndTypePairs := [][]any{}
+		for _, v := range content.Results {
+			contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
+				v.ID,
+				ContentType(v.MediaType),
+			})
+		}
+		if ws, err := getWatchedItemsByTmdbIds(b.db, userId, contentIdAndTypePairs); err == nil {
+			for _, v := range ws {
+				for i, vv := range content.Results {
+					if vv.ID == v.Content.TmdbID && vv.MediaType == string(v.Content.Type) {
+						content.Results[i].WatchedAddedToContent.Watched = &v
+					}
+				}
+			}
+		} else {
+			slog.Error("Getting watched items by tmdbIds failed!")
+		}
 		c.JSON(http.StatusOK, content)
-	}))
+	})
 
 	// Search for movies
-	content.GET("/search/movie", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/search/movie", PaginatedRequest(true), func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
 		query := c.Query("q")
 		if query == "" {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
-		pageQ := c.Query("page")
-		pageNum := 1
-		if pageQ != "" {
-			num, err := strconv.Atoi(pageQ)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
-				return
-			}
-			pageNum = num
-		}
-		content, err := searchMovies(query, pageNum)
+		pp := c.MustGet("paginationParams").(PaginationParams)
+		content, err := searchMovies(query, pp.Page)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
+		contentIdAndTypePairs := [][]any{}
+		for _, v := range content.Results {
+			contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
+				v.ID,
+				ContentType(v.MediaType),
+			})
+		}
+		if ws, err := getWatchedItemsByTmdbIds(b.db, userId, contentIdAndTypePairs); err == nil {
+			for _, v := range ws {
+				for i, vv := range content.Results {
+					if vv.ID == v.Content.TmdbID && vv.MediaType == string(v.Content.Type) {
+						content.Results[i].WatchedAddedToContent.Watched = &v
+					}
+				}
+			}
+		} else {
+			slog.Error("Getting watched items by tmdbIds failed!")
+		}
 		c.JSON(http.StatusOK, content)
-	}))
+	})
 
 	// Search for shows
-	content.GET("/search/tv", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/search/tv", PaginatedRequest(true), func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
 		query := c.Query("q")
 		if query == "" {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
-		pageQ := c.Query("page")
-		pageNum := 1
-		if pageQ != "" {
-			num, err := strconv.Atoi(pageQ)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
-				return
-			}
-			pageNum = num
-		}
-		content, err := searchTv(query, pageNum)
+		pp := c.MustGet("paginationParams").(PaginationParams)
+		content, err := searchTv(query, pp.Page)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
+		contentIdAndTypePairs := [][]any{}
+		for _, v := range content.Results {
+			contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
+				v.ID,
+				ContentType(v.MediaType),
+			})
+		}
+		if ws, err := getWatchedItemsByTmdbIds(b.db, userId, contentIdAndTypePairs); err == nil {
+			for _, v := range ws {
+				for i, vv := range content.Results {
+					if vv.ID == v.Content.TmdbID && vv.MediaType == string(v.Content.Type) {
+						content.Results[i].WatchedAddedToContent.Watched = &v
+					}
+				}
+			}
+		} else {
+			slog.Error("Getting watched items by tmdbIds failed!")
+		}
 		c.JSON(http.StatusOK, content)
-	}))
+	})
 
 	// Search for people
 	content.GET("/search/person", cache.CachePage(b.ms, exp, func(c *gin.Context) {
@@ -257,6 +288,26 @@ func (b *BaseRouter) addContentRoutes() {
 		} else {
 			resp.Watched = &watchedEntry
 		}
+		// 3. Get watched entries for Similar content
+		similarContentIdAndTypePairs := [][]any{}
+		for _, v := range content.Similar.Results {
+			similarContentIdAndTypePairs = append(similarContentIdAndTypePairs, []any{
+				v.ID,
+				SHOW,
+			})
+		}
+		if ws, err := getWatchedItemsByTmdbIds(b.db, userId, similarContentIdAndTypePairs); err == nil {
+			for _, v := range ws {
+				for i, vv := range content.Similar.Results {
+					if vv.ID == v.Content.TmdbID && string(SHOW) == string(v.Content.Type) {
+						content.Similar.Results[i].WatchedAddedToContent.Watched = &v
+					}
+				}
+			}
+		} else {
+			slog.Error("Getting watched items by tmdbIds failed!")
+		}
+
 		c.JSON(http.StatusOK, resp)
 	})
 

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-contrib/cache/persistence"
+	"github.com/robfig/go-cache"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -22,8 +22,8 @@ const (
 	SHOW_EPISODE ContentType = "tv_episode"
 )
 
-// TODO This should probably be replaced at some point (direct use of https://github.com/patrickmn/go-cache or with https://github.com/eko/gocache ?).
-var ContentStore = persistence.NewInMemoryStore(time.Hour * 24)
+// inmemory content cache
+var ContentStore = cache.New(time.Hour*24, time.Minute)
 
 // For storing cached content, so we can serve the basic local data for watched list to work
 type Content struct {
@@ -251,11 +251,17 @@ func searchContent(query string, pageNum int) (TMDBSearchMultiResponse, error) {
 	if pageNum == 0 {
 		pageNum = 1
 	}
+	cacheKey := CreateCacheKey("searchContent", query, pageNum)
+	if GetCache(ContentStore, cacheKey, &resp) {
+		slog.Debug("searchContent: Returning cache.")
+		return *resp, nil
+	}
 	err := tmdbRequest("/search/multi", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete multi search request!", "error", err.Error())
 		return TMDBSearchMultiResponse{}, errors.New("failed to complete multi search request")
 	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
@@ -263,6 +269,11 @@ func searchMovies(query string, pageNum int) (TMDBSearchMoviesResponse, error) {
 	resp := new(TMDBSearchMoviesResponse)
 	if pageNum == 0 {
 		pageNum = 1
+	}
+	cacheKey := CreateCacheKey("searchMovies", query, pageNum)
+	if GetCache(ContentStore, cacheKey, &resp) {
+		slog.Debug("searchMovies: Returning cache.")
+		return *resp, nil
 	}
 	err := tmdbRequest("/search/movie", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
 	if err != nil {
@@ -272,6 +283,7 @@ func searchMovies(query string, pageNum int) (TMDBSearchMoviesResponse, error) {
 	for i := range resp.Results {
 		resp.Results[i].MediaType = "movie"
 	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
@@ -279,6 +291,11 @@ func searchTv(query string, pageNum int) (TMDBSearchShowsResponse, error) {
 	resp := new(TMDBSearchShowsResponse)
 	if pageNum == 0 {
 		pageNum = 1
+	}
+	cacheKey := CreateCacheKey("searchTv", query, pageNum)
+	if GetCache(ContentStore, cacheKey, &resp) {
+		slog.Debug("searchTv: Returning cache.")
+		return *resp, nil
 	}
 	err := tmdbRequest("/search/tv", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
 	if err != nil {
@@ -288,6 +305,7 @@ func searchTv(query string, pageNum int) (TMDBSearchShowsResponse, error) {
 	for i := range resp.Results {
 		resp.Results[i].MediaType = "tv"
 	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
@@ -336,6 +354,11 @@ func searchByExternalId(id string, source string) (TMDBSearchMultiResponse, erro
 
 func movieDetails(db *gorm.DB, id string, country string, rParams map[string]string) (TMDBMovieDetails, error) {
 	resp := new(TMDBMovieDetails)
+	cacheKey := CreateCacheKey("movieDetails", id, country, rParams)
+	if GetCache(ContentStore, cacheKey, &resp) {
+		slog.Debug("movieDetails: Returning cache.")
+		return *resp, nil
+	}
 	err := tmdbRequest("/movie/"+id, rParams, &resp)
 	if err != nil {
 		slog.Error("Failed to complete movie details request!", "error", err.Error())
@@ -343,6 +366,7 @@ func movieDetails(db *gorm.DB, id string, country string, rParams map[string]str
 	}
 	transformProviders(&resp.WatchProviders, country)
 	go cacheContentMovie(db, *resp, true)
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
@@ -356,14 +380,15 @@ func movieCredits(id string) (TMDBContentCredits, error) {
 	return *resp, nil
 }
 
-func tvDetails(db *gorm.DB, id string, country string, rParams map[string]string) (TMDBShowDetails, error) {
-	var cacheKey = "contentstore-tvDetails-" + id + "-" + country
+func tvDetails(
+	db *gorm.DB,
+	id string,
+	country string,
+	rParams map[string]string,
+) (TMDBShowDetails, error) {
+	cacheKey := CreateCacheKey("tvDetails", id, country, rParams)
 	resp := new(TMDBShowDetails)
-	if err := ContentStore.Get(cacheKey, &resp); err != nil {
-		if err != persistence.ErrCacheMiss {
-			slog.Error("tvDetails: Cache failed for some reason", "error", err)
-		}
-	} else {
+	if GetCache(ContentStore, cacheKey, &resp) {
 		slog.Debug("tvDetails: Returning cache.")
 		return *resp, nil
 	}
@@ -374,9 +399,7 @@ func tvDetails(db *gorm.DB, id string, country string, rParams map[string]string
 	}
 	transformProviders(&resp.WatchProviders, country)
 	go cacheContentTv(db, *resp, true)
-	if err := ContentStore.Set(cacheKey, resp, time.Hour*24); err != nil {
-		slog.Error("tvDetails: Failed to set cache!", "error", err)
-	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
@@ -392,13 +415,9 @@ func tvCredits(id string) (TMDBContentCredits, error) {
 
 // This method is manually cached, so it can be easily used in other places (on the server) with cache benefits
 func seasonDetails(tvId string, seasonNumber string) (TMDBSeasonDetails, error) {
-	var cacheKey = "contentstore-seasondetails-" + tvId + "-" + seasonNumber
+	cacheKey := CreateCacheKey("seasonDetails", tvId, seasonNumber)
 	resp := new(TMDBSeasonDetails)
-	if err := ContentStore.Get(cacheKey, &resp); err != nil {
-		if err != persistence.ErrCacheMiss {
-			slog.Error("seasonDetails: Cache failed for some reason", "error", err)
-		}
-	} else {
+	if GetCache(ContentStore, cacheKey, &resp) {
 		slog.Debug("seasonDetails: Returning cache.")
 		return *resp, nil
 	}
@@ -407,9 +426,7 @@ func seasonDetails(tvId string, seasonNumber string) (TMDBSeasonDetails, error) 
 		slog.Error("seasonDetails: Failed to complete season details request!", "error", err.Error())
 		return TMDBSeasonDetails{}, errors.New("failed to complete season details request")
 	}
-	if err := ContentStore.Set(cacheKey, resp, time.Hour*24); err != nil {
-		slog.Error("seasonDetails: Failed to set cache!", "error", err)
-	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 

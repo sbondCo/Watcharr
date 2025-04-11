@@ -3,6 +3,7 @@ package main
 import (
 	"log/slog"
 	"reflect"
+	"strconv"
 
 	"github.com/robfig/go-cache"
 )
@@ -26,4 +27,38 @@ func GetCache(c *cache.Cache, k string, rv any) bool {
 	}
 	slog.Debug("cachefunc: Cache not found", "key", k)
 	return false
+}
+
+// Create a cache key for our in-mem cache.
+//
+// `name` should be the name of the function response we are caching.
+//
+// `...u` can be any amount of values that will make this key unique.
+// Currently supports types:
+//   - `string`
+//   - `map[string]string`
+//   - `int`
+func CreateCacheKey(name string, u ...any) string {
+	str := name
+	appnd := func(s string) {
+		str += "-" + s
+	}
+	for _, v := range u {
+		switch vv := v.(type) {
+		case string:
+			appnd(vv)
+		case map[string]string:
+			for k, e := range vv {
+				appnd(k + "_" + e)
+			}
+		case int:
+			appnd(strconv.Itoa(vv))
+		default:
+			// This should never happen, but incase of unknown
+			// value passed, hopefully this should make it easier
+			// to catch in logs.
+			str = str + "KEYTYPEERR"
+		}
+	}
+	return str
 }

@@ -17,17 +17,27 @@ type TMDBSearchResponse[R any] struct {
 	TotalResults int `json:"total_results"`
 }
 
+// A common "base" type for search results.
+type TMDBSearchResult struct {
+	// TMDB ID
+	ID int `json:"id"`
+	// Media Type (movie, show, person)
+	// Some requests won't return this value
+	// (namely any request other than a multi
+	// type search), but we add it in manually.
+	MediaType string `json:"media_type"`
+}
+
 type TMDBSearchMultiResults struct {
+	TMDBSearchResult
 	Adult            bool     `json:"adult"`
 	BackdropPath     string   `json:"backdrop_path"`
-	ID               int      `json:"id"`
 	Title            string   `json:"title,omitempty"`
 	OriginalLanguage string   `json:"original_language"`
 	OriginalTitle    string   `json:"original_title,omitempty"`
 	Overview         string   `json:"overview"`
 	PosterPath       string   `json:"poster_path"`
 	ProfilePath      string   `json:"profile_path"`
-	MediaType        string   `json:"media_type"`
 	GenreIds         []int64  `json:"genre_ids"`
 	Popularity       float32  `json:"popularity"`
 	ReleaseDate      string   `json:"release_date,omitempty"`
@@ -47,6 +57,9 @@ type TMDBSearchMultiResults struct {
 	SeasonNumber   int    `json:"season_number,omitempty"`
 	ShowId         int    `json:"show_id,omitempty"`
 	StillPath      string `json:"still_path,omitempty"`
+
+	//
+	WatchedAddedToContent
 }
 
 type TMDBSearchMultiResponse struct {
@@ -54,10 +67,10 @@ type TMDBSearchMultiResponse struct {
 }
 
 type TMDBSearchMovieResult struct {
+	TMDBSearchResult
 	Adult            bool    `json:"adult"`
 	BackdropPath     string  `json:"backdrop_path"`
 	GenreIds         []int   `json:"genre_ids"`
-	ID               int     `json:"id"`
 	OriginalLanguage string  `json:"original_language"`
 	OriginalTitle    string  `json:"original_title"`
 	Overview         string  `json:"overview"`
@@ -68,7 +81,8 @@ type TMDBSearchMovieResult struct {
 	Video            bool    `json:"video"`
 	VoteAverage      float64 `json:"vote_average"`
 	VoteCount        int     `json:"vote_count"`
-	MediaType        string  `json:"media_type"` // API req doesn't include this, we will add it in our service.
+
+	WatchedAddedToContent
 }
 
 type TMDBSearchMoviesResponse struct {
@@ -76,10 +90,10 @@ type TMDBSearchMoviesResponse struct {
 }
 
 type TMDBSearchShowsResult struct {
+	TMDBSearchResult
 	Adult            bool     `json:"adult"`
 	BackdropPath     string   `json:"backdrop_path"`
 	GenreIds         []int    `json:"genre_ids"`
-	ID               int      `json:"id"`
 	OriginCountry    []string `json:"origin_country"`
 	OriginalLanguage string   `json:"original_language"`
 	OriginalName     string   `json:"original_name"`
@@ -90,7 +104,9 @@ type TMDBSearchShowsResult struct {
 	Name             string   `json:"name"`
 	VoteAverage      float64  `json:"vote_average"`
 	VoteCount        int      `json:"vote_count"`
-	MediaType        string   `json:"media_type"` // API req doesn't include this, we will add it in our service.
+
+	//
+	WatchedAddedToContent
 }
 
 type TMDBSearchShowsResponse struct {
@@ -98,15 +114,14 @@ type TMDBSearchShowsResponse struct {
 }
 
 type TMDBSearchPeopleResult struct {
+	TMDBSearchResult
 	Adult              bool    `json:"adult"`
 	Gender             int     `json:"gender"`
-	ID                 int     `json:"id"`
 	KnownForDepartment string  `json:"known_for_department"`
 	Name               string  `json:"name"`
 	OriginalName       string  `json:"original_name"`
 	Popularity         float64 `json:"popularity"`
 	ProfilePath        string  `json:"profile_path"`
-	MediaType          string  `json:"media_type"` // API req doesn't include this, we will add it in our service.
 	KnownFor           []struct {
 		Adult            bool    `json:"adult"`
 		BackdropPath     string  `json:"backdrop_path"`
@@ -193,6 +208,11 @@ type TMDBMovieDetails struct {
 	WatchProviders interface{}          `json:"watch/providers"`
 	Similar        TMDBMovieSimilar     `json:"similar"`
 	ExternalIds    TMDBExternalIdsMovie `json:"external_ids"`
+}
+
+type TMDBMovieDetailsWithWatched struct {
+	WatchedAddedToContent
+	*TMDBShowDetails
 }
 
 type TMDBShowDetails struct {
@@ -346,6 +366,9 @@ type TMDBShowSimilar struct {
 		Name             string   `json:"name"`
 		VoteAverage      float64  `json:"vote_average"`
 		VoteCount        uint32   `json:"vote_count"`
+
+		//
+		WatchedAddedToContent
 	} `json:"results"`
 	TotalPages   int `json:"total_pages"`
 	TotalResults int `json:"total_results"`
@@ -368,6 +391,9 @@ type TMDBMovieSimilar struct {
 		Video            bool    `json:"video"`
 		VoteAverage      float64 `json:"vote_average"`
 		VoteCount        uint32  `json:"vote_count"`
+
+		//
+		WatchedAddedToContent
 	} `json:"results"`
 	TotalPages   int `json:"total_pages"`
 	TotalResults int `json:"total_results"`

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PosterExtraDetails, MediaType, WatchedStatus } from "@/types";
+	import type { WatchedStatus, Watched, ContentType } from "@/types";
 	import {
 		addClassToParent,
 		calculateTransformOrigin,
@@ -13,25 +13,27 @@
 	import PosterStatus from "./PosterStatus.svelte";
 	import PosterRating from "./PosterRating.svelte";
 	import ExtraDetails from "./ExtraDetails.svelte";
+	import { buildExtraDetails } from "./lib";
 
 	interface Props {
-		id?: number | undefined; // Watched list id
+		/**
+		 * If this content is on our watched list,
+		 * the entry should be provided in full.
+		 */
+		watched?: Watched;
 		media: {
 			poster_path?: string;
 			title?: string;
 			name?: string;
 			overview?: string;
 			id: number; // tmdb id
-			media_type: MediaType;
+			media_type: ContentType;
 			release_date?: string;
 			first_air_date?: string;
 		};
-		rating?: number | undefined;
-		status?: WatchedStatus | undefined;
 		small?: boolean;
 		disableInteraction?: boolean;
 		hideButtons?: boolean;
-		extraDetails?: PosterExtraDetails | undefined;
 		fluidSize?: boolean;
 		pinned?: boolean;
 		/**
@@ -52,14 +54,11 @@
 	}
 
 	let {
-		id = undefined,
 		media,
-		rating = undefined,
-		status = undefined,
+		watched = undefined,
 		small = false,
 		disableInteraction = false,
 		hideButtons = false,
-		extraDetails = undefined,
 		fluidSize = false,
 		pinned = false,
 		hideIfNotOnList = false,
@@ -79,7 +78,7 @@
 	// cached image. Could be improved, since we could have a cached image for
 	// show not on someone elses watched list.
 	let poster = $derived(
-		id
+		watched
 			? `${baseURL}/img${media.poster_path}`
 			: `https://image.tmdb.org/t/p/w500${media.poster_path}`,
 	);
@@ -90,8 +89,12 @@
 	let year = $derived(dateStr ? new Date(dateStr).getFullYear() : undefined);
 
 	function handleStarClick(r: number) {
-		if (r == rating) return;
-		updateWatched(media.id, media.media_type, undefined, r).then(() => {
+		if (r == watched?.rating) return;
+		updateWatched(watched, {
+			contentId: media.id,
+			contentType: media.media_type,
+			rating: r,
+		}).then(() => {
 			if (typeof onUpdated === "function") {
 				onUpdated();
 				runPosterMouseLeaveIfNeeded();
@@ -101,18 +104,22 @@
 
 	function handleStatusClick(type: WatchedStatus | "DELETE") {
 		if (type === "DELETE") {
-			if (!id) {
+			if (!watched) {
 				notify({
-					text: "Content has no watched list id, can't delete.",
+					text: "Content has no watched list entry, can't delete.",
 					type: "error",
 				});
 				return;
 			}
-			removeWatched(id);
+			removeWatched(watched.id);
 			return;
 		}
 		if (type == status) return;
-		updateWatched(media.id, media.media_type, type).then(() => {
+		updateWatched(watched, {
+			contentId: media.id,
+			contentType: media.media_type,
+			status: type,
+		}).then(() => {
 			if (typeof onUpdated === "function") {
 				onUpdated();
 				runPosterMouseLeaveIfNeeded();
@@ -212,7 +219,7 @@
 		}
 	}}
 	onkeypress={() => console.log("on kpress")}
-	class={`${posterActive ? "active " : ""}${pinned ? "pinned " : ""}${hideIfNotOnList && !id ? "hidden " : ""}`}
+	class={`${posterActive ? "active " : ""}${pinned ? "pinned " : ""}${hideIfNotOnList && !watched ? "hidden " : ""}`}
 >
 	<div
 		class={`container${!poster || !media.poster_path ? " details-shown" : ""}`}
@@ -232,9 +239,9 @@
 				}}
 			/>
 		{/if}
-		{#if id && !posterActive}
+		{#if watched && !posterActive}
 			<!-- Must be on watched list, and poster not hovered -->
-			<ExtraDetails details={extraDetails} {status} {rating} />
+			<ExtraDetails {...buildExtraDetails(media.media_type, watched)} />
 		{/if}
 		<div
 			onclick={(e) => {
@@ -264,8 +271,16 @@
 
 			{#if !hideButtons}
 				<div class="buttons">
-					<PosterRating {rating} {handleStarClick} {disableInteraction} />
-					<PosterStatus {status} {handleStatusClick} {disableInteraction} />
+					<PosterRating
+						rating={watched?.rating}
+						{handleStarClick}
+						{disableInteraction}
+					/>
+					<PosterStatus
+						status={watched?.status}
+						{handleStatusClick}
+						{disableInteraction}
+					/>
 				</div>
 			{/if}
 		</div>

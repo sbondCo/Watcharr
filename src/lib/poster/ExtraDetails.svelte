@@ -1,11 +1,7 @@
 <!-- Extra Details View For Posters -->
 <script lang="ts">
 	import { store } from "@/store.svelte";
-	import {
-		RatingSystem,
-		type PosterExtraDetails,
-		type WatchedStatus,
-	} from "@/types";
+	import { RatingSystem } from "@/types";
 	import {
 		getOrdinalSuffix,
 		monthsShort,
@@ -14,14 +10,15 @@
 	import Icon from "../Icon.svelte";
 	import { toShowableRating, toWhichThumb } from "../rating/helpers";
 	import { page } from "$app/state";
+	import type { PosterExtraDetails } from "./lib";
 
-	interface Props {
-		rating: number | undefined;
-		status: WatchedStatus | undefined;
-		details: PosterExtraDetails | undefined;
-	}
-
-	let { rating, status, details }: Props = $props();
+	let {
+		rating,
+		status,
+		dateAdded,
+		dateModified,
+		lastWatched,
+	}: PosterExtraDetails = $props();
 
 	let isUsingThumbs = $derived(
 		store.userSettings &&
@@ -39,7 +36,7 @@
 	}
 </script>
 
-{#if (page.url?.pathname === "/" || page.url?.pathname.startsWith("/search")) && details && store.wlDetailedView && store.wlDetailedView.length > 0}
+{#if (page.url?.pathname === "/" || page.url?.pathname.startsWith("/search")) && store.wlDetailedView && store.wlDetailedView.length > 0}
 	<div class="extra-details">
 		<!--
       The `if` statements can't be on their own line to look pretty
@@ -49,24 +46,24 @@
       OR when :empty tag is updated in browsers to new spec and counts whitespace as empty.
     -->
 		<div>
-			{#if details.dateAdded && store.wlDetailedView.includes("dateAdded")}
+			{#if dateAdded && store.wlDetailedView.includes("dateAdded")}
 				<span title="Date added to watch list">
 					<i><Icon i="calendar" /></i>
 					<span>
-						{formatDate(Date.parse(details.dateAdded))}
+						{formatDate(Date.parse(dateAdded))}
 					</span>
 				</span>
-			{/if}{#if details.dateModified && store.wlDetailedView.includes("dateModified")}
+			{/if}{#if dateModified && store.wlDetailedView.includes("dateModified")}
 				<span title="Date last modified">
 					<i><Icon i="pencil" wh={15} /></i>
 					<span>
-						{formatDate(Date.parse(details.dateModified))}
+						{formatDate(Date.parse(dateModified))}
 					</span>
 				</span>
-			{/if}{#if details.lastWatched && store.wlDetailedView.includes("lastWatched")}
+			{/if}{#if lastWatched && store.wlDetailedView.includes("lastWatched")}
 				<span title="Latest season watched">
 					<i><Icon i="play" wh={15} /></i>
-					<span>{details.lastWatched}</span>
+					<span>{lastWatched}</span>
 				</span>
 			{/if}{#if store.wlDetailedView.includes("statusRating")}
 				<span class="status-rating" title="Status and Rating">

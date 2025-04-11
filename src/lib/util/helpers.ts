@@ -56,45 +56,10 @@ export function isTouch() {
 	return "ontouchstart" in window;
 }
 
-// Not passing wList from #each loop caused it not to have reactivity.
-// Passing it through must allow it to recognize it as a dependency?
-export function getWatchedDependedProps(
-	wid: number,
-	wtype: MediaType,
-	list: Watched[],
-) {
-	const wel = list.find(
-		(wl) => wl.content?.tmdbId === wid && wl.content?.type === wtype,
-	);
-	if (!wel) return {};
-	console.log(wid, wtype, wel?.content?.title, wel?.status, wel?.rating);
-	return {
-		id: wel.id,
-		status: wel.status,
-		rating: wel.rating,
-		extraDetails: {
-			dateAdded: wel.createdAt,
-			dateModified: wel.updatedAt,
-			lastWatched: getLatestWatchedInTv(
-				wel.watchedSeasons,
-				wel.watchedEpisodes,
-			),
-		},
-	};
-}
-
 export function getPlayedDependedProps(wid: number, list: Watched[]) {
-	const wel = list.find((wl) => wl.game?.igdbId === wid);
-	if (!wel) return {};
-	return {
-		id: wel.id,
-		status: wel.status,
-		rating: wel.rating,
-		extraDetails: {
-			dateAdded: wel.createdAt,
-			dateModified: wel.updatedAt,
-		},
-	};
+	// TODO this is only here to avoid error for now, but we are removing
+	// this func, just like we removed getWatchedDependedProps, because
+	// the poster component will now just accept the whole `watched` entry obj
 }
 
 // Get biggest season watching or biggest season watched.

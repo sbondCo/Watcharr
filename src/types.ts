@@ -66,14 +66,6 @@ export type WLDetailedViewOption =
 	| "lastWatched"
 	| "dateAdded"
 	| "dateModified";
-export type PosterExtraDetails = {
-	dateAdded?: string;
-	dateModified?: string;
-	/**
-	 * Only for shows.
-	 */
-	lastWatched?: string;
-};
 
 export enum UserType {
 	Watcharr = 0,
@@ -514,49 +506,51 @@ export interface TMDBContentCreditsCrew {
 	job: string;
 }
 
-export interface TMDBShowSimilar {
+// TODO use this type everywhere needed to simplify
+export interface TMDBPaginatedResponse<T> {
 	page: number;
-	results: {
-		adult: boolean;
-		backdrop_path: string;
-		genre_ids: number[];
-		id: number;
-		origin_country: string[];
-		original_language: string;
-		original_name: string;
-		overview: string;
-		popularity: number;
-		poster_path: string;
-		first_air_date: string;
-		name: string;
-		vote_average: number;
-		vote_count: number;
-	}[];
 	total_pages: number;
 	total_results: number;
+	results: T[];
 }
 
-export interface TMDBMovieSimilar {
-	page: number;
-	results: {
-		adult: boolean;
-		backdrop_path: string;
-		genre_ids: number[];
-		id: number;
-		original_language: string;
-		original_title: string;
-		overview: string;
-		popularity: number;
-		poster_path: string;
-		release_date: string;
-		title: string;
-		video: boolean;
-		vote_average: number;
-		vote_count: number;
-	}[];
-	total_pages: number;
-	total_results: number;
+export interface TMDBShowSimilarResult extends WatchedAddedToContent {
+	adult: boolean;
+	backdrop_path: string;
+	genre_ids: number[];
+	id: number;
+	origin_country: string[];
+	original_language: string;
+	original_name: string;
+	overview: string;
+	popularity: number;
+	poster_path: string;
+	first_air_date: string;
+	name: string;
+	vote_average: number;
+	vote_count: number;
 }
+
+export type TMDBShowSimilar = TMDBPaginatedResponse<TMDBShowSimilarResult>;
+
+export interface TMDBMovieSimilarResult extends WatchedAddedToContent {
+	adult: boolean;
+	backdrop_path: string;
+	genre_ids: number[];
+	id: number;
+	original_language: string;
+	original_title: string;
+	overview: string;
+	popularity: number;
+	poster_path: string;
+	release_date: string;
+	title: string;
+	video: boolean;
+	vote_average: number;
+	vote_count: number;
+}
+
+export type TMDBMovieSimilar = TMDBPaginatedResponse<TMDBMovieSimilarResult>;
 
 export interface TMDBPersonDetails {
 	birthday?: string;
@@ -779,6 +773,7 @@ export interface ContentSearchMovie {
 	vote_count?: number;
 	video?: boolean;
 	vote_average?: number;
+	watched?: Watched;
 }
 
 export interface ContentSearchTv {
@@ -796,6 +791,7 @@ export interface ContentSearchTv {
 	vote_count?: number;
 	name?: string;
 	original_name?: string;
+	watched?: Watched;
 }
 
 export interface ContentSearchPerson {
@@ -826,6 +822,7 @@ export interface MoviesSearchResponse {
 		vote_average: number;
 		vote_count: number;
 		media_type: "movie";
+		watched?: Watched;
 	}[];
 	total_pages: number;
 	total_results: number;
@@ -849,6 +846,7 @@ export interface ShowsSearchResponse {
 		vote_average: number;
 		vote_count: number;
 		media_type: "tv";
+		watched?: Watched;
 	}[];
 	total_pages: number;
 	total_results: number;
@@ -898,6 +896,7 @@ export interface GameSearch {
 	name: string;
 	summary?: string;
 	version_title?: string;
+	// watched?: Watched; TODO
 }
 
 export enum ImportResponseType {

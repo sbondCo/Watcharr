@@ -102,11 +102,11 @@
 	) {
 		if (!data.tvId) {
 			console.error("contentChanged: no tvId");
-			return false;
+			return;
 		}
 		if (!show) {
 			console.error("contentChanged: no show");
-			return false;
+			return;
 		}
 		show.watched = await updateWatched(show.watched, {
 			contentId: data.tvId,
@@ -116,6 +116,16 @@
 			thoughts: newThoughts,
 			pinned: pinned,
 		});
+	}
+
+	async function deleteWatched() {
+		if (show?.watched) {
+			if (await removeWatched(show.watched.id)) {
+				show.watched = undefined;
+			}
+			return;
+		}
+		console.error("deleteWatched: no wlistItem.. can't delete");
 	}
 </script>
 
@@ -223,10 +233,7 @@
 								</button>
 								<button
 									class="delete-btn"
-									onclick={() =>
-										show?.watched
-											? removeWatched(show?.watched.id)
-											: console.error("no wlistItem.. can't delete")}
+									onclick={() => deleteWatched()}
 									use:tooltip={{ text: "Delete", pos: "bot" }}
 								>
 									<Icon i="trash" wh={19} />
@@ -309,7 +316,7 @@
 				<Error error={err} pretty="Failed to load cast!" />
 			{/await}
 
-			<!-- <SimilarContent type="tv" similar={show.similar} /> -->
+			<SimilarContent type="tv" similar={show.similar} />
 
 			{#if show.watched}
 				<Activity wListId={show.watched.id} activity={show.watched.activity} />

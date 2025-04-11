@@ -5,10 +5,6 @@
 	import PageError from "@/lib/PageError.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import axios from "axios";
-	import {
-		getWatchedDependedProps,
-		getPlayedDependedProps,
-	} from "@/lib/util/helpers";
 	import PersonPoster from "@/lib/poster/PersonPoster.svelte";
 	import type {
 		ContentSearch,
@@ -553,19 +549,10 @@
 									summary: w.summary,
 									firstReleaseDate: w.first_release_date,
 								}}
-								{...getPlayedDependedProps(w.id, store.watchedList)}
 								fluidSize
 							/>
 						{:else if w.media_type === "movie" || w.media_type === "tv"}
-							<Poster
-								media={w}
-								{...getWatchedDependedProps(
-									w.id,
-									w.media_type,
-									store.watchedList,
-								)}
-								fluidSize
-							/>
+							<Poster media={w} watched={w.watched} fluidSize />
 						{/if}
 					{/each}
 				{:else if !searchRunning && !contentSearchErr}

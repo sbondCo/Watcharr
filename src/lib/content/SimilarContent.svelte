@@ -1,8 +1,6 @@
 <script lang="ts">
 	import type { ContentType, TMDBMovieSimilar, TMDBShowSimilar } from "@/types";
 	import HorizontalList from "../HorizontalList.svelte";
-	import { store } from "@/store.svelte";
-	import { getWatchedDependedProps } from "@/lib/util/helpers";
 	import Poster from "../poster/Poster.svelte";
 
 	interface Props {
@@ -18,8 +16,8 @@
 		{#each similar.results as content}
 			<Poster
 				media={{ ...content, media_type: type }}
-				{...getWatchedDependedProps(content.id, type, store.watchedList)}
 				small={true}
+				watched={content.watched}
 			/>
 		{/each}
 	</HorizontalList>
