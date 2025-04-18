@@ -158,7 +158,7 @@ export async function removeWatched(id: number): Promise<boolean> {
 	try {
 		const resp = await axios.delete(`/watched/${id}`);
 		console.log("removeWatched: Removed resp:", resp.data);
-		notify({ id: nid, text: "Removed!", type: "error" });
+		notify({ id: nid, text: "Removed!", type: "success" });
 		return true;
 	} catch (err) {
 		console.error("removeWatched: Failed!", err);
