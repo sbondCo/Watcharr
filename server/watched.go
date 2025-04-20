@@ -177,7 +177,12 @@ func getWatchedItemsByTmdbIds(db *gorm.DB, userId uint, c [][]any) ([]Watched, e
 		slog.Error("getWatchedItemsByTmdbIds: Failed!", "error", res.Error)
 		return []Watched{}, res.Error
 	}
-	slog.Debug("getWatchedItemsByTmdbIds: Done.", "userId", userId, "watcheds_found", len(*watched), "wdev", *watched)
+	slog.Debug(
+		"getWatchedItemsByTmdbIds: Done.",
+		"userId", userId,
+		"watcheds_found", len(*watched),
+		// "wdev", *watched,
+	)
 	return *watched, nil
 }
 
