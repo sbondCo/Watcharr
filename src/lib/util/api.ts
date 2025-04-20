@@ -154,7 +154,7 @@ export async function updateWatched(
  */
 export async function removeWatched(id: number): Promise<boolean> {
 	console.log("removeWatched: Removing:", id);
-	const nid = notify({ text: `Removing`, type: "loading" });
+	const nid = notify({ text: "Removing", type: "loading" });
 	try {
 		const resp = await axios.delete(`/watched/${id}`);
 		console.log("removeWatched: Removed resp:", resp.data);

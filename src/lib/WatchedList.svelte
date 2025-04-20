@@ -206,7 +206,7 @@
 
 <PosterList>
 	{#if list?.length > 0}
-		{#each list as w (w.id)}
+		{#each list as w, i (w.id)}
 			{#if w.game}
 				<GamePoster
 					id={w.id}
@@ -231,7 +231,7 @@
 				/>
 			{:else if w.content}
 				<Poster
-					watched={w}
+					bind:watched={list[i]}
 					media={{
 						id: w.content.tmdbId,
 						poster_path: w.content.poster_path,

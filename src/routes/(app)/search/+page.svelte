@@ -551,8 +551,12 @@
 								}}
 								fluidSize
 							/>
-						{:else if w.media_type === "movie" || w.media_type === "tv"}
-							<Poster media={w} watched={w.watched} fluidSize />
+						{:else if searchResults[i].media_type === "movie" || searchResults[i].media_type === "tv"}
+							<Poster
+								media={w}
+								bind:watched={searchResults[i].watched}
+								fluidSize
+							/>
 						{/if}
 					{/each}
 				{:else if !searchRunning && !contentSearchErr}

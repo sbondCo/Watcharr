@@ -13,11 +13,11 @@
 
 {#if similar?.results?.length > 0}
 	<HorizontalList title="Similar">
-		{#each similar.results as content}
+		{#each similar.results as content, i}
 			<Poster
 				media={{ ...content, media_type: type }}
 				small={true}
-				watched={content.watched}
+				bind:watched={similar.results[i].watched}
 			/>
 		{/each}
 	</HorizontalList>

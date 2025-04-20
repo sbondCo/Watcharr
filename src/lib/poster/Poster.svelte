@@ -55,7 +55,11 @@
 
 	let {
 		media,
-		watched = undefined,
+		// The `watched` prop is bindable so that when we update
+		// or add content to our list, we can let the update flow
+		// back to our parent that passed it in (so state is in sync
+		// between parent and this component).
+		watched = $bindable(undefined),
 		small = false,
 		disableInteraction = false,
 		hideButtons = false,
@@ -94,11 +98,14 @@
 			contentId: media.id,
 			contentType: media.media_type,
 			rating: r,
-		}).then(() => {
+		}).then((w) => {
 			if (typeof onUpdated === "function") {
 				onUpdated();
 				runPosterMouseLeaveIfNeeded();
 			}
+			// If watched was just added, we need to assign
+			// it to our `watched` var to get the update.
+			watched = w;
 		});
 	}
 
@@ -111,19 +118,26 @@
 				});
 				return;
 			}
-			removeWatched(watched.id);
+			removeWatched(watched.id).then((removed) => {
+				if (removed) {
+					watched = undefined;
+				}
+			});
 			return;
 		}
-		if (type == status) return;
+		if (type == watched?.status) return;
 		updateWatched(watched, {
 			contentId: media.id,
 			contentType: media.media_type,
 			status: type,
-		}).then(() => {
+		}).then((w) => {
 			if (typeof onUpdated === "function") {
 				onUpdated();
 				runPosterMouseLeaveIfNeeded();
 			}
+			// If watched was just added, we need to assign
+			// it to our `watched` var to get the update.
+			watched = w;
 		});
 	}
 
@@ -159,7 +173,8 @@
 	 */
 	function runPosterMouseLeaveIfNeeded() {
 		// Timeout to give enough time for the element to
-		// actually move if it needs to.
+		// actually move if it needs to (which can happen if
+		// certain filters/sorts are applied).
 		setTimeout(() => {
 			if (!mouseOverEl(containerEl)) {
 				posterOnMouseLeave();
