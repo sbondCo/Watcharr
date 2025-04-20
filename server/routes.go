@@ -93,26 +93,8 @@ func (b *BaseRouter) addContentRoutes() {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		// TODO can we move the following to a reusable function for search/movie,tv,etc?
-		contentIdAndTypePairs := [][]any{}
-		for _, v := range content.Results {
-			contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
-				v.ID,
-				ContentType(v.MediaType),
-			})
-		}
-		if ws, err := getWatchedItemsByTmdbIds(b.db, userId, contentIdAndTypePairs); err == nil {
-			for _, v := range ws {
-				for i, vv := range content.Results {
-					if vv.ID == v.Content.TmdbID && vv.MediaType == string(v.Content.Type) {
-						content.Results[i].WatchedAddedToContent.Watched = &v
-					}
-				}
-			}
-		} else {
-			slog.Error("Getting watched items by tmdbIds failed!")
-		}
-		c.JSON(http.StatusOK, content)
+		withWatchedResp := searchContentAddWatched(b.db, userId, content.Results)
+		c.JSON(http.StatusOK, withWatchedResp)
 	})
 
 	// Search for movies
@@ -129,25 +111,8 @@ func (b *BaseRouter) addContentRoutes() {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		contentIdAndTypePairs := [][]any{}
-		for _, v := range content.Results {
-			contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
-				v.ID,
-				ContentType(v.MediaType),
-			})
-		}
-		if ws, err := getWatchedItemsByTmdbIds(b.db, userId, contentIdAndTypePairs); err == nil {
-			for _, v := range ws {
-				for i, vv := range content.Results {
-					if vv.ID == v.Content.TmdbID && vv.MediaType == string(v.Content.Type) {
-						content.Results[i].WatchedAddedToContent.Watched = &v
-					}
-				}
-			}
-		} else {
-			slog.Error("Getting watched items by tmdbIds failed!")
-		}
-		c.JSON(http.StatusOK, content)
+		withWatchedResp := searchMoviesAddWatched(b.db, userId, content.Results)
+		c.JSON(http.StatusOK, withWatchedResp)
 	})
 
 	// Search for shows
@@ -164,25 +129,8 @@ func (b *BaseRouter) addContentRoutes() {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		contentIdAndTypePairs := [][]any{}
-		for _, v := range content.Results {
-			contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
-				v.ID,
-				ContentType(v.MediaType),
-			})
-		}
-		if ws, err := getWatchedItemsByTmdbIds(b.db, userId, contentIdAndTypePairs); err == nil {
-			for _, v := range ws {
-				for i, vv := range content.Results {
-					if vv.ID == v.Content.TmdbID && vv.MediaType == string(v.Content.Type) {
-						content.Results[i].WatchedAddedToContent.Watched = &v
-					}
-				}
-			}
-		} else {
-			slog.Error("Getting watched items by tmdbIds failed!")
-		}
-		c.JSON(http.StatusOK, content)
+		withWatchedResp := searchTvAddWatched(b.db, userId, content.Results)
+		c.JSON(http.StatusOK, withWatchedResp)
 	})
 
 	// Search for people
@@ -254,18 +202,7 @@ func (b *BaseRouter) addContentRoutes() {
 
 	// Get tv details (for tv page)
 	content.GET("/tv/:id", WhereaboutsRequired(), func(c *gin.Context) {
-		tmdbIdStr := c.Param("id")
-		if tmdbIdStr == "" {
-			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "must provide an 'id' parameter"})
-			return
-		}
-		tmdbId, err := strconv.ParseUint(tmdbIdStr, 10, 64)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "'id' parameter must be a number"})
-			return
-		}
 		userId := c.MustGet("userId").(uint)
-		resp := TMDBShowDetailsWithWatched{}
 		// 1. Get details
 		content, err := tvDetails(
 			b.db,
@@ -279,36 +216,8 @@ func (b *BaseRouter) addContentRoutes() {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		resp.TMDBShowDetails = &content
-		// 2. append watched list entry if exists
-		if watchedEntry, err := getWatchedItemByTmdbId(b.db, userId, uint(tmdbId), SHOW); err != nil {
-			if err != gorm.ErrRecordNotFound {
-				resp.FailedToGetWatched = true
-			}
-		} else {
-			resp.Watched = &watchedEntry
-		}
-		// 3. Get watched entries for Similar content
-		similarContentIdAndTypePairs := [][]any{}
-		for _, v := range content.Similar.Results {
-			similarContentIdAndTypePairs = append(similarContentIdAndTypePairs, []any{
-				v.ID,
-				SHOW,
-			})
-		}
-		if ws, err := getWatchedItemsByTmdbIds(b.db, userId, similarContentIdAndTypePairs); err == nil {
-			for _, v := range ws {
-				for i, vv := range content.Similar.Results {
-					if vv.ID == v.Content.TmdbID && string(SHOW) == string(v.Content.Type) {
-						content.Similar.Results[i].WatchedAddedToContent.Watched = &v
-					}
-				}
-			}
-		} else {
-			slog.Error("Getting watched items by tmdbIds failed!")
-		}
-
-		c.JSON(http.StatusOK, resp)
+		withWatchedResp := tvDetailsAddWatched(b.db, userId, content)
+		c.JSON(http.StatusOK, withWatchedResp)
 	})
 
 	// Get tv cast

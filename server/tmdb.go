@@ -57,13 +57,19 @@ type TMDBSearchMultiResults struct {
 	SeasonNumber   int    `json:"season_number,omitempty"`
 	ShowId         int    `json:"show_id,omitempty"`
 	StillPath      string `json:"still_path,omitempty"`
+}
 
-	//
+type TMDBSearchMultiResultsWithWatched struct {
+	TMDBSearchMultiResults
 	WatchedAddedToContent
 }
 
 type TMDBSearchMultiResponse struct {
 	TMDBSearchResponse[TMDBSearchMultiResults]
+}
+
+type TMDBSearchMultiResponseWithWatched struct {
+	TMDBSearchResponse[TMDBSearchMultiResultsWithWatched]
 }
 
 type TMDBSearchMovieResult struct {
@@ -81,12 +87,19 @@ type TMDBSearchMovieResult struct {
 	Video            bool    `json:"video"`
 	VoteAverage      float64 `json:"vote_average"`
 	VoteCount        int     `json:"vote_count"`
+}
 
+type TMDBSearchMovieResultWithWatched struct {
+	TMDBSearchMovieResult
 	WatchedAddedToContent
 }
 
 type TMDBSearchMoviesResponse struct {
 	TMDBSearchResponse[TMDBSearchMovieResult]
+}
+
+type TMDBSearchMoviesResponseWithWatched struct {
+	TMDBSearchResponse[TMDBSearchMovieResultWithWatched]
 }
 
 type TMDBSearchShowsResult struct {
@@ -104,13 +117,19 @@ type TMDBSearchShowsResult struct {
 	Name             string   `json:"name"`
 	VoteAverage      float64  `json:"vote_average"`
 	VoteCount        int      `json:"vote_count"`
+}
 
-	//
+type TMDBSearchShowsResultWithWatched struct {
+	TMDBSearchShowsResult
 	WatchedAddedToContent
 }
 
 type TMDBSearchShowsResponse struct {
 	TMDBSearchResponse[TMDBSearchShowsResult]
+}
+
+type TMDBSearchShowsResponseWithWatched struct {
+	TMDBSearchResponse[TMDBSearchShowsResultWithWatched]
 }
 
 type TMDBSearchPeopleResult struct {
@@ -215,7 +234,7 @@ type TMDBMovieDetailsWithWatched struct {
 	*TMDBShowDetails
 }
 
-type TMDBShowDetails struct {
+type TMDBShowDetailsBase struct {
 	TMDBContentDetails
 	CreatedBy []struct {
 		ID          int    `json:"id"`
@@ -265,16 +284,22 @@ type TMDBShowDetails struct {
 	Type string `json:"type"`
 
 	// Extra items because we use `append_to_response` on the request
+	// Similar        SS                  `json:"similar"`
 	Videos         TMDBContentVideos   `json:"videos"`
 	WatchProviders interface{}         `json:"watch/providers"`
-	Similar        TMDBShowSimilar     `json:"similar"`
 	ExternalIds    TMDBExternalIdsShow `json:"external_ids"`
 	Keywords       TMDBKeywords        `json:"keywords"`
 }
 
+type TMDBShowDetails struct {
+	TMDBShowDetailsBase
+	Similar TMDBShowSimilar `json:"similar"`
+}
+
 type TMDBShowDetailsWithWatched struct {
 	WatchedAddedToContent
-	*TMDBShowDetails
+	TMDBShowDetailsBase
+	Similar TMDBShowSimilarWithWatched `json:"similar"`
 }
 
 type WatchProvider struct {
@@ -350,28 +375,33 @@ type TMDBSeasonDetails struct {
 }
 
 type TMDBShowSimilar struct {
-	Page    int `json:"page"`
-	Results []struct {
-		Adult            bool     `json:"adult"`
-		BackdropPath     string   `json:"backdrop_path"`
-		GenreIds         []int    `json:"genre_ids"`
-		ID               int      `json:"id"`
-		OriginCountry    []string `json:"origin_country"`
-		OriginalLanguage string   `json:"original_language"`
-		OriginalName     string   `json:"original_name"`
-		Overview         string   `json:"overview"`
-		Popularity       float64  `json:"popularity"`
-		PosterPath       string   `json:"poster_path"`
-		FirstAirDate     string   `json:"first_air_date"`
-		Name             string   `json:"name"`
-		VoteAverage      float64  `json:"vote_average"`
-		VoteCount        uint32   `json:"vote_count"`
+	TMDBSearchResponse[TMDBShowSimilarResult]
+}
 
-		//
-		WatchedAddedToContent
-	} `json:"results"`
-	TotalPages   int `json:"total_pages"`
-	TotalResults int `json:"total_results"`
+type TMDBShowSimilarResult struct {
+	Adult            bool     `json:"adult"`
+	BackdropPath     string   `json:"backdrop_path"`
+	GenreIds         []int    `json:"genre_ids"`
+	ID               int      `json:"id"`
+	OriginCountry    []string `json:"origin_country"`
+	OriginalLanguage string   `json:"original_language"`
+	OriginalName     string   `json:"original_name"`
+	Overview         string   `json:"overview"`
+	Popularity       float64  `json:"popularity"`
+	PosterPath       string   `json:"poster_path"`
+	FirstAirDate     string   `json:"first_air_date"`
+	Name             string   `json:"name"`
+	VoteAverage      float64  `json:"vote_average"`
+	VoteCount        uint32   `json:"vote_count"`
+}
+
+type TMDBShowSimilarWithWatched struct {
+	TMDBSearchResponse[TMDBShowSimilarResultWithWatched]
+}
+
+type TMDBShowSimilarResultWithWatched struct {
+	TMDBShowSimilarResult
+	WatchedAddedToContent
 }
 
 type TMDBMovieSimilar struct {
