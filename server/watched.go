@@ -89,7 +89,7 @@ type WatchedAddedToContent struct {
 }
 
 // Get entire watched list
-func getWatched(db *gorm.DB, userId uint) []Watched {
+func getWatched(db *gorm.DB, userId uint) ([]Watched, error) {
 	watched := new([]Watched)
 	res := db.Model(&Watched{}).
 		Preload("Content").
@@ -102,13 +102,14 @@ func getWatched(db *gorm.DB, userId uint) []Watched {
 		Where("user_id = ?", userId).
 		Find(&watched)
 	if res.Error != nil {
-		panic(res.Error)
+		slog.Error("getWatched: Failed!", "error", res.Error)
+		return []Watched{}, res.Error
 	}
-	return *watched
+	return *watched, nil
 }
 
 // Returns a page of users watched list.
-func getWatchedPage(db *gorm.DB, userId uint, pp PaginationParams) PaginationResponse[Watched] {
+func getWatchedPage(db *gorm.DB, userId uint, pp PaginationParams) (PaginationResponse[Watched], error) {
 	slog.Debug("getWatchedPage: A page was requested.", "user_id", userId, "pagination_params", pp)
 	watched := new([]Watched)
 	pRes := &PaginationResponse[Watched]{}
@@ -125,11 +126,12 @@ func getWatchedPage(db *gorm.DB, userId uint, pp PaginationParams) PaginationRes
 		Scopes(Paginate(pp, pRes)).
 		Find(&watched)
 	if res.Error != nil {
-		panic(res.Error)
+		slog.Error("getWatchedPage: Failed!", "error", res.Error)
+		return PaginationResponse[Watched]{}, res.Error
 	}
 	pRes.Results = *watched
 	pRes.Finished(pp)
-	return *pRes
+	return *pRes, nil
 }
 
 // Get a watched list item by id (must be for `userId`).

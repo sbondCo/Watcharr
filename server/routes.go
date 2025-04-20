@@ -472,11 +472,19 @@ func (b *BaseRouter) addWatchedRoutes() {
 		userId := c.MustGet("userId").(uint)
 		if isPaginated {
 			pp := c.MustGet("paginationParams").(PaginationParams)
-			c.JSON(http.StatusOK, getWatchedPage(b.db, userId, pp))
+			if wp, err := getWatchedPage(b.db, userId, pp); err == nil {
+				c.JSON(http.StatusOK, wp)
+			} else {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: "failed to get page"})
+			}
 			return
 		}
 		// Non paginated response
-		c.JSON(http.StatusOK, getWatched(b.db, userId))
+		if w, err := getWatched(b.db, userId); err == nil {
+			c.JSON(http.StatusOK, w)
+		} else {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "failed"})
+		}
 	})
 
 	watched.GET(":id/:username", func(c *gin.Context) {
