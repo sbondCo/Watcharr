@@ -23,11 +23,12 @@ import (
 func searchContentAddWatched(
 	db *gorm.DB,
 	userId uint,
-	results []TMDBSearchMultiResults,
+	content TMDBSearchMultiResponse,
 ) TMDBSearchMultiResponseWithWatched {
 	withWatchedResp := TMDBSearchMultiResponseWithWatched{}
+	withWatchedResp.TMDBSearchResponse.TMDBPageFields = content.TMDBPageFields
 	contentIdAndTypePairs := [][]any{}
-	for _, v := range results {
+	for _, v := range content.Results {
 		withWatchedResp.Results = append(withWatchedResp.Results, TMDBSearchMultiResultsWithWatched{
 			TMDBSearchMultiResults: v,
 		})
@@ -54,11 +55,12 @@ func searchContentAddWatched(
 func searchMoviesAddWatched(
 	db *gorm.DB,
 	userId uint,
-	results []TMDBSearchMovieResult,
+	content TMDBSearchMoviesResponse,
 ) TMDBSearchMoviesResponseWithWatched {
 	withWatchedResp := TMDBSearchMoviesResponseWithWatched{}
+	withWatchedResp.TMDBSearchResponse.TMDBPageFields = content.TMDBPageFields
 	contentIdAndTypePairs := [][]any{}
-	for _, v := range results {
+	for _, v := range content.Results {
 		withWatchedResp.Results = append(withWatchedResp.Results, TMDBSearchMovieResultWithWatched{
 			TMDBSearchMovieResult: v,
 		})
@@ -85,11 +87,12 @@ func searchMoviesAddWatched(
 func searchTvAddWatched(
 	db *gorm.DB,
 	userId uint,
-	results []TMDBSearchShowsResult,
+	content TMDBSearchShowsResponse,
 ) TMDBSearchShowsResponseWithWatched {
 	withWatchedResp := TMDBSearchShowsResponseWithWatched{}
+	withWatchedResp.TMDBSearchResponse.TMDBPageFields = content.TMDBPageFields
 	contentIdAndTypePairs := [][]any{}
-	for _, v := range results {
+	for _, v := range content.Results {
 		withWatchedResp.Results = append(withWatchedResp.Results, TMDBSearchShowsResultWithWatched{
 			TMDBSearchShowsResult: v,
 		})
@@ -144,6 +147,161 @@ func tvDetailsAddWatched(
 			for i, vv := range withWatchedResp.Similar.Results {
 				if vv.ID == v.Content.TmdbID && string(SHOW) == string(v.Content.Type) {
 					withWatchedResp.Similar.Results[i].WatchedAddedToContent.Watched = &v
+				}
+			}
+		}
+	} else {
+		// TODO Set 'FailedToGetWatched' to `true` for the whole response obj when supported in structs
+		slog.Error("Getting watched items by tmdbIds failed!")
+	}
+	return withWatchedResp
+}
+
+func allTrendingAddWatched(
+	db *gorm.DB,
+	userId uint,
+	content TMDBTrendingAll,
+) TMDBTrendingAllWithWatched {
+	withWatchedResp := TMDBTrendingAllWithWatched{}
+	contentIdAndTypePairs := [][]any{}
+	for _, v := range content.Results {
+		withWatchedResp.Results = append(withWatchedResp.Results, TMDBTrendingAllResultWithWatched{
+			TMDBTrendingAllResult: v,
+		})
+		contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
+			v.ID,
+			ContentType(v.MediaType),
+		})
+	}
+	if ws, err := getWatchedItemsByTmdbIds(db, userId, contentIdAndTypePairs); err == nil {
+		for _, v := range ws {
+			for i, vv := range withWatchedResp.Results {
+				if vv.ID == v.Content.TmdbID && vv.MediaType == string(v.Content.Type) {
+					withWatchedResp.Results[i].WatchedAddedToContent.Watched = &v
+				}
+			}
+		}
+	} else {
+		// TODO Set 'FailedToGetWatched' to `true` for the whole response obj when supported in structs
+		slog.Error("Getting watched items by tmdbIds failed!")
+	}
+	return withWatchedResp
+}
+
+func discoverTvAddWatched(
+	db *gorm.DB,
+	userId uint,
+	content TMDBDiscoverShows,
+) TMDBDiscoverShowsWithWatched {
+	withWatchedResp := TMDBDiscoverShowsWithWatched{}
+	contentIdAndTypePairs := [][]any{}
+	for _, v := range content.Results {
+		withWatchedResp.Results = append(withWatchedResp.Results, TMDBDiscoverShowsResultWithWatched{
+			TMDBDiscoverShowsResult: v,
+		})
+		contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
+			v.ID,
+			SHOW,
+		})
+	}
+	if ws, err := getWatchedItemsByTmdbIds(db, userId, contentIdAndTypePairs); err == nil {
+		for _, v := range ws {
+			for i, vv := range withWatchedResp.Results {
+				if vv.ID == v.Content.TmdbID && SHOW == v.Content.Type {
+					withWatchedResp.Results[i].WatchedAddedToContent.Watched = &v
+				}
+			}
+		}
+	} else {
+		// TODO Set 'FailedToGetWatched' to `true` for the whole response obj when supported in structs
+		slog.Error("Getting watched items by tmdbIds failed!")
+	}
+	return withWatchedResp
+}
+
+func upcomingTvAddWatched(
+	db *gorm.DB,
+	userId uint,
+	content TMDBUpcomingShows,
+) TMDBUpcomingShowsWithWatched {
+	withWatchedResp := TMDBUpcomingShowsWithWatched{}
+	contentIdAndTypePairs := [][]any{}
+	for _, v := range content.Results {
+		withWatchedResp.Results = append(withWatchedResp.Results, TMDBUpcomingShowsResultWithWatched{
+			TMDBUpcomingShowsResult: v,
+		})
+		contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
+			v.ID,
+			SHOW,
+		})
+	}
+	if ws, err := getWatchedItemsByTmdbIds(db, userId, contentIdAndTypePairs); err == nil {
+		for _, v := range ws {
+			for i, vv := range withWatchedResp.Results {
+				if vv.ID == v.Content.TmdbID && SHOW == v.Content.Type {
+					withWatchedResp.Results[i].WatchedAddedToContent.Watched = &v
+				}
+			}
+		}
+	} else {
+		// TODO Set 'FailedToGetWatched' to `true` for the whole response obj when supported in structs
+		slog.Error("Getting watched items by tmdbIds failed!")
+	}
+	return withWatchedResp
+}
+
+func discoverMoviesAddWatched(
+	db *gorm.DB,
+	userId uint,
+	content TMDBDiscoverMovies,
+) TMDBDiscoverMoviesWithWatched {
+	withWatchedResp := TMDBDiscoverMoviesWithWatched{}
+	contentIdAndTypePairs := [][]any{}
+	for _, v := range content.Results {
+		withWatchedResp.Results = append(withWatchedResp.Results, TMDBDiscoverMoviesResultWithWatched{
+			TMDBDiscoverMoviesResult: v,
+		})
+		contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
+			v.ID,
+			MOVIE,
+		})
+	}
+	if ws, err := getWatchedItemsByTmdbIds(db, userId, contentIdAndTypePairs); err == nil {
+		for _, v := range ws {
+			for i, vv := range withWatchedResp.Results {
+				if vv.ID == v.Content.TmdbID && MOVIE == v.Content.Type {
+					withWatchedResp.Results[i].WatchedAddedToContent.Watched = &v
+				}
+			}
+		}
+	} else {
+		// TODO Set 'FailedToGetWatched' to `true` for the whole response obj when supported in structs
+		slog.Error("Getting watched items by tmdbIds failed!")
+	}
+	return withWatchedResp
+}
+
+func upcomingMoviesAddWatched(
+	db *gorm.DB,
+	userId uint,
+	content TMDBUpcomingMovies,
+) TMDBUpcomingMoviesWithWatched {
+	withWatchedResp := TMDBUpcomingMoviesWithWatched{}
+	contentIdAndTypePairs := [][]any{}
+	for _, v := range content.Results {
+		withWatchedResp.Results = append(withWatchedResp.Results, TMDBUpcomingMoviesResultWithWatched{
+			TMDBUpcomingMoviesResult: v,
+		})
+		contentIdAndTypePairs = append(contentIdAndTypePairs, []any{
+			v.ID,
+			MOVIE,
+		})
+	}
+	if ws, err := getWatchedItemsByTmdbIds(db, userId, contentIdAndTypePairs); err == nil {
+		for _, v := range ws {
+			for i, vv := range withWatchedResp.Results {
+				if vv.ID == v.Content.TmdbID && MOVIE == v.Content.Type {
+					withWatchedResp.Results[i].WatchedAddedToContent.Watched = &v
 				}
 			}
 		}

@@ -93,7 +93,7 @@ func (b *BaseRouter) addContentRoutes() {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		withWatchedResp := searchContentAddWatched(b.db, userId, content.Results)
+		withWatchedResp := searchContentAddWatched(b.db, userId, content)
 		c.JSON(http.StatusOK, withWatchedResp)
 	})
 
@@ -111,7 +111,7 @@ func (b *BaseRouter) addContentRoutes() {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		withWatchedResp := searchMoviesAddWatched(b.db, userId, content.Results)
+		withWatchedResp := searchMoviesAddWatched(b.db, userId, content)
 		c.JSON(http.StatusOK, withWatchedResp)
 	})
 
@@ -129,7 +129,7 @@ func (b *BaseRouter) addContentRoutes() {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		withWatchedResp := searchTvAddWatched(b.db, userId, content.Results)
+		withWatchedResp := searchTvAddWatched(b.db, userId, content)
 		c.JSON(http.StatusOK, withWatchedResp)
 	})
 
@@ -300,54 +300,64 @@ func (b *BaseRouter) addContentRoutes() {
 	}))
 
 	// Discover movies
-	content.GET("/discover/movies", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/discover/movies", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
 		content, err := discoverMovies()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, content)
-	}))
+		withWatchedResp := discoverMoviesAddWatched(b.db, userId, content)
+		c.JSON(http.StatusOK, withWatchedResp)
+	})
 
 	// Discover shows
-	content.GET("/discover/tv", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/discover/tv", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
 		content, err := discoverTv()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, content)
-	}))
+		withWatchedResp := discoverTvAddWatched(b.db, userId, content)
+		c.JSON(http.StatusOK, withWatchedResp)
+	})
 
 	// Get all trending (movies, tv, people)
-	content.GET("/trending", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/trending", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
 		content, err := allTrending()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, content)
-	}))
+		withWatchedResp := allTrendingAddWatched(b.db, userId, content)
+		c.JSON(http.StatusOK, withWatchedResp)
+	})
 
 	// Upcoming Movies
-	content.GET("/upcoming/movies", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/upcoming/movies", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
 		content, err := upcomingMovies()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, content)
-	}))
+		withWatchedResp := upcomingMoviesAddWatched(b.db, userId, content)
+		c.JSON(http.StatusOK, withWatchedResp)
+	})
 
 	// Upcoming Tv
-	content.GET("/upcoming/tv", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/upcoming/tv", func(c *gin.Context) {
+		userId := c.MustGet("userId").(uint)
 		content, err := upcomingTv()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, content)
-	}))
+		withWatchedResp := upcomingTvAddWatched(b.db, userId, content)
+		c.JSON(http.StatusOK, withWatchedResp)
+	})
 
 	// Available regions for watch providers
 	content.GET("/regions", func(c *gin.Context) {

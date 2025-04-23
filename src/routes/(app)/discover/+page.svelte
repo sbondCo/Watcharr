@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { store } from "@/store.svelte";
 	import PageError from "@/lib/PageError.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import axios from "axios";
@@ -11,10 +10,7 @@
 		TMDBUpcomingShows,
 	} from "@/types";
 	import Poster from "@/lib/poster/Poster.svelte";
-	import { getWatchedDependedProps } from "@/lib/util/helpers";
 	import PosterList from "@/lib/poster/PosterList.svelte";
-
-	let wList = $derived(store.watchedList);
 
 	async function allTrending() {
 		return (await axios.get(`/content/trending`)).data as TMDBTrendingAll;
@@ -56,8 +52,8 @@
 				{#if trend.media_type === "movie" || trend.media_type === "tv"}
 					<Poster
 						media={{ ...trend, media_type: trend.media_type }}
-						{...getWatchedDependedProps(trend.id, trend.media_type, wList)}
 						small={true}
+						watched={trend.watched}
 					/>
 				{/if}
 			{/each}
@@ -74,8 +70,8 @@
 			{#each movies.results as movie}
 				<Poster
 					media={{ ...movie, media_type: "movie" }}
-					{...getWatchedDependedProps(movie.id, "movie", wList)}
 					small={true}
+					watched={movie.watched}
 				/>
 			{/each}
 		</PosterList>
@@ -91,8 +87,8 @@
 			{#each shows.results as tv}
 				<Poster
 					media={{ ...tv, media_type: "tv" }}
-					{...getWatchedDependedProps(tv.id, "tv", wList)}
 					small={true}
+					watched={tv.watched}
 				/>
 			{/each}
 		</PosterList>
@@ -105,11 +101,11 @@
 		<Spinner />
 	{:then shows}
 		<PosterList type="vertical">
-			{#each shows.results as tv}
+			{#each shows.results as movie}
 				<Poster
-					media={{ ...tv, media_type: "movie" }}
-					{...getWatchedDependedProps(tv.id, "movie", wList)}
+					media={{ ...movie, media_type: "movie" }}
 					small={true}
+					watched={movie.watched}
 				/>
 			{/each}
 		</PosterList>
@@ -125,8 +121,8 @@
 			{#each shows.results as tv}
 				<Poster
 					media={{ ...tv, media_type: "tv" }}
-					{...getWatchedDependedProps(tv.id, "tv", wList)}
 					small={true}
+					watched={tv.watched}
 				/>
 			{/each}
 		</PosterList>

@@ -167,7 +167,7 @@ func getWatchedItemByTmdbId(db *gorm.DB, userId uint, tmdbId uint, contentType C
 func getWatchedItemsByTmdbIds(db *gorm.DB, userId uint, c [][]any) ([]Watched, error) {
 	slog.Debug("getWatchedItemsByTmdbIds: Running.", "userId", userId, "c", c)
 	watched := new([]Watched)
-	res := db.Debug().Model(&Watched{}).
+	res := db.Model(&Watched{}).
 		Joins("Content").
 		Where("user_id = ?", userId).
 		Where(

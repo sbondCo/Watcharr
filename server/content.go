@@ -344,11 +344,13 @@ func searchByExternalId(id string, source string) (TMDBSearchMultiResponse, erro
 	comb = append(comb, resp.TvSeasonResults...)
 	comb = append(comb, resp.TvEpisodeResults...)
 	return TMDBSearchMultiResponse{TMDBSearchResponse: TMDBSearchResponse[TMDBSearchMultiResults]{
-		Results:      comb,
-		TotalResults: len(comb),
-		// Just providing these so we don't break frontend pagination logic.
-		TotalPages: 1,
-		Page:       1,
+		Results: comb,
+		TMDBPageFields: TMDBPageFields{
+			TotalResults: len(comb),
+			// Just providing these so we don't break frontend pagination logic.
+			TotalPages: 1,
+			Page:       1,
+		},
 	}}, nil
 }
 
@@ -451,56 +453,92 @@ func personCredits(id string) (TMDBPersonCombinedCredits, error) {
 }
 
 func discoverMovies() (TMDBDiscoverMovies, error) {
+	cacheKey := CreateCacheKey("discoverMovies")
 	resp := new(TMDBDiscoverMovies)
+	if GetCache(ContentStore, cacheKey, &resp) {
+		slog.Debug("discoverMovies: Returning cache.")
+		return *resp, nil
+	}
 	err := tmdbRequest("/discover/movie", map[string]string{"page": "1"}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete discover movies request!", "error", err.Error())
 		return TMDBDiscoverMovies{}, errors.New("failed to complete discover movies request")
 	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
 func discoverTv() (TMDBDiscoverShows, error) {
+	cacheKey := CreateCacheKey("discoverTv")
 	resp := new(TMDBDiscoverShows)
+	if GetCache(ContentStore, cacheKey, &resp) {
+		slog.Debug("discoverTv: Returning cache.")
+		return *resp, nil
+	}
 	err := tmdbRequest("/discover/tv", map[string]string{"page": "1"}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete discover tv request!", "error", err.Error())
 		return TMDBDiscoverShows{}, errors.New("failed to complete discover tv request")
 	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
 func allTrending() (TMDBTrendingAll, error) {
+	cacheKey := CreateCacheKey("allTrending")
 	resp := new(TMDBTrendingAll)
+	if GetCache(ContentStore, cacheKey, &resp) {
+		slog.Debug("allTrending: Returning cache.")
+		return *resp, nil
+	}
 	err := tmdbRequest("/trending/all/day", map[string]string{}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete all trending request!", "error", err.Error())
 		return TMDBTrendingAll{}, errors.New("failed to complete all trending request")
 	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
 func upcomingMovies() (TMDBUpcomingMovies, error) {
+	cacheKey := CreateCacheKey("upcomingMovies")
 	resp := new(TMDBUpcomingMovies)
+	if GetCache(ContentStore, cacheKey, &resp) {
+		slog.Debug("upcomingMovies: Returning cache.")
+		return *resp, nil
+	}
 	err := tmdbRequest("/movie/upcoming", map[string]string{"page": "1"}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete upcoming movies request!", "error", err.Error())
 		return TMDBUpcomingMovies{}, errors.New("failed to complete upcoming movies request")
 	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
 // Theres no upcoming endpoint for tv ;( - using discover with future dates
 func upcomingTv() (TMDBUpcomingShows, error) {
+	cacheKey := CreateCacheKey("upcomingTv")
 	resp := new(TMDBUpcomingShows)
+	if GetCache(ContentStore, cacheKey, &resp) {
+		slog.Debug("upcomingTv: Returning cache.")
+		return *resp, nil
+	}
 	dFmt := "2006-01-02"
 	mind := time.Now().Format(dFmt)
 	maxd := time.Now().AddDate(0, 0, 15).Format(dFmt)
-	err := tmdbRequest("/discover/tv", map[string]string{"page": "1", "first_air_date.gte": mind, "first_air_date.lte": maxd, "sort_by": "popularity.desc", "with_type": "2|3"}, &resp)
+	err := tmdbRequest("/discover/tv", map[string]string{
+		"page":               "1",
+		"first_air_date.gte": mind,
+		"first_air_date.lte": maxd,
+		"sort_by":            "popularity.desc",
+		"with_type":          "2|3",
+	}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete upcoming tv request!", "error", err.Error())
 		return TMDBUpcomingShows{}, errors.New("failed to complete upcoming tv request")
 	}
+	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
