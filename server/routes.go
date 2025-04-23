@@ -134,23 +134,14 @@ func (b *BaseRouter) addContentRoutes() {
 	})
 
 	// Search for people
-	content.GET("/search/person", cache.CachePage(b.ms, exp, func(c *gin.Context) {
+	content.GET("/search/person", PaginatedRequest(true), cache.CachePage(b.ms, exp, func(c *gin.Context) {
 		query := c.Query("q")
 		if query == "" {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "a query was not provided"})
 			return
 		}
-		pageQ := c.Query("page")
-		pageNum := 1
-		if pageQ != "" {
-			num, err := strconv.Atoi(pageQ)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "query parameter 'page' is not a number"})
-				return
-			}
-			pageNum = num
-		}
-		content, err := searchPeople(query, pageNum)
+		pp := c.MustGet("paginationParams").(PaginationParams)
+		content, err := searchPeople(query, pp.Page)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return

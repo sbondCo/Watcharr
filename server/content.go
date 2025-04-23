@@ -314,7 +314,10 @@ func searchPeople(query string, pageNum int) (TMDBSearchPeopleResponse, error) {
 	if pageNum == 0 {
 		pageNum = 1
 	}
-	err := tmdbRequest("/search/person", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	err := tmdbRequest("/search/person", map[string]string{
+		"query": query,
+		"page":  strconv.Itoa(pageNum),
+	}, &resp)
 	if err != nil {
 		slog.Error("Failed to complete people search request!", "error", err.Error())
 		return TMDBSearchPeopleResponse{}, errors.New("failed to complete people search request")
