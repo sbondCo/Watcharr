@@ -1,4 +1,4 @@
-<!-- 
+<!--
   /import/process is for processing the
   selected files data. Here it will be
   displayed and imported.
@@ -166,17 +166,33 @@
 						if (year) {
 							l.year = String(year.getFullYear());
 						}
-						if (type === "movie") {
-							l.type = "movie";
-						} else if (type === "tv series") {
-							l.type = "tv";
-						} else if (type === "tv episode") {
-							l.type = "tv_episode";
-						} else {
-							console.warn("Skipping item with invalid type", `(${type})`, el);
-							anySkipped = true;
-							continue;
+
+						switch (type) {
+							case "movie":
+							case "video":
+							case "tv movie":
+							case "short":
+								l.type = "movie";
+								break;
+							case "tv series":
+							case "tv mini series":
+							case "tv special":
+							case "tv short":
+								l.type = "tv";
+								break;
+							case "tv episode":
+								l.type = "tv_episode";
+								break;
+							default:
+								console.warn(
+									"Skipping item with invalid type",
+									`(${type})`,
+									el,
+								);
+								anySkipped = true;
+								continue;
 						}
+
 						if (imdbId) {
 							l.imdbId = imdbId;
 						}
@@ -709,7 +725,9 @@
 	{#if importMultiItem}
 		<Modal
 			title="Multiple Results Found"
-			desc="Select the correct item for {importMultiItem.original.name}"
+			desc="Select the correct item for {importMultiItem.original
+				.name} {importMultiItem.original.year &&
+				'(' + importMultiItem.original.year + ')'}"
 			onClose={() => {
 				importMultiItem?.callback("closed results modal");
 				importMultiItem = undefined;
