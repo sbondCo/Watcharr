@@ -9,7 +9,7 @@ You may consider a backup of your server before starting any import. They are no
 :::
 
 :::warning May not be what you want
-Watcharr import/export is a feature intended for end users. If you are the server admin, it is recommended that you copy your server files directly to any new server you are creating (it'll be much faster and easier). [See backup guide](http://localhost:3000/docs/server_config/backup).
+Watcharr import/export is a feature intended for end users. If you are the server admin, it is recommended that you copy your server files directly to any new server you are creating (it'll be much faster and easier). [See backup guide](/docs/server_config/backup).
 :::
 
 1. Provide the Watcharr export file (that you generated from your profile page).
