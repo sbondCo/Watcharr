@@ -4,6 +4,8 @@
 	import Icon from "../Icon.svelte";
 	import tooltip from "../actions/tooltip";
 	import Menu from "../Menu.svelte";
+	import DropDown from "../DropDown.svelte";
+	import Checkbox from "../Checkbox.svelte";
 
 	function filterClicked(type: keyof Filters, f: string) {
 		if (store.activeFilters[type]?.includes(f)) {
@@ -32,20 +34,20 @@
 	</div>
 	<div class="type-filter">
 		<button
-			class={`${store.activeFilters.type.includes("tv") ? "active" : ""}`}
+			class={`pill ${store.activeFilters.type.includes("tv") ? "active" : ""}`}
 			onclick={() => filterClicked("type", "tv")}
 		>
 			SHOW
 		</button>
 		<button
-			class={`${store.activeFilters.type.includes("movie") ? "active" : ""}`}
+			class={`pill ${store.activeFilters.type.includes("movie") ? "active" : ""}`}
 			onclick={() => filterClicked("type", "movie")}
 		>
 			MOVIE
 		</button>
 		{#if store.serverFeatures?.games}
 			<button
-				class={`${store.activeFilters.type.includes("game") ? "active" : ""}`}
+				class={`pill ${store.activeFilters.type.includes("game") ? "active" : ""}`}
 				onclick={() => filterClicked("type", "game")}
 			>
 				GAME
@@ -149,24 +151,14 @@
 	.type-filter {
 		display: flex;
 		flex-flow: row;
+		flex-wrap: wrap;
+		gap: 3px;
 		width: 100%;
 
 		button {
-			border-radius: 0;
+			flex: 1 1 45%;
 			padding: 8px 0;
-			width: 100%;
-
-			&:first-of-type {
-				border-radius: 5px 0 0 5px;
-			}
-
-			&:not(:first-of-type) {
-				border-left: unset;
-			}
-
-			&:last-of-type {
-				border-radius: 0 5px 5px 0;
-			}
+			border-radius: 10px;
 		}
 	}
 </style>
