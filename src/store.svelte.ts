@@ -22,6 +22,7 @@ interface Store {
 	notifications: Notification[];
 	activeSort: string[];
 	activeFilters: Filters;
+	sortAndFiltersForQueryParams: {};
 	appTheme: Theme;
 	importedList:
 		| {
@@ -52,6 +53,7 @@ const _store: Store = $state({
 	notifications: [],
 	activeSort: defaultSort,
 	activeFilters: { type: [], status: [] },
+	sortAndFiltersForQueryParams: {},
 	appTheme: "light",
 	importedList: undefined,
 	parsedImportedList: undefined,
@@ -63,6 +65,19 @@ const _store: Store = $state({
 	wlDetailedView: [],
 	tags: [],
 });
+
+const updateSortAndFiltersForQueryParams = () => {
+	try {
+		_store.sortAndFiltersForQueryParams = {
+			sort: store.activeSort[0],
+			sortDir: store.activeSort[1] === "UP" ? "asc" : "desc",
+			"filter.type": store.activeFilters?.type?.join(","),
+			"filter.status": store.activeFilters?.status?.join(","),
+		};
+	} catch (err) {
+		console.error("updateSortAndFiltersForQueryParams: Failed!", err);
+	}
+};
 
 /**
  * Expose store to app through getters/setters
@@ -85,6 +100,7 @@ export const store = {
 		_store.activeSort = v;
 		localStorage.setItem("activeFilter", JSON.stringify(v));
 		console.debug("Store: Saved activeSort:", v);
+		updateSortAndFiltersForQueryParams();
 	},
 	get activeFilters() {
 		return _store.activeFilters;
@@ -93,6 +109,15 @@ export const store = {
 		_store.activeFilters = v;
 		localStorage.setItem("activeFilterReal", JSON.stringify(v));
 		console.debug("Store: Saved activeFilters:", v);
+		updateSortAndFiltersForQueryParams();
+	},
+	/**
+	 * Return our `activeSort` and `activeFilters` in an object
+	 * that is in the correct format for our get watched page
+	 * requests (object that is given to axios for query params).
+	 */
+	get sortAndFiltersForQueryParams() {
+		return _store.sortAndFiltersForQueryParams;
 	},
 	get appTheme() {
 		return _store.appTheme;
@@ -225,6 +250,9 @@ function rehydrateStore() {
 			$state.snapshot(store.activeFilters),
 		);
 	}
+	// After restoring activeSort and activeFilter, set
+	// an initial value for our related query param state.
+	updateSortAndFiltersForQueryParams();
 	// Restore appTheme
 	const theme = localStorage.getItem("theme") as Theme;
 	if (theme) {

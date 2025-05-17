@@ -7,13 +7,15 @@
 	import type { Watched } from "@/types";
 	import GamePoster from "./poster/GamePoster.svelte";
 	import { notify } from "./util/notify";
+	import Spinner from "./Spinner.svelte";
 
 	interface Props {
 		list: Watched[];
+		isLoading: boolean;
 		isPublicList?: boolean;
 	}
 
-	let { list, isPublicList = false }: Props = $props();
+	let { list, isPublicList = false, isLoading = false }: Props = $props();
 
 	let sort = $derived(store.activeSort);
 	let filters = $derived(store.activeFilters);
@@ -64,30 +66,7 @@
 			// Set watched to list and sort it.
 			watched = list
 				.sort((a, b) => {
-					if (sort[0] === "DATEADDED" && sort[1] === "UP") {
-						return Date.parse(a.createdAt) - Date.parse(b.createdAt);
-					} else if (sort[0] === "ALPHA") {
-						const atitle = a.content
-							? a.content.title
-							: a.game
-								? a.game.name
-								: "";
-						const btitle = b.content
-							? b.content.title
-							: b.game
-								? b.game.name
-								: "";
-						if (sort[1] === "UP") {
-							return atitle.localeCompare(btitle);
-						} else if (sort[1] === "DOWN") {
-							return btitle.localeCompare(atitle);
-						}
-					} else if (sort[0] === "LASTCHANGED") {
-						if (sort[1] === "UP")
-							return Date.parse(a.updatedAt) - Date.parse(b.updatedAt);
-						else if (sort[1] === "DOWN")
-							return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
-					} else if (sort[0] === "LASTFIN") {
+					if (sort[0] === "LASTFIN") {
 						const aLastFinishActivity = a.activity
 							?.sort(
 								(aa, bb) =>
@@ -96,6 +75,7 @@
 							)
 							?.find(
 								(aa) =>
+									// PORT NOTE: ALSO `IMPORTED_WATCHED` & `IMPORTED_ADDED_WATCHED`
 									(aa.type === "STATUS_CHANGED" && aa.data === "FINISHED") ||
 									(aa.type === "ADDED_WATCHED" &&
 										aa.data?.includes("FINISHED")),
@@ -122,10 +102,6 @@
 							return Date.parse(alfaDate) - Date.parse(blfaDate);
 						else if (sort[1] === "DOWN")
 							return Date.parse(blfaDate) - Date.parse(alfaDate);
-					} else if (sort[0] === "RATING") {
-						if (sort[1] === "UP") return (a.rating ?? 0) - (b.rating ?? 0);
-						else if (sort[1] === "DOWN")
-							return (b.rating ?? 0) - (a.rating ?? 0);
 					}
 					// default DATEADDED DOWN
 					return Date.parse(b.createdAt) - Date.parse(a.createdAt);
@@ -248,7 +224,7 @@
 				/>
 			{/if}
 		{/each}
-	{:else}
+	{:else if !isLoading}
 		<div class="empty-list">
 			{#if list?.length > 0}
 				<!-- `watched` (filtered list) is empty, but `list` (unfiltered) isn't,
@@ -275,6 +251,12 @@
 		</div>
 	{/if}
 </PosterList>
+
+{#if isLoading}
+	<div style="margin-bottom: 60px;">
+		<Spinner />
+	</div>
+{/if}
 
 <style lang="scss">
 	.empty-list {

@@ -28,6 +28,16 @@ type GormModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
 }
 
+// Types of media supported by Watcharr
+// in an overarching way.
+type SupportedMedia string
+
+const (
+	SupportedMediaMovie SupportedMedia = "movie"
+	SupportedMediaShow  SupportedMedia = "tv"
+	SupportedMediaGame  SupportedMedia = "game"
+)
+
 var (
 	ServerInSetup = false
 	logLevel      = new(slog.LevelVar)

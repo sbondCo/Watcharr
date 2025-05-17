@@ -121,6 +121,10 @@
 			fill: $bg-color;
 			opacity: 1;
 		}
+
+		&.active {
+			border-color: $bg-color;
+		}
 	}
 }
 

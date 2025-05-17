@@ -473,14 +473,23 @@ func (b *BaseRouter) addWatchedRoutes() {
 		userId := c.MustGet("userId").(uint)
 		if isPaginated {
 			pp := c.MustGet("paginationParams").(PaginationParams)
-			if wp, err := getWatchedPage(b.db, userId, pp); err == nil {
+			wp := WatchedGetPageRequest{
+				// Defaults..
+				Sort:    watchedSortDateAdded,
+				SortDir: sortAscending,
+			}
+			if err := c.ShouldBind(&wp); err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "failed to get request parameters"})
+				return
+			}
+			if wp, err := getWatchedPage(b.db, userId, pp, wp); err == nil {
 				c.JSON(http.StatusOK, wp)
 			} else {
-				c.JSON(http.StatusForbidden, ErrorResponse{Error: "failed to get page"})
+				c.JSON(http.StatusBadRequest, ErrorResponse{Error: "failed to get page"})
 			}
 			return
 		}
-		// Non paginated response
+		// Non paginated response (doesn't support sorting/filtering atm)
 		if w, err := getWatched(b.db, userId); err == nil {
 			c.JSON(http.StatusOK, w)
 		} else {

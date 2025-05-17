@@ -14,10 +14,6 @@ type PaginationParams struct {
 	Limit int `json:"limit"`
 	// Page number.
 	Page int `json:"page"`
-	// TODO sorting and filtering to be params?
-	// Have to think about if this is better in a reusable
-	// fashion (eg query params target db cols) or not.
-	Sort string `json:"sort"`
 }
 
 // Pagination response struct.

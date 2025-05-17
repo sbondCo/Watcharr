@@ -75,6 +75,36 @@ type WatchedRemoveResponse struct {
 	NewActivity Activity `json:"newActivity"`
 }
 
+// Get watched page request extra (GET) options.
+type WatchedGetPageRequest struct {
+	// Sorting type.
+	Sort WatchedSort `form:"sort"`
+	// Sorting direction (asc or desc).
+	SortDir SortDirection `form:"sortDir,default=desc"`
+	// Filtering options.
+	Filter struct {
+		Type   SupportedMedia `form:"filter.type"`
+		Status WatchedStatus  `form:"filter.status"`
+	}
+}
+
+type WatchedSort string
+
+const (
+	watchedSortDateAdded    WatchedSort = "DATEADDED"
+	watchedSortLastChanged  WatchedSort = "LASTCHANGED"
+	watchedSortLastFinished WatchedSort = "LASTFIN"
+	watchedSortRating       WatchedSort = "RATING"
+	watchedSortAlphabetical WatchedSort = "ALPHA"
+)
+
+type SortDirection string
+
+const (
+	sortAscending  SortDirection = "asc"
+	sortDescending SortDirection = "desc"
+)
+
 // This struct is for embedding inside content response structs.
 // This holds the watched entry response data that will go along
 // with the content responses.
@@ -109,21 +139,24 @@ func getWatched(db *gorm.DB, userId uint) ([]Watched, error) {
 }
 
 // Returns a page of users watched list.
-func getWatchedPage(db *gorm.DB, userId uint, pp PaginationParams) (PaginationResponse[Watched], error) {
-	slog.Debug("getWatchedPage: A page was requested.", "user_id", userId, "pagination_params", pp)
+func getWatchedPage(db *gorm.DB, userId uint, pp PaginationParams, wr WatchedGetPageRequest) (PaginationResponse[Watched], error) {
+	slog.Debug("getWatchedPage: A page was requested.", "user_id", userId, "pagination_params", pp, "wr", wr)
 	watched := new([]Watched)
 	pRes := &PaginationResponse[Watched]{}
 	res := db.
 		Model(&Watched{}).
-		Preload("Content").
-		Preload("Game").
+		Where(&Watched{UserID: userId}).
+		Count(&pRes.TotalResults).
+		Joins("Content").
+		Joins("Game").
 		Preload("Game.Poster").
 		Preload("Tags").
-		// The order matters so that Count is correctly
-		// counted for all of users rows:
-		Where("user_id = ?", userId).
-		Count(&pRes.TotalResults).
-		Scopes(Paginate(pp, pRes)).
+		Scopes(
+			Paginate(pp, pRes),
+			// NOTE: watchedRefine->watchedSortLastFinished sort changes the SELECT
+			// statement for this query, so keep that in mind if it ever changes.
+			watchedRefine(wr),
+		).
 		Find(&watched)
 	if res.Error != nil {
 		slog.Error("getWatchedPage: Failed!", "error", res.Error)
