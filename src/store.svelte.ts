@@ -12,7 +12,7 @@ import type {
 } from "./types";
 import type { Notification } from "./lib/util/notify";
 import { browser } from "$app/environment";
-import { toggleTheme } from "./lib/util/helpers";
+import { toggleTheme } from "./lib/util/theme";
 
 export const defaultSort = ["DATEADDED", "DOWN"];
 
@@ -238,7 +238,7 @@ function rehydrateStore() {
 	const theme = localStorage.getItem("theme") as Theme;
 	if (theme) {
 		_store.appTheme = theme;
-		toggleTheme(theme, true);
+		toggleTheme(theme, false);
 		console.debug(
 			"rehydrateStore: Restored appTheme:",
 			$state.snapshot(store.appTheme),
@@ -246,7 +246,7 @@ function rehydrateStore() {
 	} else {
 		let defTheme: Theme = "system";
 		_store.appTheme = defTheme;
-		toggleTheme(defTheme, true);
+		toggleTheme(defTheme, false);
 		console.debug(
 			"rehydrateStore: appTheme hydrated from system default (wont save):",
 			defTheme,
