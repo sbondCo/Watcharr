@@ -1,6 +1,7 @@
 <!-- A menu designed to pop up around a
  	button after it is pressed. -->
 <script lang="ts">
+	import { clickOutside } from "@/lib/actions/clickOutside";
 	import stayInView from "./actions/stayInView";
 
 	export interface MenuConfig {
@@ -15,12 +16,14 @@
 	interface Props {
 		children: import("svelte").Snippet;
 		conf?: MenuConfig;
+		clickOutsideCallback?: () => void;
 	}
 
-	let { children, conf }: Props = $props();
+	let { children, conf, clickOutsideCallback }: Props = $props();
 </script>
 
 <div
+	use:clickOutside={clickOutsideCallback}
 	class="menu"
 	style={`--w: ${conf?.width || "125px"}; --r: ${
 		conf?.right || "10px"

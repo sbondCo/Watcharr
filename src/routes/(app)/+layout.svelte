@@ -205,6 +205,7 @@
 			<!-- Detailed posters only supported on own watched list currently -->
 			{#if page.url?.pathname === "/" || page.url?.pathname.startsWith("/search")}
 				<button
+					id="exclude-outclick"
 					class="plain other detailedView"
 					onclick={() => {
 						closeAllSubMenus("detailed");
@@ -222,7 +223,10 @@
 					{/if}
 				</button>
 				{#if detailedMenuShown}
-					<DetailedMenu />
+					<DetailedMenu
+						clickOutsideCallback={() =>
+							(detailedMenuShown = !detailedMenuShown)}
+					/>
 				{/if}
 			{/if}
 			<!-- Show on watched list and shared/followed watched lists -->
@@ -242,6 +246,7 @@
 					{/if}
 				</button>
 				<button
+					id="exclude-outclick"
 					class="plain other filter"
 					onclick={() => {
 						closeAllSubMenus("filter");
@@ -259,13 +264,18 @@
 					{/if}
 				</button>
 				{#if sortMenuShown}
-					<SortMenu />
+					<SortMenu
+						clickOutsideCallback={() => (sortMenuShown = !sortMenuShown)}
+					/>
 				{/if}
 				{#if filterMenuShown}
-					<FilterMenu />
+					<FilterMenu
+						clickOutsideCallback={() => (filterMenuShown = !filterMenuShown)}
+					/>
 				{/if}
 			{/if}
 			<button
+				id="exclude-outclick"
 				class="plain other tag"
 				onclick={() => {
 					closeAllSubMenus("tag");
@@ -282,6 +292,7 @@
 						tagMenuShown = false;
 					}}
 					showManageBtn={true}
+					clickOutsideCallback={() => (tagMenuShown = !tagMenuShown)}
 				/>
 			{/if}
 			<button
@@ -292,6 +303,7 @@
 				<Icon i="compass" wh={26} />
 			</button>
 			<button
+				id="exclude-outclick"
 				class="plain other following"
 				onclick={() => {
 					closeAllSubMenus("following");
@@ -306,11 +318,15 @@
 				<Icon i="people" wh={26} />
 			</button>
 			{#if followingMenuShown}
-				<FollowingMenu close={() => (followingMenuShown = false)} />
+				<FollowingMenu
+					clickOutsideCallback={() =>
+						(followingMenuShown = !followingMenuShown)}
+					close={() => (followingMenuShown = false)}
+				/>
 			{/if}
 			<button class="plain face" onclick={handleProfileClick}>:)</button>
 			{#if subMenuShown}
-				<FaceMenu />
+				<FaceMenu clickOutsideCallback={() => (subMenuShown = !subMenuShown)} />
 			{/if}
 		</div>
 	</div>

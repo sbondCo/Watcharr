@@ -9,6 +9,12 @@
 	import { notify } from "../util/notify";
 	import AboutModal from "./AboutModal.svelte";
 
+	interface Props {
+		clickOutsideCallback?: () => void;
+	}
+
+	let { clickOutsideCallback }: Props = $props();
+
 	let user = $derived(store.userInfo);
 	let proxyUserLogoutShown = $state(false);
 	let aboutModalOpen = $state(false);
@@ -69,7 +75,7 @@
 	}
 </script>
 
-<Menu conf={{ arrowRight: "10px" }}>
+<Menu {clickOutsideCallback} conf={{ arrowRight: "10px" }}>
 	{#if user?.username}
 		<h5 title={user.username}>Hi {user.username}!</h5>
 	{/if}

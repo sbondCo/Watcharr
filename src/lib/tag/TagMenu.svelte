@@ -18,6 +18,7 @@
 		 */
 		showManageBtn?: boolean;
 		menuConfig?: MenuConfig;
+		clickOutsideCallback?: () => void;
 	}
 
 	const defaultMenuConfig = {
@@ -32,6 +33,7 @@
 		selectedTags = undefined,
 		showManageBtn = false,
 		menuConfig = {},
+		clickOutsideCallback,
 	}: Props = $props();
 
 	let allTags = $derived(store.tags);
@@ -46,7 +48,10 @@
 	}
 </script>
 
-<Menu conf={Object.assign(defaultMenuConfig, menuConfig)}>
+<Menu
+	{clickOutsideCallback}
+	conf={Object.assign(defaultMenuConfig, menuConfig)}
+>
 	<div class="title">
 		<h4 class="norm sm-caps">{titleText ? titleText : "my tags"}</h4>
 		{#if showManageBtn}

@@ -4,6 +4,12 @@
 	import { page } from "$app/state";
 	import Menu from "../Menu.svelte";
 
+	interface Props {
+		clickOutsideCallback?: () => void;
+	}
+
+	let { clickOutsideCallback }: Props = $props();
+
 	function detailClicked(d: WLDetailedViewOption) {
 		if (store.wlDetailedView.includes(d)) {
 			store.wlDetailedView = store.wlDetailedView.filter((a) => a !== d);
@@ -15,6 +21,7 @@
 </script>
 
 <Menu
+	{clickOutsideCallback}
 	conf={{
 		width: "200px",
 		right: "92px",

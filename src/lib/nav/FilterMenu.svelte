@@ -5,6 +5,12 @@
 	import tooltip from "../actions/tooltip";
 	import Menu from "../Menu.svelte";
 
+	interface Props {
+		clickOutsideCallback?: () => void;
+	}
+
+	let { clickOutsideCallback }: Props = $props();
+
 	function filterClicked(type: keyof Filters, f: string) {
 		if (store.activeFilters[type]?.includes(f)) {
 			store.activeFilters[type] = store.activeFilters[type]?.filter(
@@ -17,7 +23,10 @@
 	}
 </script>
 
-<Menu conf={{ width: "200px", right: "47px", arrowLeft: "38px" }}>
+<Menu
+	{clickOutsideCallback}
+	conf={{ width: "200px", right: "47px", arrowLeft: "38px" }}
+>
 	<div class="title">
 		<h4 class="norm sm-caps">type</h4>
 		{#if store.activeFilters?.type?.length > 0 || store.activeFilters?.status?.length > 0}
