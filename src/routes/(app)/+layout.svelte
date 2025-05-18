@@ -175,15 +175,19 @@
 	}
 
 	function focusSearch() {
-		if (!mainSearchEl) {
-			console.warn("focusSearch: mainSearchEl not defined!");
-			return;
+		try {
+			if (!mainSearchEl) {
+				console.warn("focusSearch: mainSearchEl not defined!");
+				return;
+			}
+			if (document.activeElement === mainSearchEl) {
+				console.debug("focusSearch: mainSearchEl is already focused.");
+				return;
+			}
+			mainSearchEl.focus();
+		} catch (err) {
+			console.error("focusSearch: Failed!", err);
 		}
-		if (document.activeElement === mainSearchEl) {
-			console.debug("focusSearch: mainSearchEl is already focused.");
-			return;
-		}
-		mainSearchEl.focus();
 	}
 
 	function handleGlobalKeybind(ev: KeyboardEvent) {
