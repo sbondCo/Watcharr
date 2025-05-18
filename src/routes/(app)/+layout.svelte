@@ -174,6 +174,29 @@
 		scroll = window.scrollY;
 	}
 
+	function focusSearch() {
+		if (!mainSearchEl) {
+			console.warn("focusSearch: mainSearchEl not defined!");
+			return;
+		}
+		if (document.activeElement === mainSearchEl) {
+			console.debug("focusSearch: mainSearchEl is already focused.");
+			return;
+		}
+		mainSearchEl.focus();
+	}
+
+	function handleGlobalKeybind(ev: KeyboardEvent) {
+		switch (ev.key.toLowerCase()) {
+			case "s":
+				if (ev.ctrlKey) {
+					ev.preventDefault();
+					focusSearch();
+				}
+				break;
+		}
+	}
+
 	afterNavigate(() => {
 		decideOnNavSplit();
 		closeAllSubMenus();
@@ -184,10 +207,12 @@
 			decideOnNavSplit();
 			window.addEventListener("resize", decideOnNavSplit);
 			window.document.addEventListener("scroll", docOnScroll);
+			window.document.addEventListener("keydown", handleGlobalKeybind);
 
 			return () => {
 				window.removeEventListener("resize", decideOnNavSplit);
 				window.document.removeEventListener("scroll", docOnScroll);
+				window.document.removeEventListener("keydown", handleGlobalKeybind);
 			};
 		} else {
 			console.error(
