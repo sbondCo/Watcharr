@@ -43,13 +43,25 @@
 
 	function handleSearch(ev: KeyboardEvent) {
 		if (
+			ev.key === "ContextMenu" ||
+			ev.key === "Home" ||
+			ev.key === "End" ||
+			ev.key === "PageDown" ||
+			ev.key === "PageUp" ||
+			ev.key === "NumLock" ||
+			ev.key === "Escape" ||
 			ev.key === "Tab" ||
 			ev.key === "CapsLock" ||
 			ev.key === "OS" ||
 			ev.key === "ArrowLeft" ||
 			ev.key === "ArrowRight" ||
 			ev.key === "ArrowUp" ||
-			ev.key === "ArrowDown"
+			ev.key === "ArrowDown" ||
+			ev.key === "Control" ||
+			ev.key === "Alt" ||
+			ev.key === "AltGraph" ||
+			ev.key === "Shift" ||
+			ev.key === "Meta"
 		)
 			return;
 		clearTimeout(searchTimeout);
