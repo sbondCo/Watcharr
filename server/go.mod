@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/buckket/go-blurhash v1.1.0
-	github.com/gin-contrib/cache v1.3.1
+	github.com/gin-contrib/cache v1.3.2
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-co-op/gocron/v2 v2.16.2
