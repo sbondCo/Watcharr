@@ -39,7 +39,10 @@
 			await fetchKeys();
 		} catch (err) {
 			console.error(err);
-			notify({ text: err?.response?.data?.error ?? "Failed to create key", type: "error" });
+			notify({
+				text: err?.response?.data?.error ?? "Failed to create key",
+				type: "error",
+			});
 		} finally {
 			creating = false;
 		}
@@ -52,7 +55,10 @@
 			await fetchKeys();
 		} catch (err) {
 			console.error(err);
-			notify({ text: err?.response?.data?.error ?? "Failed to revoke key", type: "error" });
+			notify({
+				text: err?.response?.data?.error ?? "Failed to revoke key",
+				type: "error",
+			});
 		}
 	}
 
@@ -60,22 +66,37 @@
 </script>
 
 <h4 class="norm" style="margin-top:20px">API Keys</h4>
-<p class="sub">Generate keys for webhooks. Keep them secret! You can only have 5 active at a time per user.</p>
-<button class="primary" disabled={creating} on:click={createKey}>Create Key</button>
+<p class="sub">
+	Generate keys for webhooks. Keep them secret! You can only have 5 active at a
+	time per user.
+</p>
+<button class="primary" disabled={creating} on:click={createKey}
+	>Create Key</button
+>
 {#if loading}
 	<Spinner />
 {:else if keys.length === 0}
 	<p>No keys created yet.</p>
 {:else}
 	<table>
-		<thead><tr><th>ID</th><th>Created</th><th>Last Used</th><th></th></tr></thead>
+		<thead
+			><tr><th>ID</th><th>Created</th><th>Last Used</th><th></th></tr></thead
+		>
 		<tbody>
 			{#each keys as k}
 				<tr class={k.revoked ? "revoked" : ""}>
 					<td>{k.id}</td>
 					<td>{dayjs(k.createdAt).format("YYYY-MM-DD")}</td>
-					<td>{k.lastUsed && !k.lastUsed.startsWith("0001") ? dayjs(k.lastUsed).fromNow() : "Never"}</td>
-					<td><button disabled={k.revoked} on:click={() => revokeKey(k.id)}>revoke</button></td>
+					<td
+						>{k.lastUsed && !k.lastUsed.startsWith("0001")
+							? dayjs(k.lastUsed).fromNow()
+							: "Never"}</td
+					>
+					<td
+						><button disabled={k.revoked} on:click={() => revokeKey(k.id)}
+							>revoke</button
+						></td
+					>
 				</tr>
 			{/each}
 		</tbody>
@@ -99,8 +120,16 @@
 		width: 100%;
 		border-collapse: collapse;
 		font-size: 12px;
-		th, td { padding: 4px 6px; border-bottom: 1px solid #444; }
-		.revoked { opacity: 0.5; }
+		th,
+		td {
+			padding: 4px 6px;
+			border-bottom: 1px solid #444;
+		}
+		.revoked {
+			opacity: 0.5;
+		}
 	}
-	button.primary { margin: 5px 0 10px 0; }
+	button.primary {
+		margin: 5px 0 10px 0;
+	}
 </style>
