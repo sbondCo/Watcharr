@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"time"
+	"strconv"
 
 	"github.com/sbondCo/Watcharr/game"
 	"gorm.io/gorm"
@@ -44,6 +45,20 @@ type ServerConfig struct {
 	// Optional: Provide your own TMDB API Key.
 	// If unprovided, the default Watcharr API key will be used.
 	TMDB_KEY string `json:",omitempty"`
+
+	// Optional: Provide your own TVDB API Key to use the emby auto-scrobbling feature
+	// this is REQUIRED if you want emby to automatically send data to your watcharr instance as emby
+	// uses tvdb as its provider for episode numbering and ids, so without this watcharr will not be able to
+	// correctly identify the episode number and absolute number that emby is sending to watcharr.
+	TVDB_KEY string `json:",omitempty"`
+
+    // Default rating (0-10) assigned to episodes automatically imported via
+    // Emby webhook. Can be changed via the server settings UI.
+    EMBY_DEFAULT_RATING int `json:",omitempty"`
+
+    // Global API rate-limit in requests per second used for external APIs such
+    // as TMDB / TVDB when processing Emby webhooks. 0 or unset falls back to 10.
+    GLOBAL_RATE_LIMIT_RPS int `json:",omitempty"`
 
 	// Optional: Point to Plex install to enable plex features.
 	PLEX_HOST string `json:",omitempty"`
@@ -85,6 +100,9 @@ func (c *ServerConfig) GetSafe() ServerConfig {
 		JELLYFIN_HOST:   c.JELLYFIN_HOST,
 		USE_EMBY:        c.USE_EMBY,
 		TMDB_KEY:        c.TMDB_KEY,
+		TVDB_KEY:        c.TVDB_KEY,
+        EMBY_DEFAULT_RATING: c.EMBY_DEFAULT_RATING,
+        GLOBAL_RATE_LIMIT_RPS: c.GLOBAL_RATE_LIMIT_RPS,
 		PLEX_HOST:       c.PLEX_HOST,
 		PLEX_MACHINE_ID: c.PLEX_MACHINE_ID,
 		DEBUG:           c.DEBUG,
@@ -114,6 +132,8 @@ func (c *ServerConfig) Get(s string) (ServerConfigGetByName, error) {
 		return ServerConfigGetByName{Value: c.SIGNUP_ENABLED}, nil
 	case "TMDB_KEY":
 		return ServerConfigGetByName{Value: c.TMDB_KEY}, nil
+	case "TVDB_KEY":
+		return ServerConfigGetByName{Value: c.TVDB_KEY}, nil
 	case "PLEX_HOST":
 		return ServerConfigGetByName{Value: c.PLEX_HOST}, nil
 	case "PLEX_MACHINE_ID":
@@ -121,7 +141,11 @@ func (c *ServerConfig) Get(s string) (ServerConfigGetByName, error) {
 	case "HEADER_AUTH":
 		return ServerConfigGetByName{Value: c.HEADER_AUTH}, nil
 	case "DEBUG":
-		return ServerConfigGetByName{Value: c.DEBUG}, nil
+		return ServerConfigGetByName{Value: true}, nil
+	case "EMBY_DEFAULT_RATING":
+		return ServerConfigGetByName{Value: c.EMBY_DEFAULT_RATING}, nil
+	case "GLOBAL_RATE_LIMIT_RPS":
+		return ServerConfigGetByName{Value: c.GLOBAL_RATE_LIMIT_RPS}, nil
 	}
 	return ServerConfigGetByName{}, errors.New("invalid setting")
 }
@@ -172,6 +196,8 @@ func generateConfig() error {
 		JWT_SECRET: key,
 		// Other defaults..
 		DEFAULT_COUNTRY: "US",
+        EMBY_DEFAULT_RATING: 5,
+        GLOBAL_RATE_LIMIT_RPS: 10,
 		SIGNUP_ENABLED:  true,
 	}
 	barej, err := json.MarshalIndent(cfg, "", "\t")
@@ -196,11 +222,17 @@ func updateConfig(k string, v any) error {
 		Config.SIGNUP_ENABLED = v.(bool)
 	} else if k == "TMDB_KEY" {
 		Config.TMDB_KEY = v.(string)
+	} else if k == "TVDB_KEY" {
+		Config.TVDB_KEY = v.(string)
 	} else if k == "DEBUG" {
 		Config.DEBUG = v.(bool)
 		setLoggingLevel()
 	} else if k == "DEFAULT_COUNTRY" {
 		Config.DEFAULT_COUNTRY = v.(string)
+	} else if k == "EMBY_DEFAULT_RATING" {
+		Config.EMBY_DEFAULT_RATING = toInt(v)
+	} else if k == "GLOBAL_RATE_LIMIT_RPS" {
+		Config.GLOBAL_RATE_LIMIT_RPS = toInt(v)
 	} else {
 		return errors.New("invalid setting")
 	}
@@ -219,6 +251,25 @@ func writeConfig() error {
 		return err
 	}
 	return os.WriteFile(path.Join(DataPath, "watcharr.json"), barej, 0755)
+}
+
+// toInt safely converts common JSON number representations to int.
+func toInt(v any) int {
+    switch t := v.(type) {
+    case float64:
+        return int(t)
+    case float32:
+        return int(t)
+    case int:
+        return t
+    case int64:
+        return int(t)
+    case string:
+        if i, err := strconv.Atoi(t); err == nil {
+            return i
+        }
+    }
+    return 0
 }
 
 type ServerFeatures struct {

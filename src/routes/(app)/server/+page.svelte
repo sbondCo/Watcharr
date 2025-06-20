@@ -41,6 +41,9 @@
 	let debugDisabled = $state(false);
 	let jfDisabled = $state(false);
 	let tmdbkDisabled = $state(false);
+	let tvdbkDisabled = $state(false);
+	let embyRatingDisabled = $state(false);
+	let rateLimitDisabled = $state(false);
 	let plexHostDisabled = $state(false);
 	let countryDisabled = $state(false);
 	let useEmbyDisabled = $state(false);
@@ -234,6 +237,44 @@
 							disabled={tmdbkDisabled}
 						/>
 					</Setting>
+					<Setting title="TVDB Key" desc="Provide your own TVDB API Key (Required for Emby auto-scrobbling)">
+						<input
+							type="password"
+							placeholder="TVDB Key"
+							bind:value={serverConfig.TVDB_KEY}
+							onblur={() => {
+								tvdbkDisabled = true;
+								updateServerConfig("TVDB_KEY", serverConfig!.TVDB_KEY, () => {
+									tvdbkDisabled = false;
+								});
+							}}
+							disabled={tvdbkDisabled}
+						/>
+					</Setting>
+                    <Setting title="API Rate-Limit (req/s)" desc="Requests per second used for external APIs. 0 or unset falls back to 10 requests per second. CAUTION: Setting this higher than 40 will likely cause TVDB and TMDB to ban/throttle your API key." >
+                        <input type="number" min="1" max="1000" step="1"
+                            bind:value={serverConfig.GLOBAL_RATE_LIMIT_RPS}
+                            onblur={() => {
+                                rateLimitDisabled = true;
+                                updateServerConfig("GLOBAL_RATE_LIMIT_RPS", Number(serverConfig!.GLOBAL_RATE_LIMIT_RPS), () => {
+                                    rateLimitDisabled = false;
+                                });
+                            }}
+                            disabled={rateLimitDisabled}
+                        />
+                    </Setting>
+                    <Setting title="Default Emby Rating" desc="Rating saved for auto-imported episodes (0-10) when using Emby (You can edit each rating after it's been imported)." >
+                        <input type="number" min="0" max="10" step="1"
+                            bind:value={serverConfig.EMBY_DEFAULT_RATING}
+                            onblur={() => {
+                                embyRatingDisabled = true;
+                                updateServerConfig("EMBY_DEFAULT_RATING", Number(serverConfig!.EMBY_DEFAULT_RATING), () => {
+                                    embyRatingDisabled = false;
+                                });
+                            }}
+                            disabled={embyRatingDisabled}
+                        />
+                    </Setting>
 					<Setting
 						title="Signup"
 						desc="Allow signing up with Watcharr credentials."

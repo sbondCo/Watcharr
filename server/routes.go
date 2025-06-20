@@ -585,11 +585,15 @@ func (b *BaseRouter) addWatchedRoutes() {
 		c.JSON(http.StatusOK, response)
 	})
 
+	// Add /watched/episode
+	// minor changes because 
+	// Instead of echoing err.Error() (which can leak internal validation details), it now returns a consistent "invalid request body" string.
+	// could refactor other routes for more specific error handling but just did it for this one while i was testing my PR for more info.
+
 	watched.POST("/episode", func(c *gin.Context) {
 		userId := c.MustGet("userId").(uint)
 		var ar WatchedEpisodeAddRequest
-		err := c.ShouldBindJSON(&ar)
-		if err == nil {
+		if err := c.ShouldBindJSON(&ar); err == nil {
 			response, err := addWatchedEpisodes(b.db, userId, ar)
 			if err != nil {
 				c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
@@ -598,7 +602,7 @@ func (b *BaseRouter) addWatchedRoutes() {
 			c.JSON(http.StatusOK, response)
 			return
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: "invalid request body"})
 	})
 
 	watched.DELETE("/episode/:id", func(c *gin.Context) {

@@ -82,6 +82,7 @@ func main() {
 		&Image{},
 		&Game{},
 		&ArrRequest{},
+		&APIKey{},
 		&Tag{},
 	)
 	if err != nil {
@@ -148,6 +149,8 @@ func main() {
 	br.addProfileRoutes()
 	br.addJellyfinRoutes()
 	br.addPlexRoutes()
+	br.addAPIKeyRoutes()
+	br.addWatchedShowRoute()
 	br.addUserRoutes()
 	br.addFollowRoutes()
 	br.addImportRoutes()
