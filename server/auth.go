@@ -199,7 +199,7 @@ type UserPasswordUpdateRequest struct {
 // If db is passed, extra user info from the database will be fetched.
 func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		slog.Debug("AuthRequired middleware hit")
+		//slog.Debug("AuthRequired middleware hit")
 		atoken := c.GetHeader("Authorization")
 		// Make sure auth header isn't empty
 		if atoken == "" {
@@ -227,12 +227,12 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 				c.AbortWithStatus(401)
 				return
 			}
-			slog.Debug("Token is valid", "claims", claims)
+			//slog.Debug("Token is valid", "claims", claims)
 			c.Set("userId", claims.UserID)
 			c.Set("userType", claims.Type)
 			// If db passed, get extra user info and set as variables in req context
 			if db != nil {
-				slog.Debug("AuthRequired: db passed.. getting extra user info")
+				//slog.Debug("AuthRequired: db passed.. getting extra user info")
 				dbUser := new(User)
 				res := db.Where("id = ?", claims.UserID).Take(&dbUser)
 				if res.Error != nil {
@@ -240,7 +240,7 @@ func AuthRequired(db *gorm.DB) gin.HandlerFunc {
 					c.AbortWithStatus(401)
 					return
 				}
-				slog.Debug("AuthRequired: fetched extra user info. Setting vars.", "userThirdPartyId", dbUser.ThirdPartyID, "userThirdPartyAuth", "lol this is censored dude")
+				//slog.Debug("AuthRequired: fetched extra user info. Setting vars.", "userThirdPartyId", dbUser.ThirdPartyID, "userThirdPartyAuth", "lol this is censored dude")
 				c.Set("userThirdPartyId", dbUser.ThirdPartyID)
 				c.Set("userThirdPartyAuth", dbUser.ThirdPartyAuth)
 				c.Set("username", dbUser.Username)

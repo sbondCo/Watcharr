@@ -199,7 +199,7 @@ func (b *BaseRouter) addContentRoutes() {
 			c.Status(400)
 			return
 		}
-		content, err := movieDetails(b.db, c.Param("id"), c.MustGet("userCountry").(string), map[string]string{"append_to_response": "videos,watch/providers,similar"})
+		content, err := movieDetails(b.db, c.Param("id"), c.MustGet("userCountry").(string), map[string]string{"append_to_response": "videos,watch/providers,similar,release_dates"})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 			return

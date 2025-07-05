@@ -43,6 +43,7 @@ type Content struct {
 	Runtime          uint32      `json:"runtime"`
 	NumberOfEpisodes uint32      `json:"numberOfEpisodes"`
 	NumberOfSeasons  uint32      `json:"numberOfSeasons"`
+	Certification    string      `json:"certification"`
 }
 
 // onlyUpdate - If we should only update existing row if exists, or false to create/update if not exist.
@@ -79,6 +80,7 @@ func saveContent(db *gorm.DB, c *Content, onlyUpdate bool) error {
 				"runtime",
 				"number_of_episodes",
 				"number_of_seasons",
+				"certification",
 			}),
 		}).Create(&c)
 		if res.Error != nil {
@@ -152,20 +154,21 @@ func cacheContentMovie(db *gorm.DB, content TMDBMovieDetails, onlyUpdate bool) (
 	}
 
 	c := Content{
-		TmdbID:      content.ID,
-		Title:       content.Title,
-		Overview:    content.Overview,
-		PosterPath:  content.PosterPath,
-		Type:        MOVIE,
-		ReleaseDate: &releaseDate,
-		Popularity:  content.Popularity,
-		VoteAverage: content.VoteAverage,
-		VoteCount:   content.VoteCount,
-		ImdbID:      content.ImdbID,
-		Status:      content.Status,
-		Budget:      content.Budget,
-		Revenue:     content.Revenue,
-		Runtime:     content.Runtime,
+		TmdbID:        content.ID,
+		Title:         content.Title,
+		Overview:      content.Overview,
+		PosterPath:    content.PosterPath,
+		Type:          MOVIE,
+		ReleaseDate:   &releaseDate,
+		Popularity:    content.Popularity,
+		VoteAverage:   content.VoteAverage,
+		VoteCount:     content.VoteCount,
+		ImdbID:        content.ImdbID,
+		Status:        content.Status,
+		Budget:        content.Budget,
+		Revenue:       content.Revenue,
+		Runtime:       content.Runtime,
+		Certification: content.Certification,
 	}
 
 	err = saveContent(db, &c, onlyUpdate)
@@ -229,7 +232,7 @@ func transformProviders(c *interface{}, country string) {
 	if cmap, ok := (*c).(map[string]interface{}); ok {
 		if rmap, ok := cmap["results"].(map[string]interface{}); ok {
 			if val, ok := rmap[country]; ok {
-				slog.Debug("transformProviders: Found country.. overwriting whole object", "new_obj", val)
+				//slog.Debug("transformProviders: Found country.. overwriting whole object", "new_obj", val)
 				if rvmap, ok := val.(map[string]interface{}); ok {
 					rvmap["country"] = country
 				}
@@ -341,6 +344,9 @@ func movieDetails(db *gorm.DB, id string, country string, rParams map[string]str
 		return TMDBMovieDetails{}, errors.New("failed to complete movie details request")
 	}
 	transformProviders(&resp.WatchProviders, country)
+	//slog.Debug("JFJF parsing release", "rd", resp.ReleaseDates)
+	resp.Certification = parseCertFromReleaseDates(&resp.ReleaseDates, country)
+	slog.Debug("JFJF got back cert", "cert", resp.Certification)
 	go cacheContentMovie(db, *resp, true)
 	return *resp, nil
 }
@@ -482,4 +488,31 @@ func regions() (TMDBRegions, error) {
 		return TMDBRegions{}, errors.New("failed to complete regions request")
 	}
 	return *resp, nil
+}
+
+// Getting only region needed from TMDB API is not a feature
+func parseCertFromReleaseDates(c *interface{}, country string) string {
+	if cmap, ok := (*c).(map[string]interface{}); ok {
+		//slog.Debug("JFJF cmap", "cmap", cmap)
+		if rarr, ok := cmap["results"].([]interface{}); ok {
+			//slog.Debug("JFJF rmap", "rmap", rmap)
+			for _, item := range rarr {
+				countryRelease := item.(map[string]interface{})
+				//slog.Debug("JFJF cycling", countryRelease["iso_3166_1"])
+				if countryRelease["iso_3166_1"] == country {
+					//slog.Debug("JFJF cycling hit 1")
+					releaseDatesArray := countryRelease["release_dates"].([]interface{})
+					if len(releaseDatesArray) > 0 {
+						//slog.Debug("JFJF cycling hit 2")
+						return releaseDatesArray[0].(map[string]interface{})["certification"].(string)
+					}
+				}
+			}
+		} else {
+			slog.Warn("parseCertFromReleaseDates: Couldn't find results property")
+		}
+	} else {
+		slog.Error("parseCertFromReleaseDates: Assertion failed")
+	}
+	return ""
 }

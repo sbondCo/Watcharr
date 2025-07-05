@@ -191,8 +191,10 @@ type TMDBMovieDetails struct {
 	// Extra items because we use `append_to_response` on the request
 	Videos         TMDBContentVideos    `json:"videos"`
 	WatchProviders interface{}          `json:"watch/providers"`
+	ReleaseDates   interface{}          `json:"release_dates"`
 	Similar        TMDBMovieSimilar     `json:"similar"`
 	ExternalIds    TMDBExternalIdsMovie `json:"external_ids"`
+	Certification  string               `json:"certification,omitempty"`
 }
 
 type TMDBShowDetails struct {
