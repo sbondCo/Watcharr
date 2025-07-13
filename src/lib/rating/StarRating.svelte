@@ -6,6 +6,7 @@
 	import { store } from "@/store.svelte";
 	import { RatingStep, RatingSystem } from "@/types";
 	import { onMount } from "svelte";
+	import { isTouch } from "../util/helpers";
 
 	interface Props {
 		rating: number | undefined;
@@ -26,6 +27,14 @@
 	 * Percentage star step.
 	 */
 	let starStep = $state(10);
+	/**
+	 * The scroll position at start of star pointer click,
+	 * saved for comparison at end of star click. If same,
+	 * new rating will be saved, otherwise ignored to fix
+	 * issue where user is just trying to scroll down, but
+	 * presses star accidentally.
+	 */
+	let scrollLocAtStart = $state(0);
 
 	const ratingDesc = [
 		"Apalling",
@@ -43,6 +52,15 @@
 	async function saveSelectedRating() {
 		if (!shownPerc) {
 			console.warn("saveSelectedRating: Rating not set, ignoring call.");
+			return;
+		}
+		// We attempt to avoid accidental clicks on stars being saved while trying
+		// to scroll down the page, so if the scroll pos has changed since the press
+		// started, ignore it. This issue only affects touch devices, so ignore on pc.
+		if (isTouch() && scrollLocAtStart !== window.scrollY) {
+			console.info(
+				"saveSelectedRating: Scroll location has changed since star was pressed, not saving rating to avoid a misclick.",
+			);
 			return;
 		}
 		// Rating needs to always scale to out of 10 before saving,
@@ -119,6 +137,7 @@
 		ev: (TouchEvent | MouseEvent) & {
 			currentTarget: EventTarget & HTMLDivElement;
 		},
+		start = false,
 	) {
 		const rect = ev.currentTarget.getBoundingClientRect();
 		const x =
@@ -128,6 +147,9 @@
 			Math.ceil(Math.round((x * 100) / rect.width) / starStep) * starStep;
 		setHoveredRatingFromPerc(perc);
 		moveRatingText();
+		if (start) {
+			scrollLocAtStart = window.scrollY;
+		}
 	}
 
 	function handleKeyDown(
@@ -318,7 +340,7 @@ shownPerc: {shownPerc}<br /> -->
 			// this flow (touchstart -> touchend) for clicks too will
 			// workaround that difference.
 			ev.preventDefault();
-			handleMouseOver(ev);
+			handleMouseOver(ev, true);
 		}}
 		onmouseleave={(ev) => {
 			if (!ev.relatedTarget) {
