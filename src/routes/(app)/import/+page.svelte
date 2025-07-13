@@ -225,7 +225,7 @@
 					}
 				}
 				if (h.year) {
-					t.year = h.year;
+					t.year = Number(h.year);
 				}
 				if (ratingsEntry && ratingsEntry?.userRating) {
 					t.rating = Number(ratingsEntry.userRating);
@@ -314,7 +314,7 @@
 				const t: ImportedList = {
 					tmdbId: v.content.tmdbId,
 					name: v.content.title,
-					year: new Date(v.content.release_date)?.getFullYear()?.toString(),
+					year: new Date(v.content.release_date)?.getFullYear(),
 					type: v.content.type,
 					rating: v.rating,
 					status: v.status,

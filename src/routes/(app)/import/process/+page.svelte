@@ -74,7 +74,7 @@
 					const l: ImportedList = { name: el };
 					const year = el.match(yearRegex);
 					if (year && year.length > 0) {
-						l.year = year[0].replaceAll(/\(|\)/g, "");
+						l.year = Number(year[0].replaceAll(/\(|\)/g, ""));
 						l.name = l.name.replace(yearRegex, "").trim();
 					}
 					rList.push(l);
@@ -98,7 +98,7 @@
 							? new Date(el["Release Date"])
 							: undefined;
 						if (year) {
-							l.year = String(year.getFullYear());
+							l.year = year.getFullYear();
 						}
 						if (el.Type === "movie" || el.Type === "tv") {
 							l.type = el.Type;
@@ -164,7 +164,7 @@
 							? new Date(el["Release Date"])
 							: undefined;
 						if (year) {
-							l.year = String(year.getFullYear());
+							l.year = year.getFullYear();
 						}
 
 						switch (type) {
@@ -401,7 +401,7 @@
 		const lo = { name: ev.currentTarget.value } as ImportedList;
 		const yearEl = document.getElementById("addYear") as HTMLInputElement;
 		if (yearEl?.value) {
-			lo.year = yearEl.value;
+			lo.year = Number(yearEl.value);
 		}
 		rList.push(lo);
 		rList = rList;
@@ -511,8 +511,7 @@
 						w.content?.type === "movie"
 							? w.content?.release_date
 							: w.content?.first_air_date;
-					if (release)
-						item.year = String(new Date(Date.parse(release)).getFullYear());
+					if (release) item.year = new Date(Date.parse(release)).getFullYear();
 					item.type = w.content?.type;
 					store.watchedList.push(w);
 				}

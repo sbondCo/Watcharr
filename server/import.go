@@ -28,6 +28,7 @@ var (
 
 type ImportRequest struct {
 	Name             string           `json:"name"`
+	Year             int              `json:"year"`
 	TmdbID           int              `json:"tmdbId"`
 	Type             ContentType      `json:"type"`
 	Rating           float64          `json:"rating" binding:"max=10"`
@@ -51,6 +52,7 @@ type ImportResponse struct {
 }
 
 func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, error) {
+	slog.Debug("import: Processing request:", "request", ar)
 	// If tmdbId and type passed in request body
 	// we dont need to use a search tmdb request.
 	// Retrieve the details directly.
@@ -139,28 +141,56 @@ func importContent(db *gorm.DB, userId uint, ar ImportRequest) (ImportResponse, 
 		// If there are multiple responses, but only one item
 		// from the results is a 100% match for the imported
 		// items name, then consider successful match with that.
-		var perfectMatch TMDBSearchMultiResults
+		perfectMatches := []TMDBSearchMultiResults{}
 		for _, r := range pMatches {
 			itemName := r.Name
 			if itemName == "" {
 				itemName = r.Title
 			}
-			if strings.EqualFold(itemName, ar.Name) {
-				slog.Debug("import: multiple results processing: found a perfectMatch", "match", r)
-				if perfectMatch.ID != 0 {
-					// If perfect match has been set before..
-					// quit looking and just show all results.
-					slog.Debug("import: multiple results processing: Second perfectMatch found.. returning all results")
-					return ImportResponse{Type: IMPORT_MULTI, Results: pMatches}, nil
+			itemReleaseYear := 0
+			// Only parse dates to find year if the import request has provided
+			// a year to comparisons.. otherwise don't do it to save some performance juice.
+			if ar.Year != 0 {
+				itemReleaseDateStr := r.ReleaseDate
+				if itemReleaseDateStr == "" {
+					itemReleaseDateStr = r.FirstAirDate
 				}
-				perfectMatch = r
+				if itemReleaseDate, err := time.Parse("2006-01-02", itemReleaseDateStr); err == nil {
+					itemReleaseYear = itemReleaseDate.Year()
+				} else {
+					slog.Error("import: failed to check item release year, it can't be used for matching", "error", err, "item", r)
+				}
+			}
+			if strings.EqualFold(itemName, ar.Name) {
+				slog.Debug("import: multiple results processing: found a perfect name match", "itemReleaseYear", itemReleaseYear, "ar.Year", ar.Year, "match", r)
+				// If we have a year for comparison, force a check to compare them for a
+				// match to be deemed perfect.
+				// `itemReleaseYear` can only ever have a value if `ar.Year` has one, so this
+				// check is safe as is.
+				if itemReleaseYear != 0 || ar.Year != 0 {
+					if itemReleaseYear == ar.Year {
+						perfectMatches = append(perfectMatches, r)
+						slog.Debug("import: multiple results processing: name match also matched year")
+					} else {
+						slog.Debug("import: multiple results processing: name match didnt match year")
+					}
+					continue
+				}
+				// Otherwise, if we don't have valid dates to compare, append the perfect name match anyways.
+				slog.Debug("import: multiple results processing: name match didn't have valid release year, adding to matches anyways")
+				perfectMatches = append(perfectMatches, r)
 			}
 		}
 		// If one perfect match found, import it
-		if perfectMatch.ID != 0 {
+		pmLen := len(perfectMatches)
+		if pmLen == 1 && perfectMatches[0].ID != 0 {
 			slog.Debug("import: importing from perfect match")
-			return successfulImport(db, userId, perfectMatch.ID, ContentType(perfectMatch.MediaType), ar)
+			return successfulImport(db, userId, perfectMatches[0].ID, ContentType(perfectMatches[0].MediaType), ar)
+		} else if pmLen > 1 {
+			slog.Debug("import: returning multiple perfect matches")
+			return ImportResponse{Type: IMPORT_MULTI, Results: perfectMatches}, nil
 		}
+		slog.Debug("import: returning all potential matches")
 		return ImportResponse{Type: IMPORT_MULTI, Results: pMatches}, nil
 	} else {
 		slog.Debug("import: success.. only found one result")

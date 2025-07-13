@@ -906,7 +906,7 @@ export interface ImportResponse {
 export interface ImportedList {
 	tmdbId?: number;
 	name: string;
-	year?: string;
+	year?: number;
 	type?: ContentType;
 	state?: string;
 	rating?: number;
