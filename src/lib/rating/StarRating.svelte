@@ -34,7 +34,7 @@
 	 * issue where user is just trying to scroll down, but
 	 * presses star accidentally.
 	 */
-	let scrollLocAtStart = $state(0);
+	let scrollLocAtStart = 0;
 
 	const ratingDesc = [
 		"Apalling",
