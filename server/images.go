@@ -58,7 +58,7 @@ func getBlurHash(img io.Reader) (string, error) {
 		slog.Error("getBlurHash decoding image failed", "error", err)
 		return "", errors.New("decoding image failed")
 	}
-	bh, _ := blurhash.Encode(6, 5, i)
+	bh, err := blurhash.Encode(6, 5, i)
 	if err != nil {
 		// Handle errors
 		slog.Error("getBlurHash generation failed", "error", err)
