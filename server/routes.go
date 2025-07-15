@@ -389,7 +389,7 @@ func (b *BaseRouter) addGameRoutes() {
 	})
 	err := igdb.Init()
 	// Save cfg if init succeeded, this will save our access token
-	if err == nil {
+	if err != nil {
 		slog.Error("GameRoutes: Twitch init failed!", "error", err)
 	}
 
