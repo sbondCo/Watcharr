@@ -941,6 +941,9 @@ export interface ServerConfig {
 	USE_EMBY: boolean;
 	SIGNUP_ENABLED: boolean;
 	TMDB_KEY: string;
+	TVDB_KEY: string;
+	EMBY_DEFAULT_RATING: number;
+	GLOBAL_RATE_LIMIT_RPS: number;
 	PLEX_HOST: string;
 	PLEX_MACHINE_ID: string;
 	SONARR: SonarrSettings[];

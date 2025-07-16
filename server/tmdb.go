@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+	"strings"
+	"path"
+    "strconv"
 )
 
 type TMDBSearchResponse[R any] struct {
@@ -605,6 +608,7 @@ func getTMDBKey() string {
 	if Config.TMDB_KEY != "" {
 		return Config.TMDB_KEY
 	}
+	slog.Debug("Using built-in TMDB fallback key; set TMDB_KEY in config for higher rate-limits and reliability")
 	return "d047fa61d926371f277e7a83c9c4ff2c"
 }
 
@@ -615,12 +619,20 @@ func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
 		return nil, errors.New("failed to parse api uri")
 	}
 
-	// Path params
-	base.Path += ep
+	// Ensure we have exactly one slash between base path and endpoint
+	if !strings.HasPrefix(ep, "/") {
+		ep = "/" + ep
+	}
+	base.Path = path.Join(base.Path, ep)
 
 	// Query params
 	params := url.Values{}
-	params.Add("api_key", getTMDBKey())
+	key := getTMDBKey()
+	isBearer := strings.Contains(key, ".") && strings.HasPrefix(key, "ey")
+	slog.Info("TMDB key in use", "bearer", isBearer)
+	if !isBearer {
+		params.Add("api_key", key)
+	}
 	params.Add("language", "en-US")
 	for k, v := range p {
 		params.Add(k, v)
@@ -629,8 +641,23 @@ func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
 	// Add params to url
 	base.RawQuery = params.Encode()
 
-	// Run get request
-	res, err := http.Get(base.String())
+	// Log full request URL (without api_key for security)
+	safeURL := base
+	q := safeURL.Query()
+	q.Del("api_key")
+	safeURL.RawQuery = q.Encode()
+	slog.Debug("TMDB request", "url", safeURL.String())
+
+	// Build request
+	req, err := http.NewRequest(http.MethodGet, base.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	if isBearer {
+		req.Header.Set("Authorization", "Bearer "+key)
+	}
+	client := &http.Client{Timeout: 15 * time.Second}
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -640,10 +667,25 @@ func tmdbAPIRequest(ep string, p map[string]string) ([]byte, error) {
 		return nil, err
 	}
 	if res.StatusCode != 200 {
-		slog.Error("TMDB non 200 status code:", "status_code", res.StatusCode)
+		slog.Error("TMDB API error", "status_code", res.StatusCode, "url", safeURL.String(), "resp", string(body))
 		return nil, errors.New(string(body))
 	}
 	return body, nil
+}
+
+func findTMDBShowIDByTVDBSeriesID(seriesID int) (int, error) {
+    type findResp struct {
+        TvResults []struct{ ID int `json:"id"` } `json:"tv_results"`
+    }
+    var fr findResp
+    ep := "find/" + strconv.Itoa(seriesID)
+    if err := tmdbRequest(ep, map[string]string{"external_source": "tvdb_id"}, &fr); err != nil {
+        return 0, err
+    }
+    if len(fr.TvResults) == 0 {
+        return 0, errors.New("tmdb find returned no tv_results for series id")
+    }
+    return fr.TvResults[0].ID, nil
 }
 
 func tmdbRequest(ep string, p map[string]string, resp interface{}) error {

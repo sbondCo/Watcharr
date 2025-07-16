@@ -17,6 +17,7 @@
 	import SyncModal from "./modals/SyncModal.svelte";
 	import RegionDropDown from "@/lib/RegionDropDown.svelte";
 	import RatingSetting from "@/lib/rating/RatingSetting.svelte";
+	import APIKeysSetting from "@/lib/settings/APIKeysSetting.svelte";
 	import { toggleTheme } from "@/lib/util/theme";
 
 	let user = $derived(store.userInfo);
@@ -345,6 +346,8 @@
 					}}
 				/>
 			</Setting>
+
+			<APIKeysSetting />
 
 			<RatingSetting />
 
