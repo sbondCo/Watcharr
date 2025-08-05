@@ -20,7 +20,7 @@
 		"@typescript-eslint/eslint-plugin": "^8.32.1",
 		"@typescript-eslint/parser": "^8.32.1",
 		"@vite-pwa/sveltekit": "^0.6.6",
-		"eslint": "^8.57.0",
+		"eslint": "^9.32.0",
 		"eslint-config-prettier": "^10.1.2",
 		"eslint-plugin-svelte": "^2.45.1",
 		"prettier": "^3.4.2",
