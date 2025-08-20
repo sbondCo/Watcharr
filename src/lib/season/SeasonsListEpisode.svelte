@@ -29,6 +29,10 @@
 
 	let isHidden: boolean = $state(!!store?.userSettings?.hideSpoilers);
 
+	const isUnaired = $derived(
+		ep.air_date && new Date(ep.air_date).getTime() > new Date().getTime(),
+	);
+
 	/**
 	 * Re-sets `isHidden` state.
 	 */
@@ -121,6 +125,11 @@
 				{Math.round(ep.vote_average * 10) / 10}
 			</span>
 		</div>
+		{#if isUnaired}
+			<span class="episode-air-date"
+				>Airs on {new Date(ep.air_date).toLocaleDateString()}</span
+			>
+		{/if}
 		<span class="overview">{ep.overview}</span>
 	</div>
 	{#if watchedItem}
@@ -221,6 +230,15 @@
 						line-height: 0.7;
 					}
 				}
+			}
+
+			.episode-air-date {
+				font-size: 14px;
+				color: $text-color-accent;
+				padding: 0 2px;
+				text-transform: lowercase;
+				font-variant: small-caps;
+				font-weight: bold;
 			}
 		}
 
