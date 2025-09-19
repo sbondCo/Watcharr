@@ -5,7 +5,7 @@ services:
     image: ghcr.io/sbondco/watcharr:latest
     container_name: watcharr
     ports:
-      - 3080:3080
+      - 3000:3000
     volumes:
       # Contains all of watcharr data (database & cache)
       - ./data:/data
