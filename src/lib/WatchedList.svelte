@@ -4,11 +4,11 @@
 	import Poster from "@/lib/poster/Poster.svelte";
 	import PosterList from "@/lib/poster/PosterList.svelte";
 	import { store, clearActiveFilters } from "@/store.svelte";
-	import type { Watched } from "@/types";
+	import type { Watched, UserSettings, Filters } from "@/types";
 	import GamePoster from "./poster/GamePoster.svelte";
 	import { getLatestWatchedInTv } from "./util/helpers";
 	import { notify } from "./util/notify";
-	import { untrack } from "svelte";
+	import { onMount, onDestroy } from "svelte";
 
 	interface Props {
 		list: Watched[];
@@ -20,21 +20,11 @@
 	let sort = $derived(store.activeSort);
 	let filters = $derived(store.activeFilters);
 	let settings = $derived(store.userSettings);
-	let watched: Watched[] = $state([]);
 
-	$effect(() => {
-		if (list) {
-			watched = list;
-		}
-	});
-
-	$effect(() => {
-		if (list && filters.status && filters.type && sort) {
-			untrack(() => {
-				filt();
-			});
-		}
-	});
+	const increment = 30;
+	let visibleCount = $state(increment);
+	let loading = false;
+	let observer: IntersectionObserver;
 
 	/**
 	 * Checks if content has been watched previously
@@ -74,12 +64,15 @@
 		return wp;
 	}
 
-	// Monsterous code for filters. Soz.
-	function filt() {
+	function filt(
+		list: Watched[],
+		sort: string[],
+		filters: Filters,
+		settings: UserSettings | undefined,
+	) {
 		console.debug("WatchedList: filt()");
 		try {
-			// Set watched to list and sort it.
-			watched = list
+			let result = [...list]
 				.sort((a, b) => {
 					if (sort[0] === "DATEADDED" && sort[1] === "UP") {
 						return Date.parse(a.createdAt) - Date.parse(b.createdAt);
@@ -159,7 +152,7 @@
 					settings?.includePreviouslyWatched &&
 					filters.status.includes("finished")
 				) {
-					watched = watched.filter(
+					result = result.filter(
 						(w) =>
 							(filters.status.includes(w.status?.toLowerCase()) ||
 								contentWatchedPreviously(w)) &&
@@ -168,7 +161,7 @@
 							),
 					);
 				} else {
-					watched = watched.filter(
+					result = result.filter(
 						(w) =>
 							filters.status.includes(w.status?.toLowerCase()) &&
 							filters.type.includes(
@@ -178,7 +171,7 @@
 				}
 			} else if (filters.type.length > 0) {
 				// Only filter type
-				watched = watched.filter((w) =>
+				result = result.filter((w) =>
 					filters.type.includes(
 						w.content ? w.content.type : w.game ? "game" : "",
 					),
@@ -189,17 +182,19 @@
 					settings?.includePreviouslyWatched &&
 					filters.status.includes("finished")
 				) {
-					watched = watched.filter(
+					result = result.filter(
 						(w) =>
 							filters.status.includes(w.status?.toLowerCase()) ||
 							contentWatchedPreviously(w),
 					);
 				} else {
-					watched = watched.filter((w) =>
+					result = result.filter((w) =>
 						filters.status.includes(w.status?.toLowerCase()),
 					);
 				}
 			}
+
+			return result;
 		} catch (err) {
 			console.error("filt: Failed to filter/sort current list!", err);
 			notify({
@@ -207,23 +202,44 @@
 				type: "error",
 				time: 6000,
 			});
+			return [];
 		}
 	}
 
-	/**
-	 * Callback for when a watched list item is updated through poster,
-	 * this allows us to run the filt() func again so the sorting is
-	 * updated.
-	 */
-	function itemUpdated() {
-		console.debug("itemUpdated");
-		filt();
+	// NOTE: I believe this should only recaulculate watched when necessary and similarly only visibleWatched when necessary
+	let result = $derived.by(() => filt(list, sort, filters, settings));
+	let visibleWatched = $derived.by(() => result.slice(0, visibleCount));
+
+	function setupObserver() {
+		const sentinel = document.querySelector("#sentinel");
+		if (!sentinel) return;
+
+		let timeout: number;
+		observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting && !loading) {
+						loading = true;
+						clearTimeout(timeout);
+						timeout = window.setTimeout(() => {
+							visibleCount += increment;
+							loading = false;
+						}, 200);
+					}
+				}
+			},
+			{ rootMargin: "100px" },
+		);
+		observer.observe(sentinel);
 	}
+
+	onMount(setupObserver);
+	onDestroy(() => observer?.disconnect());
 </script>
 
 <PosterList>
-	{#if watched?.length > 0}
-		{#each watched as w (w.id)}
+	{#if visibleWatched?.length > 0}
+		{#each visibleWatched as w (w.id)}
 			{#if w.game}
 				<GamePoster
 					id={w.id}
@@ -244,7 +260,6 @@
 					}}
 					fluidSize={true}
 					pinned={w.pinned}
-					onUpdated={itemUpdated}
 				/>
 			{:else if w.content}
 				<Poster
@@ -271,7 +286,6 @@
 					}}
 					fluidSize={true}
 					pinned={w.pinned}
-					onUpdated={itemUpdated}
 				/>
 			{/if}
 		{/each}
@@ -301,6 +315,9 @@
 			{/if}
 		</div>
 	{/if}
+
+	<!-- NOTE: For some reason button is the only el that doesn't cause flickering issues -->
+	<button id="sentinel" aria-label="sentinel" class="sentinel"></button>
 </PosterList>
 
 <style lang="scss">
@@ -324,5 +341,9 @@
 			padding-right: 20px;
 			margin-top: 15px;
 		}
+	}
+
+	.sentinel {
+		visibility: hidden;
 	}
 </style>
