@@ -845,3 +845,35 @@ export interface TagAddRequest {
 	color: string;
 	bgColor: string;
 }
+
+export interface StatsResponse {
+	summary: StatsSummary;
+	ratingDistribution: DistributionBucket[];
+	statusDistribution: StatusBucket[];
+	releaseYear: YearBucket[];
+	watchYear: YearBucket[];
+	episodeCountDistribution?: DistributionBucket[];
+}
+
+export interface StatsSummary {
+	totalCount: number;
+	totalRuntime: number;
+	daysWatched: number;
+	meanScore: number;
+	episodesWatched: number;
+}
+
+export interface DistributionBucket {
+	label: string;
+	count: number;
+}
+
+export interface StatusBucket {
+	status: string;
+	count: number;
+}
+
+export interface YearBucket {
+	year: number;
+	count: number;
+}
