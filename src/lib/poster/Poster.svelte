@@ -109,6 +109,12 @@
 			return `${baseURL}/${media.poster.path}`;
 		}
 
+		// Logic below uses `extPosterPath`, so check here first.
+		// If it doesn't exist, return undefined.
+		if (!media.extPosterPath) {
+			return;
+		}
+
 		if (
 			media.type == MediaTypeE.tmdbMovie ||
 			media.type == MediaTypeE.tmdbShow
