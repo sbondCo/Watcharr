@@ -27,7 +27,7 @@ func NewService(cfg *config.ServerConfig) *Service {
 // which btns should be shown, etc.
 func (s *Service) GetEnabledFeatures(userPerms int) ServerFeatures {
 	var f ServerFeatures
-	if s.cfg.TWITCH.ClientID != nil && s.cfg.TWITCH.ClientSecret != nil {
+	if s.cfg.TwitchEnabled() {
 		f.Games = true
 	}
 	if permission.Has(userPerms, entity.PERM_REQUEST_CONTENT) {

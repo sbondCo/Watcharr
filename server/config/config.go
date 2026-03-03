@@ -212,6 +212,13 @@ func (c *ServerConfig) SaveTwitchConfig(newt igdb.IGDB) error {
 	return nil
 }
 
+func (c *ServerConfig) TwitchEnabled() bool {
+	if c.TWITCH.ClientID != nil && c.TWITCH.ClientSecret != nil {
+		return true
+	}
+	return false
+}
+
 // Read config file
 // Calls generateConfig if file doesn't exist
 func read() (*ServerConfig, error) {
