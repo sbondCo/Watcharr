@@ -303,7 +303,7 @@
 	class={`${posterActive ? "active " : ""}${watched?.pinned ? "pinned " : ""}${hideIfNotOnList && !watched ? "hidden " : ""}`}
 >
 	<div
-		class={`container${!poster ? " details-shown" : ""}`}
+		class={`container${!poster || posterImgLoaded == -1 ? " details-shown" : ""}`}
 		bind:this={containerEl}
 	>
 		{#if poster}
