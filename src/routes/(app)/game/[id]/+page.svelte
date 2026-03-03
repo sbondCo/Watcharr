@@ -1,5 +1,4 @@
 <script lang="ts">
-	import PageError from "@/lib/PageError.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import HorizontalList from "@/lib/HorizontalList.svelte";
 	import { type Media, type WatchedStatus } from "@/types";
@@ -91,7 +90,7 @@
 </svelte:head>
 
 {#if pageError}
-	<PageError pretty="Failed to load game!" error={pageError} />
+	<Error pretty="Failed to load game!" error={pageError} />
 {:else if !game}
 	<Spinner />
 {:else if Object.keys(game).length > 0}

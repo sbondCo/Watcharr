@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Icon from "@/lib/Icon.svelte";
-	import PageError from "@/lib/PageError.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import {
 		getOrdinalSuffix,
@@ -11,6 +10,7 @@
 	import axios from "axios";
 	import EditUserModal from "./modals/EditUserModal.svelte";
 	import UserTypeIcon from "@/lib/user/UserTypeIcon.svelte";
+	import Error from "@/lib/Error.svelte";
 
 	const currentYear = new Date(Date.now()).getFullYear();
 
@@ -82,7 +82,7 @@
 				/>
 			{/if}
 		{:catch err}
-			<PageError error={err} pretty="Failed to fetch users!" />
+			<Error error={err} pretty="Failed to fetch users!" />
 		{/await}
 	</div>
 </div>

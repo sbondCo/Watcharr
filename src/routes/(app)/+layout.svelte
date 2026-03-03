@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { afterNavigate, goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import Error from "@/lib/Error.svelte";
 	import Icon from "@/lib/Icon.svelte";
-	import PageError from "@/lib/PageError.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import tooltip from "@/lib/actions/tooltip";
 	import DetailedMenu from "@/lib/nav/DetailedMenu.svelte";
@@ -369,7 +369,13 @@
 {:then}
 	{@render children?.()}
 {:catch err}
-	<PageError pretty="Failed to retrieve user data!" error={err} />
+	<Error
+		pretty="Couldn't fetch app data!"
+		error={err}
+		onRetry={() => {
+			location.reload();
+		}}
+	/>
 {/await}
 
 <style lang="scss">

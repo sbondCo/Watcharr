@@ -1,5 +1,4 @@
 <script lang="ts">
-	import PageError from "@/lib/PageError.svelte";
 	import PersonPoster from "@/lib/poster/PersonPoster.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import HorizontalList from "@/lib/HorizontalList.svelte";
@@ -125,7 +124,7 @@
 </svelte:head>
 
 {#if pageError}
-	<PageError pretty="Failed to load movie!" error={pageError} />
+	<Error pretty="Failed to load movie!" error={pageError} />
 {:else if !movie}
 	<Spinner />
 {:else if Object.keys(movie).length > 0}

@@ -5,7 +5,6 @@
 	import Poster from "@/lib/poster/Poster.svelte";
 	import PosterList from "@/lib/poster/PosterList.svelte";
 	import { store } from "@/store.svelte.js";
-	import PageError from "@/lib/PageError.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import PersonPoster from "@/lib/poster/PersonPoster.svelte";
 	import {
@@ -146,7 +145,7 @@
 					<UsersList users={results} />
 				{/if}
 			{:catch err}
-				<PageError pretty="Failed to load users!" error={err} />
+				<Error pretty="Failed to load users!" error={err} />
 			{/await}
 
 			<PageTitle title="Results">

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Error from "@/lib/Error.svelte";
-	import PageError from "@/lib/PageError.svelte";
 	import Poster from "@/lib/poster/Poster.svelte";
 	import PosterList from "@/lib/poster/PosterList.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
@@ -122,7 +121,7 @@
 
 <div>
 	{#if pageError}
-		<PageError pretty="Failed to load person!" error={pageError} />
+		<Error pretty="Failed to load person!" error={pageError} />
 	{:else if !person}
 		<Spinner />
 	{:else if Object.keys(person).length > 0}

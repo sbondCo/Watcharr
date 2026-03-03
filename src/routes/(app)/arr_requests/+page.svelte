@@ -1,5 +1,5 @@
 <script lang="ts">
-	import PageError from "@/lib/PageError.svelte";
+	import Error from "@/lib/Error.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import RequestMovie from "@/lib/request/RequestMovie.svelte";
 	import RequestShow from "@/lib/request/RequestShow.svelte";
@@ -27,7 +27,7 @@
 			}
 		} catch (err) {
 			console.error("Failed to get requests!", err);
-			notify({ type: "error", text: "Failed when getting all requests!" });
+			throw err;
 		}
 	}
 
@@ -127,7 +127,7 @@
 				{/each}
 			</div>
 		{:catch err}
-			<PageError error={err} pretty="Failed to fetch requests!" />
+			<Error error={err} pretty="Failed to fetch media requests!" />
 		{/await}
 
 		{#if showBeingApproved}

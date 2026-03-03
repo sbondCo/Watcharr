@@ -3,7 +3,6 @@
 	import Error from "@/lib/Error.svelte";
 	import HorizontalList from "@/lib/HorizontalList.svelte";
 	import Icon from "@/lib/Icon.svelte";
-	import PageError from "@/lib/PageError.svelte";
 	import PersonPoster from "@/lib/poster/PersonPoster.svelte";
 	import SeasonsList from "@/lib/season/SeasonsList.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
@@ -134,7 +133,7 @@
 </svelte:head>
 
 {#if pageError}
-	<PageError pretty="Failed to load tv show!" error={pageError} />
+	<Error pretty="Failed to load tv show!" error={pageError} />
 {:else if !show}
 	<Spinner />
 {:else if Object.keys(show).length > 0}

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Checkbox from "@/lib/Checkbox.svelte";
-	import PageError from "@/lib/PageError.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import { notify } from "@/lib/util/notify";
 	import type {
@@ -8,7 +7,6 @@
 		RadarrSettings,
 		ServerConfig,
 		SonarrSettings,
-		DropDownItem,
 	} from "@/types";
 	import axios from "axios";
 	import SonarrModal from "./modals/SonarrModal.svelte";
@@ -427,7 +425,7 @@
 					{/if}
 				{/if}
 			{:catch err}
-				<PageError error={err} pretty="Failed to load server config" />
+				<Error error={err} pretty="Failed to load server config!" />
 			{/await}
 		</SettingsList>
 	</div>
