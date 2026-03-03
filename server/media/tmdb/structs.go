@@ -549,7 +549,7 @@ func (t *TMDBShowDetails) AsMedia() domain.Media {
 			Name:         v.Name,
 			EpisodeCount: v.EpisodeCount,
 		}
-		if releaseDate, err := time.Parse("2006-01-02", t.FirstAirDate); err == nil {
+		if releaseDate, err := time.Parse("2006-01-02", v.AirDate); err == nil {
 			ms.ReleaseDate = releaseDate
 		} else {
 			slog.Error("AsMedia: Failed to parse release date", "name", m.Name, "error", err)
