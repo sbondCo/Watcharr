@@ -311,7 +311,8 @@
 						<SettingButton
 							title="Twitch"
 							desc="Twitch application credentials for enabling game support (via IGDB)."
-							icon={Object.keys(serverConfig.TWITCH).length > 0
+							icon={serverConfig.TWITCH &&
+							Object.keys(serverConfig.TWITCH).length > 0
 								? "arrow"
 								: "add"}
 							onClick={() => {

@@ -573,7 +573,7 @@ export interface ServerConfig {
 	PLEX_MACHINE_ID: string;
 	SONARR: SonarrSettings[];
 	RADARR: RadarrSettings[];
-	TWITCH: TwitchSettings;
+	TWITCH?: TwitchSettings;
 	DEBUG: boolean;
 }
 
@@ -617,8 +617,8 @@ export interface RadarrSettingsPublicResponseResult
 	extends ArrSettingsPublicResponseBase {}
 
 export interface TwitchSettings {
-	clientId: string;
-	clientSecret: string;
+	clientId?: string;
+	clientSecret?: string;
 }
 
 export interface TrustedHeaderAuthSetting {

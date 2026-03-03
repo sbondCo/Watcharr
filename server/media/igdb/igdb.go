@@ -39,7 +39,7 @@ type IGDB struct {
 	ClientID           *string   `json:"clientId,omitempty"`
 	ClientSecret       *string   `json:"clientSecret,omitempty"`
 	AccessToken        string    `json:"accessToken,omitempty"`
-	AccessTokenExpires time.Time `json:"accessTokenExpires,omitempty"`
+	AccessTokenExpires time.Time `json:"accessTokenExpires,omitzero"`
 	onTokenRefreshed   *func()
 }
 

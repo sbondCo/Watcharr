@@ -81,7 +81,7 @@ type ServerConfig struct {
 
 	SONARR []cfgmodel.SonarrSettings `json:",omitempty"`
 	RADARR []cfgmodel.RadarrSettings `json:",omitempty"`
-	TWITCH igdb.IGDB                 `json:",omitempty"`
+	TWITCH igdb.IGDB                 `json:",omitzero"`
 
 	// Optional: Schedule for tasks.
 	TASK_SCHEDULE map[string]int `json:",omitempty"`

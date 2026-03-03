@@ -7,13 +7,13 @@
 	import axios from "axios";
 
 	interface Props {
-		cfg: TwitchSettings;
+		cfg?: TwitchSettings;
 		onClose: () => void;
 	}
 
-	let { cfg = $bindable(), onClose }: Props = $props();
+	let { cfg = {}, onClose }: Props = $props();
 
-	let error: string = $state();
+	let error: string | undefined = $state();
 	let formDisabled = false;
 
 	function checkForm() {
@@ -76,7 +76,8 @@
 			<input
 				type="text"
 				placeholder="yrbrrakvgbce99fzjsidkfoalsk9eee"
-				bind:value={cfg.clientId}
+				value={cfg.clientId}
+				oninput={(e) => (cfg.clientId = e.currentTarget.value)}
 				disabled={formDisabled}
 			/>
 		</Setting>
@@ -84,7 +85,8 @@
 			<input
 				type="text"
 				placeholder="yrbralsodkfishfzpajdkflqoefeee"
-				bind:value={cfg.clientSecret}
+				value={cfg.clientSecret}
+				oninput={(e) => (cfg.clientSecret = e.currentTarget.value)}
 				disabled={formDisabled}
 			/>
 		</Setting>
