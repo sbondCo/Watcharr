@@ -108,16 +108,18 @@ func (s *Service) searchMulti(
 		)
 	}
 	// IGDB
-	igdbRes, err := s.cfg.TWITCH.Search(query)
-	if err != nil {
-		slog.Error("SearchMulti: Failed to search igdb!", "error", err)
-		return errors.New("content request failed")
-	}
-	for _, v := range igdbRes {
-		resp.Results = append(
-			resp.Results,
-			v.AsMedia(),
-		)
+	if s.cfg.TwitchEnabled() {
+		igdbRes, err := s.cfg.TWITCH.Search(query)
+		if err != nil {
+			slog.Error("SearchMulti: Failed to search igdb!", "error", err)
+			return errors.New("content request failed")
+		}
+		for _, v := range igdbRes {
+			resp.Results = append(
+				resp.Results,
+				v.AsMedia(),
+			)
+		}
 	}
 	resp.Page = tmdbRes.Page
 	resp.TotalPages = tmdbRes.TotalPages
