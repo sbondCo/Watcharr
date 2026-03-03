@@ -396,6 +396,14 @@
 			justify-content: space-between;
 			align-items: center;
 
+			a,
+			.btns {
+				/* This makes the logo on left and icons on right the same
+				width, ensuring the main search bar can stay truly centered
+				when possible. */
+				flex: 1;
+			}
+
 			@media screen and (max-width: 435px) {
 				gap: 15px;
 			}
@@ -509,6 +517,8 @@
 
 		:global(body.split-nav) & {
 			.search {
+				/* We hide with visibility: hidden, so the decideOnNavSplit can
+				still get the search width for it's decision logic. */
 				opacity: 0;
 				visibility: hidden;
 			}
@@ -549,6 +559,7 @@
 		.btns {
 			display: flex;
 			flex-flow: row;
+			justify-content: end;
 			/* gap: 20px; */
 
 			button.other {
