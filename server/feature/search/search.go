@@ -107,8 +107,8 @@ func (s *Service) searchMulti(
 			v.AsMedia(),
 		)
 	}
-	// IGDB
-	if s.cfg.TwitchEnabled() {
+	// IGDB (we will only get results for the first page)
+	if page == 1 && s.cfg.TwitchEnabled() {
 		igdbRes, err := s.cfg.TWITCH.Search(query)
 		if err != nil {
 			slog.Error("SearchMulti: Failed to search igdb!", "error", err)
