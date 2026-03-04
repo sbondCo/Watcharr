@@ -256,14 +256,13 @@
 		display: flex;
 		flex-flow: column;
 		align-items: flex-start;
-		width: max-content;
 		margin: 10px auto 0 auto;
 		padding: 12px 20px;
 		border-radius: 10px;
 		color: $text-color;
 		background-color: $accent-color;
-		user-select: none;
 		font-size: 16px;
+		user-select: none;
 		transition:
 			color 100ms ease,
 			background-color 100ms ease;
