@@ -89,12 +89,13 @@ interface dbModel {
 	deletedAt: string;
 }
 
-export interface PaginationResponse<T> {
+export interface PaginationResponse<T, U> {
 	limit: number;
 	page: number;
 	totalPages: number;
 	totalResults: number;
 	results: T[] | null;
+	meta?: U;
 }
 
 export interface Content {
@@ -390,6 +391,10 @@ export enum SearchType {
 export interface SearchRequest extends PaginationParams {
 	type?: SearchType;
 	query: string;
+}
+
+export interface SearchResponseMeta {
+	fromMyList?: boolean;
 }
 
 export enum DiscoverFilter {

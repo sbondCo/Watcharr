@@ -73,6 +73,7 @@
 				const currentSearchType = page.url.searchParams.get("type");
 				const searchParams = new URLSearchParams({
 					query: encodeURIComponent(query),
+					preferMyList: "true",
 				});
 				if (page.route?.id === "/(app)/search" && currentSearchType) {
 					// If we are already on the search page, we can attempt

@@ -17,7 +17,7 @@ type PaginationParams struct {
 }
 
 // Pagination response struct.
-type PaginationResponse[T any] struct {
+type PaginationResponse[T any, U any] struct {
 	PaginationParams
 	// Max amount of pages we can produce from total_results
 	TotalPages int `json:"totalPages"`
@@ -25,11 +25,14 @@ type PaginationResponse[T any] struct {
 	// directly in gorms Count function.
 	TotalResults int64 `json:"totalResults"`
 	Results      []T   `json:"results"`
+	// Metadata, any service can use this to add extra properties that don't
+	// fit in the normal PaginationResponse struct (or in the Results slice).
+	Meta U `json:"meta,omitzero"`
 }
 
 // Call when finished with PaginationResponse, before returning to user.
 // Performs final calculations.
-func (r *PaginationResponse[T]) Finished(p PaginationParams) {
+func (r *PaginationResponse[T, U]) Finished(p PaginationParams) {
 	r.PaginationParams = p
 	if r.TotalResults != 0 && r.Limit != 0 {
 		r.TotalPages = int(math.Ceil(float64(r.TotalResults) / float64(r.Limit)))
@@ -45,9 +48,9 @@ func (r *PaginationResponse[T]) Finished(p PaginationParams) {
 // Pagination gorm scope.
 // Pass in `PaginationParams` and the `PaginationResponse` will be filled out,
 // just fill out the `Results` manually.
-func Paginate[T interface{}](
+func Paginate[T interface{}, U interface{}](
 	p PaginationParams,
-	r *PaginationResponse[T],
+	r *PaginationResponse[T, U],
 ) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		offset := (p.Page - 1) * p.Limit

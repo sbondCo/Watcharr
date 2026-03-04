@@ -41,6 +41,8 @@ type WatchedGetPageRequest struct {
 type WatchedGetPageExtraProps struct {
 	// Only get these watched ids.
 	WatchedIds []int
+	// Only get watched items where content matches this query.
+	Query string
 }
 
 type WatchedDto struct {

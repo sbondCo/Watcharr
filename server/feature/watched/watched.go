@@ -68,14 +68,15 @@ func (s *Service) GetWatchedPage(
 	pp util.PaginationParams,
 	wr domain.WatchedGetPageRequest,
 	extraProps *domain.WatchedGetPageExtraProps,
-) (util.PaginationResponse[entity.Watched], error) {
+) (util.PaginationResponse[entity.Watched, util.None], error) {
 	slog.Debug("GetWatchedPage: A page was requested.",
 		"user_id", userId,
 		"pagination_params", pp,
 		"wr", wr)
 	watched := new([]entity.Watched)
-	pRes := &util.PaginationResponse[entity.Watched]{}
+	pRes := &util.PaginationResponse[entity.Watched, util.None]{}
 	res := s.db.
+		Debug().
 		Model(&entity.Watched{}).
 		Where(&entity.Watched{UserID: userId})
 
@@ -83,6 +84,12 @@ func (s *Service) GetWatchedPage(
 		// Process `WatchedIds` extra prop.
 		if len(extraProps.WatchedIds) > 0 {
 			res = res.Where("`watcheds`.`id` IN ?", extraProps.WatchedIds)
+		}
+
+		// Search query
+		if extraProps.Query != "" {
+			q := "%" + extraProps.Query + "%"
+			res = res.Where("Content.Title LIKE ? OR Game.Name LIKE ?", q, q)
 		}
 	}
 
@@ -107,7 +114,7 @@ func (s *Service) GetWatchedPage(
 		Find(&watched)
 	if res.Error != nil {
 		slog.Error("GetWatchedPage: Failed!", "error", res.Error)
-		return util.PaginationResponse[entity.Watched]{}, res.Error
+		return util.PaginationResponse[entity.Watched, util.None]{}, res.Error
 	}
 	pRes.Results = *watched
 	pRes.Finished(pp)
@@ -120,7 +127,7 @@ func (s *Service) getPublicWatched(
 	username string,
 	pp util.PaginationParams,
 	wr domain.WatchedGetPageRequest,
-) (util.PaginationResponse[entity.Watched], error) {
+) (util.PaginationResponse[entity.Watched, util.None], error) {
 	slog.Debug("getPublicWatched: running",
 		"user_id", userId, "username", username)
 
@@ -135,17 +142,17 @@ func (s *Service) getPublicWatched(
 	if res.Error != nil {
 		slog.Error("getPublicWatched: Failed to get user.",
 			"user_id", userId)
-		return util.PaginationResponse[entity.Watched]{}, errors.New("failed to check privacy settings")
+		return util.PaginationResponse[entity.Watched, util.None]{}, errors.New("failed to check privacy settings")
 	}
 	if user.Private != nil && *user.Private {
 		slog.Error("getPublicWatched: This users list is private.",
 			"user_id", userId)
-		return util.PaginationResponse[entity.Watched]{}, errors.New("this watched list is private")
+		return util.PaginationResponse[entity.Watched, util.None]{}, errors.New("this watched list is private")
 	}
 
 	// Now we know the user is public, return their list
 	watched := new([]entity.Watched)
-	pRes := &util.PaginationResponse[entity.Watched]{}
+	pRes := &util.PaginationResponse[entity.Watched, util.None]{}
 	res = s.db.
 		Model(&entity.Watched{}).
 		Where(&entity.Watched{UserID: userId}).
@@ -169,7 +176,7 @@ func (s *Service) getPublicWatched(
 		Find(&watched)
 	if res.Error != nil {
 		slog.Error("getPublicWatched: Failed!", "error", res.Error)
-		return util.PaginationResponse[entity.Watched]{}, errors.New("failed fetching the list")
+		return util.PaginationResponse[entity.Watched, util.None]{}, errors.New("failed fetching the list")
 	}
 	pRes.Results = *watched
 	pRes.Finished(pp)

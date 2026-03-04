@@ -232,7 +232,7 @@ func main() {
 		activityService,
 		tagService)
 	importTraktService := imprt.NewTraktService(importService)
-	searchService := search.NewService(db, br.Cfg, contentService)
+	searchService := search.NewService(db, br.Cfg, contentService, watchedService)
 	discoverService := discover.NewService(db, br.Cfg, contentService)
 
 	auth.NewRouter(br, authService, authTrustedHeaderService).AddRoutes()

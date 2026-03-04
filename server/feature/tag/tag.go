@@ -16,7 +16,7 @@ import (
 // Hi from 2026, the above sounds stupid, why dont you just combine custom view features into tags view..
 
 type WatchedProvider interface {
-	GetWatchedPage(userId uint, pp util.PaginationParams, wr domain.WatchedGetPageRequest, extraProps *domain.WatchedGetPageExtraProps) (util.PaginationResponse[entity.Watched], error)
+	GetWatchedPage(userId uint, pp util.PaginationParams, wr domain.WatchedGetPageRequest, extraProps *domain.WatchedGetPageExtraProps) (util.PaginationResponse[entity.Watched, util.None], error)
 }
 
 type Service struct {
@@ -67,7 +67,7 @@ func (s *Service) GetTagPage(
 	tagId uint,
 	pp util.PaginationParams,
 	wr domain.WatchedGetPageRequest,
-) (util.PaginationResponse[entity.Watched], error) {
+) (util.PaginationResponse[entity.Watched, util.None], error) {
 	slog.Debug("GetTagPage: A page was requested.",
 		"user_id", userId,
 		"tagId", tagId,
@@ -77,7 +77,7 @@ func (s *Service) GetTagPage(
 	// Attempt to get the tag, verifying it exists and the user own it.
 	_, err := s.GetTag(userId, tagId)
 	if err != nil {
-		return util.PaginationResponse[entity.Watched]{}, err
+		return util.PaginationResponse[entity.Watched, util.None]{}, err
 	}
 
 	// Get all watched ids for this tag.
@@ -91,11 +91,11 @@ func (s *Service) GetTagPage(
 		Find(&wids)
 	if res.Error != nil {
 		slog.Error("GetTagPage: Getting watched ids failed!", "error", err)
-		return util.PaginationResponse[entity.Watched]{}, err
+		return util.PaginationResponse[entity.Watched, util.None]{}, err
 	}
 	if len(*wids) <= 0 {
 		slog.Debug("GetTagPage: The requested tag has no watched items!")
-		return util.PaginationResponse[entity.Watched]{}, nil
+		return util.PaginationResponse[entity.Watched, util.None]{}, nil
 	}
 
 	// Now get a watched page, passing in our fetched watched ids
@@ -110,7 +110,7 @@ func (s *Service) GetTagPage(
 	)
 	if err != nil {
 		slog.Error("GetTagPage: Getting watcheds failed!", "error", err)
-		return util.PaginationResponse[entity.Watched]{}, err
+		return util.PaginationResponse[entity.Watched, util.None]{}, err
 	}
 
 	return wp, nil

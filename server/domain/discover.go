@@ -38,7 +38,7 @@ type DiscoverRequestMeta struct {
 }
 
 type DiscoverResponse struct {
-	util.PaginationResponse[Media]
+	util.PaginationResponse[Media, util.None]
 }
 
 var ValidDiscoverFilter validator.Func = func(fl validator.FieldLevel) bool {

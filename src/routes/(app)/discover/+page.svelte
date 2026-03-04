@@ -24,7 +24,7 @@
 	import FilterDropDown from "./FilterDropDown.svelte";
 
 	const scroll = infScroll({ callback: onScrollToBottom });
-	const dataLoader = paginatedLoader<Media>(load);
+	const dataLoader = paginatedLoader<Media, undefined>(load);
 
 	let discoverFilter: DiscoverFilter = $state(DiscoverFilter.trending);
 	let discoverType: SearchType | undefined = $derived.by(() => {

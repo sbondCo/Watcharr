@@ -26,10 +26,18 @@ type SearchRequest struct {
 	Type SearchType `form:"type" binding:"validsearchtype"`
 	// The search term.
 	Query string `form:"query"`
+	// Prefer a search of our watched list first and return that if any results.
+	PreferMyList bool `form:"preferMyList"`
 }
 
 type SearchResponse struct {
-	util.PaginationResponse[Media]
+	util.PaginationResponse[Media, SearchResponseMeta]
+}
+
+// Search response metadata
+type SearchResponseMeta struct {
+	// When true, indicates that results were found from our list.
+	FromMyList bool `json:"fromMyList,omitempty"`
 }
 
 var ValidSearchType validator.Func = func(fl validator.FieldLevel) bool {

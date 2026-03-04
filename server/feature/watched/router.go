@@ -64,7 +64,7 @@ func (r *Router) GetWatchedList(c *gin.Context) {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: "failed to get page"})
 		}
-		dto := util.PaginationResponse[domain.Media]{
+		dto := util.PaginationResponse[domain.Media, util.None]{
 			PaginationParams: wp.PaginationParams,
 			TotalPages:       wp.TotalPages,
 			TotalResults:     wp.TotalResults,
@@ -106,7 +106,7 @@ func (r *Router) GetPublicWatchedList(c *gin.Context) {
 		c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 		return
 	}
-	dto := util.PaginationResponse[domain.Media]{
+	dto := util.PaginationResponse[domain.Media, util.None]{
 		PaginationParams: wp.PaginationParams,
 		TotalPages:       wp.TotalPages,
 		TotalResults:     wp.TotalResults,

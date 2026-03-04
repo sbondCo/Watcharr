@@ -33,7 +33,7 @@
 	);
 
 	const scroll = infScroll({ callback: onScrollToBottom });
-	const dataLoader = paginatedLoader<Media>(load);
+	const dataLoader = paginatedLoader<Media, undefined>(load);
 
 	let nextLoadParams: {
 		page: number;

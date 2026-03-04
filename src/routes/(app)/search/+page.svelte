@@ -13,6 +13,7 @@
 		type Media,
 		type PublicUser,
 		type SearchRequest,
+		type SearchResponseMeta,
 	} from "@/types";
 	import UsersList from "@/lib/UsersList.svelte";
 	import { onDestroy, onMount } from "svelte";
@@ -27,7 +28,7 @@
 	let { data } = $props();
 
 	const scroll = infScroll({ callback: onScrollToBottom });
-	const dataLoader = paginatedLoader<Media>(load);
+	const dataLoader = paginatedLoader<Media, SearchResponseMeta>(load);
 
 	let searchType: SearchType | undefined = $derived.by(() => {
 		const t = page.url.searchParams.get("type");
@@ -36,10 +37,15 @@
 		}
 		return SearchType.multi;
 	});
+	let preferMyList: boolean = $derived.by(() => {
+		const t = page.url.searchParams.get("preferMyList");
+		return Boolean(t);
+	});
 	let nextLoadParams: SearchRequest = $derived({
 		page: dataLoader.state.page + 1,
 		query: store.searchQuery,
 		type: searchType,
+		preferMyList: preferMyList,
 	});
 
 	async function load(signal: GenericAbortSignal) {
@@ -124,6 +130,14 @@
 		scroll.destroy();
 		dataLoader.abortReq("page destroyed");
 	});
+
+	function dontPreferMyListClicked() {
+		const curLocation = new URL(page.url);
+		curLocation.searchParams.delete("preferMyList");
+		// Running the goto will cause afterNavigate hook to be called,
+		// which will run a fresh search, so nothing else to do here.
+		goto(`?${curLocation.searchParams.toString()}`);
+	}
 </script>
 
 <svelte:head>
@@ -157,6 +171,16 @@
 					}}
 				/>
 			</PageTitle>
+
+			{#if dataLoader.state.data?.length > 0 && dataLoader.state.meta?.fromMyList}
+				<button
+					class="from-my-list-msg plain"
+					onclick={dontPreferMyListClicked}
+				>
+					<b>Showing results from your list.</b>
+					<span>Do a full search?</span>
+				</button>
+			{/if}
 
 			<PosterList>
 				{#if dataLoader.state.data?.length > 0}
@@ -218,6 +242,28 @@
 		.inner {
 			width: 100%;
 			max-width: 1200px;
+		}
+	}
+
+	button.from-my-list-msg {
+		display: flex;
+		flex-flow: column;
+		align-items: flex-start;
+		width: max-content;
+		margin: 10px auto 0 auto;
+		padding: 12px 20px;
+		border-radius: 10px;
+		color: $text-color;
+		background-color: $accent-color;
+		user-select: none;
+		font-size: 16px;
+		transition:
+			color 100ms ease,
+			background-color 100ms ease;
+
+		&:hover {
+			color: $bg-color;
+			background-color: $accent-color-hover;
 		}
 	}
 </style>

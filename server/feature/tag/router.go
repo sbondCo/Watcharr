@@ -83,7 +83,7 @@ func (r *Router) GetTagWatched(c *gin.Context) {
 		return
 	}
 	if wp, err := r.service.GetTagPage(userId, uint(id), pp, wp); err == nil {
-		dto := util.PaginationResponse[domain.Media]{
+		dto := util.PaginationResponse[domain.Media, util.None]{
 			PaginationParams: wp.PaginationParams,
 			TotalPages:       wp.TotalPages,
 			TotalResults:     wp.TotalResults,

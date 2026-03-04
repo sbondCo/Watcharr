@@ -64,7 +64,7 @@ func (r *Router) GetSearch(c *gin.Context) {
 		)
 		return
 	}
-	resp, err := r.service.Search(req, pp)
+	resp, err := r.service.Search(req, pp, userId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return

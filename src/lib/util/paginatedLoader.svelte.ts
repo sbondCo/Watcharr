@@ -13,21 +13,23 @@ export enum PaginatedLoaderRunFnAction {
 	ResetIfOnFirstOrNoPage = 2,
 }
 
-export default function paginatedLoader<T>(
+export default function paginatedLoader<T, U>(
 	fn: (
 		sig: GenericAbortSignal,
-	) => Promise<AxiosResponse<PaginationResponse<T>, any> | undefined>,
+	) => Promise<AxiosResponse<PaginationResponse<T, U>, any> | undefined>,
 ) {
 	let reqController = new AbortController();
 
 	const state: {
 		data: T[];
+		meta?: U;
 		page: number;
 		pageMax: number;
 		reqLoading: boolean;
 		reqLoadError: Error | undefined;
 	} = $state({
 		data: [],
+		meta: undefined,
 		page: 0,
 		pageMax: 1,
 		reqLoading: false,
@@ -113,6 +115,7 @@ export default function paginatedLoader<T>(
 			}
 			state.data.push(...resp.data.results);
 			state.data = state.data;
+			state.meta = resp.data.meta;
 		} catch (err: any) {
 			if (err?.code === "ERR_CANCELED") {
 				console.warn("loadWatchedList: Cancelled, not showing error.");

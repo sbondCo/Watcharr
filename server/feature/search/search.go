@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/sbondCo/Watcharr/config"
+	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/util"
@@ -27,21 +28,28 @@ type ContentProvider interface {
 	TvDetails(id string, country string, rParams map[string]string) (tmdb.TMDBShowDetails, error)
 }
 
+type ServiceWatchedProvider interface {
+	GetWatchedPage(userId uint, pp util.PaginationParams, wr domain.WatchedGetPageRequest, extraProps *domain.WatchedGetPageExtraProps) (util.PaginationResponse[entity.Watched, util.None], error)
+}
+
 type Service struct {
 	db              *gorm.DB
 	cfg             *config.ServerConfig
 	contentProvider ContentProvider
+	watchedProvider ServiceWatchedProvider
 }
 
 func NewService(
 	db *gorm.DB,
 	cfg *config.ServerConfig,
 	contentProvider ContentProvider,
+	watchedProvider ServiceWatchedProvider,
 ) *Service {
 	return &Service{
 		db,
 		cfg,
 		contentProvider,
+		watchedProvider,
 	}
 }
 
@@ -49,6 +57,7 @@ func NewService(
 func (s *Service) Search(
 	r domain.SearchRequest,
 	pp util.PaginationParams,
+	userId uint,
 ) (domain.SearchResponse, error) {
 	resp := domain.SearchResponse{}
 
@@ -59,6 +68,16 @@ func (s *Service) Search(
 	if s.searchExtProviderById(r.Query, &resp) {
 		slog.Debug("Search: External provider id search worked.")
 		return resp, nil
+	}
+
+	if r.PreferMyList {
+		if err := s.searchMyList(r.Query, pp, userId, &resp); err != nil {
+			// Silently fail allowing the below searches to try execution
+			slog.Error("Search: searchMyList failed!", "error", err)
+		} else if resp.TotalResults > 0 {
+			resp.Meta.FromMyList = true
+			return resp, nil
+		}
 	}
 
 	switch r.Type {
@@ -292,6 +311,32 @@ func (s *Service) searchGameBySlug(
 	resp.Page = 1
 	resp.TotalPages = 1
 	resp.TotalResults = int64(len(igdbRes))
+	return nil
+}
+
+func (s *Service) searchMyList(
+	query string,
+	pp util.PaginationParams,
+	userId uint,
+	resp *domain.SearchResponse,
+) error {
+	internalRes, err := s.watchedProvider.GetWatchedPage(
+		userId,
+		pp,
+		domain.WatchedGetPageRequest{},
+		&domain.WatchedGetPageExtraProps{Query: query})
+	if err != nil {
+		slog.Error("searchMyList: Failed to search!", "error", err)
+		return errors.New("request failed")
+	}
+	if internalRes.TotalResults <= 0 {
+		slog.Debug("searchMyList: No results found.")
+		return nil
+	}
+	resp.Results = domain.NewWatchedGetPageResponse(internalRes.Results)
+	resp.Page = internalRes.Page
+	resp.TotalPages = internalRes.TotalPages
+	resp.TotalResults = internalRes.TotalResults
 	return nil
 }
 
