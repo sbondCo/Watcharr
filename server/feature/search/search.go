@@ -314,6 +314,9 @@ func (s *Service) searchGameBySlug(
 	return nil
 }
 
+// This function differs to the other search funcs in this service,
+// since it searched our watched table, it already has the watched data,
+// so the controller doesn't need to add watched after this returns any results.
 func (s *Service) searchMyList(
 	query string,
 	pp util.PaginationParams,
