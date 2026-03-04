@@ -178,7 +178,7 @@
 					onclick={dontPreferMyListClicked}
 				>
 					<b>Showing results from your list.</b>
-					<span>Do a full search?</span>
+					<span>Do a full search instead?</span>
 				</button>
 			{/if}
 
