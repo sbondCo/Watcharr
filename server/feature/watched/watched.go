@@ -76,7 +76,6 @@ func (s *Service) GetWatchedPage(
 	watched := new([]entity.Watched)
 	pRes := &util.PaginationResponse[entity.Watched, util.None]{}
 	res := s.db.
-		Debug().
 		Model(&entity.Watched{}).
 		Where(&entity.Watched{UserID: userId})
 
