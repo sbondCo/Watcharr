@@ -69,6 +69,16 @@ func (r *Router) GetSearch(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
 	}
+
+	// If we got results to show from our list instead of a normal search,
+	// then we can just return the resp here since it will already include
+	// our watched info & it is not cached so we don't need to use copier.
+	if resp.Meta.FromMyList {
+		slog.Debug("GetSearch: FromMyList=true, returning response without further processing.")
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
 	ww := domain.SearchResponse{}
 	if err := copier.Copy(&ww, &resp); err != nil {
 		slog.Error("GetSearch: Failed to copy", "error", err)

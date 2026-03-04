@@ -48,7 +48,7 @@ func (r *PaginationResponse[T, U]) Finished(p PaginationParams) {
 // Pagination gorm scope.
 // Pass in `PaginationParams` and the `PaginationResponse` will be filled out,
 // just fill out the `Results` manually.
-func Paginate[T interface{}, U interface{}](
+func Paginate[T any, U any](
 	p PaginationParams,
 	r *PaginationResponse[T, U],
 ) func(db *gorm.DB) *gorm.DB {

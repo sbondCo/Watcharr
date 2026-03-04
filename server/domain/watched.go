@@ -119,6 +119,7 @@ func NewWatchedDtoForContentPage(w *entity.Watched) WatchedDto {
 // Get our watched page response.
 type WatchedGetPageResponse []Media
 
+// Used for GetWatchedPage (and GetWatchedPage for our search).
 func NewWatchedGetPageResponse(w []entity.Watched) WatchedGetPageResponse {
 	r := WatchedGetPageResponse{}
 	for i := range w {
