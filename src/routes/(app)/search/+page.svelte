@@ -37,10 +37,17 @@
 		}
 		return SearchType.multi;
 	});
+
 	let preferMyList: boolean = $derived.by(() => {
 		const t = page.url.searchParams.get("preferMyList");
 		return Boolean(t);
 	});
+	let showingResultsFromMyList: boolean = $derived(
+		Boolean(
+			dataLoader.state.data?.length > 0 && dataLoader.state.meta?.fromMyList,
+		),
+	);
+
 	let nextLoadParams: SearchRequest = $derived({
 		page: dataLoader.state.page + 1,
 		query: store.searchQuery,
@@ -165,14 +172,14 @@
 			<PageTitle title="Results">
 				<MediaTypeFilter
 					active={searchType}
-					disabled={dataLoader.state.reqLoading}
+					disabled={dataLoader.state.reqLoading || showingResultsFromMyList}
 					onChange={(nowActive) => {
 						setActiveSearchFilter(nowActive as SearchType | undefined);
 					}}
 				/>
 			</PageTitle>
 
-			{#if dataLoader.state.data?.length > 0 && dataLoader.state.meta?.fromMyList}
+			{#if showingResultsFromMyList}
 				<button
 					class="from-my-list-msg plain"
 					onclick={dontPreferMyListClicked}
