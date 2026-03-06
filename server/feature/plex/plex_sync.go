@@ -20,7 +20,7 @@ type PlexSyncResponse struct {
 }
 
 type WatchedProvider interface {
-	AddWatched(userId uint, ar domain.WatchedAddRequest, at entity.ActivityType) (entity.Watched, error)
+	AddWatched(userId uint, ar domain.WatchedAddRequest, extraProps domain.WatchedAddExtraProps) (entity.Watched, error)
 }
 
 type WatchedSeasonProvider interface {
@@ -115,16 +115,34 @@ func (s *SyncService) startPlexSync(
 				}
 
 				lastViewedAt := time.Unix(movie.LastViewedAt, 0)
-				w, err := s.wp.AddWatched(userId, domain.WatchedAddRequest{
-					Status:      entity.FINISHED,
-					TMDBID:      tmdbId,
-					ContentType: util.SupportedMediaMovie,
-					Rating:      float64(movie.UserRating),
-					WatchedDate: lastViewedAt,
-				}, entity.IMPORTED_WATCHED_PLEX)
+				w, err := s.wp.AddWatched(
+					userId,
+					domain.WatchedAddRequest{
+						Status:      entity.FINISHED,
+						TMDBID:      tmdbId,
+						ContentType: util.SupportedMediaMovie,
+						Rating:      float64(movie.UserRating),
+						WatchedDate: lastViewedAt,
+					},
+					domain.WatchedAddExtraProps{
+						ActivityType: entity.IMPORTED_WATCHED_PLEX,
+						DontRestore:  true,
+					})
 				if err != nil {
-					if err.Error() == "content already on watched list" {
-						slog.Error("plexSyncWatched: unique constraint hit. movie must already be on watch list", "error", err)
+					if errors.Is(err, domain.ErrWatchedExists) {
+						slog.Info("plexSyncWatched: Movie already exists on list.")
+						continue
+					}
+					if errors.Is(err, domain.ErrWatchedExistsSoftDeleted) {
+						slog.Warn("plexSyncWatched: Movie exists on list soft deleted.")
+						job.AddJobError(
+							jobId,
+							userId,
+							"failed to add movie "+
+								movie.Title+
+								". You have previously deleted it from your list!")
+						// We don't continue as it was manually removed as is still
+						// soft deleted. We don't want to re-add it (user should un-delete themselves).
 						continue
 					}
 					slog.Error("plexSyncWatched: Failed to add movie as watched", "error", err)
@@ -182,16 +200,34 @@ func (s *SyncService) startPlexSync(
 				}
 
 				lastViewedAt := time.Unix(show.LastViewedAt, 0)
-				w, err := s.wp.AddWatched(userId, domain.WatchedAddRequest{
-					Status:      entity.FINISHED,
-					ContentType: util.SupportedMediaShow,
-					TMDBID:      tmdbId,
-					Rating:      float64(show.UserRating),
-					WatchedDate: lastViewedAt,
-				}, entity.IMPORTED_WATCHED_PLEX)
+				w, err := s.wp.AddWatched(
+					userId,
+					domain.WatchedAddRequest{
+						Status:      entity.FINISHED,
+						ContentType: util.SupportedMediaShow,
+						TMDBID:      tmdbId,
+						Rating:      float64(show.UserRating),
+						WatchedDate: lastViewedAt,
+					},
+					domain.WatchedAddExtraProps{
+						ActivityType: entity.IMPORTED_WATCHED_PLEX,
+						DontRestore:  true,
+					})
 				if err != nil {
-					if err.Error() == "content already on watched list" {
-						slog.Info("plexSyncWatched: unique constraint hit. show must already be on watch list", "error", err)
+					if errors.Is(err, domain.ErrWatchedExists) {
+						slog.Info("plexSyncWatched: Show already exists on list.")
+						// In this case, we allow continuing below to start syncing seasons/episodes
+					} else if errors.Is(err, domain.ErrWatchedExistsSoftDeleted) {
+						slog.Warn("plexSyncWatched: Show exists on list soft deleted.")
+						job.AddJobError(
+							jobId,
+							userId,
+							"failed to add show "+
+								show.Title+
+								". You have previously deleted it from your list!")
+						// We don't continue as it was manually removed as is still
+						// soft deleted. We don't want to re-add it (user should un-delete themselves).
+						continue
 					} else {
 						slog.Error("plexSyncWatched: Failed to add show as watched", "error", err)
 						job.AddJobError(jobId, userId, "failed to add show "+show.Title)

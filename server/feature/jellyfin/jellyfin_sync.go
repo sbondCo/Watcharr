@@ -41,7 +41,7 @@ type JellyfinSyncResponse struct {
 }
 
 type WatchedProvider interface {
-	AddWatched(userId uint, ar domain.WatchedAddRequest, at entity.ActivityType) (entity.Watched, error)
+	AddWatched(userId uint, ar domain.WatchedAddRequest, extraProps domain.WatchedAddExtraProps) (entity.Watched, error)
 }
 
 type WatchedSeasonProvider interface {
@@ -132,18 +132,44 @@ func (s *SyncService) startJellyfinSync(
 				job.UpdateJobCurrentTask(jobId, userId, "syncing "+v.Name)
 
 				// 2. Imported watched movie
-				w, err := s.wp.AddWatched(userId, domain.WatchedAddRequest{
-					Status:      entity.FINISHED,
-					ContentType: util.SupportedMediaMovie,
-					TMDBID:      tmdbId,
-					WatchedDate: v.UserData.LastPlayedDate,
-				}, entity.IMPORTED_WATCHED_JF)
+				w, err := s.wp.AddWatched(
+					userId,
+					domain.WatchedAddRequest{
+						Status:      entity.FINISHED,
+						ContentType: util.SupportedMediaMovie,
+						TMDBID:      tmdbId,
+						WatchedDate: v.UserData.LastPlayedDate,
+					}, domain.WatchedAddExtraProps{
+						ActivityType: entity.IMPORTED_WATCHED_JF,
+						DontRestore:  true,
+					})
 				if err != nil {
-					if err.Error() == "content already on watched list" {
-						slog.Error("jellyfinSyncWatched: Unique constraint hit.. content must already be on watch list.", "movie_name", v.Name, "movie_ids", v.ProviderIds, "user_id", userId)
+					if errors.Is(err, domain.ErrWatchedExists) {
+						slog.Info("jellyfinSyncWatched: Content already exists on list.",
+							"movie_name", v.Name,
+							"movie_ids", v.ProviderIds,
+							"user_id", userId)
+					} else if errors.Is(err, domain.ErrWatchedExistsSoftDeleted) {
+						slog.Warn("jellyfinSyncWatched: Movie exists on list soft deleted.")
+						job.AddJobError(
+							jobId,
+							userId,
+							"failed to add movie "+
+								v.Name+
+								". You have previously deleted it from your list!")
+						// We don't continue as it was manually removed as is still
+						// soft deleted. We don't want to re-add it (user should un-delete themselves).
+						continue
 					} else {
-						slog.Error("jellyfinSyncWatched: Movie failed to import.", "movie_name", v.Name, "movie_ids", v.ProviderIds, "user_id", userId)
-						job.AddJobError(jobId, userId, "movie could not be imported (failed when adding to watched list): "+v.Name)
+						slog.Error("jellyfinSyncWatched: Movie failed to import.",
+							"movie_name", v.Name,
+							"movie_ids", v.ProviderIds,
+							"user_id", userId,
+							"error", err)
+						job.AddJobError(
+							jobId,
+							userId,
+							"movie could not be imported (failed when adding to watched list): "+v.Name)
 					}
 				} else {
 					// 3. Add IMPORTED_ADDED_WATCHED_JF activity
@@ -210,18 +236,42 @@ func (s *SyncService) startJellyfinSync(
 				job.UpdateJobCurrentTask(jobId, userId, "syncing serie "+v.Name)
 
 				// 2. Imported watched series
-				w, err := s.wp.AddWatched(userId, domain.WatchedAddRequest{
-					Status:      entity.FINISHED,
-					ContentType: util.SupportedMediaShow,
-					TMDBID:      tmdbId,
-					WatchedDate: v.UserData.LastPlayedDate,
-				}, entity.IMPORTED_WATCHED_JF)
+				w, err := s.wp.AddWatched(
+					userId,
+					domain.WatchedAddRequest{
+						Status:      entity.FINISHED,
+						ContentType: util.SupportedMediaShow,
+						TMDBID:      tmdbId,
+						WatchedDate: v.UserData.LastPlayedDate,
+					}, domain.WatchedAddExtraProps{
+						ActivityType: entity.IMPORTED_WATCHED_JF,
+						DontRestore:  true,
+					})
 				if err != nil {
-					if err.Error() == "content already on watched list" {
-						slog.Info("jellyfinSyncWatched: Unique constraint hit.. content must already be on watch list.",
-							"series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId, "watched_id", w.ID)
+					if errors.Is(err, domain.ErrWatchedExists) {
+						slog.Info("jellyfinSyncWatched: Content already exists on list.",
+							"series_name", v.Name,
+							"series_ids", v.ProviderIds,
+							"user_id", userId,
+							"watched_id", w.ID)
+						// In this case, we allow continuing below to start syncing seasons/episodes
+					} else if errors.Is(err, domain.ErrWatchedExistsSoftDeleted) {
+						slog.Warn("jellyfinSyncWatched: Show exists on list soft deleted.")
+						job.AddJobError(
+							jobId,
+							userId,
+							"failed to add show "+
+								v.Name+
+								". You have previously deleted it from your list!")
+						// We don't continue as it was manually removed as is still
+						// soft deleted. We don't want to re-add it (user should un-delete themselves).
+						continue
 					} else {
-						slog.Error("jellyfinSyncWatched: Series failed to import.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId)
+						slog.Error("jellyfinSyncWatched: Series failed to import.",
+							"series_name", v.Name,
+							"series_ids", v.ProviderIds,
+							"user_id", userId,
+							"error", err)
 						job.AddJobError(jobId, userId, "series could not be imported (failed when adding to watched list): "+v.Name)
 					}
 				} else {
