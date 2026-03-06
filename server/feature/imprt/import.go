@@ -19,7 +19,7 @@ import (
 )
 
 type WatchedProvider interface {
-	AddWatched(userId uint, ar domain.WatchedAddRequest, at entity.ActivityType) (entity.Watched, error)
+	AddWatched(userId uint, ar domain.WatchedAddRequest, extraProps domain.WatchedAddExtraProps) (entity.Watched, error)
 	GetWatchedItemByTmdbId(userId uint, tmdbId uint, contentType entity.ContentType) (entity.Watched, error)
 }
 
@@ -243,17 +243,22 @@ func (s *Service) SuccessfulImport(
 			}
 		}
 	}
-	w, err := s.wp.AddWatched(userId, domain.WatchedAddRequest{
-		Status:      status,
-		TMDBID:      contentId,
-		ContentType: contentType,
-		Rating:      ar.Rating,
-		Thoughts:    ar.Thoughts,
-		WatchedDate: wDate,
-	}, entity.IMPORTED_WATCHED)
+	w, err := s.wp.AddWatched(
+		userId,
+		domain.WatchedAddRequest{
+			Status:      status,
+			TMDBID:      contentId,
+			ContentType: contentType,
+			Rating:      ar.Rating,
+			Thoughts:    ar.Thoughts,
+			WatchedDate: wDate,
+		},
+		domain.WatchedAddExtraProps{
+			ActivityType: entity.IMPORTED_WATCHED,
+		})
 	if err != nil {
-		if err.Error() == "content already on watched list" {
-			slog.Error("successfulImport: unique constraint hit.. show must already be on watch list", "error", err)
+		if errors.Is(err, domain.ErrWatchedExists) {
+			slog.Error("successfulImport: Must already be on watch list", "error", err)
 			return domain.ImportResponse{Type: domain.IMPORT_EXISTS}, nil
 		}
 		slog.Error("successfulImport: Failed to add content as watched", "error", err)
