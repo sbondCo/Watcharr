@@ -84,7 +84,7 @@ func (s *Service) GetTagPage(
 	// This isn't great, but it has to be done, since we can't eliminate
 	// any for sort/filters here.
 	wids := new([]int)
-	res := s.db.Debug().
+	res := s.db.
 		Table("watched_tags").
 		Select("watched_id").
 		Where("tag_id = ?", tagId).
