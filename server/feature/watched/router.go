@@ -120,7 +120,9 @@ func (r *Router) AddWatched(c *gin.Context) {
 	var ar domain.WatchedAddRequest
 	err := c.ShouldBindJSON(&ar)
 	if err == nil {
-		response, err := r.s.AddWatched(userId, ar, entity.ADDED_WATCHED)
+		response, err := r.s.AddWatched(userId, ar, domain.WatchedAddExtraProps{
+			ActivityType: entity.ADDED_WATCHED,
+		})
 		if err != nil {
 			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 			return
