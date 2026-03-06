@@ -150,6 +150,8 @@ func (s *SyncService) startJellyfinSync(
 							"movie_ids", v.ProviderIds,
 							"user_id", userId)
 					} else if errors.Is(err, domain.ErrWatchedExistsSoftDeleted) {
+						// Entry was manually soft deleted by user at another point,
+						// we DontRestore these automatically.
 						slog.Warn("jellyfinSyncWatched: Movie exists on list soft deleted.")
 						job.AddJobError(
 							jobId,
@@ -157,8 +159,6 @@ func (s *SyncService) startJellyfinSync(
 							"failed to add movie "+
 								v.Name+
 								". You have previously deleted it from your list!")
-						// We don't continue as it was manually removed as is still
-						// soft deleted. We don't want to re-add it (user should un-delete themselves).
 						continue
 					} else {
 						slog.Error("jellyfinSyncWatched: Movie failed to import.",
@@ -256,6 +256,9 @@ func (s *SyncService) startJellyfinSync(
 							"watched_id", w.ID)
 						// In this case, we allow continuing below to start syncing seasons/episodes
 					} else if errors.Is(err, domain.ErrWatchedExistsSoftDeleted) {
+						// Entry was manually soft deleted by user at another point,
+						// we DontRestore these automatically. We also don't continue
+						// because eps/seasons cant be synced.
 						slog.Warn("jellyfinSyncWatched: Show exists on list soft deleted.")
 						job.AddJobError(
 							jobId,
@@ -263,8 +266,6 @@ func (s *SyncService) startJellyfinSync(
 							"failed to add show "+
 								v.Name+
 								". You have previously deleted it from your list!")
-						// We don't continue as it was manually removed as is still
-						// soft deleted. We don't want to re-add it (user should un-delete themselves).
 						continue
 					} else {
 						slog.Error("jellyfinSyncWatched: Series failed to import.",

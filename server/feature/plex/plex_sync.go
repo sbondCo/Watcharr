@@ -134,6 +134,8 @@ func (s *SyncService) startPlexSync(
 						continue
 					}
 					if errors.Is(err, domain.ErrWatchedExistsSoftDeleted) {
+						// Entry was manually soft deleted by user at another point,
+						// we DontRestore these automatically.
 						slog.Warn("plexSyncWatched: Movie exists on list soft deleted.")
 						job.AddJobError(
 							jobId,
@@ -141,8 +143,6 @@ func (s *SyncService) startPlexSync(
 							"failed to add movie "+
 								movie.Title+
 								". You have previously deleted it from your list!")
-						// We don't continue as it was manually removed as is still
-						// soft deleted. We don't want to re-add it (user should un-delete themselves).
 						continue
 					}
 					slog.Error("plexSyncWatched: Failed to add movie as watched", "error", err)
@@ -218,6 +218,9 @@ func (s *SyncService) startPlexSync(
 						slog.Info("plexSyncWatched: Show already exists on list.")
 						// In this case, we allow continuing below to start syncing seasons/episodes
 					} else if errors.Is(err, domain.ErrWatchedExistsSoftDeleted) {
+						// Entry was manually soft deleted by user at another point,
+						// we DontRestore these automatically. We also don't continue
+						// because eps/seasons cant be synced.
 						slog.Warn("plexSyncWatched: Show exists on list soft deleted.")
 						job.AddJobError(
 							jobId,
@@ -225,8 +228,6 @@ func (s *SyncService) startPlexSync(
 							"failed to add show "+
 								show.Title+
 								". You have previously deleted it from your list!")
-						// We don't continue as it was manually removed as is still
-						// soft deleted. We don't want to re-add it (user should un-delete themselves).
 						continue
 					} else {
 						slog.Error("plexSyncWatched: Failed to add show as watched", "error", err)
