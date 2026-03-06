@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"strconv"
 
+	"github.com/sbondCo/Watcharr/database/dbmodel"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/watched/addedtocontent"
@@ -341,11 +342,17 @@ func (s *Service) GetWatchedItemsBySupportedMediaIds(userId uint, c []addedtocon
 func (s *Service) AddWatched(
 	userId uint,
 	ar domain.WatchedAddRequest,
-	at entity.ActivityType,
+	extraProps domain.WatchedAddExtraProps,
 ) (entity.Watched, error) {
 	slog.Debug("Adding watched item",
 		"user_id", userId,
-		"add_request", ar)
+		"add_request", ar,
+		"extra_props", extraProps)
+
+	if extraProps.ActivityType == "" {
+		// We ALWAYS require the ActivityType to be provided by any caller.
+		return entity.Watched{}, errors.New("extraProp ActivityType not specified")
+	}
 
 	watched := entity.Watched{
 		UserID: userId,
@@ -422,11 +429,21 @@ func (s *Service) AddWatched(
 	// Create the entry in db.
 	res := s.db.Create(&watched)
 	if res.Error != nil {
-		if res.Error == gorm.ErrDuplicatedKey {
-			// Try to restore the entry if unique contraint hit.
-			if err := s.restoreWatched(userId, ar, &watched); err != nil {
+		if errors.Is(res.Error, gorm.ErrDuplicatedKey) {
+			// The record already exists.
+			// It could be soft deleted or not.
+			slog.Info("AddWatched: Creating row failed because of a unique key constraint violation.")
+			if err := s.restoreWatchedAfterDuplicatedKeyErr(
+				userId,
+				ar,
+				extraProps.DontRestore,
+				&watched,
+			); err != nil {
+				// Try to restore the entry if unique contraint hit.
 				slog.Error("AddWatched: Failed to restore existing watched entry.")
-				return entity.Watched{}, errors.New("failed when restoring existing entry")
+				// Returns watched too because handlers of certain errors
+				// may need it (and it's ID since we could have fetched it here)
+				return watched, err
 			}
 		} else {
 			slog.Error("AddWatched: Error adding watched to database", "error", res.Error.Error())
@@ -438,7 +455,7 @@ func (s *Service) AddWatched(
 	// Finally add activity
 	activityAddReq := domain.ActivityAddRequest{
 		WatchedID: watched.ID,
-		Type:      at,
+		Type:      extraProps.ActivityType,
 	}
 	if activityJson, err := json.Marshal(map[string]any{
 		"status": ar.Status,
@@ -461,12 +478,16 @@ func (s *Service) AddWatched(
 // Restore a watched entry that was soft deleted.
 // Currently used for AddWatched, when it realizes the entry may exist already
 // as a soft deleted record.
-func (s *Service) restoreWatched(
+//
+// NOTE: This function assumes it is being ran after a unique constraint
+// violation (like in AddWatched).
+func (s *Service) restoreWatchedAfterDuplicatedKeyErr(
 	userId uint,
 	ar domain.WatchedAddRequest,
+	dontRestore bool,
 	watchedOut *entity.Watched,
 ) error {
-	slog.Info("restoreWatched: Attempting to restore.",
+	slog.Info("restoreWatchedAfterDuplicatedKeyErr: Attempting to restore.",
 		"user_id", userId)
 
 	// Our base where statement to find the row we want to restore by unique
@@ -489,40 +510,60 @@ func (s *Service) restoreWatched(
 		return errors.New("no supported media ids in provided watched struct")
 	}
 
-	// Try to restore and update the possibly existing row.
-	res := s.db.Debug().Model(&entity.Watched{}).
+	// First we will try to get the record.
+	res := s.db.
+		Model(&entity.Watched{}).
 		Unscoped().
+		// Just loading activity now too so if we restore record,
+		// we can give the full activity in response.
+		Preload("Activity").
 		Where(&whereStmt).
-		Where("deleted_at IS NOT NULL").
+		Take(&watchedOut)
+	if res.Error != nil {
+		slog.Error("restoreWatchedAfterDuplicatedKeyErr: Select query failed!",
+			"error", res.Error)
+		return errors.New("errored checking for potential soft deleted record")
+	}
+	if watchedOut.ID == 0 {
+		return errors.New("didn't find an existing record")
+	}
+	if watchedOut.DeletedAt.Time.IsZero() {
+		// If it's not deleted, then it just exists..
+		return domain.ErrWatchedExists
+	} else if dontRestore {
+		// If we are told not to attempt a restore (eg by a sync-er).
+		return domain.ErrWatchedExistsSoftDeleted
+	}
+
+	// If we are here, we have a soft deleted record to restore:
+	res = s.db.
+		// Passing `&watchedOut` makes gorm do another query for inserting
+		// all existing rows into db, im not sure why... but just going to
+		// manually pass primary key in.
+		Model(&entity.Watched{
+			GormModel: dbmodel.GormModel{ID: watchedOut.ID},
+		}).
+		Unscoped().
 		Updates(map[string]any{
 			"status":     ar.Status,
 			"rating":     ar.Rating,
 			"thoughts":   ar.Thoughts,
 			"deleted_at": nil,
 		})
-	if res.Error != nil {
-		slog.Error("restoreWatched: Checking for record failed!",
-			"error", res.Error)
-		return errors.New("errored checking for soft deleted record")
+	if res.Error != nil || res.RowsAffected == 0 {
+		slog.Error("restoreWatchedAfterDuplicatedKeyErr: Updating record failed!",
+			"error", res.Error,
+			"rows_affected", res.RowsAffected)
+		return errors.New("failed to update record")
 	}
-	if res.RowsAffected == 0 {
-		slog.Error("restoreWatched: Nothing was updated. The row may already exist un-deleted.")
-		return errors.New("didnt find an entry to restore")
-	}
-	slog.Info("restoreWatched: Restored record.",
-		"user_id", userId)
+	// We have updated the row, update our struct now.
+	watchedOut.Status = ar.Status
+	watchedOut.Rating = ar.Rating
+	watchedOut.Thoughts = ar.Thoughts
+	watchedOut.DeletedAt = gorm.DeletedAt{}
 
-	// Restore query above succeeded so now lets get all data needed and return.
-	res = s.db.Debug().Model(&entity.Watched{}).
-		Unscoped().
-		Preload("Activity").
-		Where(&whereStmt).
-		Take(&watchedOut)
-	if res.Error != nil {
-		slog.Error("restoreWatched: Getting updated record failed!",
-			"error", res.Error)
-		return errors.New("errored while trying to get updated record")
-	}
+	slog.Info("restoreWatchedAfterDuplicatedKeyErr: Updated record.",
+		"user_id", userId)
 
 	return nil
 }

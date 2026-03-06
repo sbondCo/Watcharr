@@ -1,11 +1,19 @@
 package domain
 
 import (
+	"errors"
 	"time"
 
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/feature/watched/watchedutil"
 	"github.com/sbondCo/Watcharr/util"
+)
+
+var (
+	// Watched entry already exists.
+	ErrWatchedExists = errors.New("watched entry exists")
+	// Watched entry exists as a soft deleted record (..and restore wasn't attempted by choice).
+	ErrWatchedExistsSoftDeleted = errors.New("watched entry exists soft deleted")
 )
 
 type WatchedSort string
@@ -43,6 +51,19 @@ type WatchedGetPageExtraProps struct {
 	WatchedIds []int
 	// Only get watched items where content matches this query.
 	Query string
+}
+
+type WatchedAddExtraProps struct {
+	// The type of activity this is (will be added to db as this type).
+	ActivityType entity.ActivityType
+	// When watched entry to db, if a unique constraint is hit, should
+	// we skip the restoration logic (bring back soft deleted record)?
+	// - Syncing logic may use this field as it might not make sense to restore
+	// a record when doing a task like a regular sync, otherwise the user could
+	// soft delte a record and then have it come back when they next sync.
+	// - Importers however probably shouldn't use this flag as true because
+	// importing will always be a manual decision.
+	DontRestore bool
 }
 
 type WatchedDto struct {
