@@ -139,7 +139,8 @@ func (s *SyncService) startJellyfinSync(
 						ContentType: util.SupportedMediaMovie,
 						TMDBID:      tmdbId,
 						WatchedDate: v.UserData.LastPlayedDate,
-					}, domain.WatchedAddExtraProps{
+					},
+					domain.WatchedAddExtraProps{
 						ActivityType: entity.IMPORTED_WATCHED_JF,
 						DontRestore:  true,
 					})
@@ -243,7 +244,8 @@ func (s *SyncService) startJellyfinSync(
 						ContentType: util.SupportedMediaShow,
 						TMDBID:      tmdbId,
 						WatchedDate: v.UserData.LastPlayedDate,
-					}, domain.WatchedAddExtraProps{
+					},
+					domain.WatchedAddExtraProps{
 						ActivityType: entity.IMPORTED_WATCHED_JF,
 						DontRestore:  true,
 					})
