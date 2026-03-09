@@ -12,7 +12,7 @@
 	.loader {
 		width: 16px;
 		height: 12px;
-		border: 2px solid #000;
+		border: 2px solid $text-color;
 		border-bottom-color: transparent;
 		border-radius: 50%;
 		display: inline-block;
