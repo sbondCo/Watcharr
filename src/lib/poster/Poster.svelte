@@ -80,6 +80,9 @@
 	// set to a callback.
 	let showConfirmDeleteModalCallback: (() => void) | undefined = $state();
 
+	// If the item was just deleted from watched list (via this poster.)
+	let justDeletedFromWatcheds = $state(false);
+
 	const meta:
 		| {
 				id: number | undefined;
@@ -141,6 +144,11 @@
 		media.releaseDate ? new Date(media.releaseDate).getFullYear() : undefined,
 	);
 
+	function updateWatchedVar(w: Watched | undefined) {
+		watched = w;
+		justDeletedFromWatcheds = typeof w === "undefined";
+	}
+
 	function handleStarClick(r: number) {
 		if (r == watched?.rating || !meta?.id) return;
 		updateWatched(watched, {
@@ -154,7 +162,7 @@
 			}
 			// If watched was just added, we need to assign
 			// it to our `watched` var to get the update.
-			watched = w;
+			updateWatchedVar(w);
 		});
 	}
 
@@ -171,7 +179,7 @@
 				if (!watched) return;
 				removeWatched(watched.id).then((removed) => {
 					if (removed) {
-						watched = undefined;
+						updateWatchedVar(undefined);
 					}
 				});
 			};
@@ -189,7 +197,7 @@
 			}
 			// If watched was just added, we need to assign
 			// it to our `watched` var to get the update.
-			watched = w;
+			updateWatchedVar(w);
 		});
 	}
 
@@ -309,6 +317,7 @@
 	}}
 	onkeypress={() => console.log("on kpress")}
 	class={`${posterActive ? "active " : ""}${watched?.pinned ? "pinned " : ""}${hideIfNotOnList && !watched ? "hidden " : ""}`}
+	class:just-deleted={justDeletedFromWatcheds}
 >
 	<div
 		class={`container${!poster || posterImgLoaded == -1 ? " details-shown" : ""}`}
@@ -429,6 +438,10 @@
 				pointer-events: none !important;
 			}
 		}
+	}
+
+	li.just-deleted:not(.active) {
+		filter: grayscale(0.8) blur(1px);
 	}
 
 	.container {
