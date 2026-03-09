@@ -45,6 +45,15 @@
 		cancelled = true;
 	});
 
+	// This isn't reactive to avoid bugs (hopefully this isn't a bug)
+	let dropDownSupportedTypes = (() => {
+		let t = ["movie", "tv"];
+		if (store.serverFeatures?.games) {
+			t.push("game");
+		}
+		return t;
+	})();
+
 	// Set when current item being imported gets an IMPORT_MULTI
 	// response, which then shows the modal for user to pick correct item.
 	let importMultiItem: ImportedListItemMultiProblem | undefined = $state();
@@ -75,7 +84,7 @@
 					const year = el.match(yearRegex);
 					if (year && year.length > 0) {
 						l.year = Number(year[0].replaceAll(/\(|\)/g, ""));
-						l.name = l.name.replace(yearRegex, "").trim();
+						l.name = l.name?.replace(yearRegex, "").trim();
 					}
 					rList.push(l);
 				}
@@ -631,7 +640,7 @@
 								</td>
 								<td class="type">
 									<DropDown
-										options={["movie", "tv"]}
+										options={dropDownSupportedTypes}
 										bind:active={l.type}
 										placeholder="Type"
 										blendIn={true}
@@ -743,9 +752,27 @@
 							const item = rList.find(
 								(i) => i.name === importMultiItem?.original.name,
 							);
+							console.log(
+								"MultipleResultsFound: Poster clicked. Item in rList:",
+								item,
+							);
 							if (item) {
-								item.tmdbId = r.ids.tmdb;
+								// We found the item in our import list, update it
+								// to match the selected choice and do the import with it.
 								item.type = getContentTypeFromMedia(r);
+								if (item.type === "game") {
+									item.igdbId = r.ids.igdb;
+								} else if (item.type === "movie" || item.type === "tv") {
+									item.tmdbId = r.ids.tmdb;
+								} else {
+									item.state = ImportResponseType.IMPORT_FAILED;
+									notify({
+										type: "error",
+										text: "Can't import selected result because it has an unsupported type associated with it!",
+										time: 10000,
+									});
+									return;
+								}
 								try {
 									await doImport(item);
 									importMultiItem?.callback(undefined);

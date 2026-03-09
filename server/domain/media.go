@@ -98,6 +98,7 @@ func (t Media) GetId() int {
 	return -99
 }
 
+// If this changes, verify all use cases still make sense!
 func (t Media) GetMediaType() util.SupportedMedia {
 	switch t.Type {
 	case MediaTypeTMDBMovie:

@@ -59,6 +59,8 @@ func (s *Service) Search(
 	pp util.PaginationParams,
 	userId uint,
 ) (domain.SearchResponse, error) {
+	slog.Debug("Search: Running.", "request", r, "user_id", userId)
+
 	resp := domain.SearchResponse{}
 
 	if r.Query == "" {
@@ -114,6 +116,7 @@ func (s *Service) searchMulti(
 	page int,
 	resp *domain.SearchResponse,
 ) error {
+	slog.Debug("searchMulti: Running.", "query", query, "page", page)
 	// TMDB
 	tmdbRes, err := s.contentProvider.SearchContent(query, page)
 	if err != nil {
@@ -151,6 +154,7 @@ func (s *Service) searchMovie(
 	page int,
 	resp *domain.SearchResponse,
 ) error {
+	slog.Debug("searchMovie: Running.", "query", query, "page", page)
 	tmdbRes, err := s.contentProvider.SearchMovies(query, page)
 	if err != nil {
 		slog.Error("SearchMovie: Failed to search tmdb!", "error", err)
@@ -172,6 +176,7 @@ func (s *Service) searchMovieById(
 	id string,
 	resp *domain.SearchResponse,
 ) error {
+	slog.Debug("searchMovieById: Running.", "id", id)
 	details, err := s.contentProvider.MovieDetails(id, "", map[string]string{})
 	if err != nil {
 		slog.Error("searchMovieById: Failed to search tmdb!", "error", err)
@@ -192,6 +197,7 @@ func (s *Service) searchTv(
 	page int,
 	resp *domain.SearchResponse,
 ) error {
+	slog.Debug("searchTv: Running.", "query", query, "page", page)
 	tmdbRes, err := s.contentProvider.SearchTv(query, page)
 	if err != nil {
 		slog.Error("searchTv: Failed to search tmdb!", "error", err)
@@ -213,6 +219,7 @@ func (s *Service) searchTvById(
 	id string,
 	resp *domain.SearchResponse,
 ) error {
+	slog.Debug("searchTvById: Running.", "id", id)
 	details, err := s.contentProvider.TvDetails(id, "", map[string]string{})
 	if err != nil {
 		slog.Error("searchTvById: Failed to search tmdb!", "error", err)
@@ -233,6 +240,7 @@ func (s *Service) searchPeople(
 	page int,
 	resp *domain.SearchResponse,
 ) error {
+	slog.Debug("searchPeople: Running.", "query", query, "page", page)
 	tmdbRes, err := s.contentProvider.SearchPeople(query, page)
 	if err != nil {
 		slog.Error("searchPeople: Failed to search tmdb!", "error", err)
@@ -255,6 +263,7 @@ func (s *Service) searchGame(
 	page int,
 	resp *domain.SearchResponse,
 ) error {
+	slog.Debug("searchGame: Running.", "query", query, "page", page)
 	igdbRes, err := s.cfg.TWITCH.Search(query)
 	if err != nil {
 		slog.Error("searchGame: Failed to search igdb!", "error", err)
@@ -276,6 +285,7 @@ func (s *Service) searchGameById(
 	id string,
 	resp *domain.SearchResponse,
 ) error {
+	slog.Debug("searchGameById: Running.", "id", id)
 	igdbRes, err := s.cfg.TWITCH.SearchById(id)
 	if err != nil {
 		slog.Error("searchGameById: Failed to search igdb!", "error", err)
@@ -297,6 +307,7 @@ func (s *Service) searchGameBySlug(
 	slug string,
 	resp *domain.SearchResponse,
 ) error {
+	slog.Debug("searchGameBySlug: Running.", "slug", slug)
 	igdbRes, err := s.cfg.TWITCH.SearchBySlug(slug)
 	if err != nil {
 		slog.Error("searchGameBySlug: Failed to search igdb!", "error", err)

@@ -38,7 +38,7 @@ func (r *Router) ImportContent(c *gin.Context) {
 	if err == nil {
 		response, err := r.service.ImportContent(userId, ar)
 		if err != nil {
-			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
+			c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, response)

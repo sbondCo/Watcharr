@@ -298,32 +298,58 @@
 			const toImport: ImportedList[] = [];
 			const fileText = await readFile(new FileReader(), file);
 			const jsonData = JSON.parse(fileText) as any[];
+			let invalidStructureErrorOccurred = false;
+			let processedGame = false;
 			for (const v of jsonData) {
-				if (!v.content || !v.content.title) {
-					notify({
-						type: "error",
-						text: "Item in export has no content or a missing title! Look in console for more details.",
-					});
-					console.error(
-						"Can't add export item to import table! It has no content or a missing content.title! Item:",
-						v,
-					);
-					continue;
-				}
 				const t: ImportedList = {
-					tmdbId: v.content.tmdbId,
-					name: v.content.title,
-					year: new Date(v.content.release_date)?.getFullYear(),
-					type: v.content.type,
 					rating: v.rating,
 					status: v.status,
 					thoughts: v.thoughts,
-					// datesWatched: [new Date(v.createdAt)], // Shouldn't need this, all activity will be imported, including ADDED_WATCHED activity
 					activity: v.activity,
+
 					watchedEpisodes: v.watchedEpisodes,
 					watchedSeasons: v.watchedSeasons,
 				};
+				if (v.content) {
+					t.tmdbId = v.content.tmdbId;
+					t.name = v.content.title;
+					t.year = new Date(v.content.release_date)?.getFullYear();
+					t.type = v.content.type;
+				} else if (v.game) {
+					t.igdbId = v.game.igdbId;
+					t.name = v.game.name;
+					t.year = new Date(v.game.releaseDate)?.getFullYear();
+					t.type = "game";
+					processedGame = true;
+				} else {
+					console.error("processWatcharrFile: Went over invalid item.", v);
+					if (!invalidStructureErrorOccurred) {
+						notify({
+							type: "error",
+							text: "Item(s) in export has an invalid structure! Look in console for more details.",
+						});
+						// So we don't spam it...
+						invalidStructureErrorOccurred = true;
+					}
+					continue;
+				}
 				toImport.push(t);
+			}
+			if (processedGame && !store.serverFeatures?.games) {
+				// We know the server hasnt told us it supports games yet
+				// for this session, so alert the user of this before they start
+				// importing.
+				notify({
+					type: "error",
+					text:
+						"It looks like this server doesn't support 'Games'! " +
+						"The server should be configured properly before " +
+						"proceeding otherwise none of your games will be imported!",
+					time: Infinity,
+				});
+				// We still allow the user to continue (BECAUSE EIN CUSTOMER ISH ALWAYS REIGHT!!!!
+				// or maybe they don't care about games, or maybe they configured
+				// it in another tab and know for a fact that it should work.)
 			}
 			console.log("toImport:", toImport);
 			store.importedList = {

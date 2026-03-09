@@ -223,6 +223,8 @@ func main() {
 	profileService := profile.NewService(db)
 	followService := follow.NewService(db)
 	tagService := tag.NewService(db, watchedService)
+	searchService := search.NewService(db, br.Cfg, contentService, watchedService)
+	discoverService := discover.NewService(db, br.Cfg, contentService)
 	importService := imprt.NewService(
 		db,
 		watchedService,
@@ -230,10 +232,9 @@ func main() {
 		watchedEpisodeService,
 		contentService,
 		activityService,
-		tagService)
+		tagService,
+		searchService)
 	importTraktService := imprt.NewTraktService(importService)
-	searchService := search.NewService(db, br.Cfg, contentService, watchedService)
-	discoverService := discover.NewService(db, br.Cfg, contentService)
 
 	auth.NewRouter(br, authService, authTrustedHeaderService).AddRoutes()
 	content.NewRouter(br, contentService, watchedService).AddRoutes()

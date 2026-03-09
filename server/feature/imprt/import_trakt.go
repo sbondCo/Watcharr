@@ -165,11 +165,12 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 		}
 		rProc := func(v TraktHistory) {
 			var collectingText string
-			if v.Type == "episode" {
+			switch v.Type {
+			case "episode":
 				collectingText = fmt.Sprintf("%s S%dE%d", v.Show.Title, v.Episode.Season, v.Episode.Number)
-			} else if v.Type == "show" {
+			case "show":
 				collectingText = v.Show.Title
-			} else if v.Type == "movie" {
+			case "movie":
 				collectingText = v.Movie.Title
 			}
 			if collectingText != "" {
@@ -220,20 +221,21 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 			slog.Debug("startTraktImport: Processing watchlist item", "item", v)
 			var (
 				title       string
-				contentType entity.ContentType
+				contentType domain.ImportContentType
 				tmdbId      int
 			)
-			if v.Type == "show" || v.Type == "episode" {
+			switch v.Type {
+			case "show", "episode":
 				title = v.Show.Title
 				tmdbId = v.Show.Ids.Tmdb
-				contentType = entity.SHOW
+				contentType = domain.ImportContentTypeShow
 				if v.Type == "episode" {
 					title = v.Episode.Title
 				}
-			} else if v.Type == "movie" {
+			case "movie":
 				title = v.Movie.Title
 				tmdbId = v.Movie.Ids.Tmdb
-				contentType = entity.MOVIE
+				contentType = domain.ImportContentTypeMovie
 			}
 			job.UpdateJobCurrentTask(jobId, userId, "setting status for "+title)
 			mapKey := t.makeTraktMapKey(contentType, tmdbId)
@@ -310,23 +312,24 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 			slog.Debug("startTraktImport: Processing rating item", "item", v)
 			var (
 				title       string
-				contentType entity.ContentType
+				contentType domain.ImportContentType
 				tmdbId      int
 				traktSlug   string
 			)
-			if v.Type == "show" || v.Type == "episode" {
+			switch v.Type {
+			case "show", "episode":
 				title = v.Show.Title
 				tmdbId = v.Show.Ids.Tmdb
 				traktSlug = v.Show.Ids.Slug
-				contentType = entity.SHOW
+				contentType = domain.ImportContentTypeShow
 				if v.Type == "episode" {
 					title = v.Episode.Title
 					traktSlug = v.Episode.Ids.Slug
 				}
-			} else if v.Type == "movie" {
+			case "movie":
 				title = v.Movie.Title
 				tmdbId = v.Movie.Ids.Tmdb
-				contentType = entity.MOVIE
+				contentType = domain.ImportContentTypeMovie
 				traktSlug = v.Movie.Ids.Slug
 			}
 			job.UpdateJobCurrentTask(jobId, userId, fmt.Sprintf("setting rating of %d for %s", v.Rating, title))
@@ -374,14 +377,15 @@ func (t *TraktService) processTraktHistoryItem(v TraktHistory, toImport map[stri
 		title          string
 		traktId        int
 		tmdbId         int
-		contentType    entity.ContentType
+		contentType    domain.ImportContentType
 		watchedEpisode entity.WatchedEpisode
 	)
-	if v.Type == "show" || v.Type == "episode" {
+	switch v.Type {
+	case "show", "episode":
 		title = v.Show.Title
 		traktId = v.Show.Ids.Trakt
 		tmdbId = v.Show.Ids.Tmdb
-		contentType = entity.SHOW
+		contentType = domain.ImportContentTypeShow
 		if v.Type == "episode" {
 			traktId = v.Episode.Ids.Trakt
 			watchedEpisode = entity.WatchedEpisode{
@@ -397,11 +401,11 @@ func (t *TraktService) processTraktHistoryItem(v TraktHistory, toImport map[stri
 		} else {
 			slog.Debug("processTraktHistoryItem: Processing a show.", "contentTitle", title, "contentTmdbId", tmdbId)
 		}
-	} else if v.Type == "movie" {
+	case "movie":
 		title = v.Movie.Title
 		traktId = v.Movie.Ids.Trakt
 		tmdbId = v.Movie.Ids.Tmdb
-		contentType = entity.MOVIE
+		contentType = domain.ImportContentTypeMovie
 		slog.Debug("processTraktHistoryItem: Processing a movie.", "contentTitle", title, "contentTmdbId", tmdbId)
 	}
 	if tmdbId == 0 {
@@ -425,7 +429,7 @@ func (t *TraktService) processTraktHistoryItem(v TraktHistory, toImport map[stri
 }
 
 // `tmdbId` is for the movie or show (not for episodes).
-func (t *TraktService) makeTraktMapKey(ct entity.ContentType, tmdbId int) string {
+func (t *TraktService) makeTraktMapKey(ct domain.ImportContentType, tmdbId int) string {
 	return string(ct) + strconv.Itoa(tmdbId)
 }
 

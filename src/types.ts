@@ -538,10 +538,13 @@ export interface ImportResponse {
 
 export interface ImportedList {
 	tmdbId?: number;
-	name: string;
+	imdbId?: string;
+	igdbId?: number;
+
+	name?: string;
 	year?: number;
-	type?: ContentType;
-	state?: string;
+	type?: "movie" | "tv" | "tv_episode" | "game";
+	state?: ImportResponseType;
 	rating?: number;
 	ratingCustomDate?: Date;
 	status?: WatchedStatus;
@@ -551,7 +554,6 @@ export interface ImportedList {
 	watchedEpisodes?: WatchedEpisode[];
 	watchedSeasons?: WatchedSeason[];
 	tags?: TagAddRequest[];
-	imdbId?: string;
 }
 
 export interface Filters {
