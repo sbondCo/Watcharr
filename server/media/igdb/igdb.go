@@ -68,7 +68,7 @@ func (i *IGDB) req(host string, ep string, p map[string]string, b string, resp i
 	// Add params to url
 	base.RawQuery = params.Encode()
 
-	slog.Info("req", "base", base.String())
+	slog.Debug("req", "base", base.String())
 
 	req, err := http.NewRequest("POST", base.String(), bytes.NewBuffer([]byte(b)))
 	if err != nil {
@@ -137,7 +137,8 @@ func (i *IGDB) refreshToken(ctx context.Context) {
 			slog.Info("IGDB refreshToken: Token expired (or is near expiry date)")
 			r, err := i.getNewAccessToken()
 			if err != nil {
-				slog.Error("IGDB refreshToken: Error refreshing token (retrying in 60s):", err)
+				slog.Error("IGDB refreshToken: Error refreshing token (retrying in 60s):",
+					"error", err)
 				exp = time.After(60 * time.Second)
 			} else {
 				slog.Info("IGDB refreshToken: Token successfully refreshed")
