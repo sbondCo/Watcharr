@@ -20,6 +20,7 @@
 	import ExtraDetails from "./ExtraDetails.svelte";
 	import { buildExtraDetails } from "./lib";
 	import { decode } from "blurhash";
+	import WatchedDeleteModal from "../watched/WatchedDeleteModal.svelte";
 
 	interface Props {
 		media: Media;
@@ -74,6 +75,10 @@
 
 	let containerEl: HTMLDivElement | undefined = $state();
 	let bhCanvas: HTMLCanvasElement | undefined = $state();
+
+	// If confirm delete modal should be shown, then this will be
+	// set to a callback.
+	let showConfirmDeleteModalCallback: (() => void) | undefined = $state();
 
 	const meta:
 		| {
@@ -162,11 +167,13 @@
 				});
 				return;
 			}
-			removeWatched(watched.id).then((removed) => {
-				if (removed) {
-					watched = undefined;
-				}
-			});
+			showConfirmDeleteModalCallback = () => {
+				removeWatched(watched.id).then((removed) => {
+					if (removed) {
+						watched = undefined;
+					}
+				});
+			};
 			return;
 		}
 		if (type == watched?.status || !meta?.id) return;
@@ -380,6 +387,26 @@
 		</div>
 	</div>
 </li>
+
+{#if showConfirmDeleteModalCallback !== undefined}
+	<WatchedDeleteModal
+		mediaName={media.name}
+		onClose={(confirmed) => {
+			if (!showConfirmDeleteModalCallback) {
+				notify({
+					type: "error",
+					text: "Somehow the deletion callback doesn't exist anymore so we couldn't delete! Please try again",
+					time: 5000,
+				});
+				return;
+			}
+			if (confirmed) {
+				showConfirmDeleteModalCallback();
+			}
+			showConfirmDeleteModalCallback = undefined;
+		}}
+	/>
+{/if}
 
 <style lang="scss">
 	li.hidden {

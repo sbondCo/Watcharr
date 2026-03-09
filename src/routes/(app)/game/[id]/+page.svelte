@@ -18,6 +18,7 @@
 	import PosterImage from "@/lib/content/PosterImage.svelte";
 	import Poster from "@/lib/poster/Poster.svelte";
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
+	import WatchedDeleteBtn from "@/lib/content/WatchedDeleteBtn.svelte";
 
 	let { data } = $props();
 
@@ -77,16 +78,6 @@
 		} catch {
 			return false;
 		}
-	}
-
-	async function deleteWatched() {
-		if (game?.watched) {
-			if (await removeWatched(game.watched.id)) {
-				game.watched = undefined;
-			}
-			return;
-		}
-		console.error("deleteWatched: no wlistItem.. can't delete");
 	}
 </script>
 
@@ -173,13 +164,15 @@
 									>
 										<Icon i={game.watched?.pinned ? "unpin" : "pin"} wh={19} />
 									</button>
-									<button
-										class="delete-btn"
-										onclick={() => deleteWatched()}
-										use:tooltip={{ text: "Delete", pos: "bot" }}
-									>
-										<Icon i="trash" wh={19} />
-									</button>
+									<WatchedDeleteBtn
+										watchedId={game.watched.id}
+										mediaName={game.name}
+										onDelete={() => {
+											if (game) {
+												game.watched = undefined;
+											}
+										}}
+									/>
 								</div>
 							{/if}
 						</div>
@@ -275,12 +268,6 @@
 
 					@media screen and (min-width: 900px) {
 						margin-left: auto;
-					}
-				}
-
-				.delete-btn {
-					&:hover {
-						color: $error;
 					}
 				}
 			}

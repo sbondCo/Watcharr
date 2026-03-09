@@ -32,6 +32,7 @@
 	import ViewTrailerButton from "@/lib/content/ViewTrailerButton.svelte";
 	import PosterImage from "@/lib/content/PosterImage.svelte";
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
+	import WatchedDeleteBtn from "@/lib/content/WatchedDeleteBtn.svelte";
 
 	let { data } = $props();
 
@@ -111,16 +112,6 @@
 		} catch {
 			return false;
 		}
-	}
-
-	async function deleteWatched() {
-		if (movie?.watched) {
-			if (await removeWatched(movie.watched.id)) {
-				movie.watched = undefined;
-			}
-			return;
-		}
-		console.error("deleteWatched: no wlistItem.. can't delete");
 	}
 </script>
 
@@ -214,13 +205,15 @@
 									>
 										<Icon i={movie.watched?.pinned ? "unpin" : "pin"} wh={19} />
 									</button>
-									<button
-										class="delete-btn"
-										onclick={() => deleteWatched()}
-										use:tooltip={{ text: "Delete", pos: "bot" }}
-									>
-										<Icon i="trash" wh={19} />
-									</button>
+									<WatchedDeleteBtn
+										watchedId={movie.watched.id}
+										mediaName={movie.name}
+										onDelete={() => {
+											if (movie) {
+												movie.watched = undefined;
+											}
+										}}
+									/>
 								</div>
 							{/if}
 						</div>
@@ -357,12 +350,6 @@
 
 					@media screen and (min-width: 900px) {
 						margin-left: auto;
-					}
-				}
-
-				.delete-btn {
-					&:hover {
-						color: $error;
 					}
 				}
 			}
