@@ -4,6 +4,12 @@ import "time"
 
 // Returns age in years.
 func GetAge(birthDate time.Time, deathDate time.Time) int {
+	if birthDate.IsZero() {
+		// If we don't have a birthday, skip processing.
+		return 0
+	}
+
+	// Calculate an endDate, which is either `deathDate` or `now`.
 	var endDate time.Time
 	if !deathDate.IsZero() {
 		endDate = deathDate
