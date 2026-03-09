@@ -307,8 +307,10 @@
 					display: flex;
 					flex-flow: row;
 					align-items: center;
+					flex-shrink: 1;
 					gap: 8px;
 					width: max-content;
+					min-width: 0;
 					max-width: 100%;
 					cursor: pointer;
 				}
