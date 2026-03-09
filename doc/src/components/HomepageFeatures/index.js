@@ -1,4 +1,3 @@
-import React from "react";
 import clsx from "clsx";
 import styles from "./styles.module.css";
 
@@ -8,18 +7,18 @@ const FeatureList = [
 		Svg: require("@site/static/img/icon/code-slash.svg").default,
 		description: (
 			<>
-				Watcharr is free and open source software distributed under the MIT
-				license. Feel free to browse, modify or contribute!
+				Free and open source, distributed under the GPLv3 license. Feel free to
+				browse, modify or contribute!
 			</>
 		),
 	},
 	{
-		title: "Simple",
+		title: "Simple & Intuitive",
 		Svg: require("@site/static/img/icon/happy.svg").default,
 		description: (
 			<>
-				Watcharr is incredibly easy to dive into. Install without hassle and get
-				started with the seamless and intuitive user experience.
+				Incredibly easy to dive into. Install within the minute and get started
+				with the seamless experience.
 			</>
 		),
 	},
@@ -28,8 +27,8 @@ const FeatureList = [
 		Svg: require("@site/static/img/icon/go.svg").default,
 		description: (
 			<>
-				Don't know what else to add here, so now you know Watcharr is built with
-				Go and Svelte.
+				Don't know what else to add here, so now you know I'm built with Go and
+				Svelte.
 			</>
 		),
 	},
