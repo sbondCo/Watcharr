@@ -168,6 +168,7 @@
 				return;
 			}
 			showConfirmDeleteModalCallback = () => {
+				if (!watched) return;
 				removeWatched(watched.id).then((removed) => {
 					if (removed) {
 						watched = undefined;
