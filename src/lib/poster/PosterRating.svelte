@@ -74,7 +74,7 @@
 			{#if isUsingThumbs}
 				{@const r = toWhichThumb(rating)}
 				{#if r === -1}
-					<Icon i="thumb-down" />
+					<span class="thumb-fallback thumb-fallback-negative">-</span>
 				{:else if r === 0}
 					<span
 						style="display: flex; transform: translate(2px, -7px); font-size: 40px; font-family: 'Shrikhand';"
