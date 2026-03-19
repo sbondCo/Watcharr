@@ -229,10 +229,12 @@
 
 <nav bind:this={navEl}>
 	<div class="wrapper">
-		<a href="/">
-			<span class="large">Watcharr</span>
-			<span class="small">W</span>
-		</a>
+		<div class="left-side">
+			<a href="/">
+				<span class="large">Watcharr</span>
+				<span class="small">W</span>
+			</a>
+		</div>
 		<div class="search">
 			<input
 				bind:this={mainSearchEl}
@@ -403,7 +405,7 @@
 			justify-content: space-between;
 			align-items: center;
 
-			a,
+			.left-side,
 			.btns {
 				/* This makes the logo on left and icons on right the same
 				width, ensuring the main search bar can stay truly centered
@@ -435,42 +437,45 @@
 			}
 		}
 
-		a {
-			text-decoration: none;
-			font-family:
-				"Shrikhand",
-				system-ui,
-				-apple-system,
-				BlinkMacSystemFont;
-			font-size: 35px;
-			transition:
-				-webkit-text-stroke 150ms ease,
-				color 150ms ease,
-				font-weight 150ms ease;
+		.left-side {
+			a {
+				display: inline-flex;
+				text-decoration: none;
+				font-family:
+					"Shrikhand",
+					system-ui,
+					-apple-system,
+					BlinkMacSystemFont;
+				font-size: 35px;
+				transition:
+					-webkit-text-stroke 150ms ease,
+					color 150ms ease,
+					font-weight 150ms ease;
 
-			&:hover,
-			&:focus-visible {
-				color: $bg-color;
-				-webkit-text-stroke: 3px $text-color;
-				font-weight: bold;
-			}
-
-			span.large {
-				display: block;
-				width: 185.2px;
-			}
-
-			span.small {
-				display: none;
-				width: 40px;
-			}
-
-			@media screen and (max-width: 620px) {
-				span.large {
-					display: none;
+				&:hover,
+				&:focus-visible {
+					color: $bg-color;
+					-webkit-text-stroke: 3px $text-color;
+					font-weight: bold;
 				}
-				span.small {
+
+				span.large {
 					display: block;
+					width: 185.2px;
+				}
+
+				span.small {
+					display: none;
+					width: 40px;
+				}
+
+				@media screen and (max-width: 620px) {
+					span.large {
+						display: none;
+					}
+					span.small {
+						display: block;
+					}
 				}
 			}
 		}
