@@ -78,10 +78,21 @@
 		gap: 10px;
 		width: 100%;
 		height: 100%;
+		container-type: inline-size;
 
 		button {
 			font-size: 10px;
 			padding: 5px 10px;
+			height: 58px;
+		}
+
+		/* 380px is how big the this container is usually,
+		but when it starts to shrink we want to button height
+		to be unset so that buttons become responsive. */
+		@container (width < 380px) {
+			button {
+				height: unset;
+			}
 		}
 	}
 </style>
