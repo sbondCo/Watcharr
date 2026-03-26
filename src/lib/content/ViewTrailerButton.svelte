@@ -17,7 +17,7 @@
 					return a.best ? -1 : 1;
 				});
 			if (t[0]?.id) {
-				return `https://www.youtube.com/embed/${t[0]?.id}`;
+				return `https://www.youtube-nocookie.com/embed/${t[0]?.id}`;
 			}
 		}
 	});
