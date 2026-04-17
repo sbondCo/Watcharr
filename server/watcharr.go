@@ -139,7 +139,7 @@ func main() {
 	}
 
 	if isProd {
-		go runUI()
+		go runUI(cfg)
 		gin.SetMode(gin.ReleaseMode)
 	}
 	gin.DefaultWriter = multiw
@@ -177,7 +177,7 @@ func main() {
 		gine.NoRoute(func(c *gin.Context) {
 			director := func(req *http.Request) {
 				req.URL.Scheme = "http"
-				req.URL.Host = "127.0.0.1:3000"
+				req.URL.Host = fmt.Sprintf("%s:%d", cfg.WEB_ASSET_SERVER.Host, cfg.WEB_ASSET_SERVER.Port)
 			}
 			proxy := &httputil.ReverseProxy{Director: director}
 			proxy.ServeHTTP(c.Writer, c.Request)
@@ -276,12 +276,15 @@ func main() {
 
 	go taskl.SetupTasks(cfg, db)
 
-	gine.Run("0.0.0.0:3080")
+	gine.Run(fmt.Sprintf("%s:%d", cfg.API_HOST, cfg.API_PORT))
 }
 
 // Run UI server
-func runUI() {
+func runUI(cfg *config.ServerConfig) {
 	cmd := exec.Command("node", "ui/index.js")
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("PORT=%d", cfg.WEB_ASSET_SERVER.Port),
+	)
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal("UI ERR @ get stdout read pipe: ", err)
