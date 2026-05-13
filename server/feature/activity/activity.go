@@ -33,6 +33,16 @@ func (s *Service) AddActivity(userId uint, ar domain.ActivityAddRequest) (entity
 	if ar.WatchedID == 0 {
 		return entity.Activity{}, errors.New("watchedId must be set to add an activity")
 	}
+	// Verify watched entry belongs to the calling user.
+	var count int64
+	if res := s.db.Model(&entity.Watched{}).Where("id = ? AND user_id = ?", ar.WatchedID, userId).Count(&count); res.Error != nil {
+		slog.Error("AddActivity: failed to verify watched ownership", "error", res.Error)
+		return entity.Activity{}, errors.New("failed to verify watched entry")
+	}
+	if count == 0 {
+		slog.Warn("AddActivity: user attempted to add activity for watched entry they do not own", "user_id", userId, "watched_id", ar.WatchedID)
+		return entity.Activity{}, errors.New("watched entry does not exist")
+	}
 	activity := entity.Activity{UserID: userId, WatchedID: ar.WatchedID, Type: ar.Type, Data: ar.Data, CustomDate: ar.CustomDate}
 	res := s.db.Create(&activity)
 	if res.Error != nil {
