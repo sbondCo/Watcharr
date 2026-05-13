@@ -33,9 +33,9 @@ func (s *Service) AddActivity(userId uint, ar domain.ActivityAddRequest) (entity
 	if ar.WatchedID == 0 {
 		return entity.Activity{}, errors.New("watchedId must be set to add an activity")
 	}
-	// Verify watched entry belongs to the calling user.
+	// Verify watched entry belongs to the calling user, unscoped so soft-deleted entries still pass.
 	var count int64
-	if res := s.db.Model(&entity.Watched{}).Where("id = ? AND user_id = ?", ar.WatchedID, userId).Count(&count); res.Error != nil {
+	if res := s.db.Unscoped().Model(&entity.Watched{}).Where("id = ? AND user_id = ?", ar.WatchedID, userId).Count(&count); res.Error != nil {
 		slog.Error("AddActivity: failed to verify watched ownership", "error", res.Error)
 		return entity.Activity{}, errors.New("failed to verify watched entry")
 	}
