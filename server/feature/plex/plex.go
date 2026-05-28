@@ -334,6 +334,24 @@ type PlexClientResources []struct {
 	} `json:"connections"`
 }
 
+// plexHTTPClient is the shared client for all Plex outbound calls. Its
+// CheckRedirect policy strips the custom X-Plex-Token header when a redirect
+// crosses to a different host. net/http already strips the standard sensitive
+// headers (Authorization, Cookie, WWW-Authenticate) on a cross-host redirect,
+// but it does NOT strip custom-named headers, so without this the Plex token
+// would be forwarded to any host the configured PLEX_HOST redirects to.
+var plexHTTPClient = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		if len(via) == 0 {
+			return nil
+		}
+		if req.URL.Host != via[0].URL.Host {
+			req.Header.Del("X-Plex-Token")
+		}
+		return nil
+	},
+}
+
 type Service struct {
 	cfg *config.ServerConfig
 }
@@ -345,7 +363,7 @@ func NewService(cfg *config.ServerConfig) *Service {
 }
 
 func (s *Service) GetPlexIdentity(host string) (PlexIdentity, error) {
-	httpClient := &http.Client{}
+	httpClient := plexHTTPClient
 	req, err := http.NewRequest("GET", host+"/identity", nil)
 	if err != nil {
 		return PlexIdentity{}, err
@@ -369,7 +387,7 @@ func (s *Service) GetPlexIdentity(host string) (PlexIdentity, error) {
 }
 
 func (s *Service) FetchPlexAccountFromToken(token string) (PlexUser, error) {
-	httpClient := &http.Client{}
+	httpClient := plexHTTPClient
 	req, err := http.NewRequest("GET", "https://plex.tv/users/account.json", nil)
 	if err != nil {
 		return PlexUser{}, err
@@ -419,7 +437,7 @@ func (s *Service) UpdateConfigPlexHost(cfg *config.ServerConfig, v string) (Plex
 }
 
 func (s *Service) GetPlexLibraries(plexAuth string) (PlexLibrariesResponse, error) {
-	httpClient := &http.Client{}
+	httpClient := plexHTTPClient
 	req, err := http.NewRequest("GET", s.cfg.PLEX_HOST+"/library/sections", nil)
 	if err != nil {
 		return PlexLibrariesResponse{}, err
@@ -444,7 +462,7 @@ func (s *Service) GetPlexLibraries(plexAuth string) (PlexLibrariesResponse, erro
 }
 
 func (s *Service) GetPlexLibraryItems(plexAuth string, libraryKey string) (PlexLibraryItemsResponse, error) {
-	httpClient := &http.Client{}
+	httpClient := plexHTTPClient
 	req, err := http.NewRequest("GET", s.cfg.PLEX_HOST+"/library/sections/"+libraryKey+"/all?includeGuids=1", nil)
 	if err != nil {
 		return PlexLibraryItemsResponse{}, err
@@ -469,7 +487,7 @@ func (s *Service) GetPlexLibraryItems(plexAuth string, libraryKey string) (PlexL
 }
 
 func (s *Service) GetPlexLibraryItemSeasons(plexAuth string, ratingKey string) (PlexLibraryItemSeasonsResponse, error) {
-	httpClient := &http.Client{}
+	httpClient := plexHTTPClient
 	req, err := http.NewRequest("GET", s.cfg.PLEX_HOST+"/library/metadata/"+ratingKey+"/children", nil)
 	if err != nil {
 		return PlexLibraryItemSeasonsResponse{}, err
@@ -494,7 +512,7 @@ func (s *Service) GetPlexLibraryItemSeasons(plexAuth string, ratingKey string) (
 }
 
 func (s *Service) GetPlexLibraryItemEpisodes(plexAuth string, ratingKey string) (PlexLibraryItemEpisodesResponse, error) {
-	httpClient := &http.Client{}
+	httpClient := plexHTTPClient
 	req, err := http.NewRequest("GET", s.cfg.PLEX_HOST+"/library/metadata/"+ratingKey+"/allLeaves", nil)
 	if err != nil {
 		return PlexLibraryItemEpisodesResponse{}, err
@@ -522,7 +540,7 @@ func (s *Service) GetPlexLibraryItemEpisodes(plexAuth string, ratingKey string) 
 // so they can authenticate against it for api requests.
 // If no auth token is returned or errored, assume user doesn't have access to home plex server library.
 func (s *Service) GetPlexHomeServerAuthToken(plexAuth string, userClientId string) (string, error) {
-	httpClient := &http.Client{}
+	httpClient := plexHTTPClient
 	req, err := http.NewRequest("GET", "https://clients.plex.tv/api/v2/resources", nil)
 	if err != nil {
 		return "", err
