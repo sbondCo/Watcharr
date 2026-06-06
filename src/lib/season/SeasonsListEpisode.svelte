@@ -18,7 +18,16 @@
 
 	let { ep, watchedItem }: Props = $props();
 
-	let isHidden: boolean = $state(!!store?.userSettings?.hideSpoilers);
+	const watchedEpisode = watchedItem?.watchedEpisodes?.find(
+		(s) =>
+			s.seasonNumber === ep.season_number &&
+			s.episodeNumber === ep.episode_number,
+	);
+	let episodeStatus = $state(watchedEpisode?.status);
+	
+	// Show episode spoilers when the user finished watching
+	const SHOW_SPOILER_FOR_STATUS: WatchedStatus = "FINISHED";
+	let hideSpoilers: boolean = $state(!!store?.userSettings?.hideSpoilers && watchedEpisode?.status !== SHOW_SPOILER_FOR_STATUS);
 
 	function handleStatusClick(type: WatchedStatus | "DELETE") {
 		if (!watchedItem) {
@@ -57,7 +66,7 @@
 	}
 </script>
 
-<li class={isHidden ? "dont-spoil" : ""}>
+<li class={hideSpoilers ? "dont-spoil" : ""}>
 	{#if ep.still_path}
 		<img
 			src={`https://www.themoviedb.org/t/p/w227_and_h127_bestv2/${ep.still_path}`}
@@ -90,25 +99,22 @@
 		<span class="overview">{ep.overview}</span>
 	</div>
 	{#if watchedItem}
-		{@const we = watchedItem.watchedEpisodes?.find(
-			(s) =>
-				s.seasonNumber === ep.season_number &&
-				s.episodeNumber === ep.episode_number,
-		)}
 		<div class="status-rating-ctr">
-			<div class="rating" style={"width: 45px"}>
-				<PosterRating
-					rating={we?.rating}
-					btnTooltip={`Episode ${ep.episode_number} Rating`}
-					handleStarClick={(r) => handleStarClick(r)}
-					minimal={true}
-					direction="bot"
-					hideStarWhenRated
-				/>
-			</div>
+			{#if !hideSpoilers}
+				<div class="rating" style={"width: 45px"}>
+					<PosterRating
+						rating={watchedEpisode?.rating}
+						btnTooltip={`Episode ${ep.episode_number} Rating`}
+						handleStarClick={(r) => handleStarClick(r)}
+						minimal={true}
+						direction="bot"
+						hideStarWhenRated
+					/>
+				</div>
+			{/if}
 			<div class="status">
 				<PosterStatus
-					status={we?.status}
+					status={watchedEpisode?.status}
 					btnTooltip={`Episode ${ep.episode_number} Status`}
 					handleStatusClick={(t) => handleStatusClick(t)}
 					direction="bot"
@@ -118,8 +124,8 @@
 			</div>
 		</div>
 	{/if}
-	{#if isHidden}
-		<button class="plain spoiler-text" onclick={() => (isHidden = false)}>
+	{#if hideSpoilers}
+		<button class="plain spoiler-text" onclick={() => (hideSpoilers = false)}>
 			<Icon i="eye-closed" wh={34} />
 			<span>Click To Reveal</span>
 		</button>
