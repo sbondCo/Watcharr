@@ -104,18 +104,16 @@
 	</div>
 	{#if watchedItem}
 		<div class="status-rating-ctr">
-			{#if !hideSpoilers}
-				<div class="rating" style={"width: 45px"}>
-					<PosterRating
-						rating={watchedEpisode?.rating}
-						btnTooltip={`Episode ${ep.episode_number} Rating`}
-						handleStarClick={(r) => handleStarClick(r)}
-						minimal={true}
-						direction="bot"
-						hideStarWhenRated
-					/>
-				</div>
-			{/if}
+			<div class="rating" style={"width: 45px"}>
+				<PosterRating
+					rating={watchedEpisode?.rating}
+					btnTooltip={`Episode ${ep.episode_number} Rating`}
+					handleStarClick={(r) => handleStarClick(r)}
+					minimal={true}
+					direction="bot"
+					hideStarWhenRated
+				/>
+			</div>
 			<div class="status">
 				<PosterStatus
 					status={episodeStatus}
@@ -285,7 +283,6 @@
 
 		&.dont-spoil {
 			.episode-name,
-			.rating,
 			.overview {
 				filter: blur(4px);
 			}
