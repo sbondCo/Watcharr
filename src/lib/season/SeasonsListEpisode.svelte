@@ -24,10 +24,13 @@
 			s.episodeNumber === ep.episode_number,
 	);
 	let episodeStatus = $state(watchedEpisode?.status);
-	
+
 	// Show episode spoilers when the user finished watching
 	const SHOW_SPOILER_FOR_STATUS: WatchedStatus = "FINISHED";
-	let hideSpoilers: boolean = $state(!!store?.userSettings?.hideSpoilers && watchedEpisode?.status !== SHOW_SPOILER_FOR_STATUS);
+	let hideSpoilers: boolean = $state(
+		!!store?.userSettings?.hideSpoilers &&
+			watchedEpisode?.status !== SHOW_SPOILER_FOR_STATUS,
+	);
 
 	async function handleStatusClick(type: WatchedStatus | "DELETE") {
 		if (!watchedItem) {
@@ -52,11 +55,18 @@
 			hideSpoilers = !!store?.userSettings?.hideSpoilers;
 			return;
 		}
-		await updateWatchedEpisode(watchedItem, ep.season_number, ep.episode_number, {
-			status: type,
-		});
+		await updateWatchedEpisode(
+			watchedItem,
+			ep.season_number,
+			ep.episode_number,
+			{
+				status: type,
+			},
+		);
 		episodeStatus = type;
-		hideSpoilers = !!store?.userSettings?.hideSpoilers && episodeStatus !== SHOW_SPOILER_FOR_STATUS;
+		hideSpoilers =
+			!!store?.userSettings?.hideSpoilers &&
+			episodeStatus !== SHOW_SPOILER_FOR_STATUS;
 	}
 
 	function handleStarClick(rating: number) {
