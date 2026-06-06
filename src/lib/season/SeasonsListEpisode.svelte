@@ -29,7 +29,7 @@
 	const SHOW_SPOILER_FOR_STATUS: WatchedStatus = "FINISHED";
 	let hideSpoilers: boolean = $state(!!store?.userSettings?.hideSpoilers && watchedEpisode?.status !== SHOW_SPOILER_FOR_STATUS);
 
-	function handleStatusClick(type: WatchedStatus | "DELETE") {
+	async function handleStatusClick(type: WatchedStatus | "DELETE") {
 		if (!watchedItem) {
 			console.error("SeasonListEpisode: handleStatusClick: No watched item.");
 			return;
@@ -47,12 +47,16 @@
 				});
 				return;
 			}
-			removeWatchedEpisode(watchedItem, ws.id);
+			await removeWatchedEpisode(watchedItem, ws.id);
+			episodeStatus = undefined;
+			hideSpoilers = !!store?.userSettings?.hideSpoilers;
 			return;
 		}
-		updateWatchedEpisode(watchedItem, ep.season_number, ep.episode_number, {
+		await updateWatchedEpisode(watchedItem, ep.season_number, ep.episode_number, {
 			status: type,
 		});
+		episodeStatus = type;
+		hideSpoilers = !!store?.userSettings?.hideSpoilers && episodeStatus !== SHOW_SPOILER_FOR_STATUS;
 	}
 
 	function handleStarClick(rating: number) {
@@ -114,7 +118,7 @@
 			{/if}
 			<div class="status">
 				<PosterStatus
-					status={watchedEpisode?.status}
+					status={episodeStatus}
 					btnTooltip={`Episode ${ep.episode_number} Status`}
 					handleStatusClick={(t) => handleStatusClick(t)}
 					direction="bot"
@@ -246,7 +250,7 @@
 			justify-content: center;
 			gap: 8px;
 			position: absolute;
-			width: 100%;
+			width: calc(100% - 45px);
 			height: 100%;
 			font-weight: bolder;
 			font-size: 20px;
