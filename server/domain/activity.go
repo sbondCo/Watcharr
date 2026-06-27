@@ -22,3 +22,15 @@ type (
 		AddActivity(userId uint, ar ActivityAddRequest) (entity.Activity, error)
 	}
 )
+
+// Looks through Activity for Watched entry and calculates the amount
+// that count as plays.
+func getPlaysFromActivity(a []entity.Activity) int {
+	plays := 0
+	for i := range a {
+		if a[i].CountAsPlay {
+			plays++
+		}
+	}
+	return plays
+}

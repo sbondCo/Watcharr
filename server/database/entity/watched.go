@@ -12,6 +12,18 @@ const (
 	DROPPED  WatchedStatus = "DROPPED"
 )
 
+func (r WatchedStatus) IsValid() bool {
+	switch r {
+	case FINISHED,
+		WATCHING,
+		PLANNED,
+		HOLD,
+		DROPPED:
+		return true
+	}
+	return false
+}
+
 type Watched struct {
 	dbmodel.GormModel
 	Status WatchedStatus `json:"status"`
