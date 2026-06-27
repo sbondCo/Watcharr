@@ -101,9 +101,7 @@ func (s *Service) GetWatchedPage(
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
 		// Apply filters first.
-		Scopes(
-			watchedRefineFilter(wr),
-		).
+		Scopes(watchedRefineFilter(wr)).
 		// Then count results (after filter);
 		Count(&pRes.TotalResults).
 		// Now calculate pagination properties with a TotalResults
