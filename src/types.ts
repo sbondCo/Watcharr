@@ -114,6 +114,7 @@ export interface Activity extends dbModel {
 	type: string;
 	data: string;
 	customDate: string;
+	countAsPlay: boolean;
 }
 
 export interface WatchedSeason {
@@ -151,6 +152,7 @@ export interface Watched {
 	watchedEpisodes?: WatchedEpisode[];
 	tags?: Tag[];
 	lastViewedSeason?: number;
+	plays?: number;
 
 	// 'Watching Season/Ep' Extra detail.
 	watchingSeason?: string;
@@ -172,6 +174,7 @@ export interface WatchedUpdateRequest {
 	thoughts?: string;
 	removeThoughts?: boolean;
 	pinned?: boolean;
+	letCountAsPlay?: boolean;
 }
 
 export interface WatchedUpdateResponse {

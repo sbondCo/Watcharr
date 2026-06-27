@@ -8,7 +8,7 @@
 		activity: Activity;
 		activityMessage: string;
 		onClose: () => void;
-		onRemoved: (activityId: number) => void;
+		onRemoved: (activity: Activity) => void;
 		onUpdated: (activityId: number, updatedActivity: Activity) => void;
 	}
 
@@ -85,7 +85,7 @@
 		if (!success) {
 			return;
 		}
-		onRemoved(activity.id);
+		onRemoved(activity);
 		onClose();
 	}
 </script>

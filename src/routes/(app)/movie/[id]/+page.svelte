@@ -33,6 +33,8 @@
 	import PosterImage from "@/lib/content/PosterImage.svelte";
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
 	import WatchedDeleteBtn from "@/lib/content/WatchedDeleteBtn.svelte";
+	import TopCrewList from "@/lib/content/TopCrewList.svelte";
+	import { activityRemovedHook } from "@/lib/activity.js";
 
 	let { data } = $props();
 
@@ -262,14 +264,7 @@
 			{:then credits}
 				<!-- TODO make this nicer  -->
 				{#if credits.topCrew?.length > 0}
-					<div class="creators">
-						{#each credits.topCrew as crew}
-							<div>
-								<span>{crew.name}</span>
-								<span>{crew.job}</span>
-							</div>
-						{/each}
-					</div>
+					<TopCrewList topCrew={credits.topCrew} />
 				{/if}
 
 				{#if credits.cast?.length > 0}
@@ -294,7 +289,10 @@
 			{/if}
 
 			{#if movie.watched}
-				<Activity bind:activity={movie.watched.activity} />
+				<Activity
+					activity={movie.watched.activity}
+					onRemoved={(a) => activityRemovedHook(movie?.watched, a)}
+				/>
 			{/if}
 		</div>
 	</div>
@@ -368,24 +366,6 @@
 
 		@media screen and (max-width: 500px) {
 			padding: 20px;
-		}
-	}
-
-	.creators {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 35px;
-		margin: 10px 60px;
-
-		div {
-			display: flex;
-			flex-flow: column;
-			min-width: 150px;
-
-			span:first-child {
-				font-weight: bold;
-			}
 		}
 	}
 </style>
