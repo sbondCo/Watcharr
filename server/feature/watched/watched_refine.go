@@ -50,7 +50,14 @@ func refineFilterStatus(db *gorm.DB, f []entity.WatchedStatus) {
 }
 
 // Applies sorts to list.
-func refineSort(db *gorm.DB, sort domain.WatchedSort, dir domain.SortDirection) {
+// Takes in userId of user who owns the list we are sorting, since some sorts
+// may require it for subqueries (eg LastFinished).
+func refineSort(
+	db *gorm.DB,
+	userId uint,
+	sort domain.WatchedSort,
+	dir domain.SortDirection,
+) {
 	if sort == "" {
 		return
 	}
@@ -71,19 +78,27 @@ func refineSort(db *gorm.DB, sort domain.WatchedSort, dir domain.SortDirection) 
 		db.Order(obc(clause.Column{Name: "watcheds.updated_at"}))
 	case domain.WatchedSortLastFinished:
 		db.
-			// This join looks for the latest activity for each watched entry
-			// that indiciates a 'FINISHED' status. The date of these is used
-			// in the sort below.
-			// This seems the best way to support this sort with how our current
-			// activity data is structured.
+			// This join looks for the latest activity that counts as a play
+			// for each watched entry. The date of these is used in the sort
+			// below.
+			// Note: Technically the join subquery will process ALL activities
+			// that the user has by their user_id, BUT this is okay since we
+			// use this sorting over the users entire watched list, so we want
+			// to process every activity to join to main list for the sort
+			// anyways. I'm making this note because previously I had left out
+			// the user_id WHERE, which results in all activities in the table
+			// being processed, which is obviously NOT wanted (cuz its slower).
 			Joins(`LEFT JOIN (
 					SELECT
 						watched_id AS a_watched_id,
 						MAX(COALESCE(custom_date, created_at)) AS a_sort_by_date
 					FROM activities
-					WHERE data LIKE "%FINISHED%" AND deleted_at IS NULL
+					WHERE
+						count_as_play = 1
+						AND deleted_at IS NULL
+						AND user_id = ?
 					GROUP BY watched_id
-				) q ON q.a_watched_id = watcheds.id`).
+				) q ON q.a_watched_id = watcheds.id`, userId).
 			Order(obc(clause.Column{Name: "q.a_sort_by_date"}))
 	case domain.WatchedSortRating:
 		db.Order(obc(clause.Column{Name: "watcheds.rating"}))
