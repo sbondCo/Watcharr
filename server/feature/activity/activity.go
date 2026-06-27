@@ -35,6 +35,11 @@ func (s *Service) GetActivity(
 	return *activity, nil
 }
 
+// NOTE: Currently this function doesn't verify if `userId` owns the referenced
+// watched item at `ar.WatchedID`. If we ever need this function to work from an
+// "AddActivity" endpoint on the API, we should create another func that has
+// that validation, since this func is only for internal operations!
+// AddActivity: Only for internal use.
 func (s *Service) AddActivity(
 	userId uint,
 	ar domain.ActivityAddProps,
