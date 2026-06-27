@@ -19,31 +19,56 @@ func NewService(db *gorm.DB) *Service {
 	}
 }
 
-func (s *Service) GetActivity(userId uint, watchedId uint) ([]entity.Activity, error) {
+func (s *Service) GetActivity(
+	userId uint,
+	watchedId uint,
+) ([]entity.Activity, error) {
 	activity := new([]entity.Activity)
-	res := s.db.Model(&entity.Activity{}).Where("user_id = ? AND watched_id = ?", userId, watchedId).Find(&activity)
+	res := s.db.Model(&entity.Activity{}).
+		Where("user_id = ? AND watched_id = ?", userId, watchedId).
+		Find(&activity)
 	if res.Error != nil {
-		slog.Error("Failed getting activity from database", "error", res.Error.Error())
+		slog.Error("Failed getting activity from database",
+			"error", res.Error.Error())
 		return []entity.Activity{}, errors.New("failed getting activity")
 	}
 	return *activity, nil
 }
 
-func (s *Service) AddActivity(userId uint, ar domain.ActivityAddRequest) (entity.Activity, error) {
+func (s *Service) AddActivity(
+	userId uint,
+	ar domain.ActivityAddProps,
+	// If this activity counts as a play.
+	countAsPlay bool,
+) (entity.Activity, error) {
 	if ar.WatchedID == 0 {
-		return entity.Activity{}, errors.New("watchedId must be set to add an activity")
+		return entity.Activity{},
+			errors.New("watchedId must be set to add an activity")
 	}
-	activity := entity.Activity{UserID: userId, WatchedID: ar.WatchedID, Type: ar.Type, Data: ar.Data, CustomDate: ar.CustomDate}
+	activity := entity.Activity{
+		UserID:      userId,
+		WatchedID:   ar.WatchedID,
+		Type:        ar.Type,
+		Data:        ar.Data,
+		CustomDate:  ar.CustomDate,
+		CountAsPlay: countAsPlay,
+	}
 	res := s.db.Create(&activity)
 	if res.Error != nil {
-		slog.Error("Error adding activity to database", "error", res.Error.Error())
-		return entity.Activity{}, errors.New("failed adding new activity to database")
+		slog.Error("Error adding activity to database",
+			"error", res.Error.Error())
+		return entity.Activity{},
+			errors.New("failed adding new activity to database")
 	}
 	slog.Debug("Adding activity", "added_activity", activity)
 	return activity, nil
 }
 
-func (s *Service) UpdateActivity(userId uint, id uint, activityUpdateRequest domain.ActivityUpdateRequest) error {
+func (s *Service) UpdateActivity(
+	userId uint,
+	id uint,
+	activityUpdateRequest domain.ActivityUpdateRequest,
+) error {
 	if id == 0 {
 		return errors.New("id must be set to update an activity")
 	}
@@ -55,11 +80,12 @@ func (s *Service) UpdateActivity(userId uint, id uint, activityUpdateRequest dom
 		Where("user_id = ? AND id = ?", userId, id).
 		Update("custom_date", activityUpdateRequest.CustomDate)
 	if res.Error != nil {
-		slog.Error("Error updating activity in database", "error", res.Error.Error())
+		slog.Error("Error updating activity in database",
+			"error", res.Error.Error())
 		return errors.New("failed updating activity in database")
 	}
 	if res.RowsAffected < 1 {
-		slog.Error("No activities were updated. This may be because the activity doesn't exist or is not owned by the calling user.")
+		slog.Error("No activities were updated.")
 		return errors.New("failed updating activity in database")
 	}
 	slog.Debug("Updating activity", "updated_activity", id)
@@ -72,11 +98,12 @@ func (s *Service) DeleteActivity(userId uint, id uint) error {
 	}
 	res := s.db.Where("user_id = ?", userId).Delete(&entity.Activity{}, id)
 	if res.Error != nil {
-		slog.Error("Error deleting activity in database", "error", res.Error.Error())
+		slog.Error("Error deleting activity in database",
+			"error", res.Error.Error())
 		return errors.New("failed deleting activity in database")
 	}
 	if res.RowsAffected < 1 {
-		slog.Error("No activities were deleted. This may be because the activity doesn't exist or is not owned by the calling user.")
+		slog.Error("No activities were deleted.")
 		return errors.New("failed deleting activity from database")
 	}
 	return nil

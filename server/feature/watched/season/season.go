@@ -46,7 +46,11 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 	slog.Debug("Adding watched season item", "userId", userId, "watchedID", ar.WatchedID, "season", ar.SeasonNumber)
 	// 1. Make sure watched item exists and it is the correct type (TV)
 	var w entity.Watched
-	if resp := s.db.Where("id = ? AND user_id = ?", ar.WatchedID, userId).Preload("Content").Preload("WatchedSeasons").Find(&w); resp.Error != nil {
+	if resp := s.db.
+		Where("id = ? AND user_id = ?", ar.WatchedID, userId).
+		Preload("Content").
+		Preload("WatchedSeasons").
+		Find(&w); resp.Error != nil {
 		slog.Error("Failed when adding a watched season", "error", "failed to get watched item from db")
 		return WatchedSeasonAddResponse{}, errors.New("failed when retrieving watched item")
 	}
@@ -96,11 +100,27 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 		if updated {
 			if ar.Status != "" {
 				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status})
-				addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: w.ID, Type: entity.SEASON_STATUS_CHANGED, Data: string(json)})
+				addedActivity, _ = s.activityProvider.AddActivity(
+					userId,
+					domain.ActivityAddProps{
+						WatchedID: w.ID,
+						Type:      entity.SEASON_STATUS_CHANGED,
+						Data:      string(json),
+					},
+					false,
+				)
 			}
 			if ar.Rating != 0 {
 				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "rating": ar.Rating})
-				addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: w.ID, Type: entity.SEASON_RATING_CHANGED, Data: string(json)})
+				addedActivity, _ = s.activityProvider.AddActivity(
+					userId,
+					domain.ActivityAddProps{
+						WatchedID: w.ID,
+						Type:      entity.SEASON_RATING_CHANGED,
+						Data:      string(json),
+					},
+					false,
+				)
 			}
 		}
 	} else {
@@ -113,14 +133,14 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 			}
 		}
 		json, _ := json.Marshal(actData)
-		act := domain.ActivityAddRequest{WatchedID: w.ID, Type: entity.SEASON_ADDED, Data: string(json)}
+		act := domain.ActivityAddProps{WatchedID: w.ID, Type: entity.SEASON_ADDED, Data: string(json)}
 		if ar.AddActivity != "" {
 			act.Type = ar.AddActivity
 		}
 		if !ar.AddActivityDate.IsZero() {
 			act.CustomDate = &ar.AddActivityDate
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(userId, act)
+		addedActivity, _ = s.activityProvider.AddActivity(userId, act, false)
 	}
 	return WatchedSeasonAddResponse{
 		WatchedSeasons: w.WatchedSeasons,
@@ -132,7 +152,12 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 func (s *Service) RmWatchedSeason(userId uint, seasonId uint) (entity.Activity, error) {
 	slog.Debug("rmWatchedSeason called", "user_id", userId, "season_id", seasonId)
 	var watchedSeason entity.WatchedSeason
-	resp := s.db.Clauses(clause.Returning{}).Model(&entity.WatchedSeason{}).Unscoped().Where("id = ? AND user_id = ?", seasonId, userId).Delete(&watchedSeason)
+	resp := s.db.
+		Clauses(clause.Returning{}).
+		Model(&entity.WatchedSeason{}).
+		Unscoped().
+		Where("id = ? AND user_id = ?", seasonId, userId).
+		Delete(&watchedSeason)
 	if resp.Error != nil {
 		slog.Error("Failed when removing a watched season", "error", resp.Error)
 		return entity.Activity{}, errors.New("failed when removing watched season")
@@ -148,7 +173,15 @@ func (s *Service) RmWatchedSeason(userId uint, seasonId uint) (entity.Activity, 
 			"status": watchedSeason.Status,
 			"rating": watchedSeason.Rating,
 		})
-		addedActivity, _ := s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: watchedSeason.WatchedID, Type: entity.SEASON_REMOVED, Data: string(json)})
+		addedActivity, _ := s.activityProvider.AddActivity(
+			userId,
+			domain.ActivityAddProps{
+				WatchedID: watchedSeason.WatchedID,
+				Type:      entity.SEASON_REMOVED,
+				Data:      string(json),
+			},
+			false,
+		)
 		return addedActivity, nil
 	}
 	return entity.Activity{}, errors.New("removed, but failed to add activity entry")

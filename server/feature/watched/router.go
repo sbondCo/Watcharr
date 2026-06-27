@@ -120,14 +120,19 @@ func (r *Router) AddWatched(c *gin.Context) {
 	var ar domain.WatchedAddRequest
 	err := c.ShouldBindJSON(&ar)
 	if err == nil {
-		response, err := r.s.AddWatched(userId, ar, domain.WatchedAddExtraProps{
-			ActivityType: entity.ADDED_WATCHED,
-		})
+		newWatched, err := r.s.AddWatched(
+			userId,
+			ar,
+			domain.WatchedAddExtraProps{
+				ActivityType: entity.ADDED_WATCHED,
+			},
+		)
 		if err != nil {
 			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, response)
+		dto := domain.NewWatchedDtoForContentPage(&newWatched)
+		c.JSON(http.StatusOK, dto)
 		return
 	}
 	c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})

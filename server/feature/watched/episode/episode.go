@@ -143,24 +143,54 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 		// (changing value to same value doesn't count).
 		if updated {
 			if ar.Status != "" {
-				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "status": ar.Status})
-				addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: w.ID, Type: entity.EPISODE_STATUS_CHANGED, Data: string(json)})
+				json, _ := json.Marshal(map[string]any{
+					"season":  ar.SeasonNumber,
+					"episode": ar.EpisodeNumber,
+					"status":  ar.Status})
+				addedActivity, _ = s.activityProvider.AddActivity(
+					userId,
+					domain.ActivityAddProps{
+						WatchedID: w.ID,
+						Type:      entity.EPISODE_STATUS_CHANGED,
+						Data:      string(json),
+					},
+					false,
+				)
 			}
 			if ar.Rating != 0 {
-				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "rating": ar.Rating})
-				addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: w.ID, Type: entity.EPISODE_RATING_CHANGED, Data: string(json)})
+				json, _ := json.Marshal(map[string]any{
+					"season":  ar.SeasonNumber,
+					"episode": ar.EpisodeNumber,
+					"rating":  ar.Rating})
+				addedActivity, _ = s.activityProvider.AddActivity(
+					userId,
+					domain.ActivityAddProps{
+						WatchedID: w.ID,
+						Type:      entity.EPISODE_RATING_CHANGED,
+						Data:      string(json),
+					},
+					false,
+				)
 			}
 		}
 	} else {
-		json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "episode": ar.EpisodeNumber, "status": ar.Status, "rating": ar.Rating})
-		act := domain.ActivityAddRequest{WatchedID: w.ID, Type: entity.EPISODE_ADDED, Data: string(json)}
+		json, _ := json.Marshal(map[string]any{
+			"season":  ar.SeasonNumber,
+			"episode": ar.EpisodeNumber,
+			"status":  ar.Status,
+			"rating":  ar.Rating})
+		act := domain.ActivityAddProps{
+			WatchedID: w.ID,
+			Type:      entity.EPISODE_ADDED,
+			Data:      string(json),
+		}
 		if ar.AddActivity != "" {
 			act.Type = ar.AddActivity
 		}
 		if !ar.AddActivityDate.IsZero() {
 			act.CustomDate = &ar.AddActivityDate
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(userId, act)
+		addedActivity, _ = s.activityProvider.AddActivity(userId, act, false)
 	}
 	episodeAddResp := WatchedEpisodeAddResponse{
 		WatchedEpisodes: w.WatchedEpisodes,
@@ -168,7 +198,13 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 	}
 	if ar.Status != "" {
 		slog.Debug("addWatchedEpisodes: Episode status was changed, calling hook.")
-		episodeAddResp.EpisodeStatusChangedHookResponse = s.hookEpisodeStatusChanged(userId, ar.WatchedID, ar.SeasonNumber, ar.EpisodeNumber, ar.Status)
+		episodeAddResp.EpisodeStatusChangedHookResponse =
+			s.hookEpisodeStatusChanged(
+				userId,
+				ar.WatchedID,
+				ar.SeasonNumber,
+				ar.EpisodeNumber,
+				ar.Status)
 	}
 	return episodeAddResp, nil
 }
@@ -177,7 +213,12 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 func (s *Service) rmWatchedEpisode(userId uint, id uint) (entity.Activity, error) {
 	slog.Debug("rmWatchedSeason called", "user_id", userId, "id", id)
 	var watchedEpisode entity.WatchedEpisode
-	resp := s.db.Clauses(clause.Returning{}).Model(&entity.WatchedEpisode{}).Unscoped().Where("id = ? AND user_id = ?", id, userId).Delete(&watchedEpisode)
+	resp := s.db.
+		Clauses(clause.Returning{}).
+		Model(&entity.WatchedEpisode{}).
+		Unscoped().
+		Where("id = ? AND user_id = ?", id, userId).
+		Delete(&watchedEpisode)
 	if resp.Error != nil {
 		slog.Error("Failed when removing a watched episode", "error", resp.Error)
 		return entity.Activity{}, errors.New("failed when removing watched episode")
@@ -194,7 +235,15 @@ func (s *Service) rmWatchedEpisode(userId uint, id uint) (entity.Activity, error
 			"status":  watchedEpisode.Status,
 			"rating":  watchedEpisode.Rating,
 		})
-		addedActivity, _ := s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: watchedEpisode.WatchedID, Type: entity.EPISODE_REMOVED, Data: string(json)})
+		addedActivity, _ := s.activityProvider.AddActivity(
+			userId,
+			domain.ActivityAddProps{
+				WatchedID: watchedEpisode.WatchedID,
+				Type:      entity.EPISODE_REMOVED,
+				Data:      string(json),
+			},
+			false,
+		)
 		return addedActivity, nil
 	}
 	return entity.Activity{}, errors.New("removed, but failed to add activity entry")
@@ -223,7 +272,15 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 	hookResponse := EpisodeStatusChangedHookResponse{}
 
 	addHookActivity := func(aType entity.ActivityType, data string) {
-		addedActivity, _ := s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: watchedId, Type: aType, Data: (data)})
+		addedActivity, _ := s.activityProvider.AddActivity(
+			userId,
+			domain.ActivityAddProps{
+				WatchedID: watchedId,
+				Type:      aType,
+				Data:      (data),
+			},
+			false,
+		)
 		hookResponse.AddedActivities = append(hookResponse.AddedActivities, addedActivity)
 	}
 
