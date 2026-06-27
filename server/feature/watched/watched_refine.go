@@ -124,15 +124,23 @@ func refineSortPinned(db *gorm.DB) {
 }
 
 // list data.
-// gorm scope for applying sort and filters to watched
-func watchedRefine(wr domain.WatchedGetPageRequest) func(db *gorm.DB) *gorm.DB {
+// gorm scope for applying filters to watched
+func watchedRefineFilter(wr domain.WatchedGetPageRequest) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		// Apply filters
 		refineFilterType(db, wr.FilterType)
 		refineFilterStatus(db, wr.FilterStatus)
+		return db
+	}
+}
+
+// list data.
+// gorm scope for applying sort to watched
+func watchedRefineSort(wr domain.WatchedGetPageRequest, userId uint) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
 		// Apply sort
 		refineSortPinned(db)
-		refineSort(db, wr.Sort, wr.SortDir)
+		refineSort(db, userId, wr.Sort, wr.SortDir)
 		return db
 	}
 }
