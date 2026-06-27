@@ -100,17 +100,20 @@ func (s *Service) GetWatchedPage(
 		Preload("Tags").
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
-		// Refine our results first (filters, sort);
+		// Apply filters first.
 		Scopes(
-			watchedRefine(wr),
+			watchedRefineFilter(wr),
 		).
 		// Then count results (after filter);
 		Count(&pRes.TotalResults).
 		// Now calculate pagination properties with a TotalResults
 		// that takes filtered out items into account.
-		Scopes(
-			util.Paginate(pp, pRes),
-		).
+		Scopes(util.Paginate(pp, pRes)).
+		// Last we can apply our sorting.
+		// Note: We must sort *after* we count, because currently
+		// our 'Last Finished' sort, causes the COUNT query to also
+		// be given extra JOINS that we don't want (because it slows it down).
+		Scopes(watchedRefineSort(wr, userId)).
 		Find(&watched)
 	if res.Error != nil {
 		slog.Error("GetWatchedPage: Failed!", "error", res.Error)
@@ -162,17 +165,16 @@ func (s *Service) getPublicWatched(
 		Preload("Tags").
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
-		// Refine our results first (filters, sort);
-		Scopes(
-			watchedRefine(wr),
-		).
+		// Apply filters first.
+		Scopes(watchedRefineFilter(wr)).
 		// Then count results (after filter);
 		Count(&pRes.TotalResults).
 		// Now calculate pagination properties with a TotalResults
 		// that takes filtered out items into account.
-		Scopes(
-			util.Paginate(pp, pRes),
-		).
+		Scopes(util.Paginate(pp, pRes)).
+		// Sort options.
+		// Note: See note above in GetWatchedPage.
+		Scopes(watchedRefineSort(wr, userId)).
 		Find(&watched)
 	if res.Error != nil {
 		slog.Error("getPublicWatched: Failed!", "error", res.Error)
