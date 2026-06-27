@@ -42,6 +42,10 @@ If you backup your database by copying the .db file (while your server is stoppe
 
 ## Fixed
 
+- fix safari: Shrikhand font.
+- Icon: Fix status icons not having width and height properties not set.
+- Status: Fix button sizes now that icons have a width/height set.
+- Nav: Fix logo link being clickable through whole left side of nav.
 - import: myanimelist: Don't import start/finish dates when they are empty.
 - Star and Play icons color.
 - Activity: Fixed automation tooltip going out of bounds by moving it to top.
