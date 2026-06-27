@@ -116,7 +116,7 @@ func main() {
   ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
 
   Layer:%s Starting now. Get ready!
-  
+
   Thank you for running my (spaghetti) code on your system.`+"\n\n", version)
 
 	// Ensure data dir exists
@@ -139,9 +139,12 @@ func main() {
 		isProd = false
 	}
 
+	// Create our database connection.
+	// Migrations are ran before our connection is returned for use.
 	db, err := database.New()
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		slog.Error("Database initialization failed!", "error", err)
+		os.Exit(1)
 	}
 
 	if isProd {
