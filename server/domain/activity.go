@@ -7,7 +7,8 @@ import (
 )
 
 type (
-	ActivityAddRequest struct {
+	// Internal struct accepted by AddActivity function.
+	ActivityAddProps struct {
 		WatchedID  uint                `json:"watchedId" binding:"required"`
 		Type       entity.ActivityType `json:"type" binding:"required"`
 		Data       string              `json:"data" binding:"required"`
@@ -19,7 +20,11 @@ type (
 	}
 
 	ActivityAddProvider interface {
-		AddActivity(userId uint, ar ActivityAddRequest) (entity.Activity, error)
+		AddActivity(
+			userId uint,
+			ar ActivityAddProps,
+			countAsPlay bool,
+		) (entity.Activity, error)
 	}
 )
 

@@ -170,10 +170,12 @@ func (s *Service) SuccessfulImport(
 		})
 	if err != nil {
 		if errors.Is(err, domain.ErrWatchedExists) {
-			slog.Error("successfulImport: Must already be on watch list", "error", err)
+			slog.Error("successfulImport: Must already be on watch list",
+				"error", err)
 			return domain.ImportResponse{Type: domain.IMPORT_EXISTS}
 		}
-		slog.Error("successfulImport: Failed to add content as watched", "error", err)
+		slog.Error("successfulImport: Failed to add content as watched",
+			"error", err)
 		return domain.ImportResponse{Type: domain.IMPORT_FAILED}
 	}
 	// Add activity of the original time the show was added to the users
@@ -185,21 +187,58 @@ func (s *Service) SuccessfulImport(
 				"rating":         ar.Rating,
 				"linkedActivity": w.Activity[0].ID,
 			})
-			addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: w.ID, Type: entity.IMPORTED_RATING, Data: string(activityJson), CustomDate: ar.RatingCustomDate})
+			addedActivity, _ = s.activityProvider.AddActivity(
+				userId,
+				domain.ActivityAddProps{
+					WatchedID:  w.ID,
+					Type:       entity.IMPORTED_RATING,
+					Data:       string(activityJson),
+					CustomDate: ar.RatingCustomDate,
+				},
+				false,
+			)
 		} else {
-			addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: w.ID, Type: entity.IMPORTED_RATING, Data: strconv.Itoa(int(ar.Rating)), CustomDate: ar.RatingCustomDate})
+			addedActivity, _ = s.activityProvider.AddActivity(
+				userId,
+				domain.ActivityAddProps{
+					WatchedID:  w.ID,
+					Type:       entity.IMPORTED_RATING,
+					Data:       strconv.Itoa(int(ar.Rating)),
+					CustomDate: ar.RatingCustomDate,
+				},
+				false,
+			)
 		}
 		w.Activity = append(w.Activity, addedActivity)
 	}
 	// Add all dates watched as activity, if any
 	if len(ar.DatesWatched) > 0 {
-		for _, v := range ar.DatesWatched {
+		for i, v := range ar.DatesWatched {
+			countAsPlay := true
+			if i == 0 && ar.Status == entity.FINISHED {
+				// If the watched status we are importing is of FINISHED
+				// then the first DatesWatched must not count as a play,
+				// since the import activity (set in AddWatched) will already.
+				// Any subsequent DatesWatched should count as a play though.
+				countAsPlay = false
+				slog.Info("successfulImport: Set countAsPlay=false for first" +
+					"DatesWatched to avoid duplicate play count with AddWatched activity.")
+			}
 			customDate := v
-			addedActivity, err := s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: w.ID, Type: entity.IMPORTED_ADDED_WATCHED, CustomDate: &customDate})
+			addedActivity, err := s.activityProvider.AddActivity(
+				userId,
+				domain.ActivityAddProps{
+					WatchedID:  w.ID,
+					Type:       entity.IMPORTED_ADDED_WATCHED,
+					CustomDate: &customDate,
+				},
+				countAsPlay,
+			)
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
 			} else {
-				slog.Error("successfulImport: Failed to add dateswatched activity.", "date", v, "error", err)
+				slog.Error("successfulImport: Failed to add dateswatched activity.",
+					"date", v, "error", err)
 			}
 		}
 	}
@@ -212,11 +251,21 @@ func (s *Service) SuccessfulImport(
 			if activityDate == nil || activityDate.IsZero() {
 				activityDate = &ar.Activity[i].CreatedAt
 			}
-			addedActivity, err := s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: w.ID, Type: v.Type, Data: v.Data, CustomDate: activityDate})
+			addedActivity, err := s.activityProvider.AddActivity(
+				userId,
+				domain.ActivityAddProps{
+					WatchedID:  w.ID,
+					Type:       v.Type,
+					Data:       v.Data,
+					CustomDate: activityDate,
+				},
+				v.CountAsPlay,
+			)
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
 			} else {
-				slog.Error("successfulImport: Failed to add imported activity.", "full_object", v, "error", err)
+				slog.Error("successfulImport: Failed to add imported activity.",
+					"full_object", v, "error", err)
 			}
 		}
 	}
@@ -232,7 +281,8 @@ func (s *Service) SuccessfulImport(
 				AddActivityDate: v.CreatedAt,
 			})
 			if err != nil {
-				slog.Error("successfulImport: Failed to add watched season.", "error", err)
+				slog.Error("successfulImport: Failed to add watched season.",
+					"error", err)
 				continue
 			}
 			w.WatchedSeasons = ws.WatchedSeasons
@@ -251,7 +301,8 @@ func (s *Service) SuccessfulImport(
 				AddActivityDate: v.CreatedAt,
 			})
 			if err != nil {
-				slog.Error("successfulImport: Failed to add watched episodes.", "error", err)
+				slog.Error("successfulImport: Failed to add watched episodes.",
+					"error", err)
 				continue
 			}
 			w.WatchedEpisodes = ws.WatchedEpisodes
@@ -266,7 +317,8 @@ func (s *Service) SuccessfulImport(
 			var t entity.Tag
 			t, err := s.tagProvider.GetTagByNameAndColor(userId, v.Name, v.Color, v.BgColor)
 			if err != nil && err.Error() != "tag does not exist" {
-				slog.Error("successfulImport: Failed to check for an existing tag", "name", v.Name, "error", err)
+				slog.Error("successfulImport: Failed to check for an existing tag",
+					"name", v.Name, "error", err)
 				continue
 			}
 			if t.ID == 0 {
@@ -276,7 +328,8 @@ func (s *Service) SuccessfulImport(
 					BgColor: v.BgColor,
 				})
 				if err != nil {
-					slog.Error("successfulImport: Failed to add a tag.", "name", v.Name, "error", err)
+					slog.Error("successfulImport: Failed to add a tag.",
+						"name", v.Name, "error", err)
 					continue
 				}
 				t = tag
@@ -285,7 +338,8 @@ func (s *Service) SuccessfulImport(
 			// Associate the watched entry with the tag
 			err = watched.AddWatchedToTag(s.db, userId, t.ID, w.ID)
 			if err != nil {
-				slog.Error("successfulImport: Failed to associate watched entry with tag.", "error", err)
+				slog.Error("successfulImport: Failed to associate watched entry with tag.",
+					"error", err)
 				continue
 			}
 			w.Tags = append(w.Tags, t)

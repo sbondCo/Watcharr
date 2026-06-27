@@ -186,7 +186,10 @@ func (s *Service) getPublicWatched(
 // Get a watched list item by id (must be for `userId`).
 func (s *Service) GetWatchedItemById(userId uint, id uint) (entity.Watched, error) {
 	watched := new(entity.Watched)
-	res := s.db.Model(&entity.Watched{}).Preload("Content").Where("user_id = ? AND id = ?", userId, id).Find(&watched)
+	res := s.db.Model(&entity.Watched{}).
+		Preload("Content").
+		Where("user_id = ? AND id = ?", userId, id).
+		Find(&watched)
 	if res.Error != nil {
 		slog.Error("GetWatchedItemById: Failed!", "error", res.Error)
 		return entity.Watched{}, res.Error
@@ -453,7 +456,7 @@ func (s *Service) AddWatched(
 	slog.Debug("AddWatched: Added watched list item", "item", watched)
 
 	// Finally add activity
-	activityAddReq := domain.ActivityAddRequest{
+	activityAddReq := domain.ActivityAddProps{
 		WatchedID: watched.ID,
 		Type:      extraProps.ActivityType,
 	}
@@ -466,9 +469,14 @@ func (s *Service) AddWatched(
 	} else {
 		activityAddReq.Data = string(activityJson)
 	}
+	countAsPlay := false
+	if ar.Status == entity.FINISHED {
+		countAsPlay = true
+	}
 	act, _ := s.activityProvider.AddActivity(
 		userId,
 		activityAddReq,
+		countAsPlay,
 	)
 	watched.Activity = append(watched.Activity, act)
 
@@ -575,6 +583,11 @@ func (s *Service) updateWatched(
 	ar domain.WatchedUpdateRequest,
 ) (domain.WatchedUpdateResponse, error) {
 	slog.Debug("UpdateWatched", "request_data", ar)
+	if err := ar.Valid(); err != nil {
+		slog.Error("UpdateWatched: UpdateRequest struct is invalid.",
+			"id", id, "error", err)
+		return domain.WatchedUpdateResponse{}, err
+	}
 	upwat := entity.Watched{}
 	res := s.db.Model(&entity.Watched{}).Where("id = ? AND user_id = ?", id, userId).Take(&upwat)
 	if res.Error != nil {
@@ -603,16 +616,49 @@ func (s *Service) updateWatched(
 	}
 	addedActivity := entity.Activity{}
 	if ar.Rating != 0 {
-		addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: id, Type: entity.RATING_CHANGED, Data: strconv.Itoa(int(ar.Rating))})
+		addedActivity, _ = s.activityProvider.AddActivity(
+			userId,
+			domain.ActivityAddProps{
+				WatchedID: id,
+				Type:      entity.RATING_CHANGED,
+				Data:      strconv.Itoa(int(ar.Rating)),
+			},
+			false,
+		)
 	}
 	if ar.Status != "" {
-		addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: id, Type: entity.STATUS_CHANGED, Data: string(ar.Status)})
+		countAsPlay := false
+		if ar.Status == entity.FINISHED &&
+			util.Deref(ar.LetCountAsPlay, true) != false {
+			countAsPlay = true
+		}
+		addedActivity, _ = s.activityProvider.AddActivity(userId,
+			domain.ActivityAddProps{
+				WatchedID: id,
+				Type:      entity.STATUS_CHANGED,
+				Data:      string(ar.Status),
+			},
+			countAsPlay,
+		)
 	}
 	if ar.Thoughts != "" {
-		addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: id, Type: entity.THOUGHTS_CHANGED})
+		addedActivity, _ = s.activityProvider.AddActivity(userId,
+			domain.ActivityAddProps{
+				WatchedID: id,
+				Type:      entity.THOUGHTS_CHANGED,
+			},
+			false,
+		)
 	}
 	if ar.RemoveThoughts {
-		addedActivity, _ = s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: id, Type: entity.THOUGHTS_REMOVED, Data: originalThoughts})
+		addedActivity, _ = s.activityProvider.AddActivity(userId,
+			domain.ActivityAddProps{
+				WatchedID: id,
+				Type:      entity.THOUGHTS_REMOVED,
+				Data:      originalThoughts,
+			},
+			false,
+		)
 	}
 	return domain.WatchedUpdateResponse{NewActivity: addedActivity}, nil
 }
@@ -665,6 +711,13 @@ func (s *Service) removeWatched(
 	if res.RowsAffected <= 0 {
 		return domain.WatchedRemoveResponse{}, errors.New("no watched entry found")
 	}
-	addedActivity, _ := s.activityProvider.AddActivity(userId, domain.ActivityAddRequest{WatchedID: id, Type: entity.REMOVED_WATCHED})
+	addedActivity, _ := s.activityProvider.AddActivity(
+		userId,
+		domain.ActivityAddProps{
+			WatchedID: id,
+			Type:      entity.REMOVED_WATCHED,
+		},
+		false,
+	)
 	return domain.WatchedRemoveResponse{NewActivity: addedActivity}, nil
 }

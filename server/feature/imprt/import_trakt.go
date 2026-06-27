@@ -257,7 +257,7 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 							SeasonNumber:  v.Episode.Season,
 							EpisodeNumber: v.Episode.Number,
 							Status:        entity.PLANNED,
-							GormModel: dbmodel.GormModel{
+							GormModelNoDel: dbmodel.GormModelNoDel{
 								CreatedAt: v.ListedAt,
 							},
 						})
@@ -283,7 +283,7 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 						SeasonNumber:  v.Episode.Season,
 						EpisodeNumber: v.Episode.Number,
 						Status:        entity.PLANNED,
-						GormModel: dbmodel.GormModel{
+						GormModelNoDel: dbmodel.GormModelNoDel{
 							CreatedAt: v.ListedAt,
 						},
 					}}
@@ -393,7 +393,7 @@ func (t *TraktService) processTraktHistoryItem(v TraktHistory, toImport map[stri
 				EpisodeNumber: v.Episode.Number,
 				Status:        entity.FINISHED,
 				// Rating: ,
-				GormModel: dbmodel.GormModel{
+				GormModelNoDel: dbmodel.GormModelNoDel{
 					CreatedAt: v.WatchedAt,
 				},
 			}
