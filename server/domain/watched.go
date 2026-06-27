@@ -89,6 +89,8 @@ type WatchedDto struct {
 	WatchedEpisodes  []entity.WatchedEpisode `json:"watchedEpisodes,omitempty"`
 	Tags             []entity.Tag            `json:"tags,omitempty"`
 	LastViewedSeason *int                    `json:"lastViewedSeason,omitempty"`
+	// Amount of plays this media has, calculated from activity.
+	Plays int `json:"plays,omitempty"`
 }
 
 // New dto with base properties that we have for all WatchedDtos.
@@ -137,6 +139,7 @@ func NewWatchedDtoForContentPage(w *entity.Watched) WatchedDto {
 	dto.WatchedEpisodes = w.WatchedEpisodes
 	dto.Tags = w.Tags
 	dto.LastViewedSeason = w.LastViewedSeason
+	dto.Plays = getPlaysFromActivity(w.Activity)
 
 	return dto
 }
@@ -192,11 +195,35 @@ type WatchedAddRequest struct {
 
 // Update watched entry request
 type WatchedUpdateRequest struct {
-	Status         entity.WatchedStatus `json:"status" binding:"required_without_all=Rating Thoughts RemoveThoughts Pinned"`
-	Rating         float64              `json:"rating" binding:"max=10,required_without_all=Status Thoughts RemoveThoughts Pinned"`
-	Thoughts       string               `json:"thoughts" binding:"required_without_all=Status Rating RemoveThoughts Pinned"`
+	Status         entity.WatchedStatus `json:"status"`
+	Rating         float64              `json:"rating"`
+	Thoughts       string               `json:"thoughts" `
 	RemoveThoughts bool                 `json:"removeThoughts"`
-	Pinned         *bool                `json:"pinned" binding:"required_without_all=Status Rating Thoughts RemoveThoughts"`
+	Pinned         *bool                `json:"pinned" `
+	// Allow the added activity count as play?
+	// If the activity was going to count, this can stop it.
+	LetCountAsPlay *bool `json:"letCountAsPlay"`
+}
+
+// If the struct is valid for the Update Request.
+// - has atleast one property set.
+// - If rating is set, can't be out of bounds.
+func (w WatchedUpdateRequest) Valid() error {
+	if w.Status == "" &&
+		w.Rating == 0 &&
+		(w.Thoughts == "" && !w.RemoveThoughts) &&
+		w.Pinned == nil &&
+		w.LetCountAsPlay == nil {
+		// No properties are set, so this struct is not valid.
+		return errors.New("no properties provided")
+	}
+	if w.Status != "" && !w.Status.IsValid() {
+		return errors.New("status is not set to a supported status")
+	}
+	if w.Rating < 0 || w.Rating > 10 {
+		return errors.New("rating can only be a value from 0-10")
+	}
+	return nil
 }
 
 // Update response.
