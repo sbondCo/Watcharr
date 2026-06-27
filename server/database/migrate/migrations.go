@@ -65,4 +65,32 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		// Dropping `deleted_at` columns for `watched_seasons` and
+		// `watched_episodes` tables since we do not use them.
+		ID: "202604142234_0002",
+		Up: func(tx *gorm.DB) error {
+			migID := "202604142234_0002"
+			slog.Info("Migration is starting.", "mig", migID)
+
+			// Drop deleted_at for watched_seasons
+			err := tx.Migrator().DropColumn(&entity.WatchedSeason{}, "deleted_at")
+			if err != nil {
+				slog.Error("watched_seasons migration failed!", "mig", migID)
+				return err
+			}
+			slog.Info("watched_seasons migration succeeded.", "mig", migID)
+
+			// Drop deleted_at for watched_episodes
+			err = tx.Migrator().DropColumn(&entity.WatchedEpisode{}, "deleted_at")
+			if err != nil {
+				slog.Error("watched_episodes migration failed!", "mig", migID)
+				return err
+			}
+			slog.Info("watched_episodes migration succeeded.", "mig", migID)
+
+			slog.Info("Migration complete.", "mig", migID)
+			return nil
+		},
+	},
 }
