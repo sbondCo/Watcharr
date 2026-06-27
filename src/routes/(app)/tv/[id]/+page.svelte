@@ -13,6 +13,7 @@
 		contentExistsOnJellyfin,
 		removeWatched,
 		updateWatched,
+		type UpdateWatchedOptions,
 	} from "@/lib/util/api";
 	import { getTopCrew } from "@/lib/util/helpers.js";
 	import { store } from "@/store.svelte.js";
@@ -34,6 +35,10 @@
 	import PosterImage from "@/lib/content/PosterImage.svelte";
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
 	import WatchedDeleteBtn from "@/lib/content/WatchedDeleteBtn.svelte";
+	import TopCrewList from "@/lib/content/TopCrewList.svelte";
+	import { activityRemovedHook } from "@/lib/activity.js";
+	import CountAsPlayModal from "@/lib/watched/CountAsPlayModal.svelte";
+	import { createSignal, type Signal } from "@/lib/util/signal.js";
 
 	let { data } = $props();
 
@@ -42,6 +47,7 @@
 	let arrRequestButtonComp: ArrRequestButton | undefined = $state();
 	let show: Media | undefined = $state();
 	let pageError: Error | undefined = $state();
+	let countAsPlayModalSignal: Signal<boolean> | undefined = $state();
 
 	$effect(() => {
 		(async () => {
@@ -101,14 +107,29 @@
 				console.error("contentChanged: no show");
 				return false;
 			}
-			show.watched = await updateWatched(show.watched, {
+			const reqOpts: UpdateWatchedOptions = {
 				contentId: data.tvId,
 				contentType: "tv",
 				status: newStatus,
 				rating: newRating,
 				thoughts: newThoughts,
 				pinned: pinned,
-			});
+			};
+			// Series differ from other media in that people are likely to go
+			// back out of the 'FINISHED' state when a new season releases
+			// while they watch it, then go back to 'FINISHED' after only
+			// watching the new season. Because of that use case, for series,
+			// we will ask the user if any 'FINISHED' statuses set when plays>1
+			// should count as a play..
+			if (show.watched?.plays && newStatus == "FINISHED") {
+				countAsPlayModalSignal = createSignal<boolean>();
+				const allow = await countAsPlayModalSignal.promise;
+				countAsPlayModalSignal = undefined;
+				if (!allow) {
+					reqOpts.letCountAsPlay = false;
+				}
+			}
+			show.watched = await updateWatched(show.watched, reqOpts);
 			return true;
 		} catch {
 			return false;
@@ -239,6 +260,10 @@
 			/>
 		</div>
 
+		{#if countAsPlayModalSignal}
+			<CountAsPlayModal onDecision={countAsPlayModalSignal} />
+		{/if}
+
 		{#if requestModalShown}
 			<RequestShow
 				content={show}
@@ -260,14 +285,7 @@
 				<Spinner />
 			{:then credits}
 				{#if credits.topCrew?.length > 0}
-					<div class="creators">
-						{#each credits.topCrew as crew}
-							<div>
-								<span>{crew.name}</span>
-								<span>{crew.job}</span>
-							</div>
-						{/each}
-					</div>
+					<TopCrewList topCrew={credits.topCrew} />
 				{/if}
 
 				{#if credits.cast?.length > 0}
@@ -292,7 +310,10 @@
 			{/if}
 
 			{#if show.watched}
-				<Activity bind:activity={show.watched.activity} />
+				<Activity
+					activity={show.watched.activity}
+					onRemoved={(a) => activityRemovedHook(show?.watched, a)}
+				/>
 			{/if}
 
 			{#if data?.tvId && show.seasons}
@@ -380,24 +401,6 @@
 
 		@media screen and (max-width: 500px) {
 			padding: 20px;
-		}
-	}
-
-	.creators {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 35px;
-		margin: 10px 60px;
-
-		div {
-			display: flex;
-			flex-flow: column;
-			min-width: 150px;
-
-			span:first-child {
-				font-weight: bold;
-			}
 		}
 	}
 </style>

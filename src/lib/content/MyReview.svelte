@@ -30,6 +30,12 @@
 			thoughts={watched?.thoughts}
 			onChange={onThoughtsChanged}
 		/>
+		{#if typeof watched.plays == "number" && watched.plays > 0}
+			<div>
+				{watched.plays}
+				{watched.plays > 1 ? "Plays" : "Play"}
+			</div>
+		{/if}
 	{/if}
 </div>
 

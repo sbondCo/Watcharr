@@ -27,14 +27,11 @@ export const baseURL =
 		: "/api";
 console.log("api: baseURL constructed:", baseURL);
 
-interface UpdateWatchedSharedOptions {
-	status?: WatchedStatus;
-	rating?: number;
-	thoughts?: string;
-	pinned?: boolean;
-}
-
-interface UpdateWatchedOptions extends UpdateWatchedSharedOptions {
+/**
+ * Options for our internal updateWatched func.
+ */
+export interface UpdateWatchedOptions
+	extends Omit<WatchedUpdateRequest, "removeThoughts"> {
 	/**
 	 * TMDB ID.
 	 */
@@ -52,6 +49,7 @@ async function _updateWatched(
 	rating?: number,
 	thoughts?: string,
 	pinned?: boolean,
+	letCountAsPlay?: boolean,
 ) {
 	if (
 		!status &&
@@ -70,6 +68,9 @@ async function _updateWatched(
 	if (typeof thoughts !== "undefined") obj.thoughts = thoughts;
 	if (thoughts === "") obj.removeThoughts = true;
 	if (typeof pinned !== "undefined") obj.pinned = pinned;
+	if (typeof letCountAsPlay !== "undefined") {
+		obj.letCountAsPlay = letCountAsPlay;
+	}
 	const resp = await axios.put<WatchedUpdateResponse>(
 		`/watched/${wEntry.id}`,
 		obj,
@@ -79,21 +80,25 @@ async function _updateWatched(
 	if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
 	if (typeof pinned !== "undefined") wEntry.pinned = pinned;
 	if (resp?.data?.newActivity && resp?.data?.newActivity?.id) {
-		if (wEntry.activity?.length > 0) {
+		if (wEntry.activity && wEntry.activity.length > 0) {
 			wEntry.activity.push(resp.data.newActivity);
 		} else {
 			wEntry.activity = [resp.data.newActivity];
 		}
-		// We want to update the updatedAt field too (so
-		// change is reflected when filtering modified at)
-		// We can piggy back from this data for now.
-		wEntry.updatedAt = resp.data.newActivity.createdAt;
+		// If new activity counts as play, increment plays for local state.
+		if (resp.data.newActivity.countAsPlay) {
+			if (wEntry.plays) {
+				wEntry.plays++;
+			} else {
+				wEntry.plays = 1;
+			}
+		}
 	}
 }
 
 /**
- * Add or update watched show/movie.
- * @param wEntry The watched entry (movie or tv only) we are updating.
+ * Add or update watched media.
+ * @param wEntry The watched entry we are updating.
  * @param opts Update options.
  * @returns Updated watched entry if request succeeded, otherwise will
  * throw error after displaying updating the notification to "failed".
@@ -114,6 +119,7 @@ export async function updateWatched(
 					opts.rating,
 					opts.thoughts,
 					opts.pinned,
+					opts.letCountAsPlay,
 				);
 				notify({ id: nid, text: `Saved!`, type: "success" });
 			} catch (err) {

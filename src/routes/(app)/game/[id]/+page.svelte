@@ -19,6 +19,7 @@
 	import Poster from "@/lib/poster/Poster.svelte";
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
 	import WatchedDeleteBtn from "@/lib/content/WatchedDeleteBtn.svelte";
+	import { activityRemovedHook } from "@/lib/activity.js";
 
 	let { data } = $props();
 
@@ -213,7 +214,10 @@
 			{/if}
 
 			{#if game.watched}
-				<Activity bind:activity={game.watched.activity} />
+				<Activity
+					activity={game.watched.activity}
+					onRemoved={(a) => activityRemovedHook(game?.watched, a)}
+				/>
 			{/if}
 		</div>
 	</div>

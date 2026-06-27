@@ -47,8 +47,8 @@
 		instance.
 	</p>
 	<p>
-		If you are migrating to another server you own, it's best to migrate take
-		your existing database with you.
+		If you are migrating to another server that you own, it's best to take your
+		existing database with you.
 	</p>
 	<p>
 		<b>Warning</b>: This is not a backup feature. Backups should be done on the

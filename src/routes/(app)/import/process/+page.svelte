@@ -337,7 +337,10 @@
 					try {
 						const startDateNode = animeNode.querySelector("my_start_date");
 						const finishDateNode = animeNode.querySelector("my_finish_date");
-						if (startDateNode?.textContent) {
+						if (
+							startDateNode?.textContent &&
+							startDateNode?.textContent != "0000-00-00"
+						) {
 							// For start date, we can simply add the activity manually.
 							l.activity = [
 								// We don't need all the data when importing activity.
@@ -349,7 +352,10 @@
 								},
 							] as any[];
 						}
-						if (finishDateNode?.textContent) {
+						if (
+							finishDateNode?.textContent &&
+							finishDateNode?.textContent != "0000-00-00"
+						) {
 							l.datesWatched = [new Date(finishDateNode.textContent)];
 						}
 					} catch (err) {
