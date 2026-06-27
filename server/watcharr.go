@@ -66,7 +66,13 @@ func main() {
 	}
 
 	multiw := logging.Setup(path.Join(config.DataPath, "watcharr.log"))
-	slog.Info("Watcharr Starting", "version", version)
+	// Just a nice separator so when inspecting the log file I know when
+	// logs are for a new instance.
+	fmt.Fprintf(multiw, `
+	Stand back. Watcharr is starting.
+
+`)
+	slog.Info("Watcharr starting", "version", version)
 	fmt.Printf(`
   ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⣀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
   ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⣴⣶⣿⠿⠛⠛⠛⠻⠿⣿⣿⣿⣿⣿⣶⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
