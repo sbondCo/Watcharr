@@ -25,28 +25,28 @@ func TestGetLatestWatchedInTv(t *testing.T) {
 	}
 	watchedEps := []entity.WatchedEpisode{
 		{
-			GormModel:     dbmodel.GormModel{ID: 60},
-			EpisodeNumber: 1,
-			SeasonNumber:  1,
-			Status:        entity.FINISHED,
+			GormModelNoDel: dbmodel.GormModelNoDel{ID: 60},
+			EpisodeNumber:  1,
+			SeasonNumber:   1,
+			Status:         entity.FINISHED,
 		},
 		{
-			GormModel:     dbmodel.GormModel{ID: 70},
-			EpisodeNumber: 5,
-			SeasonNumber:  2,
-			Status:        entity.FINISHED,
+			GormModelNoDel: dbmodel.GormModelNoDel{ID: 70},
+			EpisodeNumber:  5,
+			SeasonNumber:   2,
+			Status:         entity.FINISHED,
 		},
 		{
-			GormModel:     dbmodel.GormModel{ID: 72},
-			EpisodeNumber: 6,
-			SeasonNumber:  3,
-			Status:        entity.DROPPED,
+			GormModelNoDel: dbmodel.GormModelNoDel{ID: 72},
+			EpisodeNumber:  6,
+			SeasonNumber:   3,
+			Status:         entity.DROPPED,
 		},
 		{
-			GormModel:     dbmodel.GormModel{ID: 90},
-			EpisodeNumber: 2,
-			SeasonNumber:  3,
-			Status:        entity.FINISHED,
+			GormModelNoDel: dbmodel.GormModelNoDel{ID: 90},
+			EpisodeNumber:  2,
+			SeasonNumber:   3,
+			Status:         entity.FINISHED,
 		},
 	}
 	resp := watchedutil.GetLatestWatchedInTv(watchedSeasons, watchedEps)
