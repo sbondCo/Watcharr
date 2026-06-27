@@ -93,4 +93,45 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		// Moving to using WAL journal_mode for our sqlite database, which
+		// should grant us improvements in all areas.
+		// https://sqlite.org/pragma.html#pragma_journal_mode
+		ID: "202604162229_0003",
+		// NOTE: We are using `unsafe` so that this migration isn't ran inside
+		// of a transaction (can't change into WAL from within one), so we
+		// MUST ENSURE we are only doing one thing!
+		UNSAFE: true,
+		Up: func(db *gorm.DB) error {
+			migID := "202604162229_0003"
+			slog.Info("Migration is starting.", "mig", migID)
+
+			var mode string
+			res := db.Raw("PRAGMA journal_mode=WAL").Scan(&mode)
+			if res.Error != nil {
+				slog.Error("Setting journal_mode=WAL failed!", "mig", migID)
+				return res.Error
+			}
+			// Setting journal_mode might not return an error if it fails,
+			// it always returns the current journal_mode of the db, which
+			// will be WAL if it succeeds OR the "old" journal_mode if it
+			// wasn't changed.
+			// If the mode returned isn't WAL, then something has failed, so
+			// we'll error to stop here and prevent the migration record from
+			// being created, allowing the user to try again.
+			// Note: I was able to test this code by opening the db like this
+			// `sqlite.Open("file:data/watcharr.db?immutable=true")` and
+			// commenting out other code so we get right to this migration
+			// without failing at AutoMigration, etc.
+			slog.Info("journal_mode response.", "mode", mode)
+			if strings.ToLower(mode) != "wal" {
+				slog.Error("Setting journal_mode=WAL failed silently!")
+				return errors.New("Database is not in WAL mode after setting journal_mode=WAL")
+			}
+			slog.Info("WAL journal_mode migration succeeded.", "mig", migID)
+
+			slog.Info("Migration complete.", "mig", migID)
+			return nil
+		},
+	},
 }
