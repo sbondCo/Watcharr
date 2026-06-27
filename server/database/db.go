@@ -58,6 +58,9 @@ func New() (*gorm.DB, error) {
 		slog.Error("New: Manual migrations failed.", "error", err)
 		return nil, err
 	}
+	// Optimize database.
+	if err := optimize(db); err != nil {
+		slog.Error("New: Optimizing database failed.", "error", err)
 		return nil, err
 	}
 	return db, nil
@@ -82,3 +85,77 @@ func configure(db *gorm.DB) error {
 	return nil
 }
 
+// Optimize the database.
+func optimize(db *gorm.DB) error {
+	slog.Info("optimize: Running optimizations.")
+
+	// WAL Checkpoint (aka commit anything in the WAL to the main db).
+	// Seems best to do this to make sure it has happened, especially since
+	// we are running vacuum next.
+	// https://sqlite.org/pragma.html#pragma_wal_checkpoint
+	if res := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); res.Error != nil {
+		slog.Error("optimize: Checkpoint failed!")
+		return res.Error
+	}
+	slog.Info("optimize: Checkpointed.")
+
+	// Optimize pragma.
+	// Running with recommended argument for our new long-living connection.
+	// https://sqlite.org/pragma.html#pragma_optimize
+	if res := db.Exec("PRAGMA optimize=0x10002"); res.Error != nil {
+		slog.Error("optimize: Optimize pragma failed!")
+		return res.Error
+	}
+	slog.Info("optimize: Optimize pragma succeeded.")
+
+	// Vacuum.
+	// > VACUUM rebuilds the database file, repacking it into a minimal amount
+	// > of disk space.
+	// https://sqlite.org/lang_vacuum.html
+	if res := db.Exec("VACUUM"); res.Error != nil {
+		slog.Error("optimize: Vacuum failed!")
+		return res.Error
+	}
+	slog.Info("optimize: Vacuumed successfully.")
+
+	// WAL Checkpoint (aka commit anything in the WAL to the main db).
+	// Do this after vacuum too to ensure we have a clean slate for this
+	// startup.
+	// https://sqlite.org/pragma.html#pragma_wal_checkpoint
+	if res := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); res.Error != nil {
+		slog.Error("optimize: Checkpoint failed!")
+		return res.Error
+	}
+	slog.Info("optimize: Checkpointed.")
+
+	slog.Info("optimize: Done.")
+	return nil
+}
+
+// Optimize task that is scheduled and ran every whenever.
+// So this func is for optimzations that we want to re-run every time the
+// task is scheduled for.
+func TaskOptimize(db *gorm.DB) error {
+	slog.Info("TaskOptimize: Running optimizations.")
+
+	// WAL Checkpoint (aka commit anything in the WAL to the main db).
+	// To avoid our WAL file becoming huge, we checkpoint regularly.
+	// https://sqlite.org/pragma.html#pragma_wal_checkpoint
+	if res := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); res.Error != nil {
+		slog.Error("TaskOptimize: Checkpoint failed!")
+		return res.Error
+	}
+	slog.Info("TaskOptimize: Checkpointed.")
+
+	// Optimize pragma.
+	// No args for our task as recommended.
+	// https://sqlite.org/pragma.html#pragma_optimize
+	if res := db.Exec("PRAGMA optimize"); res.Error != nil {
+		slog.Error("TaskOptimize: Optimize pragma failed!")
+		return res.Error
+	}
+	slog.Info("TaskOptimize: Optimize pragma succeeded.")
+
+	slog.Info("TaskOptimize: Done.")
+	return nil
+}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/sbondCo/Watcharr/config"
+	"github.com/sbondCo/Watcharr/database"
 	"github.com/sbondCo/Watcharr/feature/arr"
 	"github.com/sbondCo/Watcharr/image"
 	"github.com/sbondCo/Watcharr/token"
@@ -71,6 +72,12 @@ func SetupTasks(cfg *config.ServerConfig, db *gorm.DB) {
 		"Cleanup Images": {
 			f: func() {
 				image.CleanupImages(db)
+			},
+			dd: 24 * time.Hour,
+		},
+		"Optimize Database": {
+			f: func() {
+				database.TaskOptimize(db)
 			},
 			dd: 24 * time.Hour,
 		},
