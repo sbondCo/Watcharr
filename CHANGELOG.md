@@ -1,4 +1,4 @@
-# Unreleased
+# [Unreleased]
 
 These changes are awaiting release:
 
