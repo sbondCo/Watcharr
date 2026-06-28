@@ -53,7 +53,7 @@ If you backup your database by copying the .db file (while your server is stoppe
 ## Removed
 
 - Drop `deleted_at` columns for watched episode/season tables.
-- Removed `AddActivity` (POST /activity) endpoint.
+- Removed `AddActivity` (POST /activity) endpoint (Thanks [@Dredsen] for pointing out the flaw).
 
 ## Documentation
 
@@ -1729,3 +1729,4 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@jigglycrumb]: https://github.com/jigglycrumb
 [@IvanBeke]: https://github.com/IvanBeke
 [@ParksideParade]: https://github.com/ParksideParade
+[Dredsen]: https://github.com/Dredsen
