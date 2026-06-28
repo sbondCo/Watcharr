@@ -2,4 +2,4 @@
 
 Changelog images, etc go in this folder.
 
-[View the real changelog for Watcharr.](../README.md)
+[View the real changelog for Watcharr.](../CHANGELOG.md)
