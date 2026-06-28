@@ -55,6 +55,10 @@ If you backup your database by copying the .db file (while your server is stoppe
 - Drop `deleted_at` columns for watched episode/season tables.
 - Removed `AddActivity` (POST /activity) endpoint.
 
+## Documentation
+
+- Backup: Also note that `watcharr.db-wal` should be backed up along with the .db file since v3.
+
 # [3.0.1] - 2026-03-09
 
 Hi All, delivered straight to your inbox today; you have bug fixes, some even improving general quality of life!!
