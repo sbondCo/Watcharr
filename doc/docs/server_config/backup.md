@@ -35,7 +35,7 @@ Backing up this way is discouraged because new important files could be added la
 
 If you don't care about the warning not to backup this way, here are the "important" files that you can single out for backup:
 
-- `watcharr.db` Your database, holds all users, their watchlists, etc.
+- `watcharr.db` & `watcharr.db-wal` Your database, holds all users, their watchlists, etc.
 - `watcharr.json` Server config.
 - `img/up` Profile picture uploads.
 - `img/games` Game posters (not exactly important, but scenarios in which this folder is not backed up have not been tested, only relevant for servers with game support enabled).
