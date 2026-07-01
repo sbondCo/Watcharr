@@ -3,6 +3,7 @@ package database
 import (
 	"log/slog"
 	"path"
+	"time"
 
 	"github.com/sbondCo/Watcharr/config"
 	"github.com/sbondCo/Watcharr/database/entity"
@@ -93,40 +94,46 @@ func optimize(db *gorm.DB) error {
 	// Seems best to do this to make sure it has happened, especially since
 	// we are running vacuum next.
 	// https://sqlite.org/pragma.html#pragma_wal_checkpoint
+	timeBeforeQuery := time.Now()
 	if res := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); res.Error != nil {
 		slog.Error("optimize: Checkpoint failed!")
 		return res.Error
 	}
-	slog.Info("optimize: Checkpointed.")
+	slog.Info("optimize: Checkpointed.", "took", time.Since(timeBeforeQuery))
 
 	// Optimize pragma.
 	// Running with recommended argument for our new long-living connection.
 	// https://sqlite.org/pragma.html#pragma_optimize
+	timeBeforeQuery = time.Now()
 	if res := db.Exec("PRAGMA optimize=0x10002"); res.Error != nil {
 		slog.Error("optimize: Optimize pragma failed!")
 		return res.Error
 	}
-	slog.Info("optimize: Optimize pragma succeeded.")
+	slog.Info("optimize: Optimize pragma succeeded.",
+		"took", time.Since(timeBeforeQuery))
 
 	// Vacuum.
 	// > VACUUM rebuilds the database file, repacking it into a minimal amount
 	// > of disk space.
 	// https://sqlite.org/lang_vacuum.html
+	timeBeforeQuery = time.Now()
 	if res := db.Exec("VACUUM"); res.Error != nil {
 		slog.Error("optimize: Vacuum failed!")
 		return res.Error
 	}
-	slog.Info("optimize: Vacuumed successfully.")
+	slog.Info("optimize: Vacuumed successfully.",
+		"took", time.Since(timeBeforeQuery))
 
 	// WAL Checkpoint (aka commit anything in the WAL to the main db).
 	// Do this after vacuum too to ensure we have a clean slate for this
 	// startup.
 	// https://sqlite.org/pragma.html#pragma_wal_checkpoint
+	timeBeforeQuery = time.Now()
 	if res := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); res.Error != nil {
 		slog.Error("optimize: Checkpoint failed!")
 		return res.Error
 	}
-	slog.Info("optimize: Checkpointed.")
+	slog.Info("optimize: Checkpointed.", "took", time.Since(timeBeforeQuery))
 
 	slog.Info("optimize: Done.")
 	return nil
@@ -141,20 +148,24 @@ func TaskOptimize(db *gorm.DB) error {
 	// WAL Checkpoint (aka commit anything in the WAL to the main db).
 	// To avoid our WAL file becoming huge, we checkpoint regularly.
 	// https://sqlite.org/pragma.html#pragma_wal_checkpoint
+	timeBeforeQuery := time.Now()
 	if res := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); res.Error != nil {
 		slog.Error("TaskOptimize: Checkpoint failed!")
 		return res.Error
 	}
-	slog.Info("TaskOptimize: Checkpointed.")
+	slog.Info("TaskOptimize: Checkpointed.",
+		"took", time.Since(timeBeforeQuery))
 
 	// Optimize pragma.
 	// No args for our task as recommended.
 	// https://sqlite.org/pragma.html#pragma_optimize
+	timeBeforeQuery = time.Now()
 	if res := db.Exec("PRAGMA optimize"); res.Error != nil {
 		slog.Error("TaskOptimize: Optimize pragma failed!")
 		return res.Error
 	}
-	slog.Info("TaskOptimize: Optimize pragma succeeded.")
+	slog.Info("TaskOptimize: Optimize pragma succeeded.",
+		"took", time.Since(timeBeforeQuery))
 
 	slog.Info("TaskOptimize: Done.")
 	return nil
