@@ -33,6 +33,7 @@ import (
 	"github.com/sbondCo/Watcharr/feature/feature"
 	"github.com/sbondCo/Watcharr/feature/follow"
 	"github.com/sbondCo/Watcharr/feature/game"
+	"github.com/sbondCo/Watcharr/feature/img"
 	"github.com/sbondCo/Watcharr/feature/imprt"
 	"github.com/sbondCo/Watcharr/feature/jellyfin"
 	"github.com/sbondCo/Watcharr/feature/job"
@@ -266,6 +267,7 @@ func main() {
 	game.NewRouter(br, gameService, watchedService).AddRoutes()
 	search.NewRouter(br, searchService, watchedService).AddRoutes()
 	discover.NewRouter(br, discoverService, watchedService).AddRoutes()
+	img.NewRouter(br).AddRoutes()
 
 	// Only add setup routes if there are no users found in db.
 	var userCount int64
@@ -280,8 +282,6 @@ func main() {
 		slog.Error("Failed to check if any users exist.. not registering setup routes",
 			"error", uresp.Error)
 	}
-
-	api.Static("/img", path.Join(config.DataPath, "img"))
 
 	go taskl.SetupTasks(cfg, db)
 
