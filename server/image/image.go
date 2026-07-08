@@ -7,28 +7,40 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	_ "image/jpeg"
-	_ "image/png"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"log/slog"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 
 	"github.com/buckket/go-blurhash"
 	"github.com/sbondCo/Watcharr/config"
 	"github.com/sbondCo/Watcharr/database/entity"
+	"github.com/sbondCo/Watcharr/util"
 	"gorm.io/gorm"
+)
+
+const (
+	defMaxSize        int64 = 10 * util.Mebibyte
+	defMaxWidthHeight int64 = 7680
+	defMaxPixels      int64 = 10_000_000
 )
 
 // TODO now that this file is in the image package it no longer needs to have "image(s)"
 // in the name of all the functions..
 
 // Insert an image into database
-func InsertImage(db *gorm.DB, hash string, path string, f io.Reader) (entity.Image, error) {
-	bh, _ := GetBlurHash(f)
+func Insert(
+	db *gorm.DB,
+	hash string,
+	path string,
+	b []byte,
+) (entity.Image, error) {
+	br := bytes.NewReader(b)
+	bh, _ := GetBlurHash(br)
 	img := entity.Image{
 		Hash:     hash,
 		Path:     path,
@@ -96,25 +108,144 @@ WHERE NOT EXISTS (
 	}
 }
 
-func IsValidImageType(f multipart.File) error {
-	// Read first 512 bytes, since that is all `DetectContentType` will evaluate on.
-	// Reading whole file is a waste.
-	buff := make([]byte, 512)
-	if _, err := f.Read(buff); err != nil {
-		slog.Error("isValidImageType: failed to read file into buffer", "error", err)
-		return errors.New("failed to verify if image is valid")
+// Validate the image safely.
+// Re-encodes the image in our own desired format, which helps verify the file
+// is a valid image and any undesirable data (eg think xss; appended html,
+// exit, etc) is not kept in the final image file we store.
+// We currently prefer jpg for the format we re-encode to, which also helps us
+// save storage space (adds compression, which the image we are validating
+// could lack or have a higher quality setting, etc).
+// Returns the new re-encoded image data, file extension, and error.
+// NOTE: Never use a user-set file extension (always validate we allow it).
+func Validate(
+	b []byte,
+) ([]byte, string, error) {
+	br := bytes.NewReader(b)
+
+	// Check image header for config/format.
+	cfg, format, err := image.DecodeConfig(br)
+	if err != nil {
+		slog.Error("Validate: Failed to DecodeConfig", "error", err)
+		return []byte{}, "", errors.New("invalid or bad image")
 	}
-	t := http.DetectContentType(buff)
-	slog.Debug("isValidImageType", "type", t)
-	if t != "image/png" && t != "image/jpeg" && t != "image/webp" && t != "image/gif" {
-		slog.Debug("isValidImageType: rejecting file as not valid (supported) image type")
-		return errors.New("invalid file type")
+	slog.Debug("Validate", "cfg", cfg, "format", format)
+	if int64(cfg.Width) > defMaxWidthHeight ||
+		int64(cfg.Height) > defMaxWidthHeight {
+		return []byte{}, "", errors.New("dimensions too large")
 	}
-	return nil
+	// Protect against images that max out the allowed width/height.
+	// If we assume each pixel is 4 bytes, someone maxing out 8000x8000 would
+	// mean ~235mb of data we need to decode into memory (i think!), but instead
+	// of limiting the max width/height values too much, we can limit the max
+	// amount of pixels to restrict the max size of the img pixels we'd allow.
+	// Then weird aspect ratios are still allowed.
+	// I'm definitely over-engineering this feature for a self-hosted movie list app lol.
+	if int64(cfg.Width)*int64(cfg.Height) > defMaxPixels {
+		return []byte{}, "", errors.New("i can't handle all those pixels")
+	}
+
+	// Seek back, we are reading again below for decode.
+	if _, err = br.Seek(0, 0); err != nil {
+		slog.Error("Validate: Seeking reader to start failed", "error", err)
+		return []byte{}, "", err
+	}
+
+	// Decode image.
+	// This should catch any malformed image files.
+	var img image.Image
+	switch format {
+	case "png":
+		img, err = png.Decode(br)
+	case "jpeg":
+		img, err = jpeg.Decode(br)
+	case "gif":
+		img, err = gif.Decode(br)
+	default:
+		return []byte{}, "", errors.New("unsupported image type")
+	}
+	if err != nil {
+		slog.Error("full image decode failed", "error", err, "format", format)
+		return []byte{}, "", errors.New("invalid or corrupt image")
+	}
+
+	// Re-encode the image from our decoded data (any extra included, possibly
+	// malicious data not part of the image should be gone now).
+	// exif data, etc should also be gone now too which is good.
+	// We just re-encode as jpeg right now, but if we wanted to, in the future
+	// it's possible to encode different formats based on if we want to perserve
+	// transparency from png, etc. OR maybe using webp will be easier and we
+	// can just use that format since it supports transparency and animations.
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: 75}); err != nil {
+		slog.Error("Validate: Failed to encode jpeg", "error", err)
+		return []byte{}, "", errors.New("failed to encode image")
+	}
+	return buf.Bytes(), ".jpg", nil
 }
 
-func DownloadAndInsertImage(db *gorm.DB, url string, imgSubPath string) (entity.Image, error) {
-	slog.Debug("Attempting to download image", "url", url)
+// Creates the image file on disk.
+func save(b []byte, subPath string) (string, string, error) {
+	br := bytes.NewReader(b)
+	// First we get a hash of the files contents.
+	// Using the hash for filename has the benefit of us not storing duplicate
+	// files just because their filename provided to us is different.
+	h := sha256.New()
+	if _, err := io.Copy(h, br); err != nil {
+		slog.Error("save: Copy failed!", "error", err)
+		return "", "", errors.New("copy failed")
+	}
+	hs := hex.EncodeToString(h.Sum(nil))
+	slog.Debug("save: image hash calculated",
+		"hash", hs,
+		"first_letter", hs[0:1])
+
+	// Validate the file.
+	// We always validate, even from "trusted sources!"
+	b, ext, err := Validate(b)
+	if err != nil {
+		slog.Error("save: Validate failed!", "error", err)
+		return "", "", err
+	}
+	br = bytes.NewReader(b)
+
+	// Create paths for file.
+	imgPath := path.Join(
+		// Always outputs to `img/` dir.
+		"img/",
+		// Any sub path for separating images.
+		subPath,
+		// Sub-separate images by the starting character of their hash.
+		hs[0:1],
+		// File name is whole hash then the file extension.
+		hs+ext)
+	fullOutPath := path.Join(config.DataPath, imgPath)
+	slog.Debug("save: Built path", "path", imgPath)
+
+	// Save file
+	err = os.MkdirAll(path.Dir(fullOutPath), 0764)
+	if err != nil {
+		return "", "", err
+	}
+	out, err := os.Create(fullOutPath)
+	if err != nil {
+		return "", "", err
+	}
+	defer out.Close()
+	_, err = io.Copy(out, br)
+	if err != nil {
+		return "", "", err
+	}
+
+	return hs, imgPath, nil
+}
+
+// Download an image from `url` and insert it.
+func DownloadAndInsertFromUrl(
+	db *gorm.DB,
+	url string,
+	imgSubPath string,
+) (entity.Image, error) {
+	slog.Debug("DownloadAndInsertFromUrl: Running.", "url", url)
 
 	// Get the data
 	resp, err := http.Get(url)
@@ -128,66 +259,36 @@ func DownloadAndInsertImage(db *gorm.DB, url string, imgSubPath string) (entity.
 		return entity.Image{}, fmt.Errorf("bad status: %s", resp.Status)
 	}
 
-	// Read body into byte array, then create new reader
-	// So we have the ability to seek.
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		slog.Error("downloadAndInsertImage failed to read response into byte array", "error", err)
-		return entity.Image{}, err
-	}
-	br := bytes.NewReader(b)
+	return DownloadAndInsert(db, resp.Body, imgSubPath)
+}
 
-	h := sha256.New()
-	if _, err := io.Copy(h, br); err != nil {
-		slog.Error("DownloadAndInsertImage: Copy failed!", "error", err)
-		return entity.Image{}, errors.New("copy failed")
-	}
-	hs := hex.EncodeToString(h.Sum(nil))
+func DownloadAndInsert(
+	db *gorm.DB,
+	r io.Reader,
+	imgSubPath string,
+) (entity.Image, error) {
+	slog.Debug("DownloadAndInsert: Running.")
 
-	// Seek back for file
-	_, err = br.Seek(0, 0)
+	// Read all into memory.
+	b, err := util.LimitedReadAll(r, defMaxSize)
 	if err != nil {
-		slog.Error("downloadAndInsertImage seeking back to start of br failed", "error", err)
+		slog.Error("DownloadAndInsert: Failed to read response!", "error", err)
 		return entity.Image{}, err
 	}
 
-	outp := path.Join("img/", imgSubPath, hs[0:1], hs+filepath.Ext(resp.Request.URL.Path))
-	dataOutP := path.Join(config.DataPath, outp)
-
-	// Create the file
-	out, err := os.Create(dataOutP)
+	// Save the file.
+	imgHash, imgPath, err := save(b, imgSubPath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			err = os.MkdirAll(path.Dir(dataOutP), 0764)
-			if err != nil {
-				return entity.Image{}, err
-			}
-			// If dirs made, try making file again
-			out, err = os.Create(dataOutP)
-			if err != nil {
-				return entity.Image{}, err
-			}
-		} else {
-			return entity.Image{}, err
-		}
-	}
-	defer out.Close()
-	_, err = io.Copy(out, br)
-	if err != nil {
+		slog.Error("DownloadAndInsert: Failed to save file!", "error", err)
 		return entity.Image{}, err
 	}
 
-	// Seek back for insertImage
-	_, err = br.Seek(0, 0)
+	// Insert image into db.
+	imge, err := Insert(db, imgHash, imgPath, b)
 	if err != nil {
-		slog.Error("downloadAndInsertImage seeking back to start of br failed", "error", err)
+		slog.Error("DownloadAndInsert: Insert into db failed!", "error", err)
 		return entity.Image{}, err
 	}
 
-	img, err := InsertImage(db, hs, outp, br)
-	if err != nil {
-		return entity.Image{}, err
-	}
-
-	return img, nil
+	return imge, nil
 }

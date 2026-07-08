@@ -68,7 +68,7 @@
 			bind:this={avatarInput}
 			type="file"
 			title=""
-			accept=".jpg,.png,.gif,.webp"
+			accept=".jpg,.png,.gif"
 		/>
 	{/if}
 </div>

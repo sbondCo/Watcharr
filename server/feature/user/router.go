@@ -136,7 +136,9 @@ func (r *Router) UpdateAvatar(c *gin.Context) {
 	userId := c.MustGet("userId").(uint)
 	response, err := r.service.UploadUserAvatar(c, userId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, router.ErrorResponse{Error: err.Error()})
+		c.JSON(
+			http.StatusInternalServerError,
+			router.ErrorResponse{Error: err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, response)

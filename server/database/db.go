@@ -16,6 +16,10 @@ import (
 // Also runs migrations, etc, before returning connection.
 // Any error returned from this func should always make our app Exit (caller
 // handled).
+//
+// NOTE: Our mock db used in tests mimics this function, so if this func is
+// changed, you should look at the mock db to make it match if it makes
+// sense, so our tests stay accurate to prod.
 func New() (*gorm.DB, error) {
 	slog.Info("New: Opening new database connection")
 	// Open the database.
@@ -27,13 +31,27 @@ func New() (*gorm.DB, error) {
 		slog.Error("New: Opening database failed.")
 		return nil, err
 	}
-	if err := configure(db); err != nil {
-		slog.Error("New: Configuring connection failed!", "error", err)
+	// Setup the db (migrations, etc)
+	if err := Setup(db); err != nil {
+		slog.Error("New: Setting up connection failed!", "error", err)
 		return nil, err
 	}
+	return db, nil
+}
+
+// Setup configures our db connection and applies migrations.
+//
+// NOTE: This exists as a separate function so it can be reused by our testutil
+// package that we want to have configured in the same way as the main db so
+// that tests reflect real life.
+func Setup(db *gorm.DB) error {
+	if err := configure(db); err != nil {
+		slog.Error("Setup: Configuring connection failed!", "error", err)
+		return err
+	}
 	// Perform auto migration.
-	slog.Info("New: AutoMigrating")
-	err = db.AutoMigrate(
+	slog.Info("Setup: AutoMigrating")
+	err := db.AutoMigrate(
 		&migrate.MigrationRecord{},
 		&entity.User{},
 		&entity.UserServices{},
@@ -50,21 +68,21 @@ func New() (*gorm.DB, error) {
 		&entity.Tag{},
 	)
 	if err != nil {
-		slog.Error("New: Auto migration failed.")
-		return nil, err
+		slog.Error("Setup: Auto migration failed.")
+		return err
 	}
-	slog.Info("New: AutoMigrated")
+	slog.Info("Setup: AutoMigrated")
 	// Perform our manual migrations.
 	if err := migrate.Now(db); err != nil {
-		slog.Error("New: Manual migrations failed.", "error", err)
-		return nil, err
+		slog.Error("Setup: Manual migrations failed.", "error", err)
+		return err
 	}
 	// Optimize database.
 	if err := optimize(db); err != nil {
-		slog.Error("New: Optimizing database failed.", "error", err)
-		return nil, err
+		slog.Error("Setup: Optimizing database failed.", "error", err)
+		return err
 	}
-	return db, nil
+	return nil
 }
 
 // Configure our SQLite database connection.

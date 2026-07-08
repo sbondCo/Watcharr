@@ -49,6 +49,7 @@ If you backup your database by copying the .db file (while your server is stoppe
 - import: myanimelist: Don't import start/finish dates when they are empty.
 - Star and Play icons color.
 - Activity: Fixed automation tooltip going out of bounds by moving it to top.
+- Make `image` package a lot more robust.
 
 ## Removed
 

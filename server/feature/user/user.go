@@ -1,16 +1,10 @@
 package user
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
-	"io"
 	"log/slog"
-	"path"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sbondCo/Watcharr/config"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/image"
 	"gorm.io/gorm"
@@ -133,58 +127,41 @@ func (s *Service) UserUpdateBio(userId uint, newBio string) error {
 	return nil
 }
 
-func (s *Service) UploadUserAvatar(c *gin.Context, userId uint) (entity.Image, error) {
+func (s *Service) UploadUserAvatar(
+	c *gin.Context,
+	userId uint,
+) (entity.Image, error) {
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		slog.Error("failed to get file", "error", err)
 		return entity.Image{}, errors.New("no file found")
 	}
 
-	slog.Debug("an avatar is being uploaded", "name", file.Filename)
+	slog.Debug("UploadUserAvatar: An avatar is being uploaded",
+		"name", file.Filename)
 
 	f, _ := file.Open()
-	if err := image.IsValidImageType(f); err != nil {
-		return entity.Image{}, errors.New("invalid image type")
-	}
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		slog.Error("uploadUserAvatar: Copy failed!", "error", err)
-		return entity.Image{}, errors.New("copy failed")
-	}
-	hs := hex.EncodeToString(h.Sum(nil))
+	defer f.Close()
 
-	slog.Debug("image hash calculated", "hash", hs, "first_letter", hs[0:1])
-
-	// Upload the file to specific dst.
-	outp := path.Join("img/up/", hs[0:1], hs+filepath.Ext(file.Filename))
-	c.SaveUploadedFile(file, path.Join(config.DataPath, outp))
-
-	_, err = f.Seek(0, 0)
+	img, err := image.DownloadAndInsert(s.db, f, "up")
 	if err != nil {
-		slog.Error("uploadUserAvatar seeking back to start of image failed", "error", err)
+		slog.Error("UploadUserAvatar: DownloadAndInsert failed!",
+			"error", err)
+		return entity.Image{}, errors.New("processing image failed")
 	}
 
-	// No need to remove old image, the daily cleanup task will handle removing unused ones.
-	var img entity.Image
-	err = s.db.Transaction(func(tx *gorm.DB) error {
-		// Insert avatar into db
-		img, err = image.InsertImage(s.db, hs, outp, f)
-		if err != nil {
-			return err
-		}
-		if img.ID == 0 {
-			return errors.New("image has no id")
-		}
-		// Update users avatar to newly inserted
-		if err := tx.Where("id = ?", userId).Updates(&entity.User{AvatarID: img.ID}).Error; err != nil {
-			return err
-		}
-		// commit transaction if no errors
-		return nil
-	})
-	if err != nil {
-		slog.Error("uploadUserAvatar failed!", "error", err)
-		return entity.Image{}, errors.New("uploadUserAvatar transaction failed")
+	// No need to remove old image, the daily cleanup task will handle removing
+	// unused ones.
+
+	// Update users avatar to newly inserted
+	res := s.db.
+		Where("id = ?", userId).
+		Updates(&entity.User{AvatarID: img.ID})
+	if res.Error != nil {
+		slog.Error("UploadUserAvatar: Updating the users avatar in db failed!",
+			"error", err)
+		return entity.Image{}, errors.New("updating user failed")
 	}
+
 	return img, nil
 }
