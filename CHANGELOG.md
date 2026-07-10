@@ -49,7 +49,7 @@ If you backup your database by copying the .db file (while your server is stoppe
 - import: myanimelist: Don't import start/finish dates when they are empty.
 - Star and Play icons color.
 - Activity: Fixed automation tooltip going out of bounds by moving it to top.
-- Make `image` package a lot more robust.
+- Make `image` package a lot more robust (thanks [@4qu4r1um]).
 
 ## Removed
 
@@ -1730,4 +1730,5 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@jigglycrumb]: https://github.com/jigglycrumb
 [@IvanBeke]: https://github.com/IvanBeke
 [@ParksideParade]: https://github.com/ParksideParade
-[Dredsen]: https://github.com/Dredsen
+[@Dredsen]: https://github.com/Dredsen
+[@4qu4r1um]: https://github.com/4qu4r1um
