@@ -173,7 +173,10 @@ func (s *Saver) validate(b []byte) ([]byte, string, error) {
 		slog.Error("Validate: Failed to DecodeConfig", "error", err)
 		return []byte{}, "", errors.New("invalid or bad image")
 	}
-	slog.Debug("Validate", "cfg", cfg, "format", format)
+	slog.Debug("Validate",
+		"cfg.Width", cfg.Width,
+		"cfg.Height", cfg.Height,
+		"format", format)
 	if int64(cfg.Width) > defMaxWidthHeight ||
 		int64(cfg.Height) > defMaxWidthHeight {
 		return []byte{}, "", errors.New("dimensions too large")
