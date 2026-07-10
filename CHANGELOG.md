@@ -39,6 +39,7 @@ If you backup your database by copying the .db file (while your server is stoppe
 - Moved db to WAL journal_mode.
 - WatchedUpdateRequest: Manually validate instead of using complex struct tags.
   - Now properly validating WatchedStatus.
+- ViewTrailerButton: Use youtube-nocookie.com (thanks [@GreatGatsby102])
 
 ## Fixed
 
@@ -1731,4 +1732,5 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@IvanBeke]: https://github.com/IvanBeke
 [@ParksideParade]: https://github.com/ParksideParade
 [@Dredsen]: https://github.com/Dredsen
+[@GreatGatsby102]: https://github.com/GreatGatsby102
 [@4qu4r1um]: https://github.com/4qu4r1um
