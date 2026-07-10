@@ -52,7 +52,6 @@ var migrations = []Migration{
 				Model(&entity.Activity{}).
 				Where("type IN ?", []entity.ActivityType{
 					entity.IMPORTED_ADDED_WATCHED,
-					// TODO: Should these be here?:
 					entity.IMPORTED_ADDED_WATCHED_JF,
 					entity.IMPORTED_ADDED_WATCHED_PLEX,
 				}).
