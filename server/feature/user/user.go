@@ -143,7 +143,9 @@ func (s *Service) UploadUserAvatar(
 	f, _ := file.Open()
 	defer f.Close()
 
-	img, err := image.DownloadAndInsert(s.db, f, "up")
+	img, err := image.
+		NewSaver(s.db, "up", image.ValidateOptions{}).
+		DownloadAndInsert(f)
 	if err != nil {
 		slog.Error("UploadUserAvatar: DownloadAndInsert failed!",
 			"error", err)

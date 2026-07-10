@@ -15,10 +15,9 @@ func TestDownloadAndInsertFromUrl(t *testing.T) {
 	testutil.SetupLogging()
 	db := testutil.SetupDB(t)
 
-	i, err := DownloadAndInsertFromUrl(
-		db,
-		"https://github.com/sbondCo/Watcharr/raw/dev/screenshot/homepage.png",
-		"test")
+	i, err := NewSaver(db, "test", ValidateOptions{}).
+		DownloadAndInsertFromUrl(
+			"https://github.com/sbondCo/Watcharr/raw/dev/screenshot/homepage.png")
 	if err != nil {
 		t.Fatalf("DownloadAndInsert call failed: %v", err)
 	}

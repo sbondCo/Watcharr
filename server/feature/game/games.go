@@ -35,10 +35,19 @@ func (s *Service) saveGame(c *entity.Game, onlyUpdate bool) error {
 		return errors.New("game missing id or title")
 	}
 	if c.CoverID != "" {
-		p, err := image.DownloadAndInsertFromUrl(
-			s.db,
-			"https://images.igdb.com/igdb/image/upload/t_cover_big/"+c.CoverID+".png",
-			"games")
+		p, err := image.
+			NewSaver(
+				s.db,
+				"games",
+				image.ValidateOptions{
+					// To avoid losing quality, we want to keep png format
+					// for our game posters.
+					ToFormat: image.ValidateAllowedFormatPNG,
+				},
+			).
+			DownloadAndInsertFromUrl(
+				"https://images.igdb.com/igdb/image/upload/t_cover_big/" +
+					c.CoverID + ".png")
 		if err != nil {
 			slog.Error("saveGame: Failed to cache game cover.", "error", err)
 		} else {
