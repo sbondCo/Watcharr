@@ -2,9 +2,22 @@
 
 These changes are awaiting release:
 
+# [4.0.0] - 2026-07-11T02:34:00Z
+
+> [!CAUTION]
+> It is always highly recommended that you perform a backup before updating (https://watcharr.app/docs/server_config/backup)!
+
+> [!NOTE]
+> v4 is finally here! Don't worry about the major version bump, all migrations will be handled automatically when you start the upgraded version.
+>
+> Have a read of the Data Migrations section below to get an understanding of the migrations we are applying in v4. You'll also notice that on the first start there will be a delay while migrations are applied.
+
+> [!NOTE]
+> This release contains security fixes. If your server is exposed to the public and you have signing up enabled, you should update sooner rather than later!
+
 ## Data migrations
 
-This is the first time migrations are being taken place when updating Watcharr, please be mindful of that and **ensure you have your existing database backed up** incase of any errors.
+This is the first time migrations are taking place when updating Watcharr, please be mindful of that and **ensure you have your existing database backed up** incase of any errors.
 
 ### Backfilling `plays` data from users Activity.
 
@@ -51,6 +64,7 @@ If you backup your database by copying the .db file (while your server is stoppe
 - Star and Play icons color.
 - Activity: Fixed automation tooltip going out of bounds by moving it to top.
 - Make `image` package a lot more robust (thanks [@4qu4r1um]).
+- GHSA-5q73-v9hv-4cf3
 
 ## Removed
 
@@ -60,6 +74,14 @@ If you backup your database by copying the .db file (while your server is stoppe
 ## Documentation
 
 - Backup: Also note that `watcharr.db-wal` should be backed up along with the .db file since v3.
+
+## New Contributors
+
+- [@GreatGatsby102] made their first contribution in https://github.com/sbondCo/Watcharr/pull/1040
+
+## Etc
+
+- **Package**: https://github.com/sbondCo/Watcharr/pkgs/container/watcharr/1020169511?tag=v4.0.0 or on [docker hub](https://hub.docker.com/layers/sbondco/watcharr/v4.0.0/images/sha256-cd39b4fc0578ca374b2c7d65b410e29dc2859918a322e35e6b01f8e55d250f10).
 
 # [3.0.1] - 2026-03-09
 
@@ -1633,7 +1655,8 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 
 <!-- Version Changelog References (newest first) -->
 
-[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...HEAD
+[4.0.0]: https://github.com/sbondCo/Watcharr/compare/v3.0.1...v4.0.0
 [3.0.1]: https://github.com/sbondCo/Watcharr/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/sbondCo/Watcharr/compare/v2.1.1...v3.0.0
 [2.1.1]: https://github.com/sbondCo/Watcharr/compare/v2.1.0...v2.1.1
