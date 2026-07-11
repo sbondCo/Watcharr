@@ -54,6 +54,9 @@ func Now(db *gorm.DB) error {
 			continue
 		}
 
+		slog.Info("Migration has NOT been applied before.. applying.",
+			"id", mig.ID)
+
 		// Timing the migration.
 		timeBeforeMig := time.Now()
 
@@ -89,7 +92,7 @@ func Now(db *gorm.DB) error {
 			}
 		}
 
-		slog.Debug("Migration applied successfully.",
+		slog.Info("Migration applied successfully.",
 			"id", mig.ID,
 			"duration", time.Since(timeBeforeMig))
 	}
