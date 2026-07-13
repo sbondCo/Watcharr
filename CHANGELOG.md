@@ -2,6 +2,10 @@
 
 These changes are awaiting release:
 
+## Maintenance
+
+- workflows/test-pr-server: Add test step
+
 # [4.0.0] - 2026-07-11T02:34:00Z
 
 > [!CAUTION]
@@ -213,7 +217,7 @@ Many thanks to everyone who has worked on this release!
 ## New
 
 - About modal (accessible via face menu) by [@Clusters] in https://github.com/sbondCo/Watcharr/pull/811
-- System app theme (automatically swaps between light/dark themes depending on system config) by @antoniosarro in https://github.com/sbondCo/Watcharr/pull/822
+- System app theme (automatically swaps between light/dark themes depending on system config) by [@antoniosarro] in https://github.com/sbondCo/Watcharr/pull/822
 - Search shortcut (`Ctrl+S`) by [@IRHM] in https://github.com/sbondCo/Watcharr/pull/886
 
 ## Fixed
