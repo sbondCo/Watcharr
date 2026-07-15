@@ -2,6 +2,10 @@
 
 These changes are awaiting release:
 
+## Changed
+
+- Move notifications to its own component.
+
 ## Fixed
 
 - SpinnerTiny: Use svg instead of the css border trick to create the spinner fixing it looking more like a horseshoe than a circle on different browser scales (also added animation on the svg circle).
