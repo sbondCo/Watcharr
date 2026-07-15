@@ -615,7 +615,7 @@
 									<td class="icon-cell">
 										<div>
 											{#if !l.state}
-												<SpinnerTiny style="width: 13px;" />
+												<SpinnerTiny />
 											{:else if l.state === ImportResponseType.IMPORT_SUCCESS}
 												<Icon i="check" wh={22} />
 											{:else if l.state === ImportResponseType.IMPORT_NOTFOUND}
