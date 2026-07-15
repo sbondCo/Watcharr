@@ -1,8 +1,5 @@
 <script lang="ts">
-	import Icon from "@/lib/Icon.svelte";
-	import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
-	import { unNotify } from "@/lib/util/notify";
-	import { store } from "@/store.svelte";
+	import Notifications from "@/lib/notifications.svelte";
 	import { onMount } from "svelte";
 	import { pwaInfo } from "virtual:pwa-info";
 
@@ -37,26 +34,8 @@
 </svelte:head>
 
 <div id="tooltip"></div>
-<div id="notifications">
-	{#each store.notifications as n}
-		<div class={`${n.type} notif`}>
-			{#if n.type === "loading"}
-				<SpinnerTiny />
-			{/if}
-			<!-- only comes from our strings (which may have html) -->
-			<!-- eslint-disable-next-line -->
-			<span>{@html n.text}</span>
-			<button
-				class="plain"
-				onclick={() => {
-					unNotify(n.id);
-				}}
-			>
-				<Icon i="close" />
-			</button>
-		</div>
-	{/each}
-</div>
+
+<Notifications />
 
 {@render children?.()}
 
