@@ -2,6 +2,11 @@
 
 These changes are awaiting release:
 
+## Fixed
+
+- SpinnerTiny: Use svg instead of the css border trick to create the spinner fixing it looking more like a horseshoe than a circle on different browser scales (also added animation on the svg circle).
+- SpinnerTiny: Fix color being wrong on dark theme.
+
 ## Maintenance
 
 - workflows/test-pr-server: Add test step
