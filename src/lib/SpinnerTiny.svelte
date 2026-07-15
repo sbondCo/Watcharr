@@ -49,7 +49,7 @@
 		}
 		100% {
 			stroke-dasharray: 1px 200px;
-			stroke-dashoffset: -125px;
+			stroke-dashoffset: -124px;
 		}
 	}
 </style>
