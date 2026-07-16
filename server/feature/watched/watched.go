@@ -443,7 +443,8 @@ func (s *Service) AddWatched(
 				&watched,
 			); err != nil {
 				// Try to restore the entry if unique contraint hit.
-				slog.Error("AddWatched: Failed to restore existing watched entry.")
+				slog.Error("AddWatched: Failed to restore existing watched entry.",
+					"error", err)
 				// Returns watched too because handlers of certain errors
 				// may need it (and it's ID since we could have fetched it here)
 				return watched, err
