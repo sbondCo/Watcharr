@@ -11,8 +11,12 @@ on:
       - "server/**"
 
 jobs:
-  format_check_go:
+  test_and_format_check_go:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: server
 
     steps:
       - uses: actions/checkout@v4
