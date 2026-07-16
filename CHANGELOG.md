@@ -5,6 +5,7 @@ These changes are awaiting release:
 ## Changed
 
 - Move notifications to its own component.
+- Use an `svg` for the favicon and change its `fill` to `white` for dark themed browsers.
 
 ## Fixed
 
