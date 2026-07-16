@@ -2,6 +2,8 @@
 
 These changes are awaiting release:
 
+# [4.0.1] - 2026-07-16T10:12:00Z
+
 ## Changed
 
 - Move notifications to its own component.
@@ -16,6 +18,10 @@ These changes are awaiting release:
 ## Maintenance
 
 - workflows/test-pr-server: Add test step
+
+## Etc
+
+- **Package**: https://github.com/sbondCo/Watcharr/pkgs/container/watcharr/1036344762?tag=v4.0.1 or on [docker hub](https://hub.docker.com/layers/sbondco/watcharr/v4.0.1/images/sha256-3546329532facf6f55c779bb229ce997258ff1a89c4e5f9d66a92cc65ae80396).
 
 # [4.0.0] - 2026-07-11T02:34:00Z
 
@@ -1671,6 +1677,7 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 <!-- Version Changelog References (newest first) -->
 
 [Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...HEAD
+[4.0.1]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/sbondCo/Watcharr/compare/v3.0.1...v4.0.0
 [3.0.1]: https://github.com/sbondCo/Watcharr/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/sbondCo/Watcharr/compare/v2.1.1...v3.0.0
