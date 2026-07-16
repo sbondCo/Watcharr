@@ -11,6 +11,7 @@ These changes are awaiting release:
 
 - SpinnerTiny: Use svg instead of the css border trick to create the spinner fixing it looking more like a horseshoe than a circle on different browser scales (also added animation on the svg circle).
 - SpinnerTiny: Fix color being wrong on dark theme.
+- Watched: Also log the `error` on the "failed to restore existing watched entry" log.
 
 ## Maintenance
 
