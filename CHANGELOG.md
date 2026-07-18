@@ -14,6 +14,10 @@ These changes are awaiting release:
 
 - `Include Previously Watched` regression (fixes https://github.com/sbondCo/Watcharr/issues/1027).
 
+## Maintenance
+
+- Remove `dependabot.yml`.
+
 # [4.0.1] - 2026-07-16T10:12:00Z
 
 ## Changed
