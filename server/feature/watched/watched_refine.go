@@ -61,17 +61,20 @@ func refineFilterStatus(
 		userSettings != nil && util.Deref(userSettings.IncludePreviouslyWatched, false) {
 		slog.Debug("refineFilterStatus: Performing query that includes previously watched.")
 		db.
-			// The WHERE here is wrapped in parenthesis so that the `OR` doesn't
-			// intefere with the main query confusing its AND/ORs.
-			Where(`(watcheds.status IN ? OR EXISTS (
+			// If status IN `f` OR any activity counts as a play for this
+			// watched item.
+			// NOTE: GORM adds parenthesis around this WHERE so that the OR
+			// doesn't confuse the whole WHERE on the main query, so we don't
+			// need to do that.
+			Where(`watcheds.status IN ? OR EXISTS (
 				SELECT 1
 				FROM activities
 				WHERE activities.watched_id = watcheds.id
 					AND activities.count_as_play = 1
-			))`, f)
+			)`, f)
 	} else {
 		slog.Debug("refineFilterStatus: Performing standard query.")
-		db.Where(`watcheds.status IN ?`, f)
+		db.Where("watcheds.status IN ?", f)
 	}
 }
 
