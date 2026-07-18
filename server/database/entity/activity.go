@@ -46,7 +46,7 @@ type Activity struct {
 	// secured (users can only view their own activities).
 	UserID uint `json:"-" gorm:"not null"`
 	// ID of watched list item this activity is linked to.
-	WatchedID uint `json:"watchedId" gorm:"not null"`
+	WatchedID uint `json:"watchedId" gorm:"not null;index"`
 	// Type of activity.
 	Type ActivityType `json:"type" gorm:"not null"`
 	// Holds custom data (ex, if rating changed, this can

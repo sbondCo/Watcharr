@@ -297,7 +297,7 @@
 
 			<Setting
 				title="Include Previously Watched"
-				desc="Deprecated: This setting is due to be removed because I think TRUE is the only useful value (the removal will go through soon, please give feedback if you have any opinions!)."
+				desc="Should previously finished items be included in the 'Finished' status filter?"
 				row
 			>
 				<Checkbox
@@ -308,8 +308,6 @@
 						includePreviouslyWatchedDisabled = true;
 						updateUserSetting("includePreviouslyWatched", on, () => {
 							includePreviouslyWatchedDisabled = false;
-							// Get profile stats again
-							getProfilePromise = getProfile();
 						});
 					}}
 				/>

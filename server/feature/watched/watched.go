@@ -22,11 +22,16 @@ type GameProvider interface {
 	GetOrCache(igdbID int) (entity.Game, error)
 }
 
+type UserProvider interface {
+	UserGetSettings(userId uint) (entity.UserSettings, error)
+}
+
 type Service struct {
 	db               *gorm.DB
 	cp               ContentProvider
 	gameProvider     GameProvider
 	activityProvider domain.ActivityAddProvider
+	userProvider     UserProvider
 }
 
 func NewService(
@@ -34,12 +39,14 @@ func NewService(
 	cp ContentProvider,
 	gameProvider GameProvider,
 	activityProvider domain.ActivityAddProvider,
+	userProvider UserProvider,
 ) *Service {
 	return &Service{
 		db,
 		cp,
 		gameProvider,
 		activityProvider,
+		userProvider,
 	}
 }
 
@@ -74,8 +81,16 @@ func (s *Service) GetWatchedPage(
 		"user_id", userId,
 		"pagination_params", pp,
 		"wr", wr)
-	watched := new([]entity.Watched)
+
 	pRes := &util.PaginationResponse[entity.Watched, util.None]{}
+
+	// Get user settings.
+	userSettings, err := s.userProvider.UserGetSettings(userId)
+	if err != nil {
+		return *pRes, errors.New("failed to get user settings")
+	}
+
+	watched := new([]entity.Watched)
 	res := s.db.
 		Model(&entity.Watched{}).
 		Where(&entity.Watched{UserID: userId})
@@ -101,7 +116,7 @@ func (s *Service) GetWatchedPage(
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
 		// Apply filters first.
-		Scopes(watchedRefineFilter(wr)).
+		Scopes(watchedRefineFilter(wr, &userSettings)).
 		// Then count results (after filter);
 		Count(&pRes.TotalResults).
 		// Now calculate pagination properties with a TotalResults
@@ -164,7 +179,7 @@ func (s *Service) getPublicWatched(
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
 		// Apply filters first.
-		Scopes(watchedRefineFilter(wr)).
+		Scopes(watchedRefineFilter(wr, nil)).
 		// Then count results (after filter);
 		Count(&pRes.TotalResults).
 		// Now calculate pagination properties with a TotalResults

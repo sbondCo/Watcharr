@@ -1,7 +1,6 @@
 package profile
 
 import (
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"time"
@@ -28,63 +27,38 @@ func NewService(db *gorm.DB) *Service {
 	}
 }
 
-// Check if content has been previsouly watched by looking for related activity.
+// Checks if item has been previously watched by scanning for any activity
+// that counts as a play.
 func (s *Service) hasBeenPreviouslyWatched(a *[]entity.Activity) bool {
-	wp := false
-	var relatedActivity []entity.Activity
 	for _, v := range *a {
-		if v.Type == entity.ADDED_WATCHED ||
-			v.Type == entity.IMPORTED_ADDED_WATCHED ||
-			v.Type == entity.IMPORTED_WATCHED ||
-			v.Type == entity.STATUS_CHANGED {
-			relatedActivity = append(relatedActivity, v)
+		if v.CountAsPlay {
+			return true
 		}
 	}
-	if len(relatedActivity) <= 0 {
-		return false
-	}
-	for _, ra := range relatedActivity {
-		if ra.Type == entity.IMPORTED_ADDED_WATCHED {
-			wp = true
-			break
-		} else if ra.Type == entity.ADDED_WATCHED || ra.Type == entity.IMPORTED_WATCHED {
-			if ra.Data == "" {
-				continue
-			}
-			var v map[string]any
-			err := json.Unmarshal([]byte(ra.Data), &v)
-			if err != nil {
-				slog.Error("Checking ADDED_WATCHED or IMPORTED_WATCHED.. failed to parse json data", "error", err)
-				continue
-			}
-			if status, ok := v["status"]; ok {
-				if status == "FINISHED" {
-					wp = true
-					break
-				}
-			}
-		} else if ra.Type == entity.STATUS_CHANGED {
-			if ra.Data == "FINISHED" {
-				wp = true
-				break
-			}
-		}
-	}
-	return wp
+	return false
 }
 
 // Gets any data required for profile page
 func (s *Service) getProfile(userId uint) (Profile, error) {
+	// Get user.
 	user := new(entity.User)
 	res := s.db.Model(&entity.User{}).Where("id = ?", userId).Take(&user)
 	if res.Error != nil {
-		slog.Error("Failed to get profile:", "error", res.Error.Error())
+		slog.Error("Failed to get profile:",
+			"error", res.Error)
 		return Profile{}, errors.New("failed to get profile")
 	}
+
+	// Process stats.
 	watched := new([]entity.Watched)
-	res = s.db.Model(&entity.Watched{}).Preload("Content").Preload("Activity").Where("user_id = ?", userId).Find(&watched)
+	res = s.db.Model(&entity.Watched{}).
+		Preload("Content").
+		Preload("Activity").
+		Where("user_id = ?", userId).
+		Find(&watched)
 	if res.Error != nil {
-		slog.Error("Profile: Failed to get watched for processing:", "error", res.Error.Error())
+		slog.Error("Profile: Failed to get watched for processing:",
+			"error", res.Error)
 		return Profile{}, errors.New("failed to get watched for processing")
 	}
 	var (
@@ -95,11 +69,12 @@ func (s *Service) getProfile(userId uint) (Profile, error) {
 	)
 	for _, w := range *watched {
 		isFinished := false
-		if w.Status == entity.FINISHED {
-			isFinished = true
-		} else if *user.IncludePreviouslyWatched && s.hasBeenPreviouslyWatched(&w.Activity) {
-			// If status is not finished and user has IncludePreviouslyWatched enabled,
-			// then we can also check if content hasBeenPreviouslyWatched.
+		// Note: Deliberately always checking `hasBeenPreviouslyWatched` for any
+		// items without status set to FINISHED without checking users
+		// `IncludePreviouslyWatched` setting, because that setting is useful
+		// for filters, BUT not for these stats. I think it is always expected
+		// that all previously watched stuff is included in finished stats.
+		if w.Status == entity.FINISHED || s.hasBeenPreviouslyWatched(&w.Activity) {
 			isFinished = true
 		}
 		if isFinished {
@@ -107,7 +82,8 @@ func (s *Service) getProfile(userId uint) (Profile, error) {
 				continue
 			}
 			c := *w.Content
-			if c.Type == entity.SHOW {
+			switch c.Type {
+			case entity.SHOW:
 				showsWatched++
 				// This aint a science, just a very inaccurate guesstimate.
 				if c.NumberOfEpisodes != 0 {
@@ -116,9 +92,11 @@ func (s *Service) getProfile(userId uint) (Profile, error) {
 						showRuntime = c.Runtime
 					}
 					showsWatchedRuntime += showRuntime * c.NumberOfEpisodes
-					slog.Debug("calcualted", "show", c.Title, "runti", showRuntime*c.NumberOfEpisodes)
+					slog.Debug("profile stat calculated",
+						"show", c.Title,
+						"runti", showRuntime*c.NumberOfEpisodes)
 				}
-			} else if c.Type == entity.MOVIE {
+			case entity.MOVIE:
 				moviesWatched++
 				moviesWatchedRuntime += c.Runtime
 			}

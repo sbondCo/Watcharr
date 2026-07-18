@@ -65,7 +65,7 @@ func (s *Service) UserUpdate(userId uint, ur entity.UserSettings) (entity.UserSe
 }
 
 func (s *Service) UserGetSettings(userId uint) (entity.UserSettings, error) {
-	slog.Debug("user update request running", "user_id", userId)
+	slog.Debug("UserGetSettings: Request running.", "user_id", userId)
 	user := new(entity.User)
 	res := s.db.Where("id = ?", userId).Take(&user)
 	if res.Error != nil {
