@@ -6,6 +6,9 @@ These changes are awaiting release:
 
 - Profile: Stats no longer care about the `Include Previously Watched` setting. All previously watched items will be counted in the stats now.
 - Activity: Added `index` to `WatchedID` column to speed up queries.
+- SeasonsListEpisode when `Hide Spoilers` is on:
+  - Show episode spoilers if its status is `FINISHED`;
+  - Allow changing status without showing spoilers (useful for when setting an episode to PLANNED, etc).
 
 ## Fixed
 

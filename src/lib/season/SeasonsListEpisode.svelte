@@ -10,6 +10,7 @@
 	import { notify } from "../util/notify";
 	import { store } from "@/store.svelte";
 	import { removeWatchedEpisode, updateWatchedEpisode } from "./api";
+	import { onMount } from "svelte";
 
 	interface Props {
 		ep: TMDBSeasonDetailsEpisode;
@@ -18,32 +19,65 @@
 
 	let { ep, watchedItem }: Props = $props();
 
+	const we = $derived(
+		watchedItem?.watchedEpisodes?.find(
+			(s) =>
+				s.seasonNumber === ep.season_number &&
+				s.episodeNumber === ep.episode_number,
+		),
+	);
+
 	let isHidden: boolean = $state(!!store?.userSettings?.hideSpoilers);
 
-	function handleStatusClick(type: WatchedStatus | "DELETE") {
+	/**
+	 * Re-sets `isHidden` state.
+	 */
+	function reSetIsHidden() {
+		// If the episode status is "FINISHED", ensure `isHidden` is set to
+		// `false` (so finished episodes aren't blurred when hideSpoilers is on).
+		if (we?.status == "FINISHED") {
+			isHidden = false;
+		}
+	}
+
+	onMount(() => {
+		reSetIsHidden();
+	});
+
+	async function handleStatusClick(type: WatchedStatus | "DELETE") {
 		if (!watchedItem) {
 			console.error("SeasonListEpisode: handleStatusClick: No watched item.");
 			return;
 		}
 		if (type === "DELETE") {
-			const ws = watchedItem.watchedEpisodes?.find(
-				(s) =>
-					s.seasonNumber === ep.season_number &&
-					s.episodeNumber === ep.episode_number,
-			);
-			if (!ws) {
+			if (!we || !we.id) {
 				notify({
 					text: "Failed to find watched episode id. Please try refreshing.",
 					type: "error",
 				});
+				console.error(
+					"handleStatusClick(DELETE): `we` doesn't exist or have an id",
+					we,
+				);
 				return;
 			}
-			removeWatchedEpisode(watchedItem, ws.id);
+			removeWatchedEpisode(watchedItem, we.id);
+			// NOTE: Similar to below where we `reSetIsHidden` to unhide spoilers
+			// automatically if status is set to FINISHED, we WONT do the opposite
+			// here and re-hide the spoilers (if unhidden) after removing an episode
+			// because that would probably be annoying to users (eg: click to
+			// show spoilers, then delete episode, spoilers re-hidden automatically).
 			return;
 		}
-		updateWatchedEpisode(watchedItem, ep.season_number, ep.episode_number, {
-			status: type,
-		});
+		await updateWatchedEpisode(
+			watchedItem,
+			ep.season_number,
+			ep.episode_number,
+			{
+				status: type,
+			},
+		);
+		reSetIsHidden();
 	}
 
 	function handleStarClick(rating: number) {
@@ -90,11 +124,6 @@
 		<span class="overview">{ep.overview}</span>
 	</div>
 	{#if watchedItem}
-		{@const we = watchedItem.watchedEpisodes?.find(
-			(s) =>
-				s.seasonNumber === ep.season_number &&
-				s.episodeNumber === ep.episode_number,
-		)}
 		<div class="status-rating-ctr">
 			<div class="rating" style={"width: 45px"}>
 				<PosterRating
@@ -221,6 +250,19 @@
 					min-height: 40px;
 					height: 40px;
 					overflow: visible;
+
+					/* z-index of 2 so the button is higher than .spoiler-text
+					   which makes it clickable while whole ep is still hidden.
+					   Which is useful if you don't want spoilers while setting
+					   the episode to WATCHING, etc. */
+					z-index: 2;
+
+					&:hover {
+						/* On hover, the z-index is higher than all other status
+						   buttons on the page to avoid the active one being put
+						   below others (making it unuseable). */
+						z-index: 3;
+					}
 				}
 			}
 		}
