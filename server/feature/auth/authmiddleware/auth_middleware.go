@@ -14,6 +14,10 @@ import (
 
 // Auth middleware
 // If db is passed, extra user info from the database will be fetched.
+//
+// **NOTE:** Instead of providing the `db` parameter, it is probably better to
+// fetch what you need in the handler directly! We might follow that pattern
+// from now on and potentially remove `db` from this func in the future.
 func AuthRequired(db *gorm.DB, cfg *config.ServerConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		slog.Debug("AuthRequired middleware hit")

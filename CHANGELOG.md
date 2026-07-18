@@ -2,6 +2,15 @@
 
 These changes are awaiting release:
 
+## Changed
+
+- Profile: Stats no longer care about the `Include Previously Watched` setting. All previously watched items will be counted in the stats now.
+- Activity: Added `index` to `WatchedID` column to speed up queries.
+
+## Fixed
+
+- `Include Previously Watched` regression (fixes https://github.com/sbondCo/Watcharr/issues/1027).
+
 # [4.0.1] - 2026-07-16T10:12:00Z
 
 ## Changed

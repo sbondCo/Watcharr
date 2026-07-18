@@ -38,15 +38,41 @@ func refineFilterType(db *gorm.DB, ft []util.SupportedMedia) {
 }
 
 // Applies 'Status' filter.
-func refineFilterStatus(db *gorm.DB, f []entity.WatchedStatus) {
+func refineFilterStatus(
+	db *gorm.DB,
+	f []entity.WatchedStatus,
+	userSettings *entity.UserSettings,
+) {
 	if len(f) <= 0 {
 		return
 	}
+	// Process the input data.
+	fIncludesFinished := false
 	for i := range f {
 		// Ensure string **case** is valid WatchedStatus by converting to uppercase.
 		f[i] = entity.WatchedStatus(strings.ToUpper(string(f[i])))
+		if f[i] == entity.FINISHED {
+			fIncludesFinished = true
+			slog.Debug("refineFilterStatus: f includes FINISHED")
+		}
 	}
-	db.Where("watcheds.status IN ?", f)
+	// Apply the query.
+	if fIncludesFinished &&
+		userSettings != nil && util.Deref(userSettings.IncludePreviouslyWatched, false) {
+		slog.Debug("refineFilterStatus: Performing query that includes previously watched.")
+		db.
+			// The WHERE here is wrapped in parenthesis so that the `OR` doesn't
+			// intefere with the main query confusing its AND/ORs.
+			Where(`(watcheds.status IN ? OR EXISTS (
+				SELECT 1
+				FROM activities
+				WHERE activities.watched_id = watcheds.id
+					AND activities.count_as_play = 1
+			))`, f)
+	} else {
+		slog.Debug("refineFilterStatus: Performing standard query.")
+		db.Where(`watcheds.status IN ?`, f)
+	}
 }
 
 // Applies sorts to list.
@@ -125,11 +151,14 @@ func refineSortPinned(db *gorm.DB) {
 
 // list data.
 // gorm scope for applying filters to watched
-func watchedRefineFilter(wr domain.WatchedGetPageRequest) func(db *gorm.DB) *gorm.DB {
+func watchedRefineFilter(
+	wr domain.WatchedGetPageRequest,
+	userSettings *entity.UserSettings,
+) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		// Apply filters
 		refineFilterType(db, wr.FilterType)
-		refineFilterStatus(db, wr.FilterStatus)
+		refineFilterStatus(db, wr.FilterStatus, userSettings)
 		return db
 	}
 }
