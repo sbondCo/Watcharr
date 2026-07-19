@@ -2,6 +2,8 @@
 
 These changes are awaiting release:
 
+# [4.1.0] - 2026-07-19T14:18:00Z
+
 ## Changed
 
 - Profile: Stats no longer care about the `Include Previously Watched` setting. All previously watched items will be counted in the stats now.
@@ -17,6 +19,10 @@ These changes are awaiting release:
 ## Maintenance
 
 - Remove `dependabot.yml`.
+
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/orgs/sbondCo/packages/container/watcharr/1045300036?tag=v4.1.0) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.1.0/images/sha256-8148b4bdd81e7fc2b412a4dd0a0a2bafa478bd42ab6d9824f9be10d1763719f4).
 
 # [4.0.1] - 2026-07-16T10:12:00Z
 
@@ -1693,6 +1699,7 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 <!-- Version Changelog References (newest first) -->
 
 [Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...HEAD
+[4.1.0]: https://github.com/sbondCo/Watcharr/compare/v4.0.1...v4.1.0
 [4.0.1]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/sbondCo/Watcharr/compare/v3.0.1...v4.0.0
 [3.0.1]: https://github.com/sbondCo/Watcharr/compare/v3.0.0...v3.0.1
