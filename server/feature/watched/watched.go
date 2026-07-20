@@ -10,12 +10,16 @@ import (
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/watched/addedtocontent"
+	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/util"
 	"gorm.io/gorm"
 )
 
 type ContentProvider interface {
 	GetOrCacheContent(contentType entity.ContentType, tmdbId int) (entity.Content, error)
+	// SeasonDetails returns a season's episodes (with air dates) from TMDB (cached).
+	// Used by the "Up Next" feature to find the next unwatched episode.
+	SeasonDetails(tvId string, seasonNumber string) (tmdb.TMDBSeasonDetails, error)
 }
 
 type GameProvider interface {

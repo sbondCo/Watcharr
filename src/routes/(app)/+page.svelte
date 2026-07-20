@@ -5,6 +5,7 @@
 	import Poster from "@/lib/poster/Poster.svelte";
 	import PosterList from "@/lib/poster/PosterList.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
+	import UpNext from "@/lib/UpNext.svelte";
 	import infScroll from "@/lib/util/infScroll";
 	import paginatedLoader from "@/lib/util/paginatedLoader.svelte";
 	import { clearActiveFilters, store } from "@/store.svelte";
@@ -81,6 +82,8 @@
 	{JSON.stringify(store.activeFilters)} <b>queryp:</b>
 	{JSON.stringify(store.sortAndFiltersForQueryParams)}</span
 > -->
+
+<UpNext />
 
 <PosterList>
 	{#if dataLoader.state.data?.length > 0}
