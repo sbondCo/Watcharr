@@ -22,6 +22,8 @@ Feel free to abuse this demo instance (nicely). It runs on the latest `dev` buil
 
 Demo: [https://beta.watcharr.app/](https://beta.watcharr.app/)
 
+**NOTE:** There is no demo account, just type in a random username/password (smashing hand into keyboard is supported), then click `Not a user?` at the bottom and a `Sign Up` button will appear.
+
 ### Track new features
 
 Most patches are tracked through [our project board](https://github.com/orgs/sbondCo/projects/9/views/3), though I am very unorganised so expect surprise updates (or don't, if you like surprises)!
