@@ -16,9 +16,15 @@ With [some extra configuration](https://watcharr.app/docs/server_config/game-sup
 
 I am built with Go and Svelte(Kit).
 
-Feel free to abuse this demo instance (nicely), which runs on the latest `dev` build (there may be bugs, as new features are tested on here too): [https://beta.watcharr.app/](https://beta.watcharr.app/)
+### Demo
 
-[Track progress for the next version](https://github.com/orgs/sbondCo/projects/9/views/3).
+Feel free to abuse this demo instance (nicely). It runs on the latest `dev` build so there may be bugs, as new features are tested on here too. The demo is a worst-case scenario for speed (which is why I like it as a testing ground), if you host it yourself the app will be snappy.
+
+Demo: [https://beta.watcharr.app/](https://beta.watcharr.app/)
+
+### Track new features
+
+Most patches are tracked through [our project board](https://github.com/orgs/sbondCo/projects/9/views/3), though I am very unorganised so expect surprise updates (or don't, if you like surprises)!
 
 ### Contents
 
@@ -26,6 +32,7 @@ Feel free to abuse this demo instance (nicely), which runs on the latest `dev` b
 - [Set Up](#set-up)
 - [Community Made Tools](#community-made-tools)
 - [Getting Help](#getting-help)
+- [License](#license)
 - [Contributing](#contributing)
 
 # Screenshots
@@ -71,6 +78,8 @@ Thanks to anyone that has made a script or tool for Watcharr. Feel free to add y
 If something isn't working for you or you are stuck, [creating an issue](https://github.com/sbondCo/Watcharr/issues/new) is the best way to get help! Every type of issue is accepted, so don't be afraid to ask anything!
 
 You can also [join our space on Matrix](https://matrix.to/#/#watcharr:matrix.org) for support.
+
+I'll do my best to reply!
 
 # License
 
