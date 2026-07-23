@@ -13,6 +13,7 @@ import {
 	type ActivityUpdateRequest,
 	type Activity,
 	type SupportedMedia,
+	type StatsResponse,
 } from "@/types";
 import axios from "axios";
 import { notify, unNotify } from "./notify";
@@ -327,6 +328,10 @@ export async function unfollowUser(id: number) {
 			console.error(err);
 			notify({ id: nid, text: "Failed To Unfollow!", type: "error" });
 		});
+}
+
+export async function getStats(type: "movie" | "tv"): Promise<StatsResponse> {
+	return (await axios.get(`/profile/stats?type=${type}`)).data;
 }
 
 /**
