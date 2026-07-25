@@ -54,7 +54,11 @@ func (t *TMDB) APIRequest(ep string, p map[string]string) ([]byte, error) {
 	// Query params
 	params := url.Values{}
 	params.Add("api_key", t.GetKey())
-	params.Add("language", t.GetLang())
+	// Let callers override the language per-request (used for the English
+	// fallback when a translation is missing); otherwise use the configured one.
+	if _, ok := p["language"]; !ok {
+		params.Add("language", t.GetLang())
+	}
 	for k, v := range p {
 		params.Add(k, v)
 	}

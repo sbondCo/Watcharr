@@ -424,6 +424,22 @@ func (s *Service) MovieDetails(
 		return tmdb.TMDBMovieDetails{},
 			errors.New("failed to complete movie details request")
 	}
+	// English fallback: TMDB returns empty text fields when there's no translation
+	// in the configured language, so backfill from en-US when needed.
+	if s.tmdb.GetLang() != "en-US" && (resp.Overview == "" || resp.Title == "" || resp.PosterPath == "") {
+		en := new(tmdb.TMDBMovieDetails)
+		if e := s.tmdb.Request("/movie/"+id, map[string]string{"language": "en-US"}, &en); e == nil {
+			if resp.Overview == "" {
+				resp.Overview = en.Overview
+			}
+			if resp.Title == "" {
+				resp.Title = en.Title
+			}
+			if resp.PosterPath == "" {
+				resp.PosterPath = en.PosterPath
+			}
+		}
+	}
 	resp.WatchProvidersTransformed = transformProviders(&resp.WatchProviders, country)
 	resp.WatchProviders = nil // We don't want this to linger around (in cache) since we have the transformed version now..
 	go s.cacheContentMovie(*resp, true)
@@ -456,6 +472,22 @@ func (s *Service) TvDetails(
 	if err != nil {
 		slog.Error("Failed to complete tv details request!", "error", err.Error())
 		return tmdb.TMDBShowDetails{}, errors.New("failed to complete tv details request")
+	}
+	// English fallback: TMDB returns empty text fields when there's no translation
+	// in the configured language, so backfill from en-US when needed.
+	if s.tmdb.GetLang() != "en-US" && (resp.Overview == "" || resp.Name == "" || resp.PosterPath == "") {
+		en := new(tmdb.TMDBShowDetails)
+		if e := s.tmdb.Request("/tv/"+id, map[string]string{"language": "en-US"}, &en); e == nil {
+			if resp.Overview == "" {
+				resp.Overview = en.Overview
+			}
+			if resp.Name == "" {
+				resp.Name = en.Name
+			}
+			if resp.PosterPath == "" {
+				resp.PosterPath = en.PosterPath
+			}
+		}
 	}
 	resp.WatchProvidersTransformed = transformProviders(&resp.WatchProviders, country)
 	resp.WatchProviders = nil // We don't want this to linger around (in cache) since we have the transformed version now..
