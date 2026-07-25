@@ -238,6 +238,47 @@ func (s *Service) cacheContentMovie(content tmdb.TMDBMovieDetails, onlyUpdate bo
 }
 
 // Get content from our db cache, or cache it if it doesn't exist.
+// fillTvFallback backfills empty text/poster fields from en-US when the
+// configured language has no translation (TMDB returns empty fields in that case).
+func (s *Service) fillTvFallback(id string, c *tmdb.TMDBShowDetails) {
+	if s.tmdb.GetLang() == "en-US" || (c.Overview != "" && c.Name != "" && c.PosterPath != "") {
+		return
+	}
+	en := new(tmdb.TMDBShowDetails)
+	if err := s.tmdb.Request("/tv/"+id, map[string]string{"language": "en-US"}, &en); err != nil {
+		return
+	}
+	if c.Overview == "" {
+		c.Overview = en.Overview
+	}
+	if c.Name == "" {
+		c.Name = en.Name
+	}
+	if c.PosterPath == "" {
+		c.PosterPath = en.PosterPath
+	}
+}
+
+// fillMovieFallback: same as fillTvFallback but for movies.
+func (s *Service) fillMovieFallback(id string, c *tmdb.TMDBMovieDetails) {
+	if s.tmdb.GetLang() == "en-US" || (c.Overview != "" && c.Title != "" && c.PosterPath != "") {
+		return
+	}
+	en := new(tmdb.TMDBMovieDetails)
+	if err := s.tmdb.Request("/movie/"+id, map[string]string{"language": "en-US"}, &en); err != nil {
+		return
+	}
+	if c.Overview == "" {
+		c.Overview = en.Overview
+	}
+	if c.Title == "" {
+		c.Title = en.Title
+	}
+	if c.PosterPath == "" {
+		c.PosterPath = en.PosterPath
+	}
+}
+
 func (s *Service) GetOrCacheContent(contentType entity.ContentType, tmdbId int) (entity.Content, error) {
 	var content entity.Content
 	// Look in db for content.
@@ -259,6 +300,7 @@ func (s *Service) GetOrCacheContent(contentType entity.ContentType, tmdbId int) 
 				slog.Error("Failed to unmarshal movie details", "error", err)
 				return entity.Content{}, errors.New("failed to process movie details response")
 			}
+			s.fillMovieFallback(strconv.Itoa(tmdbId), c)
 			content, err = s.cacheContentMovie(*c, false)
 			if err != nil {
 				slog.Error("GetOrCacheContent: failed to cache movie content", "type", contentType, "content_id", tmdbId, "err", err)
@@ -271,6 +313,7 @@ func (s *Service) GetOrCacheContent(contentType entity.ContentType, tmdbId int) 
 				slog.Error("Failed to unmarshal tv details", "error", err)
 				return entity.Content{}, errors.New("failed to process tv details response")
 			}
+			s.fillTvFallback(strconv.Itoa(tmdbId), c)
 			content, err = s.cacheContentTv(*c, false)
 			if err != nil {
 				slog.Error("GetOrCacheContent: failed to cache tv content", "type", contentType, "content_id", tmdbId, "err", err)
@@ -424,22 +467,7 @@ func (s *Service) MovieDetails(
 		return tmdb.TMDBMovieDetails{},
 			errors.New("failed to complete movie details request")
 	}
-	// English fallback: TMDB returns empty text fields when there's no translation
-	// in the configured language, so backfill from en-US when needed.
-	if s.tmdb.GetLang() != "en-US" && (resp.Overview == "" || resp.Title == "" || resp.PosterPath == "") {
-		en := new(tmdb.TMDBMovieDetails)
-		if e := s.tmdb.Request("/movie/"+id, map[string]string{"language": "en-US"}, &en); e == nil {
-			if resp.Overview == "" {
-				resp.Overview = en.Overview
-			}
-			if resp.Title == "" {
-				resp.Title = en.Title
-			}
-			if resp.PosterPath == "" {
-				resp.PosterPath = en.PosterPath
-			}
-		}
-	}
+	s.fillMovieFallback(id, resp)
 	resp.WatchProvidersTransformed = transformProviders(&resp.WatchProviders, country)
 	resp.WatchProviders = nil // We don't want this to linger around (in cache) since we have the transformed version now..
 	go s.cacheContentMovie(*resp, true)
@@ -473,22 +501,7 @@ func (s *Service) TvDetails(
 		slog.Error("Failed to complete tv details request!", "error", err.Error())
 		return tmdb.TMDBShowDetails{}, errors.New("failed to complete tv details request")
 	}
-	// English fallback: TMDB returns empty text fields when there's no translation
-	// in the configured language, so backfill from en-US when needed.
-	if s.tmdb.GetLang() != "en-US" && (resp.Overview == "" || resp.Name == "" || resp.PosterPath == "") {
-		en := new(tmdb.TMDBShowDetails)
-		if e := s.tmdb.Request("/tv/"+id, map[string]string{"language": "en-US"}, &en); e == nil {
-			if resp.Overview == "" {
-				resp.Overview = en.Overview
-			}
-			if resp.Name == "" {
-				resp.Name = en.Name
-			}
-			if resp.PosterPath == "" {
-				resp.PosterPath = en.PosterPath
-			}
-		}
-	}
+	s.fillTvFallback(id, resp)
 	resp.WatchProvidersTransformed = transformProviders(&resp.WatchProviders, country)
 	resp.WatchProviders = nil // We don't want this to linger around (in cache) since we have the transformed version now..
 	go s.cacheContentTv(*resp, true)
