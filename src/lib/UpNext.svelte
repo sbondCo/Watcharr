@@ -58,7 +58,6 @@
 	}
 
 	async function dropShow(item: UpNextItem) {
-		if (!confirm(`Drop "${item.showTitle}"? It will leave your Up Next list.`)) return;
 		busyId = item.watchedId;
 		const nid = notify({ text: `Dropping ${item.showTitle}`, type: "loading" });
 		try {
@@ -194,7 +193,7 @@
 		gap: 6px;
 	}
 	.mark {
-		flex: 1;
+		flex: 4 1 0;
 		display: flex;
 		align-items: center;
 		gap: 4px;
@@ -202,6 +201,7 @@
 		cursor: pointer;
 	}
 	.drop {
+		flex: 1 1 0;
 		cursor: pointer;
 		opacity: 0.7;
 	}
