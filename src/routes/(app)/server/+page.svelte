@@ -39,6 +39,7 @@
 	let debugDisabled = $state(false);
 	let jfDisabled = $state(false);
 	let tmdbkDisabled = $state(false);
+	let tmdbLangDisabled = $state(false);
 	let plexHostDisabled = $state(false);
 	let countryDisabled = $state(false);
 	let useEmbyDisabled = $state(false);
@@ -230,6 +231,23 @@
 								});
 							}}
 							disabled={tmdbkDisabled}
+						/>
+					</Setting>
+					<Setting
+						title="TMDB Language"
+						desc="Language for content metadata (titles, overviews, posters), e.g. fr-FR. Applies to newly-fetched content."
+					>
+						<input
+							type="text"
+							placeholder="en-US"
+							bind:value={serverConfig.TMDB_LANG}
+							onblur={() => {
+								tmdbLangDisabled = true;
+								updateServerConfig("TMDB_LANG", serverConfig!.TMDB_LANG, () => {
+									tmdbLangDisabled = false;
+								});
+							}}
+							disabled={tmdbLangDisabled}
 						/>
 					</Setting>
 					<Setting
