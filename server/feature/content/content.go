@@ -340,6 +340,36 @@ func (s *Service) SearchContent(query string, pageNum int) (tmdb.TMDBSearchMulti
 		slog.Error("Failed to complete multi search request!", "error", err.Error())
 		return tmdb.TMDBSearchMultiResponse{}, errors.New("failed to complete multi search request")
 	}
+	// English fallback for search overviews: TMDB returns empty overviews for
+	// entries with no translation in the configured language. Do a single extra
+	// en-US search and backfill by id, only when something is actually missing.
+	if s.tmdb.GetLang() != "en-US" {
+		missing := false
+		for i := range resp.Results {
+			if resp.Results[i].Overview == "" {
+				missing = true
+				break
+			}
+		}
+		if missing {
+			en := new(tmdb.TMDBSearchMultiResponse)
+			if e := s.tmdb.Request("/search/multi", map[string]string{
+				"query": query, "page": strconv.Itoa(pageNum), "language": "en-US",
+			}, &en); e == nil {
+				enOverview := make(map[int]string, len(en.Results))
+				for i := range en.Results {
+					enOverview[en.Results[i].ID] = en.Results[i].Overview
+				}
+				for i := range resp.Results {
+					if resp.Results[i].Overview == "" {
+						if ov := enOverview[resp.Results[i].ID]; ov != "" {
+							resp.Results[i].Overview = ov
+						}
+					}
+				}
+			}
+		}
+	}
 	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
