@@ -13,6 +13,7 @@
 		posterPath: string;
 		seasonNumber: number;
 		episodeNumber: number;
+		seasonEpisodeCount: number;
 		episodeName: string;
 		stillPath: string;
 		airDate: string;
@@ -56,6 +57,22 @@
 		}
 	}
 
+	async function dropShow(item: UpNextItem) {
+		if (!confirm(`Drop "${item.showTitle}"? It will leave your Up Next list.`)) return;
+		busyId = item.watchedId;
+		const nid = notify({ text: `Dropping ${item.showTitle}`, type: "loading" });
+		try {
+			await axios.put(`/watched/${item.watchedId}`, { status: "DROPPED" });
+			notify({ id: nid, text: "Dropped", type: "success" });
+			await load(); // the show leaves the Up Next row (no longer "Watching")
+		} catch (err) {
+			console.error("UpNext: dropShow failed", err);
+			notify({ id: nid, text: "Failed to drop!", type: "error" });
+		} finally {
+			busyId = undefined;
+		}
+	}
+
 	function img(item: UpNextItem) {
 		const p = item.stillPath || item.posterPath;
 		return p ? `https://image.tmdb.org/t/p/w300${p}` : "";
@@ -82,9 +99,9 @@
 				<div class="meta">
 					<span class="show">{item.showTitle}</span>
 					<span class="ep">
-						S{item.seasonNumber}E{item.episodeNumber}{item.episodeName
-							? ` · ${item.episodeName}`
-							: ""}
+						S{item.seasonNumber}.E{item.episodeNumber}{item.seasonEpisodeCount
+							? `/${item.seasonEpisodeCount}`
+							: ""}{item.episodeName ? ` · ${item.episodeName}` : ""}
 					</span>
 					{#if item.airDate}
 						{@const future = new Date(item.airDate) > new Date()}
@@ -93,13 +110,23 @@
 						</span>
 					{/if}
 				</div>
-				<button
-					class="mark"
-					disabled={busyId === item.watchedId}
-					onclick={() => markWatched(item)}
-				>
-					✓ Watched
-				</button>
+				<div class="actions">
+					<button
+						class="mark"
+						disabled={busyId === item.watchedId}
+						onclick={() => markWatched(item)}
+					>
+						✓ Watched
+					</button>
+					<button
+						class="drop"
+						disabled={busyId === item.watchedId}
+						onclick={() => dropShow(item)}
+						title="Drop this show (abandon)"
+					>
+						Drop
+					</button>
+				</div>
 			</li>
 		{/each}
 	</HorizontalList>
@@ -162,11 +189,23 @@
 		font-weight: 600;
 		color: #e0a13c;
 	}
+	.actions {
+		display: flex;
+		gap: 6px;
+	}
 	.mark {
+		flex: 1;
 		display: flex;
 		align-items: center;
 		gap: 4px;
 		justify-content: center;
 		cursor: pointer;
+	}
+	.drop {
+		cursor: pointer;
+		opacity: 0.7;
+	}
+	.drop:hover {
+		opacity: 1;
 	}
 </style>

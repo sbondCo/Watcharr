@@ -17,9 +17,11 @@ type UpNextItem struct {
 	PosterPath    string `json:"posterPath"`
 	SeasonNumber  int    `json:"seasonNumber"`
 	EpisodeNumber int    `json:"episodeNumber"`
-	EpisodeName   string `json:"episodeName"`
-	StillPath     string `json:"stillPath"`
-	AirDate       string `json:"airDate"`
+	// Total number of episodes in that season (for a "S6.E2/12" style display).
+	SeasonEpisodeCount int    `json:"seasonEpisodeCount"`
+	EpisodeName        string `json:"episodeName"`
+	StillPath          string `json:"stillPath"`
+	AirDate            string `json:"airDate"`
 }
 
 // UpNext returns, for each show the user is currently WATCHING, the next
@@ -91,15 +93,16 @@ func (s *Service) nextEpisodeFor(w *entity.Watched) (UpNextItem, bool) {
 				continue
 			}
 			return UpNextItem{
-				WatchedID:     w.ID,
-				TmdbID:        w.Content.TmdbID,
-				ShowTitle:     w.Content.Title,
-				PosterPath:    w.Content.PosterPath,
-				SeasonNumber:  ep.SeasonNumber,
-				EpisodeNumber: ep.EpisodeNumber,
-				EpisodeName:   ep.Name,
-				StillPath:     ep.StillPath,
-				AirDate:       ep.AirDate,
+				WatchedID:          w.ID,
+				TmdbID:             w.Content.TmdbID,
+				ShowTitle:          w.Content.Title,
+				PosterPath:         w.Content.PosterPath,
+				SeasonNumber:       ep.SeasonNumber,
+				EpisodeNumber:      ep.EpisodeNumber,
+				SeasonEpisodeCount: len(eps),
+				EpisodeName:        ep.Name,
+				StillPath:          ep.StillPath,
+				AirDate:            ep.AirDate,
 			}, true
 		}
 	}
