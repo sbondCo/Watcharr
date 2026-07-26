@@ -68,6 +68,9 @@ export function preparePlexAuth(): Plex {
 			// Don't really want to give all the possible headers,
 			// trying to minimize it to what gets it working.
 			headers: {
+				// So plex api returns json.
+				Accept: "application/json",
+				// Plex product specific headers:
 				"X-Plex-Product": "Watcharr",
 				"X-Plex-Client-Identifier": clientId,
 				"X-Plex-Version": "Plex OAuth",

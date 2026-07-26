@@ -2,6 +2,10 @@
 
 These changes are awaiting release:
 
+## Fixed
+
+- Plex Login: Request JSON from plex api so that it doesn't return XML.
+
 # [4.1.0] - 2026-07-19T14:18:00Z
 
 ## Changed
