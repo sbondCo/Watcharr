@@ -131,7 +131,7 @@ export const store = {
 	/**
 	 * Return our `activeSort` and `activeFilters` in an object
 	 * that is in the correct format for our get watched page
-	 * requests (object that is given to axios for query params).
+	 * http requests.
 	 */
 	get sortAndFiltersForQueryParams() {
 		return _store.sortAndFiltersForQueryParams;

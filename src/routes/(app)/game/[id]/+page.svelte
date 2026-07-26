@@ -2,12 +2,11 @@
 	import Spinner from "@/lib/Spinner.svelte";
 	import HorizontalList from "@/lib/HorizontalList.svelte";
 	import { type Media, type WatchedStatus } from "@/types";
-	import axios from "axios";
 	import Activity from "@/lib/Activity.svelte";
 	import Title from "@/lib/content/Title.svelte";
 	import Error from "@/lib/Error.svelte";
 	import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
-	import { removeWatched, updateWatched } from "@/lib/util/api.js";
+	import { req, updateWatched } from "@/lib/util/api.js";
 	import tooltip from "@/lib/actions/tooltip.js";
 	import Icon from "@/lib/Icon.svelte";
 	import AddToTagButton from "@/lib/tag/AddToTagButton.svelte";
@@ -43,8 +42,7 @@
 				if (!data.gameId) {
 					return;
 				}
-				const resp = (await axios.get(`/game/${data.gameId}`)).data as Media;
-				game = resp;
+				game = await req.get<Media>(`/game/${data.gameId}`);
 			} catch (err: any) {
 				game = undefined;
 				pageError = err;

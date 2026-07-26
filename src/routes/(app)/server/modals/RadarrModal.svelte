@@ -12,7 +12,8 @@
 		RadarrSettings,
 		RadarrTestResponse,
 	} from "@/types";
-	import axios from "axios";
+	import { req } from "@/lib/util/api";
+	import { ReqerError } from "@/lib/util/fetch";
 
 	interface Props {
 		servarr: RadarrSettings;
@@ -22,7 +23,7 @@
 
 	let { servarr = $bindable(), isEditing, onClose }: Props = $props();
 
-	let error: string = $state();
+	let error: string | undefined = $state();
 	let formDisabled = $state(false);
 
 	let qualityProfiles: DropDownItem[] = $state([]);
@@ -42,14 +43,14 @@
 	async function getSettingsData() {
 		try {
 			formDisabled = true;
-			const res = await axios.post<RadarrTestResponse>("/arr/rad/test", {
+			const res = await req.post<RadarrTestResponse>("/arr/rad/test", {
 				host: servarr.host,
 				key: servarr.key,
 			});
-			qualityProfiles = res.data.qualityProfiles.map((d) => {
+			qualityProfiles = res.qualityProfiles.map((d) => {
 				return { id: d.id, value: d.name };
 			});
-			rootFolders = res.data.rootFolders.map((d) => {
+			rootFolders = res.rootFolders.map((d) => {
 				return { id: d.id, value: d.path };
 			});
 			formDisabled = false;
@@ -91,43 +92,33 @@
 		if (!error) {
 			console.log(servarr);
 			try {
-				const res = await axios.post(
-					`/arr/rad/${isEditing ? "edit" : "add"}`,
-					servarr,
-				);
-				if (res.status === 200) {
-					notify({
-						type: "success",
-						text: isEditing ? "Changes saved!" : "Server added successfully!",
-					});
-					onClose();
-				}
+				await req.post(`/arr/rad/${isEditing ? "edit" : "add"}`, servarr);
+				notify({
+					type: "success",
+					text: isEditing ? "Changes saved!" : "Server added successfully!",
+				});
+				onClose();
 			} catch (err: any) {
 				console.error("Failed to save server!", err);
-				error = `Failed to ${isEditing ? "edit" : "add"}`;
-				if (err?.response?.data?.error) {
-					error = err.response.data.error;
-				}
+				error = ReqerError.getMsg(
+					err,
+					`Failed to ${isEditing ? "edit" : "add"}`,
+				);
 			}
 		}
 	}
 
 	async function remove() {
 		try {
-			const res = await axios.post(`/arr/rad/rm/${servarr.name}`);
-			if (res.status === 200) {
-				notify({
-					type: "success",
-					text: "Removed server",
-				});
-				onClose();
-			}
+			await req.post(`/arr/rad/rm/${servarr.name}`);
+			notify({
+				type: "success",
+				text: "Removed server",
+			});
+			onClose();
 		} catch (err: any) {
 			console.error("Failed to remove server!", err);
-			error = `Failed to remove`;
-			if (err?.response?.data?.error) {
-				error = err.response.data.error;
-			}
+			error = ReqerError.getMsg(err, "Failed to remove");
 		}
 	}
 	run(() => {

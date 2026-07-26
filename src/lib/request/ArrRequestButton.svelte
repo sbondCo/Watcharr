@@ -6,12 +6,13 @@
 		ArrRequestStatus,
 		ContentType,
 	} from "@/types";
-	import axios from "axios";
 	import { onMount } from "svelte";
 	import Icon from "../Icon.svelte";
 	import tooltip from "../actions/tooltip";
 	import { msToAmountsOfTime } from "../util/helpers";
 	import { notify } from "../util/notify";
+	import { req } from "../util/api";
+	import { ReqerError } from "../util/fetch";
 
 	interface Props {
 		type: ContentType;
@@ -48,11 +49,11 @@
 				);
 				return;
 			}
-			const resp = await axios.get<ArrInfoResponse>(
+			const resp = await req.get<ArrInfoResponse>(
 				`/arr/${type === "movie" ? "rad" : "son"}/info/${existingRequest.id}`,
 			);
-			if (resp?.data) {
-				info = resp.data;
+			if (resp) {
+				info = resp;
 				if (info.hasFile) {
 					status = "available";
 				} else {
@@ -61,8 +62,9 @@
 			}
 		} catch (err: any) {
 			if (
-				err?.response?.status === 404 &&
-				err?.response?.data?.error === "request deleted"
+				ReqerError.withBody(err) &&
+				err.response?.status === 404 &&
+				err.body.error === "request deleted"
 			) {
 				return;
 			}
@@ -80,13 +82,13 @@
 				console.warn("getStatus called before existingRequest exists.");
 				return;
 			}
-			const statusResp = await axios.get<ArrDetailsResponse>(
+			const statusResp = await req.getWhole<ArrDetailsResponse>(
 				`/arr/${type === "movie" ? "rad" : "son"}/status/${existingRequest.serverName}/${existingRequest.arrId}`,
 			);
 			if (statusResp.status === 204) {
 				status = "requested";
-			} else if (statusResp?.data) {
-				status = statusResp.data;
+			} else if (statusResp.body) {
+				status = statusResp.body;
 				const estMs =
 					new Date(status.estimatedCompletionTime).getTime() -
 					new Date(Date.now()).getTime();
@@ -119,19 +121,19 @@
 
 	async function lookForExisting() {
 		try {
-			const existingRequestResp = await axios.get<ArrRequestResponse>(
+			const existingRequestResp = await req.get<ArrRequestResponse>(
 				`/arr/${type === "movie" ? "rad" : "son"}/request/${tmdbId}`,
 			);
-			if (existingRequestResp?.data && existingRequestResp?.data?.arrId) {
-				existingRequest = existingRequestResp?.data;
+			if (existingRequestResp && existingRequestResp.arrId) {
+				existingRequest = existingRequestResp;
 				getInfo();
-			} else if (existingRequestResp?.data) {
+			} else if (existingRequestResp) {
 				// If no arrId, use status in request (pending, denied, etc)
 				console.log(
 					"No arrId in request resp.. using request status for btn status if set.",
 				);
-				if (existingRequestResp?.data?.status) {
-					status = existingRequestResp?.data?.status;
+				if (existingRequestResp.status) {
+					status = existingRequestResp.status;
 				}
 			}
 		} catch (err) {

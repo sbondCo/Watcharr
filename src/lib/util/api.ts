@@ -13,8 +13,9 @@ import {
 	type ActivityUpdateRequest,
 	type Activity,
 	type SupportedMedia,
+	type ServerFeatures,
 } from "@/types";
-import axios from "axios";
+import { Reqer, ReqerError } from "./fetch";
 import { notify, unNotify } from "./notify";
 import { browser } from "$app/environment";
 const { MODE } = import.meta.env;
@@ -26,6 +27,9 @@ export const baseURL =
 			: "http://127.0.0.1:3080/api"
 		: "/api";
 console.log("api: baseURL constructed:", baseURL);
+
+export const req = new Reqer(baseURL, true);
+export const noAuthReq = new Reqer(baseURL, false);
 
 /**
  * Options for our internal updateWatched func.
@@ -71,7 +75,7 @@ async function _updateWatched(
 	if (typeof letCountAsPlay !== "undefined") {
 		obj.letCountAsPlay = letCountAsPlay;
 	}
-	const resp = await axios.put<WatchedUpdateResponse>(
+	const resp = await req.put<WatchedUpdateResponse>(
 		`/watched/${wEntry.id}`,
 		obj,
 	);
@@ -79,14 +83,14 @@ async function _updateWatched(
 	if (rating) wEntry.rating = rating;
 	if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
 	if (typeof pinned !== "undefined") wEntry.pinned = pinned;
-	if (resp?.data?.newActivity && resp?.data?.newActivity?.id) {
+	if (resp?.newActivity && resp?.newActivity?.id) {
 		if (wEntry.activity && wEntry.activity.length > 0) {
-			wEntry.activity.push(resp.data.newActivity);
+			wEntry.activity.push(resp.newActivity);
 		} else {
-			wEntry.activity = [resp.data.newActivity];
+			wEntry.activity = [resp.newActivity];
 		}
 		// If new activity counts as play, increment plays for local state.
-		if (resp.data.newActivity.countAsPlay) {
+		if (resp.newActivity.countAsPlay) {
 			if (wEntry.plays) {
 				wEntry.plays++;
 			} else {
@@ -133,22 +137,22 @@ export async function updateWatched(
 
 		// Add new watched item
 		notify({ id: nid, text: `Adding`, type: "loading" });
-		let req: WatchedAddRequest = {
+		let reqBody: WatchedAddRequest = {
 			contentType: opts.contentType,
 			status: opts.status,
 			rating: opts.rating,
 		};
 		if (opts.contentType === "movie" || opts.contentType === "tv") {
-			req.tmdbId = opts.contentId;
+			reqBody.tmdbId = opts.contentId;
 		} else if (opts.contentType === "game") {
-			req.igdbId = opts.contentId;
+			reqBody.igdbId = opts.contentId;
 		} else {
 			throw "invalid contentType";
 		}
-		const resp = await axios.post<Watched>("/watched", req);
-		console.log("Added watched:", resp.data);
+		const resp = await req.post<Watched>("/watched", reqBody);
+		console.log("Added watched:", resp);
 		notify({ id: nid, text: `Added!`, type: "success" });
-		return resp.data;
+		return resp;
 	} catch (err) {
 		console.error("updateWatched: Failed!", err);
 		notify({ id: nid, text: `Failed!`, type: "error" });
@@ -165,8 +169,8 @@ export async function removeWatched(id: number): Promise<boolean> {
 	console.log("removeWatched: Removing:", id);
 	const nid = notify({ text: "Removing", type: "loading" });
 	try {
-		const resp = await axios.delete(`/watched/${id}`);
-		console.log("removeWatched: Removed resp:", resp.data);
+		const resp = await req.delete(`/watched/${id}`);
+		console.log("removeWatched: Removed resp:", resp);
 		notify({ id: nid, text: "Removed!", type: "success" });
 		return true;
 	} catch (err) {
@@ -183,7 +187,7 @@ export async function updateActivity(
 	const nid = notify({ text: "Updating", type: "loading" });
 	console.debug("updateActivity:", activity, date);
 	try {
-		const resp = await axios.put(`/activity/${activity.id}`, {
+		const resp = await req.putWhole(`/activity/${activity.id}`, {
 			customDate: date.toISOString(),
 		} as ActivityUpdateRequest);
 		console.log("updateActivity: Response status:", resp.status);
@@ -201,7 +205,7 @@ export async function updateActivity(
 export async function removeActivity(activityId: number): Promise<boolean> {
 	const nid = notify({ text: "Deleting", type: "loading" });
 	try {
-		await axios.delete("/activity/" + activityId);
+		await req.delete("/activity/" + activityId);
 		console.log("removeActivity: Removed:", activityId);
 		notify({ id: nid, text: "Deleted!", type: "success" });
 		return true;
@@ -219,9 +223,11 @@ export async function contentExistsOnJellyfin(
 ): Promise<JellyfinFoundContent | undefined> {
 	try {
 		if (Number(store.userInfo?.type) == UserType.Jellyfin) {
-			const resp = await axios.get(`/jellyfin/${type}/${name}/${tmdbId}`);
-			console.log("contentExistsOnJellyfin response:", resp.data);
-			return resp.data as JellyfinFoundContent;
+			const resp = await req.get<JellyfinFoundContent>(
+				`/jellyfin/${type}/${name}/${tmdbId}`,
+			);
+			console.log("contentExistsOnJellyfin response:", resp);
+			return resp;
 		}
 	} catch (err) {
 		console.error(err);
@@ -241,14 +247,12 @@ export function updateUserSetting<K extends keyof UserSettings>(
 	}
 	const originalValue = store.userSettings[name];
 	const nid = notify({ type: "loading", text: "Updating" });
-	axios
+	req
 		.post("/user/update", { [name]: value })
-		.then((r) => {
-			if (r.status === 200) {
-				if (store.userSettings) store.userSettings[name] = value;
-				notify({ id: nid, type: "success", text: "Updated" });
-				if (typeof done !== "undefined") done();
-			}
+		.then(() => {
+			if (store.userSettings) store.userSettings[name] = value;
+			notify({ id: nid, type: "success", text: "Updated" });
+			if (typeof done !== "undefined") done();
 		})
 		.catch((err) => {
 			console.error("Failed to update user setting", err);
@@ -264,18 +268,14 @@ export function changeUserPassword(
 	done?: (errMsg?: string) => void,
 ) {
 	const nid = notify({ type: "loading", text: "Changing Password" });
-	axios
+	req
 		.post("/auth/change_password", { oldPassword, newPassword })
-		.then((r) => {
-			if (r.status === 200) {
-				notify({ id: nid, type: "success", text: "Password Changed" });
-				if (typeof done !== "undefined") done();
-			}
+		.then(() => {
+			notify({ id: nid, type: "success", text: "Password Changed" });
+			if (typeof done !== "undefined") done();
 		})
 		.catch((err) => {
-			const errMsg = err?.response?.data?.error
-				? err.response.data.error
-				: "Couldn't Change Password";
+			const errMsg = ReqerError.getMsg(err, "Couldn't Change Password");
 			console.error(
 				"Change Password Form - Failed to change password on the server",
 				err,
@@ -290,9 +290,9 @@ export function changeUserPassword(
  */
 export async function getServerFeatures() {
 	try {
-		const f = await axios.get("/features");
-		if (f?.data) {
-			store.serverFeatures = f.data;
+		const f = await req.get<ServerFeatures>("/features");
+		if (f) {
+			store.serverFeatures = f;
 		}
 	} catch (err) {
 		console.error("getServerFeatures failed!", err);
@@ -301,11 +301,11 @@ export async function getServerFeatures() {
 
 export async function followUser(id: number) {
 	const nid = notify({ text: `Following`, type: "loading" });
-	axios
-		.post(`/follow/${id}`)
+	req
+		.post<Follow>(`/follow/${id}`)
 		.then((resp) => {
-			console.log("Followed:", resp.data);
-			store.follows.push(resp.data as Follow);
+			console.log("Followed:", resp);
+			store.follows.push(resp);
 			notify({ id: nid, text: `Followed!`, type: "success" });
 		})
 		.catch((err) => {
@@ -316,10 +316,10 @@ export async function followUser(id: number) {
 
 export async function unfollowUser(id: number) {
 	const nid = notify({ text: `Unfollowing`, type: "loading" });
-	axios
+	req
 		.delete(`/follow/${id}`)
 		.then((resp) => {
-			console.log("Unfollowed:", resp.data);
+			console.log("Unfollowed:", resp);
 			store.follows = store.follows.filter((fo) => fo.followedUser.id != id);
 			notify({ id: nid, text: `Unfollowed!`, type: "success" });
 		})
@@ -328,10 +328,3 @@ export async function unfollowUser(id: number) {
 			notify({ id: nid, text: "Failed To Unfollow!", type: "error" });
 		});
 }
-
-/**
- * For use with routes that don't require authentication (eg login/register)
- */
-export const noAuthAxios = axios.create({
-	baseURL: baseURL,
-});

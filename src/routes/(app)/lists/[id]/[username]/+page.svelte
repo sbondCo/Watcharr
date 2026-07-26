@@ -3,11 +3,10 @@
 	import Spinner from "@/lib/Spinner.svelte";
 	import tooltip from "@/lib/actions/tooltip.js";
 	import UserAvatar from "@/lib/img/UserAvatar.svelte";
-	import { followUser, unfollowUser } from "@/lib/util/api.js";
+	import { followUser, req, unfollowUser } from "@/lib/util/api.js";
 	import { clearActiveFilters, store } from "@/store.svelte.js";
-	import type { Media, PublicUser } from "@/types.js";
-	import axios, { type GenericAbortSignal } from "axios";
-	import { onDestroy, onMount, untrack } from "svelte";
+	import type { Media, PaginationResponse, PublicUser } from "@/types.js";
+	import { onDestroy, untrack } from "svelte";
 	import paginatedLoader, {
 		PaginatedLoaderRunFnAction,
 	} from "@/lib/util/paginatedLoader.svelte.js";
@@ -43,7 +42,7 @@
 		...store.sortAndFiltersForQueryParams,
 	});
 
-	async function load(signal: GenericAbortSignal) {
+	async function load(signal: AbortSignal) {
 		console.debug("load: loadParams:", nextLoadParams);
 		if (nextLoadParams.page === dataLoader.state.page) {
 			console.warn("load: Already on this page, not loading it again!");
@@ -53,10 +52,13 @@
 			console.warn("load: Missing id or username!");
 			return;
 		}
-		const r = await axios.get(`/watched/${meta.id}/${meta.username}`, {
-			params: nextLoadParams,
-			signal,
-		});
+		const r = await req.get<PaginationResponse<Media, undefined>>(
+			`/watched/${meta.id}/${meta.username}`,
+			{
+				params: nextLoadParams,
+				signal,
+			},
+		);
 		scroll.dataLoaded();
 		return r;
 	}
@@ -87,8 +89,9 @@
 	});
 
 	async function getPublicUser() {
-		return (await axios.get(`/user/public/${meta.id}/${meta.username}`))
-			.data as PublicUser;
+		return await req.get<PublicUser>(
+			`/user/public/${meta.id}/${meta.username}`,
+		);
 	}
 
 	async function follow() {

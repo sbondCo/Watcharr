@@ -2,6 +2,20 @@
 
 These changes are awaiting release:
 
+## Changed
+
+- HTTP Requests: Replace `axios` with `Fetch`.
+
+## Fixed
+
+- Login: Display error when request to get available auth providers fails.
+- Removed some legacy code that still thought there was a `store.watchedList`.
+
+## Maintenance
+
+- Package.json: Use exact version for all packages.
+- .npmrc: Enable `ignore-scripts` (still on npm 11) and set `min-release-age=14`.
+
 # [4.1.1] - 2026-07-26T02:00:00Z
 
 ## Fixed

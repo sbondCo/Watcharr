@@ -1,15 +1,11 @@
 <script lang="ts">
 	import { store } from "@/store.svelte";
 	import Modal from "../Modal.svelte";
-	import Setting from "../settings/Setting.svelte";
-	import SettingsList from "../settings/SettingsList.svelte";
-	import ColorSelector from "../ColorSelector.svelte";
 	import { notify } from "../util/notify";
-	import axios from "axios";
-	import type { Tag as TagT, TagAddRequest } from "@/types";
-	import { get } from "svelte/store";
+	import type { Tag as TagT } from "@/types";
 	import Tag from "./Tag.svelte";
 	import { onMount } from "svelte";
+	import { req } from "../util/api";
 
 	interface Props {
 		tag: TagT;
@@ -30,28 +26,10 @@
 		deleteDisabled = true;
 		const nid = notify({ text: "Deleting Tag", type: "loading" });
 		try {
-			const resp = await axios.delete(`/tag/${tag.id}`);
-			console.log("deleteTag: Tag was deleted", resp.data);
-			// 1. Remove tag from store.
-			// const _tags = get(tags);
-			// store.tags.update((t) => t);
+			const resp = await req.delete(`/tag/${tag.id}`);
+			console.log("deleteTag: Tag was deleted", resp);
+			// Remove tag from store.
 			store.tags = store.tags.filter((t) => t.id !== tag.id);
-			// tags.update(() => newList);
-			// 2. Remove tag from all watched entries in store.
-			try {
-				for (let i = 0; i < store.watchedList.length; i++) {
-					const wi = store.watchedList[i];
-					if (wi.tags && wi.tags.length > 0) {
-						wi.tags = wi.tags.filter((t) => t.id !== tag.id);
-					}
-				}
-				// watchedList.update(() => wList);
-			} catch (err) {
-				console.error(
-					"deleteTag: Failed to remove tags from watched entries:",
-					err,
-				);
-			}
 			notify({ id: nid, text: "Tag Deleted!", type: "success" });
 			onClose();
 		} catch (err) {
@@ -63,7 +41,8 @@
 	}
 
 	onMount(() => {
-		// Sort of prevent accidental clickage, wait 3s after opening modal before enabling delete btn.
+		// Sort of prevent accidental clickage, wait 3s after opening modal
+		// before enabling delete btn.
 		deleteDisabled = true;
 		setTimeout(() => {
 			deleteDisabled = false;

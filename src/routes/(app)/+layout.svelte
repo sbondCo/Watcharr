@@ -11,9 +11,16 @@
 	import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
 	import SortMenu from "@/lib/nav/SortMenu.svelte";
 	import TagMenu from "@/lib/tag/TagMenu.svelte";
+	import { req } from "@/lib/util/api";
 	import { isTouch } from "@/lib/util/helpers";
 	import { store, defaultSort } from "@/store.svelte";
-	import axios from "axios";
+	import type {
+		ServerFeatures,
+		Follow,
+		PrivateUser,
+		Tag,
+		UserSettings,
+	} from "@/types";
 	import { onMount } from "svelte";
 	interface Props {
 		children?: import("svelte").Snippet;
@@ -101,31 +108,32 @@
 	}
 
 	async function getInitialData() {
-		if (localStorage.getItem("token")) {
-			const [u, s, f, fo, ts] = await Promise.all([
-				axios.get("/user"),
-				axios.get("/user/settings"),
-				axios.get("/features"),
-				axios.get("/follow"),
-				axios.get("/tag"),
-			]);
-			if (u?.data) {
-				store.userInfo = u.data;
-			}
-			if (s?.data) {
-				store.userSettings = s.data;
-			}
-			if (f?.data) {
-				store.serverFeatures = f.data;
-			}
-			if (fo?.data) {
-				store.follows = fo.data;
-			}
-			if (ts?.data) {
-				store.tags = ts.data;
-			}
-		} else {
+		if (!localStorage.getItem("token")) {
+			console.warn("getInitialData: No token found, redirecting to login!");
 			goto("/login?again=1");
+			return;
+		}
+		const [u, s, f, fo, ts] = await Promise.all([
+			req.get<PrivateUser>("/user"),
+			req.get<UserSettings>("/user/settings"),
+			req.get<ServerFeatures>("/features"),
+			req.get<Follow[]>("/follow"),
+			req.get<Tag[]>("/tag"),
+		]);
+		if (u) {
+			store.userInfo = u;
+		}
+		if (s) {
+			store.userSettings = s;
+		}
+		if (f) {
+			store.serverFeatures = f;
+		}
+		if (fo) {
+			store.follows = fo;
+		}
+		if (ts) {
+			store.tags = ts;
 		}
 	}
 

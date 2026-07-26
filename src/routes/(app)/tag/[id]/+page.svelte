@@ -8,13 +8,13 @@
 	import Spinner from "@/lib/Spinner.svelte";
 	import CreateTagModal from "@/lib/tag/CreateTagModal.svelte";
 	import Tag from "@/lib/tag/Tag.svelte";
+	import { req } from "@/lib/util/api";
 	import infScroll from "@/lib/util/infScroll";
 	import paginatedLoader, {
 		PaginatedLoaderRunFnAction,
 	} from "@/lib/util/paginatedLoader.svelte";
 	import { clearActiveFilters, store } from "@/store.svelte.js";
-	import type { Media } from "@/types";
-	import axios, { type GenericAbortSignal } from "axios";
+	import type { Media, PaginationResponse } from "@/types";
 	import { onDestroy, untrack } from "svelte";
 
 	let meta = $derived.by(() => {
@@ -36,7 +36,7 @@
 		...store.sortAndFiltersForQueryParams,
 	});
 
-	async function load(signal: GenericAbortSignal) {
+	async function load(signal: AbortSignal) {
 		console.debug("load: loadParams:", nextLoadParams);
 		if (nextLoadParams.page === dataLoader.state.page) {
 			console.warn("load: Already on this page, not loading it again!");
@@ -46,10 +46,13 @@
 			console.warn("load: Missing tag id!");
 			return;
 		}
-		const r = await axios.get(`/tag/${meta.tagId}/watched`, {
-			params: nextLoadParams,
-			signal,
-		});
+		const r = await req.get<PaginationResponse<Media, undefined>>(
+			`/tag/${meta.tagId}/watched`,
+			{
+				params: nextLoadParams,
+				signal,
+			},
+		);
 		scroll.dataLoaded();
 		return r;
 	}

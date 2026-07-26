@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from "svelte/legacy";
-
 	import Modal from "@/lib/Modal.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
@@ -8,7 +6,7 @@
 	import { toRelativeTime } from "@/lib/util/helpers";
 	import { notify } from "@/lib/util/notify";
 	import type { AllTasksResponse } from "@/types";
-	import axios from "axios";
+	import { req } from "@/lib/util/api";
 	import { onMount } from "svelte";
 
 	interface Props {
@@ -23,8 +21,8 @@
 
 	async function getAllTasks() {
 		try {
-			const res = await axios.get<AllTasksResponse[]>("/task/");
-			taskSchedule = res.data?.sort((a, b) => {
+			const res = await req.get<AllTasksResponse[]>("/task/");
+			taskSchedule = res?.sort((a, b) => {
 				if (a.name < b.name) {
 					return -1;
 				}
@@ -47,7 +45,7 @@
 		const nid = notify({ type: "loading", text: "Updating.." });
 		try {
 			formDisabled = true;
-			const res = await axios.put(`/task/${name}`, { seconds });
+			const res = await req.putWhole(`/task/${name}`, { seconds });
 			if (res.status === 200) {
 				notify({ id: nid, type: "success", text: "Schedule updated." });
 				getAllTasks();

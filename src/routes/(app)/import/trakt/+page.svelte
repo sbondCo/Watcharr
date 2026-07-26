@@ -6,29 +6,29 @@
 <script lang="ts">
 	import JobWatcherModal from "@/lib/JobWatcherModal.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
+	import { req } from "@/lib/util/api";
 	import { notify } from "@/lib/util/notify";
 	import { store } from "@/store.svelte";
 	import type { JobCreatedResponse } from "@/types";
-	import axios from "axios";
 
 	let modalOpen = $state(false);
 	let traktUsername = $state("");
 	let traktApiKey = $state("");
 
 	async function startJob(): Promise<{ jobId: string } | undefined> {
-		const r = await axios.post<JobCreatedResponse>("/import/trakt", {
+		const r = await req.post<JobCreatedResponse>("/import/trakt", {
 			username: traktUsername,
 			apiKey: traktApiKey.trim(),
 		});
-		console.log("startSync: Response:", r.data);
-		if (!r.data.jobId) {
+		console.log("startSync: Response:", r);
+		if (!r?.jobId) {
 			notify({
 				type: "error",
 				text: "No job id was returned! Cannot watch job, if it even started.",
 			});
 			return;
 		}
-		return { jobId: r.data.jobId };
+		return { jobId: r.jobId };
 	}
 </script>
 

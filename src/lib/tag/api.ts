@@ -1,4 +1,4 @@
-import axios from "axios";
+import { req } from "../util/api";
 import { notify } from "../util/notify";
 import type { Tag } from "@/types";
 
@@ -15,10 +15,10 @@ export async function tagWatched(
 		});
 		return false;
 	}
-	return await axios
+	return await req
 		.post(`/watched/${watchedId}/tag/${tag.id}`)
 		.then((resp) => {
-			console.log("tagWatched: Status:", resp.status);
+			console.log("tagWatched: Success.", resp);
 			notify({ id: nid, text: `Tagged!`, type: "success" });
 			return true;
 		})
@@ -42,10 +42,10 @@ export async function untagWatched(
 		});
 		return false;
 	}
-	return await axios
+	return await req
 		.delete(`/watched/${watchedId}/tag/${tag.id}`)
 		.then((resp) => {
-			console.log("untagWatched: Status:", resp.status);
+			console.log("untagWatched: Success.", resp);
 			notify({ id: nid, text: `Untagged!`, type: "success" });
 			return true;
 		})

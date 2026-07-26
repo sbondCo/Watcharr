@@ -11,9 +11,8 @@
 		type GetJobResponse,
 		type JobCreatedResponse,
 	} from "@/types";
-	import axios from "axios";
 	import { onDestroy, onMount } from "svelte";
-	import { store } from "@/store.svelte";
+	import { req } from "@/lib/util/api";
 
 	interface Props {
 		type?: "jellyfin" | "plex";
@@ -30,16 +29,16 @@
 
 	async function startSync() {
 		try {
-			const r = await axios.get<JobCreatedResponse>(
+			const r = await req.get<JobCreatedResponse>(
 				type === "jellyfin" ? "/jellyfin/sync" : "/plex/sync",
 			);
-			console.log("startSync: Response:", r.data);
-			if (!r.data.jobId) {
+			console.log("startSync: Response:", r);
+			if (!r.jobId) {
 				step = "errored";
 				console.error("startSync: No jobId returned!");
 				return;
 			}
-			jobId = r.data.jobId;
+			jobId = r.jobId;
 			step = "job-running";
 			startJobWatcher();
 		} catch (err) {
@@ -61,13 +60,13 @@
 		let seqfailedJobReqs = 0;
 		while (step === "job-running") {
 			try {
-				const r = await axios.get<GetJobResponse>(`/job/${jobId}`);
-				console.log("jobWatcher: Got job data:", r.data);
-				latestJobStatus = r.data;
-				currentTask = r.data?.currentTask;
-				if (r.data?.status === JobStatus.DONE) {
+				const r = await req.get<GetJobResponse>(`/job/${jobId}`);
+				console.log("jobWatcher: Got job data:", r);
+				latestJobStatus = r;
+				currentTask = r?.currentTask;
+				if (r?.status === JobStatus.DONE) {
 					step = "done";
-				} else if (r.data?.status === JobStatus.CANCELLED) {
+				} else if (r?.status === JobStatus.CANCELLED) {
 					step = "errored";
 				}
 				// If we get here without erroring, we can reset it to 0.
@@ -91,31 +90,6 @@
 				break;
 			}
 			await new Promise((r) => setTimeout(r, 1000));
-		}
-		if (step !== "modal-closing") {
-			// Update our watched list
-			const nid = notify({
-				text: "Fetching updated watched list.",
-				type: "loading",
-			});
-			try {
-				const w = await axios.get("/watched");
-				if (w?.data?.length > 0) {
-					store.watchedList = w.data;
-				}
-				notify({
-					id: nid,
-					text: "Fetched updated watched list.",
-					type: "success",
-				});
-			} catch (err) {
-				console.error("jobWatcher: Getting updated watched list failed!", err);
-				notify({
-					id: nid,
-					text: "Getting updated watched list failed!",
-					type: "error",
-				});
-			}
 		}
 	}
 

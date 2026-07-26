@@ -7,7 +7,7 @@
 		userHasPermission,
 	} from "@/lib/util/helpers";
 	import { UserPermission, type ManagedUser } from "@/types";
-	import axios from "axios";
+	import { req } from "@/lib/util/api";
 	import EditUserModal from "./modals/EditUserModal.svelte";
 	import UserTypeIcon from "@/lib/user/UserTypeIcon.svelte";
 	import Error from "@/lib/Error.svelte";
@@ -18,7 +18,7 @@
 	let editingUser: ManagedUser | undefined;
 
 	async function getUsers() {
-		allUsers = (await axios.get(`/server/users`)).data as ManagedUser[];
+		allUsers = await req.get<ManagedUser[]>(`/server/users`);
 	}
 </script>
 

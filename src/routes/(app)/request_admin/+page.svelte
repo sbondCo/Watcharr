@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { req } from "@/lib/util/api";
 	import { notify } from "@/lib/util/notify";
 	import { store } from "@/store.svelte";
 	import { UserPermission } from "@/types";
-	import axios from "axios";
 
 	let page = $state(0);
 	let adminToken: string | undefined = $state();
 
 	function generateAdminToken() {
-		axios
+		req
 			.get("/auth/admin_token")
 			.then(() => {
 				page = 1;
@@ -25,7 +25,7 @@
 			console.error("useAdminToken: No admin token provided!");
 			return;
 		}
-		axios
+		req
 			.post("/auth/admin_token", { token: adminToken })
 			.then(() => {
 				notify({ type: "success", text: "You now have admin!" });
@@ -35,10 +35,7 @@
 				goto("/");
 			})
 			.catch((err) => {
-				console.error(
-					"Failed to use admin token",
-					err?.response?.data?.error || err,
-				);
+				console.error("Failed to use admin token", err);
 				notify({ type: "error", text: "Failed to use admin token!" });
 			});
 	}

@@ -2,9 +2,10 @@
 	import Modal from "@/lib/Modal.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
 	import SettingsList from "@/lib/settings/SettingsList.svelte";
+	import { req } from "@/lib/util/api";
+	import { ReqerError } from "@/lib/util/fetch";
 	import { notify } from "@/lib/util/notify";
 	import type { TwitchSettings } from "@/types";
-	import axios from "axios";
 
 	interface Props {
 		cfg?: TwitchSettings;
@@ -36,20 +37,15 @@
 		// if no error set from checkForm func, continue
 		if (!error) {
 			try {
-				const res = await axios.post(`/game/config`, cfg);
-				if (res.status === 200) {
-					notify({
-						type: "success",
-						text: "Changes saved!",
-					});
-					onClose();
-				}
+				await req.post(`/game/config`, cfg);
+				notify({
+					type: "success",
+					text: "Changes saved!",
+				});
+				onClose();
 			} catch (err: any) {
 				console.error("Failed to save twitch cfg!", err);
-				error = `Failed to save`;
-				if (err?.response?.data?.error) {
-					error = err.response.data.error;
-				}
+				error = ReqerError.getMsg(err, "Failed to save");
 			}
 		}
 	}

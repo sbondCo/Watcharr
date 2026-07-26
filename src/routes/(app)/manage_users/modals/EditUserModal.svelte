@@ -4,10 +4,11 @@
 	import Modal from "@/lib/Modal.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
 	import SettingsList from "@/lib/settings/SettingsList.svelte";
+	import { req } from "@/lib/util/api";
+	import { ReqerError } from "@/lib/util/fetch";
 	import { userHasPermission } from "@/lib/util/helpers";
 	import { notify } from "@/lib/util/notify";
 	import { UserPermission, UserType, type ManagedUser } from "@/types";
-	import axios from "axios";
 
 	interface UpdateUserRequest {
 		permissions?: number;
@@ -44,20 +45,15 @@
 				if (changedType) {
 					toUpdate["type"] = user.type;
 				}
-				const res = await axios.post(`/server/users/${user.id}`, toUpdate);
-				if (res.status === 200) {
-					notify({
-						type: "success",
-						text: "Changes saved!",
-					});
-					onClose();
-				}
+				await req.post(`/server/users/${user.id}`, toUpdate);
+				notify({
+					type: "success",
+					text: "Changes saved!",
+				});
+				onClose();
 			} catch (err: any) {
 				console.error("Failed to save user!", err);
-				error = `Failed to save`;
-				if (err?.response?.data?.error) {
-					error = err.response.data.error;
-				}
+				error = ReqerError.getMsg(err, "Failed to save");
 			}
 		}
 	}
