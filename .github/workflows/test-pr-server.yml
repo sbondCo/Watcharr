@@ -19,8 +19,8 @@ jobs:
         working-directory: server
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7.0.0
+      - uses: actions/setup-go@v7.0.0
 
       - name: go test all packages
         run: go test ./...

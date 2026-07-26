@@ -15,6 +15,7 @@ These changes are awaiting release:
 
 - Package.json: Use exact version for all packages.
 - .npmrc: Enable `ignore-scripts` (still on npm 11) and set `min-release-age=14`.
+- Workflows: Upgrade action versions & set Node version to `24`.
 
 # [4.1.1] - 2026-07-26T02:00:00Z
 
