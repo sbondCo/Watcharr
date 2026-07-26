@@ -2,11 +2,11 @@
 	import type { ContentType, PublicUser, WatchedStatus } from "@/types";
 	import HorizontalList from "../HorizontalList.svelte";
 	import Modal from "../Modal.svelte";
-	import axios from "axios";
 	import Spinner from "../Spinner.svelte";
 	import Error from "../Error.svelte";
 	import Icon from "../Icon.svelte";
 	import { watchedStatuses } from "../util/helpers";
+	import { req } from "../util/api";
 
 	interface FollowThoughts {
 		followedUser: PublicUser;
@@ -26,11 +26,9 @@
 	let modalShownFor: FollowThoughts | undefined = $state(undefined);
 
 	async function getFollowsThoughts() {
-		return (
-			await axios.get<FollowThoughts[]>(
-				`/follow/thoughts/${mediaType}/${mediaId}`,
-			)
-		).data;
+		return await req.get<FollowThoughts[]>(
+			`/follow/thoughts/${mediaType}/${mediaId}`,
+		);
 	}
 </script>
 

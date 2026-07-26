@@ -5,9 +5,9 @@
 	import Spinner from "@/lib/Spinner.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
 	import SettingsList from "@/lib/settings/SettingsList.svelte";
+	import { req } from "@/lib/util/api";
 	import { notify } from "@/lib/util/notify";
 	import type { ServerConfigByName, TrustedHeaderAuthSetting } from "@/types";
-	import axios from "axios";
 	import { onMount } from "svelte";
 
 	interface Props {
@@ -29,13 +29,13 @@
 	async function getHeaderCfg() {
 		try {
 			loadingCfg = true;
-			const res = await axios.get<ServerConfigByName<TrustedHeaderAuthSetting>>(
+			const res = await req.get<ServerConfigByName<TrustedHeaderAuthSetting>>(
 				"/server/config",
 				{
 					params: { s: "HEADER_AUTH" },
 				},
 			);
-			headerCfg = res.data.value;
+			headerCfg = res.value;
 			loadingCfg = false;
 		} catch (err) {
 			console.error("getHeaderCfg failed!", err);
@@ -53,7 +53,7 @@
 			text: "Saving..",
 		});
 		try {
-			await axios.post("/server/config", headerCfg, {
+			await req.post("/server/config", headerCfg, {
 				params: { s: "HEADER_AUTH" },
 			});
 			notify({

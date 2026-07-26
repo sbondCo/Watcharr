@@ -1,8 +1,8 @@
 <script lang="ts">
-	import axios from "axios";
 	import DropDown from "./DropDown.svelte";
 	import type { DropDownItem, TMDBRegions } from "@/types";
 	import Error from "./Error.svelte";
+	import { req } from "./util/api";
 
 	interface Props {
 		selectedCountry?: string;
@@ -16,10 +16,10 @@
 		onChange,
 	}: Props = $props();
 
-	let mappedCountries: DropDownItem[] = $state();
+	let mappedCountries: DropDownItem[] = $state([]);
 
 	async function getCountries() {
-		const c = (await axios.get(`/content/regions`)).data as TMDBRegions;
+		const c = await req.get<TMDBRegions>(`/content/regions`);
 		mappedCountries = c.results
 			.map((cc) => {
 				return {

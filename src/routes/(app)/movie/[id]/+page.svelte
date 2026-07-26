@@ -2,11 +2,7 @@
 	import PersonPoster from "@/lib/poster/PersonPoster.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import HorizontalList from "@/lib/HorizontalList.svelte";
-	import {
-		contentExistsOnJellyfin,
-		removeWatched,
-		updateWatched,
-	} from "@/lib/util/api";
+	import { contentExistsOnJellyfin, req, updateWatched } from "@/lib/util/api";
 	import { store } from "@/store.svelte";
 	import type {
 		Media,
@@ -14,7 +10,6 @@
 		TMDBContentCreditsCrew,
 		WatchedStatus,
 	} from "@/types";
-	import axios from "axios";
 	import { getTopCrew } from "@/lib/util/helpers.js";
 	import Activity from "@/lib/Activity.svelte";
 	import Title from "@/lib/content/Title.svelte";
@@ -52,11 +47,9 @@
 				if (!data.movieId) {
 					return;
 				}
-				const resp = (
-					await axios.get(`/content/movie/${data.movieId}`, {
-						params: { region: store.userSettings?.country },
-					})
-				).data as Media;
+				const resp = await req.get<Media>(`/content/movie/${data.movieId}`, {
+					params: { region: store.userSettings?.country },
+				});
 				if (resp) {
 					if (resp.name && resp.ids.tmdb) {
 						contentExistsOnJellyfin("movie", resp.name, resp.ids.tmdb).then(
@@ -79,8 +72,9 @@
 	});
 
 	async function getMovieCredits() {
-		const credits = (await axios.get(`/content/movie/${data.movieId}/credits`))
-			.data as TMDBContentCredits & { topCrew: TMDBContentCreditsCrew[] };
+		const credits = await req.get<
+			TMDBContentCredits & { topCrew: TMDBContentCreditsCrew[] }
+		>(`/content/movie/${data.movieId}/credits`);
 		if (credits.crew?.length > 0) {
 			credits.topCrew = getTopCrew(credits.crew);
 		}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { afterNavigate, goto } from "$app/navigation";
-	import axios, { type GenericAbortSignal } from "axios";
+	import { req } from "@/lib/util/api.js";
 	import Poster from "@/lib/poster/Poster.svelte";
 	import PosterList from "@/lib/poster/PosterList.svelte";
 	import { store } from "@/store.svelte.js";
@@ -11,6 +11,7 @@
 		MediaTypeE,
 		SearchType,
 		type Media,
+		type PaginationResponse,
 		type PublicUser,
 		type SearchRequest,
 		type SearchResponseMeta,
@@ -55,7 +56,7 @@
 		preferMyList: preferMyList,
 	});
 
-	async function load(signal: GenericAbortSignal) {
+	async function load(signal: AbortSignal) {
 		console.debug("load: loadParams:", nextLoadParams);
 		if (nextLoadParams.page === dataLoader.state.page) {
 			console.warn("load: Already on this page, not loading it again!");
@@ -65,10 +66,13 @@
 			console.warn("load: There is no search query!");
 			return;
 		}
-		const r = await axios.get(`/search`, {
-			params: nextLoadParams,
-			signal,
-		});
+		const r = await req.get<PaginationResponse<Media, SearchResponseMeta>>(
+			`/search`,
+			{
+				params: nextLoadParams,
+				signal,
+			},
+		);
 		scroll.dataLoaded();
 		return r;
 	}
@@ -95,8 +99,9 @@
 	}
 
 	async function searchUsers(query: string) {
-		return (await axios.get(`/user/search`, { params: { q: query } }))
-			.data as PublicUser[];
+		return await req.get<PublicUser[]>(`/user/search`, {
+			params: { q: query },
+		});
 	}
 
 	onMount(() => {

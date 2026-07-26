@@ -5,9 +5,8 @@
 	import SettingsList from "../settings/SettingsList.svelte";
 	import ColorSelector from "../ColorSelector.svelte";
 	import { notify } from "../util/notify";
-	import axios from "axios";
+	import { req } from "../util/api";
 	import type { Tag, TagAddRequest } from "@/types";
-	import { get } from "svelte/store";
 	import { onMount } from "svelte";
 
 	interface Props {
@@ -54,15 +53,13 @@
 		}
 		const nid = notify({ text: "Creating Tag", type: "loading" });
 		try {
-			const resp = await axios.post<Tag>("/tag", {
+			const resp = await req.post<Tag>("/tag", {
 				name: tagName,
 				color: textColor,
 				bgColor,
 			} as TagAddRequest);
-			console.log("addTag: Tag was created", resp.data);
-			// const _tags = get(tags);
-			store.tags.push(resp.data);
-			// tags.update((t) => t);
+			console.log("addTag: Tag was created", resp);
+			store.tags.push(resp);
 			notify({ id: nid, text: "Tag Created!", type: "success" });
 			onClose();
 		} catch (err) {
@@ -80,17 +77,16 @@
 		}
 		const nid = notify({ text: "Modifying Tag", type: "loading" });
 		try {
-			const resp = await axios.put<Tag>(`/tag/${existingTag!.id}`, {
+			const resp = await req.put<Tag>(`/tag/${existingTag!.id}`, {
 				name: tagName,
 				color: textColor,
 				bgColor,
 			} as TagAddRequest);
-			console.log("updateTag: Tag was edited", resp.data);
+			console.log("updateTag: Tag was edited", resp);
 			existingTag!.name = tagName;
 			existingTag!.color = textColor;
 			existingTag!.bgColor = bgColor;
 			// Doesn't update `updatedAt`... may need to in the future if we need to sort by it, etc
-			// tags.update((t) => t);
 			notify({ id: nid, text: "Tag Modified!", type: "success" });
 			onClose();
 		} catch (err) {

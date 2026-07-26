@@ -1,5 +1,4 @@
 import type { PaginationResponse } from "@/types";
-import type { AxiosResponse, GenericAbortSignal } from "axios";
 
 export enum PaginatedLoaderRunFnAction {
 	// Reset state before running fn. Simplifies running a clean request.
@@ -14,9 +13,7 @@ export enum PaginatedLoaderRunFnAction {
 }
 
 export default function paginatedLoader<T, U>(
-	fn: (
-		sig: GenericAbortSignal,
-	) => Promise<AxiosResponse<PaginationResponse<T, U>, any> | undefined>,
+	fn: (sig: AbortSignal) => Promise<PaginationResponse<T, U> | undefined>,
 ) {
 	let reqController = new AbortController();
 
@@ -102,20 +99,20 @@ export default function paginatedLoader<T, U>(
 				);
 				return;
 			}
-			state.page = resp.data.page;
-			state.pageMax = resp.data.totalPages;
+			state.page = resp.page;
+			state.pageMax = resp.totalPages;
 			console.debug(
 				`%cpaginatedLoader->runFn: Loaded Page=${state.page} Max=${state.pageMax}`,
 				logStyle,
 			);
-			if (!resp.data.results || resp.data.results.length <= 0) {
+			if (!resp.results || resp.results.length <= 0) {
 				state.reqLoading = false;
 				console.warn("loadWatchedList: No results.");
 				return;
 			}
-			state.data.push(...resp.data.results);
+			state.data.push(...resp.results);
 			state.data = state.data;
-			state.meta = resp.data.meta;
+			state.meta = resp.meta;
 		} catch (err: any) {
 			if (err?.code === "ERR_CANCELED") {
 				console.warn("loadWatchedList: Cancelled, not showing error.");

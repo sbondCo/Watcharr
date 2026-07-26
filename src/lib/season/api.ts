@@ -1,6 +1,7 @@
-import axios from "axios";
+import { req } from "../util/api";
 import { notify } from "../util/notify";
 import type {
+	Activity,
 	Watched,
 	WatchedEpisodeAddResponse,
 	WatchedSeasonAddResponse,
@@ -28,17 +29,17 @@ export async function updateWatchedSeason(
 	}
 	const nid = notify({ text: `Saving`, type: "loading" });
 	try {
-		const r = await axios.post<WatchedSeasonAddResponse>(`/watched/season`, {
+		const r = await req.post<WatchedSeasonAddResponse>(`/watched/season`, {
 			watchedId: watchedItem.id,
 			seasonNumber: seasonNumber,
 			status: opts.status,
 			rating: opts.rating,
 		});
-		watchedItem.watchedSeasons = r.data.watchedSeasons;
+		watchedItem.watchedSeasons = r.watchedSeasons;
 		if (watchedItem.activity && watchedItem.activity?.length > 0) {
-			watchedItem.activity.push(r.data.addedActivity);
+			watchedItem.activity.push(r.addedActivity);
 		} else {
-			watchedItem.activity = [r.data.addedActivity];
+			watchedItem.activity = [r.addedActivity];
 		}
 		notify({ id: nid, text: `Saved!`, type: "success" });
 	} catch (err) {
@@ -50,15 +51,15 @@ export async function updateWatchedSeason(
 export async function removeWatchedSeason(watchedItem: Watched, id: number) {
 	const nid = notify({ text: `Removing`, type: "loading" });
 	try {
-		const r = await axios.delete(`/watched/season/${id}`);
+		const r = await req.delete<Activity>(`/watched/season/${id}`);
 		watchedItem.watchedSeasons = watchedItem.watchedSeasons?.filter(
 			(s) => s.id !== id,
 		);
-		if (r.data) {
+		if (r) {
 			if (watchedItem.activity && watchedItem.activity?.length > 0) {
-				watchedItem.activity.push(r.data);
+				watchedItem.activity.push(r);
 			} else {
-				watchedItem.activity = [r.data];
+				watchedItem.activity = [r];
 			}
 		}
 		notify({ id: nid, text: `Removed!`, type: "success" });
@@ -80,21 +81,21 @@ export async function updateWatchedEpisode(
 	}
 	const nid = notify({ text: `Saving`, type: "loading" });
 	try {
-		const r = await axios.post<WatchedEpisodeAddResponse>(`/watched/episode`, {
+		const r = await req.post<WatchedEpisodeAddResponse>(`/watched/episode`, {
 			watchedId: watchedItem.id,
 			seasonNumber,
 			episodeNumber,
 			status: opts.status,
 			rating: opts.rating,
 		});
-		watchedItem.watchedEpisodes = r.data.watchedEpisodes;
+		watchedItem.watchedEpisodes = r.watchedEpisodes;
 		if (watchedItem.activity && watchedItem.activity?.length > 0) {
-			watchedItem.activity.push(r.data.addedActivity);
+			watchedItem.activity.push(r.addedActivity);
 		} else {
-			watchedItem.activity = [r.data.addedActivity];
+			watchedItem.activity = [r.addedActivity];
 		}
 		try {
-			const epHookResp = r?.data?.episodeStatusChangedHookResponse;
+			const epHookResp = r?.episodeStatusChangedHookResponse;
 			if (epHookResp && Object.keys(epHookResp).length > 0) {
 				if (epHookResp.errors && epHookResp.errors.length > 0) {
 					console.error(
@@ -148,15 +149,15 @@ export async function updateWatchedEpisode(
 export async function removeWatchedEpisode(watchedItem: Watched, id: number) {
 	const nid = notify({ text: `Removing`, type: "loading" });
 	try {
-		const r = await axios.delete(`/watched/episode/${id}`);
+		const r = await req.delete<Activity>(`/watched/episode/${id}`);
 		watchedItem.watchedEpisodes = watchedItem.watchedEpisodes?.filter(
 			(s) => s.id !== id,
 		);
 		if (r.data) {
 			if (watchedItem.activity && watchedItem.activity?.length > 0) {
-				watchedItem.activity.push(r.data);
+				watchedItem.activity.push(r);
 			} else {
-				watchedItem.activity = [r.data];
+				watchedItem.activity = [r];
 			}
 		}
 		notify({ id: nid, text: `Removed!`, type: "success" });

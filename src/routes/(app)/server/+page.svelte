@@ -8,13 +8,12 @@
 		ServerConfig,
 		SonarrSettings,
 	} from "@/types";
-	import axios from "axios";
 	import SonarrModal from "./modals/SonarrModal.svelte";
 	import SettingsList from "@/lib/settings/SettingsList.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
 	import SettingButton from "@/lib/settings/SettingButton.svelte";
 	import RadarrModal from "./modals/RadarrModal.svelte";
-	import { getServerFeatures } from "@/lib/util/api";
+	import { getServerFeatures, req } from "@/lib/util/api";
 	import Stats from "@/lib/stats/Stats.svelte";
 	import Error from "@/lib/Error.svelte";
 	import Stat from "@/lib/stats/Stat.svelte";
@@ -44,7 +43,7 @@
 	let useEmbyDisabled = $state(false);
 
 	async function getServerConfig() {
-		serverConfig = (await axios.get(`/server/config`)).data as ServerConfig;
+		serverConfig = await req.get<ServerConfig>(`/server/config`);
 	}
 
 	export function updateServerConfig<K extends keyof ServerConfig>(
@@ -64,13 +63,13 @@
 		if (name === "PLEX_HOST") {
 			ep = "/server/config/plex_host";
 		}
-		axios
-			.post(ep, { key: name, value: value })
+		req
+			.postWhole<any>(ep, { key: name, value: value })
 			.then((r) => {
 				if (r.status === 200) {
 					serverConfig![name] = value;
 					notify({ id: nid, type: "success", text: "Updated" });
-					if (typeof done !== "undefined") done(r?.data);
+					if (typeof done !== "undefined") done(r?.body);
 				}
 			})
 			.catch((err) => {
@@ -93,7 +92,7 @@
 	}
 
 	async function getServerStats() {
-		return (await axios.get("/server/stats")).data as ServerStats;
+		return await req.get<ServerStats>("/server/stats");
 	}
 </script>
 

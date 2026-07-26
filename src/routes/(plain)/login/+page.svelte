@@ -3,9 +3,10 @@
 	import { page } from "$app/state";
 	import Icon from "@/lib/Icon.svelte";
 	import { type AvailableAuthProviders } from "@/types";
-	import { noAuthAxios } from "@/lib/util/api";
+	import { noAuthReq } from "@/lib/util/api";
 	import { onMount } from "svelte";
 	import { notify, unNotify } from "@/lib/util/notify";
+	import { ReqerError } from "@/lib/util/fetch";
 
 	let error: string | undefined = $state();
 	let login = $state(true);
@@ -31,26 +32,45 @@
 			noAuto = true;
 		}
 
-		noAuthAxios.get<AvailableAuthProviders>("/auth/available").then((r) => {
-			if (r?.data) {
-				if (r.data.isInSetup) {
-					console.log("Server is in setup.. navigating to web setup page.");
-					goto("/setup");
-				}
-				availableProviders = r.data.available;
-				apHeader = availableProviders?.includes("header");
-				apPlex = availableProviders?.includes("plex");
-				signupEnabled = r.data.signupEnabled;
-				useEmby = r.data.useEmby;
-				if (r.data.headerAuthAutoLogin && !noAuto) {
-					console.log(
-						"handling headerAuthAutoLogin.. calling proxyLogin automatically now.",
-					);
-					proxyLogin(true);
-				}
-			}
-		});
+		processAvailableLoginMethods();
 	});
+
+	/**
+	 * Get and process available login methods.
+	 */
+	async function processAvailableLoginMethods() {
+		let r: AvailableAuthProviders;
+		try {
+			r = await noAuthReq.get<AvailableAuthProviders>("/auth/available");
+		} catch {
+			notify({
+				type: "error",
+				time: 10000,
+				text: "Failed to get available login methods",
+			});
+			return;
+		}
+		if (!r) {
+			console.log("AvailableAuth: no response data");
+		}
+		if (r.isInSetup) {
+			console.log(
+				"AvailableAuth: Server is in setup.. navigating to web setup page.",
+			);
+			goto("/setup");
+		}
+		availableProviders = r.available;
+		apHeader = availableProviders?.includes("header");
+		apPlex = availableProviders?.includes("plex");
+		signupEnabled = r.signupEnabled;
+		useEmby = r.useEmby;
+		if (r.headerAuthAutoLogin && !noAuto) {
+			console.log(
+				"AvailableAuth: handling headerAuthAutoLogin.. calling proxyLogin automatically now.",
+			);
+			proxyLogin(true);
+		}
+	}
 
 	function handleLogin(ev: SubmitEvent) {
 		ev.preventDefault();
@@ -69,15 +89,15 @@
 		}
 
 		const nid = notify({ text: "Logging in", type: "loading" });
-		noAuthAxios
+		noAuthReq
 			.post(`/auth${login ? `/${customAuthEP}` : "/register"}`, {
 				username: user,
 				password: pass,
 			})
-			.then((resp) => {
-				if (resp.data?.token) {
+			.then((resp: any) => {
+				if (resp?.token) {
 					console.log("Received token... logging in.");
-					localStorage.setItem("token", resp.data.token);
+					localStorage.setItem("token", resp.token);
 					if (useEmby) {
 						localStorage.setItem("useEmby", "1");
 					} else {
@@ -88,11 +108,7 @@
 				}
 			})
 			.catch((err) => {
-				if (err.response) {
-					error = err.response.data.error;
-				} else {
-					error = err.message;
-				}
+				error = ReqerError.getMsg(err, "Login failed");
 				unNotify(nid);
 			});
 	}
@@ -111,26 +127,22 @@
 					return;
 				}
 				const nid = notify({ text: "Logging in", type: "loading" });
-				noAuthAxios
+				noAuthReq
 					.post("/auth/plex", {
 						token,
 						clientIdentifier: p.clientId,
 					})
-					.then((resp) => {
-						if (resp.data?.token) {
+					.then((resp: any) => {
+						if (resp?.token) {
 							console.log("Received token... logging in.");
-							localStorage.setItem("token", resp.data.token);
+							localStorage.setItem("token", resp.token);
 							goto("/");
 							notify({ id: nid, text: `Welcome!`, type: "success" });
 						}
 					})
 					.catch((err) => {
 						console.error("plexLogin: Fail", err);
-						if (err.response) {
-							error = err.response.data.error;
-						} else {
-							error = err.message;
-						}
+						error = ReqerError.getMsg(err, "Login failed");
 						notify({ id: nid, text: `Failed!`, type: "error" });
 					});
 			});
@@ -142,22 +154,18 @@
 
 	function proxyLogin(auto = false) {
 		const nid = notify({ text: "Logging in", type: "loading" });
-		noAuthAxios
+		noAuthReq
 			.post(`/auth/proxy`)
-			.then((resp) => {
-				if (resp.data?.token) {
+			.then((resp: any) => {
+				if (resp?.token) {
 					console.log("Received token... logging in.");
-					localStorage.setItem("token", resp.data.token);
+					localStorage.setItem("token", resp.token);
 					goto("/");
 					notify({ id: nid, text: `Welcome!`, type: "success" });
 				}
 			})
 			.catch((err) => {
-				if (err.response) {
-					error = err.response.data.error;
-				} else {
-					error = err.message;
-				}
+				error = ReqerError.getMsg(err, "Login failed");
 				if (auto) {
 					notify({
 						id: nid,

@@ -25,7 +25,7 @@
 		type Media,
 		type WatchedStatus,
 	} from "@/types";
-	import axios from "axios";
+	import { req } from "@/lib/util/api";
 	import { onDestroy } from "svelte";
 	import papa from "papaparse";
 	import Status from "@/lib/Status.svelte";
@@ -479,11 +479,11 @@
 			rList = rList;
 			return;
 		}
-		const resp = await axios.post<ImportResponse>("/import", item);
+		const resp = await req.post<ImportResponse>("/import", item);
 		return new Promise((res, rej) => {
-			if (resp.data.type === ImportResponseType.IMPORT_MULTI) {
-				console.log("Import found multiple responses for content", resp.data);
-				let results = resp.data.results;
+			if (resp.type === ImportResponseType.IMPORT_MULTI) {
+				console.log("Import found multiple responses for content", resp);
+				let results = resp.results;
 				if (!results || results.length <= 0) {
 					item.state = ImportResponseType.IMPORT_NOTFOUND;
 					rList = rList;
@@ -521,9 +521,9 @@
 						}
 					},
 				};
-			} else if (resp.data.type === ImportResponseType.IMPORT_SUCCESS) {
+			} else if (resp.type === ImportResponseType.IMPORT_SUCCESS) {
 				item.state = ImportResponseType.IMPORT_SUCCESS;
-				const w = resp.data.watchedEntry;
+				const w = resp.watchedEntry;
 				if (w) {
 					const release = w.media?.releaseDate;
 					if (release) item.year = new Date(Date.parse(release)).getFullYear();
@@ -533,7 +533,7 @@
 				rList = rList;
 				res(0);
 			} else {
-				item.state = resp.data.type;
+				item.state = resp.type;
 				rList = rList;
 				res(0);
 			}

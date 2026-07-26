@@ -1,4 +1,9 @@
-import { noAuthAxios } from "./api";
+import { Reqer } from "./fetch";
+
+/**
+ * For requests outbound to `plex.tv`.
+ */
+const plexTvReq = new Reqer("https://plex.tv/api/v2", false);
 
 interface Plex {
 	win: Window;
@@ -104,11 +109,11 @@ export async function plexPinPoll(
 	const doPoll = async () => {
 		try {
 			console.debug("plexPinPoll");
-			const r = await noAuthAxios.get(`https://plex.tv/api/v2/pins/${pin.id}`, {
+			const r = await plexTvReq.get<any>(`/pins/${pin.id}`, {
 				headers: { ...headers, code: pin.code },
 			});
-			if (r.data?.authToken) {
-				done(undefined, r.data.authToken);
+			if (r?.authToken) {
+				done(undefined, r.authToken);
 				win.close();
 			} else if (win?.closed) {
 				done(new Error("Plex popup closed before login completed"));
@@ -124,13 +129,9 @@ export async function plexPinPoll(
 }
 
 async function getPlexPin(headers: Record<string, string>): Promise<PlexPin> {
-	const r = await noAuthAxios.post(
-		`https://plex.tv/api/v2/pins?strong=true`,
-		undefined,
-		{
-			headers: headers,
-		},
-	);
-	console.debug("getPlexPin:", r.data);
-	return { id: r.data.id, code: r.data.code };
+	const r = await plexTvReq.post<any>(`/pins?strong=true`, undefined, {
+		headers: headers,
+	});
+	console.debug("getPlexPin:", r);
+	return { id: r.id, code: r.code };
 }

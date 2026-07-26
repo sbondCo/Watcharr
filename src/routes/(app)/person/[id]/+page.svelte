@@ -9,7 +9,7 @@
 		PersonCreditsResponse,
 		PersonDetailsResponse,
 	} from "@/types";
-	import axios from "axios";
+	import { req } from "@/lib/util/api.js";
 	import Checkbox from "@/lib/Checkbox.svelte";
 	import Icon from "@/lib/Icon.svelte";
 	import PageBackdrop from "@/lib/generic/PageBackdrop.svelte";
@@ -53,16 +53,13 @@
 	}
 
 	async function getPerson(id: number) {
-		return (await axios.get<PersonDetailsResponse>(`/content/person/${id}`))
-			.data;
+		return await req.get<PersonDetailsResponse>(`/content/person/${id}`);
 	}
 
 	async function updatePersonCredits() {
-		credits = (
-			await axios.get<PersonCreditsResponse>(
-				`/content/person/${data.personId}/credits`,
-			)
-		).data;
+		credits = await req.get<PersonCreditsResponse>(
+			`/content/person/${data.personId}/credits`,
+		);
 		credits.credits = credits.credits?.filter(
 			(v, i, a) => a.findIndex((t) => t.ids.tmdb === v.ids.tmdb) === i,
 		); // remove duplicate entries. If an actor has multiple roles in a single movie, it would otherwise show up multiple times
