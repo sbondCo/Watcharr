@@ -196,7 +196,7 @@ func main() {
 	api := gine.Group("/api")
 	br := router.NewBaseRouter(db, api, cfg)
 
-	t := tmdb.NewTMDB(cfg.TMDB_KEY)
+	t := tmdb.NewTMDB(cfg.TMDB_KEY, cfg.TMDB_LANG)
 
 	plexService := plex.NewService(cfg)
 	authService := auth.NewService(db, cfg, plexService)

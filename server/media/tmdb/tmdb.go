@@ -14,12 +14,14 @@ import (
 // fix needing so many extra structs for the *WithWatched types and functions)
 
 type TMDB struct {
-	Key string
+	Key  string
+	Lang string
 }
 
-func NewTMDB(key string) *TMDB {
+func NewTMDB(key string, lang string) *TMDB {
 	return &TMDB{
-		Key: key,
+		Key:  key,
+		Lang: lang,
 	}
 }
 
@@ -28,6 +30,15 @@ func (t *TMDB) GetKey() string {
 		return t.Key //Config.TMDB_KEY
 	}
 	return "d047fa61d926371f277e7a83c9c4ff2c"
+}
+
+// GetLang returns the configured TMDB metadata language (ISO 639-1, optionally
+// with a region, e.g. "fr-FR"), falling back to English when unset.
+func (t *TMDB) GetLang() string {
+	if t.Lang != "" {
+		return t.Lang
+	}
+	return "en-US"
 }
 
 func (t *TMDB) APIRequest(ep string, p map[string]string) ([]byte, error) {
@@ -43,7 +54,11 @@ func (t *TMDB) APIRequest(ep string, p map[string]string) ([]byte, error) {
 	// Query params
 	params := url.Values{}
 	params.Add("api_key", t.GetKey())
-	params.Add("language", "en-US")
+	// Let callers override the language per-request (used for the English
+	// fallback when a translation is missing); otherwise use the configured one.
+	if _, ok := p["language"]; !ok {
+		params.Add("language", t.GetLang())
+	}
 	for k, v := range p {
 		params.Add(k, v)
 	}

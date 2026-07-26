@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	gocache "github.com/robfig/go-cache"
@@ -238,6 +240,47 @@ func (s *Service) cacheContentMovie(content tmdb.TMDBMovieDetails, onlyUpdate bo
 }
 
 // Get content from our db cache, or cache it if it doesn't exist.
+// fillTvFallback backfills empty text/poster fields from en-US when the
+// configured language has no translation (TMDB returns empty fields in that case).
+func (s *Service) fillTvFallback(id string, c *tmdb.TMDBShowDetails) {
+	if s.tmdb.GetLang() == "en-US" || (c.Overview != "" && c.Name != "" && c.PosterPath != "") {
+		return
+	}
+	en := new(tmdb.TMDBShowDetails)
+	if err := s.tmdb.Request("/tv/"+id, map[string]string{"language": "en-US"}, &en); err != nil {
+		return
+	}
+	if c.Overview == "" {
+		c.Overview = en.Overview
+	}
+	if c.Name == "" {
+		c.Name = en.Name
+	}
+	if c.PosterPath == "" {
+		c.PosterPath = en.PosterPath
+	}
+}
+
+// fillMovieFallback: same as fillTvFallback but for movies.
+func (s *Service) fillMovieFallback(id string, c *tmdb.TMDBMovieDetails) {
+	if s.tmdb.GetLang() == "en-US" || (c.Overview != "" && c.Title != "" && c.PosterPath != "") {
+		return
+	}
+	en := new(tmdb.TMDBMovieDetails)
+	if err := s.tmdb.Request("/movie/"+id, map[string]string{"language": "en-US"}, &en); err != nil {
+		return
+	}
+	if c.Overview == "" {
+		c.Overview = en.Overview
+	}
+	if c.Title == "" {
+		c.Title = en.Title
+	}
+	if c.PosterPath == "" {
+		c.PosterPath = en.PosterPath
+	}
+}
+
 func (s *Service) GetOrCacheContent(contentType entity.ContentType, tmdbId int) (entity.Content, error) {
 	var content entity.Content
 	// Look in db for content.
@@ -259,6 +302,7 @@ func (s *Service) GetOrCacheContent(contentType entity.ContentType, tmdbId int) 
 				slog.Error("Failed to unmarshal movie details", "error", err)
 				return entity.Content{}, errors.New("failed to process movie details response")
 			}
+			s.fillMovieFallback(strconv.Itoa(tmdbId), c)
 			content, err = s.cacheContentMovie(*c, false)
 			if err != nil {
 				slog.Error("GetOrCacheContent: failed to cache movie content", "type", contentType, "content_id", tmdbId, "err", err)
@@ -271,6 +315,7 @@ func (s *Service) GetOrCacheContent(contentType entity.ContentType, tmdbId int) 
 				slog.Error("Failed to unmarshal tv details", "error", err)
 				return entity.Content{}, errors.New("failed to process tv details response")
 			}
+			s.fillTvFallback(strconv.Itoa(tmdbId), c)
 			content, err = s.cacheContentTv(*c, false)
 			if err != nil {
 				slog.Error("GetOrCacheContent: failed to cache tv content", "type", contentType, "content_id", tmdbId, "err", err)
@@ -296,6 +341,36 @@ func (s *Service) SearchContent(query string, pageNum int) (tmdb.TMDBSearchMulti
 	if err != nil {
 		slog.Error("Failed to complete multi search request!", "error", err.Error())
 		return tmdb.TMDBSearchMultiResponse{}, errors.New("failed to complete multi search request")
+	}
+	// English fallback for search overviews: TMDB returns empty overviews for
+	// entries with no translation in the configured language. Do a single extra
+	// en-US search and backfill by id, only when something is actually missing.
+	if s.tmdb.GetLang() != "en-US" {
+		missing := false
+		for i := range resp.Results {
+			if resp.Results[i].Overview == "" {
+				missing = true
+				break
+			}
+		}
+		if missing {
+			en := new(tmdb.TMDBSearchMultiResponse)
+			if e := s.tmdb.Request("/search/multi", map[string]string{
+				"query": query, "page": strconv.Itoa(pageNum), "language": "en-US",
+			}, &en); e == nil {
+				enOverview := make(map[int]string, len(en.Results))
+				for i := range en.Results {
+					enOverview[en.Results[i].ID] = en.Results[i].Overview
+				}
+				for i := range resp.Results {
+					if resp.Results[i].Overview == "" {
+						if ov := enOverview[resp.Results[i].ID]; ov != "" {
+							resp.Results[i].Overview = ov
+						}
+					}
+				}
+			}
+		}
 	}
 	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
@@ -424,6 +499,7 @@ func (s *Service) MovieDetails(
 		return tmdb.TMDBMovieDetails{},
 			errors.New("failed to complete movie details request")
 	}
+	s.fillMovieFallback(id, resp)
 	resp.WatchProvidersTransformed = transformProviders(&resp.WatchProviders, country)
 	resp.WatchProviders = nil // We don't want this to linger around (in cache) since we have the transformed version now..
 	go s.cacheContentMovie(*resp, true)
@@ -457,6 +533,7 @@ func (s *Service) TvDetails(
 		slog.Error("Failed to complete tv details request!", "error", err.Error())
 		return tmdb.TMDBShowDetails{}, errors.New("failed to complete tv details request")
 	}
+	s.fillTvFallback(id, resp)
 	resp.WatchProvidersTransformed = transformProviders(&resp.WatchProviders, country)
 	resp.WatchProviders = nil // We don't want this to linger around (in cache) since we have the transformed version now..
 	go s.cacheContentTv(*resp, true)
@@ -639,6 +716,57 @@ func (s *Service) PopularPeople(pageNum int) (tmdb.TMDBPopularPeople, error) {
 	}
 	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
+}
+
+// LanguageOption is a selectable metadata language (for the TMDB_LANG setting).
+type LanguageOption struct {
+	Code string `json:"code"` // TMDB "language" value, e.g. "fr-FR"
+	Name string `json:"name"` // Human label, e.g. "French (FR)"
+}
+
+// Languages returns the list of TMDB-supported translation languages
+// (primary translations), with human-readable labels, for a dropdown.
+func (s *Service) Languages() ([]LanguageOption, error) {
+	cacheKey := cache.CreateCacheKey("Languages")
+	cached := new([]LanguageOption)
+	if cache.GetCache(ContentStore, cacheKey, &cached) {
+		return *cached, nil
+	}
+	var prim []string
+	if err := s.tmdb.Request("/configuration/primary_translations", map[string]string{}, &prim); err != nil {
+		slog.Error("Languages: primary_translations request failed", "error", err)
+		return nil, errors.New("failed to fetch languages")
+	}
+	var langs []struct {
+		Iso6391     string `json:"iso_639_1"`
+		EnglishName string `json:"english_name"`
+	}
+	if err := s.tmdb.Request("/configuration/languages", map[string]string{}, &langs); err != nil {
+		slog.Error("Languages: languages request failed", "error", err)
+		return nil, errors.New("failed to fetch languages")
+	}
+	nameByIso := make(map[string]string, len(langs))
+	for _, l := range langs {
+		nameByIso[l.Iso6391] = l.EnglishName
+	}
+	out := make([]LanguageOption, 0, len(prim))
+	for _, code := range prim {
+		lang, region := code, ""
+		if i := strings.Index(code, "-"); i > 0 {
+			lang, region = code[:i], code[i+1:]
+		}
+		name := nameByIso[lang]
+		if name == "" {
+			name = lang
+		}
+		if region != "" {
+			name = name + " (" + region + ")"
+		}
+		out = append(out, LanguageOption{Code: code, Name: name})
+	}
+	sort.Slice(out, func(a, b int) bool { return out[a].Name < out[b].Name })
+	ContentStore.Set(cacheKey, &out, time.Hour*24)
+	return out, nil
 }
 
 func (s *Service) Regions() (tmdb.TMDBRegions, error) {
