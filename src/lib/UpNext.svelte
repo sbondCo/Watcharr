@@ -1,10 +1,10 @@
 <script lang="ts">
 	import axios from "axios";
-	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { notify } from "@/lib/util/notify";
 	import HorizontalList from "@/lib/HorizontalList.svelte";
 	import Icon from "@/lib/Icon.svelte";
+	import { store } from "@/store.svelte";
 
 	interface UpNextItem {
 		watchedId: number;
@@ -25,7 +25,14 @@
 
 	async function load() {
 		try {
-			const r = await axios.get<UpNextItem[]>("/watched/upnext");
+			// Pass the same sort as the watched list so Up Next matches its order.
+			const qp = store.sortAndFiltersForQueryParams as {
+				sort?: string;
+				sortDir?: string;
+			};
+			const r = await axios.get<UpNextItem[]>("/watched/upnext", {
+				params: { sort: qp?.sort, sortDir: qp?.sortDir },
+			});
 			items = r.data ?? [];
 		} catch (err) {
 			console.error("UpNext: load failed", err);
@@ -77,7 +84,12 @@
 		return p ? `https://image.tmdb.org/t/p/w300${p}` : "";
 	}
 
-	onMount(load);
+	// Load on mount and whenever the sort changes, so Up Next stays in the
+	// same order as the watched list.
+	$effect(() => {
+		void store.activeSort;
+		load();
+	});
 </script>
 
 {#if !loading && items.length > 0}

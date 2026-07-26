@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/sbondCo/Watcharr/database/entity"
+	"github.com/sbondCo/Watcharr/domain"
 )
 
 // UpNextItem describes the next unwatched episode of an in-progress show,
@@ -31,13 +32,18 @@ type UpNextItem struct {
 // TV broadcast schedule, which does not reflect streaming/replay availability
 // (a fully-streamable show can still have "future" broadcast dates). So we
 // simply offer the next episode that exists and hasn't been watched.
-func (s *Service) UpNext(userId uint) ([]UpNextItem, error) {
+func (s *Service) UpNext(userId uint, wpr domain.WatchedGetPageRequest) ([]UpNextItem, error) {
 	var watched []entity.Watched
 	res := s.db.
 		Joins("Content").
+		// Game is joined only so the shared sort scope (which references Game
+		// columns for some sorts) resolves; UpNext is shows-only so it's null.
+		Joins("Game").
 		Preload("WatchedEpisodes").
 		Where("watcheds.user_id = ? AND Content.type = ? AND watcheds.status = ?",
 			userId, entity.SHOW, entity.WATCHING).
+		// Apply the same sort as the watched list so Up Next matches its order.
+		Scopes(watchedRefineSort(wpr, userId)).
 		Find(&watched)
 	if res.Error != nil {
 		slog.Error("UpNext: query failed", "error", res.Error)

@@ -49,7 +49,16 @@ func (r *Router) AddRoutes() {
 // Get the "Up Next" list: next unwatched aired episode per in-progress show.
 func (r *Router) GetUpNext(c *gin.Context) {
 	userId := c.MustGet("userId").(uint)
-	items, err := r.s.UpNext(userId)
+	wpr := domain.WatchedGetPageRequest{
+		// Defaults, mirroring the watched list.
+		Sort:    domain.WatchedSortDateAdded,
+		SortDir: domain.WatchedSortDirAsc,
+	}
+	if err := c.ShouldBind(&wpr); err != nil {
+		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: "failed to get request parameters"})
+		return
+	}
+	items, err := r.s.UpNext(userId, wpr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, router.ErrorResponse{Error: "failed to get up next list"})
 		return
