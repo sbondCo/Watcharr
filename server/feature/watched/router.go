@@ -36,6 +36,7 @@ func (r *Router) AddRoutes() {
 	watched := r.br.Router.Group("/watched").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
 
 	watched.GET("", router.PaginatedRequest(false), r.GetWatchedList)
+	watched.GET("/upnext", r.GetUpNext)
 	watched.GET(":id/:username", router.PaginatedRequest(true), r.GetPublicWatchedList)
 	watched.POST("", r.AddWatched)
 	watched.PUT(":id", r.UpdateWatched)
@@ -43,6 +44,26 @@ func (r *Router) AddRoutes() {
 	// TODO Move add/delete watched from tag to the `tag` package (the service code is there so the route may as well be under there, also avoids a circular dep).
 	watched.POST(":id/tag/:tagId", r.AddWatchedToTag)
 	watched.DELETE(":id/tag/:tagId", r.DeleteWatchedFromTag)
+}
+
+// Get the "Up Next" list: next unwatched aired episode per in-progress show.
+func (r *Router) GetUpNext(c *gin.Context) {
+	userId := c.MustGet("userId").(uint)
+	wpr := domain.WatchedGetPageRequest{
+		// Defaults, mirroring the watched list.
+		Sort:    domain.WatchedSortDateAdded,
+		SortDir: domain.WatchedSortDirAsc,
+	}
+	if err := c.ShouldBind(&wpr); err != nil {
+		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: "failed to get request parameters"})
+		return
+	}
+	items, err := r.s.UpNext(userId, wpr)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, router.ErrorResponse{Error: "failed to get up next list"})
+		return
+	}
+	c.JSON(http.StatusOK, items)
 }
 
 // Get our (logged in user) watched list.
