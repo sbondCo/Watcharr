@@ -23,6 +23,12 @@ var DataPath = func() string {
 	return path
 }()
 
+// WebAssetServerSetting configures the nodejs webserver
+type WebAssetServerSetting struct {
+	Port uint16 `json:"port"`
+	Host string `json:"host"`
+}
+
 type TrustedHeaderAuthSetting struct {
 	// Required: Should header auth be enabled?
 	// This bool exists so header auth can be toggled
@@ -50,6 +56,12 @@ type ServerConfig struct {
 	// region to get correct content streaming providers.
 	// TODO Enforce iso_3166_1 validity (same as tmdb)
 	DEFAULT_COUNTRY string `json:",omitempty"`
+
+	// The port Watcharr's API Runs on
+	API_PORT uint16 `json:",omitempty"`
+
+	// The host the API should bind to
+	API_HOST string `json:",omitempty"`
 
 	// Optional: Point to your Jellyfin install
 	// to enable it as an auth provider.
@@ -91,6 +103,9 @@ type ServerConfig struct {
 	// of failure.
 	// Set to `true` to enable.
 	DEBUG bool `json:",omitempty"`
+
+	// Details for the web asset server run with nodejs
+	WEB_ASSET_SERVER WebAssetServerSetting `json:",omitempty"`
 }
 
 // ServerConfig, but with JWT_SECRET removed from json.
@@ -101,6 +116,8 @@ type ServerConfig struct {
 // not editable on frontend, so not needed).
 func (c *ServerConfig) GetSafe() ServerConfig {
 	return ServerConfig{
+		API_PORT:        c.API_PORT,
+		API_HOST:        c.API_HOST,
 		SIGNUP_ENABLED:  c.SIGNUP_ENABLED,
 		DEFAULT_COUNTRY: c.DEFAULT_COUNTRY,
 		JELLYFIN_HOST:   c.JELLYFIN_HOST,
@@ -143,30 +160,39 @@ func (c *ServerConfig) Get(s string) (ServerConfigGetByName, error) {
 		return ServerConfigGetByName{Value: c.HEADER_AUTH}, nil
 	case "DEBUG":
 		return ServerConfigGetByName{Value: c.DEBUG}, nil
+	case "API_PORT":
+		return ServerConfigGetByName{Value: c.API_PORT}, nil
+	case "API_HOST":
+		return ServerConfigGetByName{Value: c.API_HOST}, nil
 	}
 	return ServerConfigGetByName{}, errors.New("invalid setting")
 }
 
-// Update server config property
+// UpdateConfig updates server config property
 func (c *ServerConfig) UpdateConfig(k string, v any) error {
 	slog.Debug("updateConfig", "k", k, "v", v)
 	if v == nil {
 		return errors.New("invalid value")
 	}
-	if k == "JELLYFIN_HOST" {
+	switch k {
+	case "JELLYFIN_HOST":
 		c.JELLYFIN_HOST = v.(string)
-	} else if k == "USE_EMBY" {
+	case "USE_EMBY":
 		c.USE_EMBY = v.(bool)
-	} else if k == "SIGNUP_ENABLED" {
+	case "SIGNUP_ENABLED":
 		c.SIGNUP_ENABLED = v.(bool)
-	} else if k == "TMDB_KEY" {
+	case "TMDB_KEY":
 		c.TMDB_KEY = v.(string)
-	} else if k == "DEBUG" {
+	case "DEBUG":
 		c.DEBUG = v.(bool)
 		logging.SetLevel(c.DEBUG)
-	} else if k == "DEFAULT_COUNTRY" {
+	case "DEFAULT_COUNTRY":
 		c.DEFAULT_COUNTRY = v.(string)
-	} else {
+	case "API_PORT":
+		c.API_PORT = v.(uint16)
+	case "API_HOST":
+		c.API_HOST = v.(string)
+	default:
 		return errors.New("invalid setting")
 	}
 	err := c.Write()
@@ -250,6 +276,18 @@ func initFromConfig(c *ServerConfig) {
 	if c.JWT_SECRET == "" {
 		log.Fatal("JWT_SECRET missing from config!")
 	}
+	if c.API_PORT == 0 {
+		c.API_PORT = 3080
+	}
+	if c.API_HOST == "" {
+		c.API_HOST = "0.0.0.0"
+	}
+	if c.WEB_ASSET_SERVER.Port == 0 {
+		c.WEB_ASSET_SERVER.Port = 3000
+	}
+	if c.WEB_ASSET_SERVER.Host == "" {
+		c.WEB_ASSET_SERVER.Host = "127.0.0.1"
+	}
 }
 
 // Generate new barebones watcharr.json config file.
@@ -264,6 +302,8 @@ func generateConfig() (*ServerConfig, error) {
 		// Other defaults..
 		DEFAULT_COUNTRY: "US",
 		SIGNUP_ENABLED:  true,
+		API_PORT:        3080,
+		API_HOST:        "0.0.0.0",
 	}
 	barej, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
@@ -278,6 +318,13 @@ func Get() (*ServerConfig, error) {
 	cfg, err := read()
 	if err != nil {
 		return nil, err
+	}
+	// for existing config files
+	if cfg.API_PORT == 0 {
+		cfg.API_PORT = 3080
+	}
+	if cfg.API_HOST == "" {
+		cfg.API_HOST = "0.0.0.0"
 	}
 	return cfg, nil
 }
