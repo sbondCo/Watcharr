@@ -5,6 +5,7 @@ These changes are awaiting release:
 ## Fixed
 
 - Plex Login: Request JSON from plex api so that it doesn't return XML.
+- GHSA-6x53-2w54-v5rj (thanks to [@tonghuaroot] for reporting and patching!)
 
 # [4.1.0] - 2026-07-19T14:18:00Z
 
@@ -1807,3 +1808,4 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@GreatGatsby102]: https://github.com/GreatGatsby102
 [@4qu4r1um]: https://github.com/4qu4r1um
 [@goestav]: https://github.com/goestav
+[@tonghuaroot]: https://github.com/tonghuaroot
