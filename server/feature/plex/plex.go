@@ -345,6 +345,9 @@ var plexHTTPClient = &http.Client{
 		if len(via) == 0 {
 			return nil
 		}
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
 		if req.URL.Host != via[0].URL.Host {
 			req.Header.Del("X-Plex-Token")
 		}
