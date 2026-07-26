@@ -18,7 +18,7 @@ RUN go mod download && GOOS=linux CGO_ENABLED=1 CGO_CFLAGS="-D_LARGEFILE64_SOURC
 #
 # Frontend
 #
-FROM node:20-alpine AS ui
+FROM node:24-alpine AS ui
 
 WORKDIR /app
 COPY package*.json vite.config.ts svelte.config.js tsconfig.json ./
@@ -30,7 +30,7 @@ RUN npm install && npm run build
 #
 # Production
 #
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 
 COPY --from=server /server/watcharr /
 COPY --from=ui /app/build /ui
