@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-go@v7.0.0
         with:
-          go-version-file: "go.mod"
+          go-version-file: "server/go.mod"
 
       - name: go test all packages
         run: go test ./...
