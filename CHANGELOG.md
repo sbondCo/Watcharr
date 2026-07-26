@@ -2,10 +2,16 @@
 
 These changes are awaiting release:
 
+# [4.1.1] - 2026-07-26T02:00:00Z
+
 ## Fixed
 
 - Plex Login: Request JSON from plex api so that it doesn't return XML.
 - GHSA-6x53-2w54-v5rj (thanks to [@tonghuaroot] for reporting and patching!)
+
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/sbondCo/Watcharr/pkgs/container/watcharr/1066968415?tag=v4.1.1) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.1.1/images/sha256-e71e9006e22e8111230ae2fc0e8a66c2b6de75112c784a11ab1b45faffeb8e8a).
 
 # [4.1.0] - 2026-07-19T14:18:00Z
 
@@ -1704,6 +1710,7 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 <!-- Version Changelog References (newest first) -->
 
 [Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...HEAD
+[4.1.1]: https://github.com/sbondCo/Watcharr/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/sbondCo/Watcharr/compare/v4.0.1...v4.1.0
 [4.0.1]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/sbondCo/Watcharr/compare/v3.0.1...v4.0.0
