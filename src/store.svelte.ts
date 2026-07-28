@@ -15,12 +15,37 @@ import { toggleTheme } from "./lib/util/theme";
 
 export const defaultSort = ["DATEADDED", "DOWN"];
 
+export type WatchedListMode = "all" | "tv" | "movie";
+
+/** Type filter array for a given view mode. */
+export function typeForMode(mode: WatchedListMode): string[] {
+	if (mode === "tv") return ["tv"];
+	if (mode === "movie") return ["movie"];
+	return [];
+}
+
+/**
+ * Derive the current view mode from a type filter, or undefined when the
+ * type filter is a combination that no single mode represents.
+ */
+function modeOf(type: string[] | undefined): WatchedListMode | undefined {
+	if (!type?.length) return "all";
+	if (type.length === 1 && type[0] === "tv") return "tv";
+	if (type.length === 1 && type[0] === "movie") return "movie";
+	return undefined;
+}
+
 interface Store {
 	userInfo: PrivateUser | undefined;
 	userSettings: UserSettings | undefined;
 	notifications: Notification[];
 	activeSort: string[];
 	activeFilters: Filters;
+	// Remembered status filter and sort for each watched-list view mode
+	// (all/tv/movie), so switching between shows and movies keeps each mode's
+	// own filters and sort order.
+	filterModes: Record<string, string[]>;
+	sortModes: Record<string, string[]>;
 	sortAndFiltersForQueryParams: {};
 	appTheme: Theme;
 	importedList:
@@ -52,6 +77,8 @@ const _store: Store = $state({
 	notifications: [],
 	activeSort: defaultSort,
 	activeFilters: { type: [], status: [] },
+	filterModes: { all: [], tv: [], movie: [] },
+	sortModes: { all: defaultSort, tv: defaultSort, movie: defaultSort },
 	appTheme: "system",
 	sortAndFiltersForQueryParams: {},
 	importedList: undefined,
@@ -109,6 +136,12 @@ export const store = {
 	set activeSort(v) {
 		_store.activeSort = v;
 		localStorage.setItem("activeFilter", JSON.stringify(v));
+		// Remember this mode's sort so switching modes restores it.
+		const mode = modeOf(_store.activeFilters?.type);
+		if (mode) {
+			_store.sortModes[mode] = v;
+			localStorage.setItem("sortModes", JSON.stringify(_store.sortModes));
+		}
 		console.debug("Store: Saved activeSort:", v);
 		updateSortAndFiltersForQueryParams();
 	},
@@ -125,8 +158,20 @@ export const store = {
 	set activeFilters(v) {
 		_store.activeFilters = v;
 		localStorage.setItem("activeFilterReal", JSON.stringify(v));
+		// Remember this mode's status filter so switching modes restores it.
+		const mode = modeOf(v?.type);
+		if (mode) {
+			_store.filterModes[mode] = v?.status ?? [];
+			localStorage.setItem("filterModes", JSON.stringify(_store.filterModes));
+		}
 		console.debug("Store: Saved activeFilters:", v);
 		updateSortAndFiltersForQueryParams();
+	},
+	get filterModes() {
+		return _store.filterModes;
+	},
+	get sortModes() {
+		return _store.sortModes;
 	},
 	/**
 	 * Return our `activeSort` and `activeFilters` in an object
@@ -236,6 +281,21 @@ export const clearActiveFilters = () => {
 	store.activeFilters = { type: [], status: [] };
 };
 
+/**
+ * Switch the watched-list view mode (all/tv/movie), restoring the status
+ * filter last used in that mode.
+ */
+export const setWatchedListMode = (mode: WatchedListMode) => {
+	// Set the type filter first so the mode is derivable, then restore this
+	// mode's remembered status and sort.
+	store.activeFilters = {
+		...store.activeFilters,
+		type: typeForMode(mode),
+		status: store.filterModes[mode] ?? [],
+	};
+	store.activeSort = store.sortModes[mode] ?? defaultSort;
+};
+
 if (browser) {
 	rehydrateStore();
 }
@@ -265,6 +325,29 @@ function rehydrateStore() {
 		console.debug(
 			"rehydrateStore: Restored activeFilters:",
 			$state.snapshot(store.activeFilters),
+		);
+	}
+	// Restore per-mode remembered filters
+	const fm = localStorage.getItem("filterModes");
+	if (fm) {
+		_store.filterModes = { all: [], tv: [], movie: [], ...JSON.parse(fm) };
+		console.debug(
+			"rehydrateStore: Restored filterModes:",
+			$state.snapshot(store.filterModes),
+		);
+	}
+	// Restore per-mode remembered sort
+	const sm = localStorage.getItem("sortModes");
+	if (sm) {
+		_store.sortModes = {
+			all: defaultSort,
+			tv: defaultSort,
+			movie: defaultSort,
+			...JSON.parse(sm),
+		};
+		console.debug(
+			"rehydrateStore: Restored sortModes:",
+			$state.snapshot(store.sortModes),
 		);
 	}
 	// After restoring activeSort and activeFilter, set
