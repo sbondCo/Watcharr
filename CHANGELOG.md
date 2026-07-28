@@ -18,6 +18,16 @@ These changes are awaiting release:
 - Workflows: Upgrade action versions & set Node version to `24`.
 - Dockerfile: Upgrade node steps to use version `24`.
 - Workflows: test-pr-server: Set go-version-file for setup-go action.
+- Upgrade devDependencies:
+  - eslint: 8.57.0 -> 10.7.0
+  - eslint-config-prettier: 10.1.2 -> 10.1.8
+  - eslint-plugin-svelte: 2.45.1 -> 3.20.0
+  - prettier: 3.4.2 -> 3.9.5
+  - prettier-plugin-svelte: 3.4.0 -> 4.1.1
+  - svelte-eslint-parser: 0.42.0 -> 1.8.0
+  - typescript-eslint: 8.32.1 -> 8.63.0
+- Added devDependencies: `@eslint/js` (new eslint has split this module out into a new package) and `globals` (as a result of new eslint architecture, we now have this as a direct dev dependency).
+- ESLint: Migrate to flat config: I ran `npx sv add eslint` and modified the eslint.config.js it generated to line up better with our old one and work a bit better (i think) with our normal ts files. Also set `ecmaVersion` to `latest`, previously was `2020`.
 
 # [4.1.1] - 2026-07-26T02:00:00Z
 
