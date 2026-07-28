@@ -66,8 +66,7 @@
 			placeholder={`My thoughts on ${contentTitle}`}
 			value={thoughts}
 			bind:this={textarea}
-			oninput={resizeTextarea}
-		></textarea>
+			oninput={resizeTextarea}></textarea>
 	</Modal>
 {/if}
 

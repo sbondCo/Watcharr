@@ -34,8 +34,10 @@ export const noAuthReq = new Reqer(baseURL, false);
 /**
  * Options for our internal updateWatched func.
  */
-export interface UpdateWatchedOptions
-	extends Omit<WatchedUpdateRequest, "removeThoughts"> {
+export interface UpdateWatchedOptions extends Omit<
+	WatchedUpdateRequest,
+	"removeThoughts"
+> {
 	/**
 	 * TMDB ID.
 	 */

@@ -60,8 +60,7 @@
 	// Set when user clicks 'Change Statuses' button for the change all
 	// statuses modal.
 	let changeAllStatusesModalCb:
-		| ((newStatus?: WatchedStatus) => void)
-		| undefined = $state();
+		((newStatus?: WatchedStatus) => void) | undefined = $state();
 
 	async function getList() {
 		const list = store.importedList;

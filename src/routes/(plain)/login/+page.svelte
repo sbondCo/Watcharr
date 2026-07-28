@@ -115,9 +115,8 @@
 
 	async function plexLogin() {
 		try {
-			const { preparePlexAuth, doPlexLogin, plexPinPoll } = await import(
-				"@/lib/util/plex"
-			);
+			const { preparePlexAuth, doPlexLogin, plexPinPoll } =
+				await import("@/lib/util/plex");
 			const p = preparePlexAuth();
 			const pin = await doPlexLogin(p);
 			plexPinPoll(pin, p, (err, token) => {
