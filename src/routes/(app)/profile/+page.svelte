@@ -146,8 +146,7 @@
 					rows="1"
 					placeholder="my bio"
 					onblur={updateBio}
-					value={user?.bio}
-				></textarea>
+					value={user?.bio}></textarea>
 			</div>
 		</div>
 

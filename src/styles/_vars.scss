@@ -22,7 +22,8 @@ $success-hover: #1e7e34;
 // For ratings that are on bg-color.
 $rating-color: var(--rating-color);
 
-$blended-mask: linear-gradient(
+$blended-mask:
+	linear-gradient(
 		to right,
 		var(--bg-color),
 		rgba(from var(--bg-color) r g b / 0.984) 0.97%,

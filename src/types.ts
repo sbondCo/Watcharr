@@ -1,9 +1,5 @@
 export type WatchedStatus =
-	| "PLANNED"
-	| "WATCHING"
-	| "FINISHED"
-	| "HOLD"
-	| "DROPPED";
+	"PLANNED" | "WATCHING" | "FINISHED" | "HOLD" | "DROPPED";
 /**
  * Types of media supported by Watcharr in an overarching way.
  */
@@ -70,10 +66,7 @@ export type Icon =
 export type Theme = "light" | "dark" | "system";
 
 export type WLDetailedViewOption =
-	| "statusRating"
-	| "lastWatched"
-	| "dateAdded"
-	| "dateModified";
+	"statusRating" | "lastWatched" | "dateAdded" | "dateModified";
 
 export enum UserType {
 	Watcharr = 0,
@@ -618,13 +611,11 @@ interface ArrSettingsPublicResponseBase {
 	automaticSearch: boolean;
 }
 
-export interface SonarrSettingsPublicResponseResult
-	extends ArrSettingsPublicResponseBase {
+export interface SonarrSettingsPublicResponseResult extends ArrSettingsPublicResponseBase {
 	languageProfile?: number;
 }
 
-export interface RadarrSettingsPublicResponseResult
-	extends ArrSettingsPublicResponseBase {}
+export interface RadarrSettingsPublicResponseResult extends ArrSettingsPublicResponseBase {}
 
 export interface TwitchSettings {
 	clientId?: string;
@@ -710,11 +701,7 @@ export interface RadarrTestResponse {
 }
 
 export type ArrRequestStatus =
-	| "PENDING"
-	| "APPROVED"
-	| "AUTO_APPROVED"
-	| "DENIED"
-	| "FOUND";
+	"PENDING" | "APPROVED" | "AUTO_APPROVED" | "DENIED" | "FOUND";
 
 export interface ArrRequestResponse {
 	id: number;
