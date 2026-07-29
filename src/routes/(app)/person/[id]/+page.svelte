@@ -132,9 +132,11 @@
 			<div class="content">
 				<div class="details-wrap">
 					<div class="details-container">
-						<PosterImage
-							src={"https://image.tmdb.org/t/p/w500" + person.extPosterPath}
-						/>
+						{#if person.extPosterPath}
+							<PosterImage
+								src={"https://image.tmdb.org/t/p/w500" + person.extPosterPath}
+							/>
+						{/if}
 
 						<div class="details">
 							<span class="title-container">

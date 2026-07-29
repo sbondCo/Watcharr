@@ -131,9 +131,11 @@
 		<div class="content">
 			<div class="details-wrap">
 				<div class="details-container">
-					<PosterImage
-						src={"https://image.tmdb.org/t/p/w500" + movie.extPosterPath}
-					/>
+					{#if movie.extPosterPath}
+						<PosterImage
+							src={"https://image.tmdb.org/t/p/w500" + movie.extPosterPath}
+						/>
+					{/if}
 
 					<div class="details">
 						<Title

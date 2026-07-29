@@ -11,6 +11,7 @@ These changes are awaiting release:
 - Login: Display error when request to get available auth providers fails.
 - Removed some legacy code that still thought there was a `store.watchedList`.
 - DropDown: Fix whole page scrolling when pressing letter to scroll to first relevant dropdown item (only the dropdown list should scroll now, which is less jarring).
+- Media pages: Only show PosterImage if we have a poster path.
 
 ## Maintenance
 
