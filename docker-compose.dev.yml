@@ -4,8 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: watcharr
+    container_name: watcharr-dev
     ports:
-      - 3080:3080
+      - 3081:3080
     volumes:
       - ./container_data:/data
