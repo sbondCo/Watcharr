@@ -19,7 +19,7 @@
 	let { data } = $props();
 
 	let person: PersonDetailsResponse | undefined = $state();
-	let pageError: Error | undefined = $state();
+	let pageError: unknown | undefined = $state();
 	let sortOption = $state("Vote count");
 	let credits: PersonCreditsResponse | undefined = $state();
 	let onMyListFilter = $state(false);
@@ -46,7 +46,7 @@
 			person = await getPerson(data.personId);
 			await updatePersonCredits();
 			sortCredits(sortOption);
-		} catch (err: any) {
+		} catch (err) {
 			person = undefined;
 			pageError = err;
 		}
@@ -138,7 +138,9 @@
 
 						<div class="details">
 							<span class="title-container">
-								<a href={person.homepage} target="_blank">{person.name}</a>
+								<a href={person.homepage} rel="external" target="_blank">
+									{person.name}
+								</a>
 								<span></span>
 							</span>
 

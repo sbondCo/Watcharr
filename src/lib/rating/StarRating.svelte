@@ -16,7 +16,6 @@
 	let { rating, onChange }: Props = $props();
 
 	let hoveredRating: number | undefined = $state();
-	let shownRating: number | undefined = $state();
 	let shownPerc: number | undefined = $state();
 	let ratingContainer: HTMLDivElement | undefined = $state();
 	let ratingWrapEl: HTMLDivElement | undefined = $state();
@@ -217,7 +216,6 @@
 	run(() => {
 		if (hoveredRating !== undefined && hoveredRating > 0) {
 			console.debug("showRatingCaller: We have a hoveredRating.");
-			shownRating = hoveredRating;
 			showRating(
 				Math.round(
 					(hoveredRating * 100) /
@@ -226,11 +224,9 @@
 			);
 		} else if (rating !== undefined) {
 			console.debug("showRatingCaller: We have a rating.");
-			shownRating = rating;
 			showRating(Math.round((rating * 100) / 10));
 		} else {
 			console.debug("showRatingCaller: We have nothing.");
-			shownRating = undefined;
 			showRating(0);
 		}
 	});
@@ -383,7 +379,7 @@ shownPerc: {shownPerc}<br /> -->
 			class="rating the-normal-one"
 			tabindex="-1"
 		>
-			{#each stars as _}
+			{#each stars as _ (_)}
 				<button class="plain" tabindex="-1">*</button>
 			{/each}
 		</div>
@@ -393,13 +389,13 @@ shownPerc: {shownPerc}<br /> -->
 			class="rating the-highlight-one"
 			tabindex="-1"
 		>
-			{#each stars as _}
+			{#each stars as _ (_)}
 				<button class="plain lit" tabindex="-1">*</button>
 			{/each}
 		</div>
 		<!-- Hidden stars, just to keep correct layout since the two above are abolute. -->
 		<div class="rating the-hidden-one-for-layout-reasons" tabindex="-1">
-			{#each stars as _}
+			{#each stars as _ (_)}
 				<button
 					class="plain"
 					style="opacity: 0; pointer-events: none;"

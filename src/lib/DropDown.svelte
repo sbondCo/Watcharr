@@ -36,29 +36,17 @@
 
 		const pressedLetter = event.key.toLowerCase();
 
-		// Filter options that start with the pressed letter (ignoring case)
-		const filteredOptions = options.filter((o) =>
-			typeof o === "string"
-				? o.toLowerCase().startsWith(pressedLetter)
-				: o.value.toLowerCase().startsWith(pressedLetter),
-		);
-
-		// If there are filtered options, select the first one
-		let f: string | number | undefined;
-		if (filteredOptions.length > 0) {
-			f =
-				typeof filteredOptions[0] === "string"
-					? filteredOptions[0]
-					: filteredOptions[0].id;
-		}
-
 		// Find first button with text content starting with letter pressed and scroll it into view.
 		const btns = ulElement?.querySelectorAll("button");
 		if (btns) {
 			for (let i = 0; i < btns.length; i++) {
 				const btn = btns[i];
 				if (btn.textContent?.toLowerCase()?.startsWith(pressedLetter)) {
-					btn.scrollIntoView({ behavior: "smooth", block: "start" });
+					btn.scrollIntoView({
+						behavior: "smooth",
+						block: "nearest",
+						inline: "nearest",
+					});
 					break;
 				}
 			}
@@ -98,7 +86,7 @@
 		<Icon i="chevron" facing={open ? "up" : "down"} />
 	</button>
 	<ul bind:this={ulElement}>
-		{#each showActiveElementsInOptions ? options : options.filter( (o) => (typeof o === "string" ? o !== active : o.id !== active) ) as o}
+		{#each showActiveElementsInOptions ? options : options.filter( (o) => (typeof o === "string" ? o !== active : o.id !== active) ) as o (typeof o === "string" ? o : o.id)}
 			<li>
 				<button
 					class="plain"

@@ -13,7 +13,7 @@
 		const nid = notify({ text: "Exporting", type: "loading" });
 		try {
 			// We re-fetch, to ensure data we export is up to date.
-			const r = await req.get<any>("/watched");
+			const r = await req.get<unknown[]>("/watched");
 			console.log(r);
 			if (!r || r?.length <= 0) {
 				notify({

@@ -125,7 +125,7 @@
 	</div>
 	{#if watchedItem}
 		<div class="status-rating-ctr">
-			<div class="rating" style={"width: 45px"}>
+			<div class="rating" style="width: 45px">
 				<PosterRating
 					rating={we?.rating}
 					btnTooltip={`Episode ${ep.episode_number} Rating`}

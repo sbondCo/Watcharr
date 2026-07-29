@@ -6,6 +6,7 @@
 	import { clearWatcharrData } from ".";
 	import { goto } from "$app/navigation";
 	import { req } from "../util/api";
+	import { resolve } from "$app/paths";
 
 	interface Props {
 		onClose: () => void;
@@ -34,7 +35,7 @@
 
 	function logout() {
 		clearWatcharrData();
-		goto("/login?noAuto=1");
+		goto(resolve("/login?noAuto=1"));
 	}
 
 	function proxyLogout() {

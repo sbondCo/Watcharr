@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { store } from "@/store.svelte";
 	import tooltip from "../actions/tooltip";
-	import { RatingStep, RatingSystem } from "@/types";
+	import { RatingSystem } from "@/types";
 	import Icon from "../Icon.svelte";
 	import { toShowableRating, toWhichThumb } from "../rating/helpers";
 
@@ -49,7 +49,7 @@
 		ev.stopPropagation();
 		ratingsShown = !ratingsShown;
 	}}
-	onmouseleave={(ev) => {
+	onmouseleave={() => {
 		ratingsShown = false;
 	}}
 	use:tooltip={{
@@ -88,6 +88,7 @@
 				{toShowableRating(rating)}
 			{/if}
 		{:else if minimal}
+			<!-- eslint-disable-next-line svelte/no-useless-mustaches -->
 			{""}
 		{:else if disableInteraction}
 			Unrated
@@ -139,7 +140,7 @@
 				store.userSettings?.ratingSystem == RatingSystem.OutOf5
 					? [5, 4, 3, 2, 1]
 					: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]}
-			{#each stars as v}
+			{#each stars as v (v)}
 				<!-- svelte-ignore node_invalid_placement_ssr -->
 				<button
 					class="plain{rating === v ? ' active' : ''}"

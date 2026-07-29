@@ -28,7 +28,7 @@ export interface ToolTipOptions {
  * loading from causing extra data requests, etc.
  */
 export default function infScroll(opts: ToolTipOptions) {
-	let { threshold = 150, callback } = opts;
+	const { threshold = 150, callback } = opts;
 
 	// Store current pathname at point of infScroll
 	// initialization, this ensures we have a point

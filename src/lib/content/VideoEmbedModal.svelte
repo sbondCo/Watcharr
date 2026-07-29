@@ -8,7 +8,7 @@
 
 	let { embed, closed }: Props = $props();
 
-	let modalDiv: HTMLDivElement = $state();
+	let modalDiv: HTMLDivElement | undefined = $state();
 
 	onMount(() => {
 		// For better experience on keyboard.

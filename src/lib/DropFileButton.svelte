@@ -17,18 +17,18 @@
 		allowSelectMultipleFiles = false,
 	}: Props = $props();
 
-	let fileInput: HTMLInputElement = $state();
-	let dragEnterTarget: EventTarget | null = $state();
+	let fileInput: HTMLInputElement | undefined = $state();
+	let dragEnterTarget: EventTarget | null | undefined = $state();
 	let isDragOver = $state(false);
 
 	function importFile() {
-		fileInput.click();
+		fileInput?.click();
 	}
 
 	onMount(() => {
 		if (fileInput) {
 			fileInput.addEventListener("change", () => {
-				filesSelected(fileInput.files);
+				filesSelected(fileInput?.files);
 			});
 		}
 	});

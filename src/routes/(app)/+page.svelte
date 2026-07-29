@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import Error from "@/lib/Error.svelte";
 	import Icon from "@/lib/Icon.svelte";
 	import Poster from "@/lib/poster/Poster.svelte";
@@ -17,7 +18,7 @@
 
 	let nextLoadParams: {
 		page: number;
-		[x: string]: any;
+		[x: string]: unknown;
 	} = $derived({
 		page: dataLoader.state.page + 1,
 		...store.sortAndFiltersForQueryParams,
@@ -72,15 +73,20 @@
 	<title>Watched List</title>
 </svelte:head>
 
-<!-- <span style="position: fixed; top: 80px; background-color: white; z-index: 60;"
-	><b>listPage</b>: {dataLoader.state.page} listPageMax: {dataLoader.state
-		.pageMax} listLoading:
-	{dataLoader.state.reqLoading}
+<!-- <span
+	style="position: fixed; top: 80px; background-color: white; color: black; z-index: 60;"
+>
+	<b>listPage</b>: {dataLoader.state.page}
+	listPageMax: {dataLoader.state.pageMax}
+	listLoading: {dataLoader.state.reqLoading}
 	<b>sort:</b>
-	{JSON.stringify(store.activeSort)} <b>filter:</b>
-	{JSON.stringify(store.activeFilters)} <b>queryp:</b>
-	{JSON.stringify(store.sortAndFiltersForQueryParams)}</span
-> -->
+	{JSON.stringify(store.activeSort)}
+	<b>filter:</b>
+	{JSON.stringify(store.activeFilters)}
+	<b>queryp:</b>
+	{JSON.stringify(store.sortAndFiltersForQueryParams)}
+	paginatedLoader.state.meta: {JSON.stringify(dataLoader.state.meta)}
+</span> -->
 
 <PosterList>
 	{#if dataLoader.state.data?.length > 0}
@@ -102,7 +108,7 @@
 				searching for something you would like to add.
 			</h4>
 			{#if !store.hasActiveFilters}
-				<button onclick={() => goto("/import")}>Import</button>
+				<button onclick={() => goto(resolve("/import"))}>Import</button>
 			{/if}
 			{#if store.hasActiveFilters}
 				<button onclick={() => clearActiveFilters()}>Clear Filters</button>

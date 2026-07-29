@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import {
 		addClassToParent,
 		calculateTransformOrigin,
@@ -24,7 +25,9 @@
 	const poster = path
 		? `https://image.tmdb.org/t/p/w300_and_h450_bestv2${path}`
 		: undefined;
-	const link = id ? `/person/${id}` : undefined;
+	const link: `/person/${number}` | undefined = id
+		? `/person/${id}`
+		: undefined;
 </script>
 
 <!-- Quick fix to ignore error, should be fixed -->
@@ -33,7 +36,7 @@
 	onmouseenter={(e) => calculateTransformOrigin(e)}
 	onfocusin={(e) => calculateTransformOrigin(e)}
 	onclick={() => {
-		if (link) goto(link);
+		if (link) goto(resolve(link));
 	}}
 	onkeypress={() => console.log("on kpress")}
 >
@@ -58,7 +61,7 @@
 		<div class="inner">
 			<h2>
 				{#if link}
-					<a data-sveltekit-preload-data="tap" href={link}>
+					<a data-sveltekit-preload-data="tap" href={resolve(link)}>
 						{name}
 					</a>
 				{:else}

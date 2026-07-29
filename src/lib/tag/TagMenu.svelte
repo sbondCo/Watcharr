@@ -68,7 +68,7 @@
 			>
 		{/if}
 		<div class="list">
-			{#each allTags as t}
+			{#each allTags as t (t.id)}
 				{@const isSelected = selectedTags
 					? selectedTags.find((tag) => tag.id === t.id)
 						? true

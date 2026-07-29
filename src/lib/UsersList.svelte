@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from "$app/paths";
 	import type { PublicUser } from "@/types";
 
 	interface Props {
@@ -11,9 +12,9 @@
 <div>
 	<h2>Users</h2>
 	<ul>
-		{#each users as user}
+		{#each users as user (user.id)}
 			<li title={user.username}>
-				<a href="/lists/{user.id}/{user.username}">
+				<a href={resolve(`/lists/${user.id}/${user.username}`)}>
 					<span>{user.username}</span>
 				</a>
 			</li>

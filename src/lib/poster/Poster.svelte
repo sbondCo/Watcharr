@@ -21,6 +21,7 @@
 	import { buildExtraDetails } from "./lib";
 	import { decode } from "blurhash";
 	import WatchedDeleteModal from "../watched/WatchedDeleteModal.svelte";
+	import { resolve } from "$app/paths";
 
 	interface Props {
 		media: Media;
@@ -139,7 +140,9 @@
 			return `https://images.igdb.com/igdb/image/upload/t_cover_big/${media.extPosterPath}.jpg`;
 		}
 	});
-	const link = $derived(meta?.id ? `/${meta.type}/${meta.id}` : undefined);
+	const link = $derived<`${`/${SupportedMedia}/${string}`}` | undefined>(
+		meta?.id ? `/${meta.type}/${meta.id}` : undefined,
+	);
 	const year = $derived(
 		media.releaseDate ? new Date(media.releaseDate).getFullYear() : undefined,
 	);
@@ -211,7 +214,7 @@
 				return;
 			}
 			if (link) {
-				goto(link);
+				goto(resolve(link));
 			}
 		}
 	}
@@ -342,10 +345,10 @@
 				loading="lazy"
 				src={poster}
 				alt=""
-				onload={(e) => {
+				onload={() => {
 					posterImgLoaded = 1;
 				}}
-				onerror={(e) => {
+				onerror={() => {
 					posterImgLoaded = -1;
 				}}
 			/>
@@ -362,7 +365,7 @@
 					e.preventDefault();
 					return;
 				}
-				if (posterActive && link) goto(link);
+				if (posterActive && link) goto(resolve(link));
 			}}
 			onkeyup={handleInnerKeyUp}
 			id="ilikemoviessueme"
@@ -370,7 +373,11 @@
 			role="button"
 			tabindex="-1"
 		>
-			<a data-sveltekit-preload-data="tap" href={link} class="small-scrollbar">
+			<a
+				data-sveltekit-preload-data="tap"
+				href={link ? resolve(link) : undefined}
+				class="small-scrollbar"
+			>
 				<h2>
 					{media.name}
 					{#if year}

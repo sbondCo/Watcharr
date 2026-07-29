@@ -1,6 +1,5 @@
 import { store } from "@/store.svelte";
 import { RatingStep, RatingSystem } from "@/types";
-import { get } from "svelte/store";
 
 /**
  * Used for scaling users 'actual' rating we store in db

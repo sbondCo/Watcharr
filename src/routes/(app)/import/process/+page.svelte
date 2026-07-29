@@ -29,6 +29,7 @@
 	import { onDestroy } from "svelte";
 	import papa from "papaparse";
 	import Status from "@/lib/Status.svelte";
+	import { resolve } from "$app/paths";
 
 	interface ImportedListItemMultiProblem {
 		original: ImportedList;
@@ -66,7 +67,7 @@
 		const list = store.importedList;
 		if (!list) {
 			console.log("import/process, no list, returning to /import");
-			goto("/import");
+			goto(resolve("/import"));
 			return;
 		}
 		console.log("getList", list);
@@ -94,6 +95,7 @@
 			console.debug("parsed csv", s);
 			for (let i = 0; i < s.data.length; i++) {
 				try {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					const el = s.data[i] as any;
 					if (el) {
 						// Skip if no name or tmdb id
@@ -135,6 +137,7 @@
 			// there are common keys between these types that we use below so should
 			// be okay with importing either.
 			importText = "IMDb";
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const s = papa.parse<any>(list.data.trim(), { header: true });
 			console.debug("parsed csv", s);
 			let anySkipped = false;
@@ -152,6 +155,7 @@
 			});
 			for (let i = 0; i < s.data.length; i++) {
 				try {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					const el = s.data[i] as any;
 					if (el) {
 						const imdbId = el["Const"];
@@ -349,6 +353,7 @@
 									data: "WATCHING",
 									customDate: new Date(startDateNode.textContent),
 								},
+								// eslint-disable-next-line @typescript-eslint/no-explicit-any
 							] as any[];
 						}
 						if (
@@ -403,7 +408,6 @@
 				});
 			}
 		}
-		// TODO: remove duplicate names in list
 	}
 
 	function addRow(
@@ -461,14 +465,14 @@
 		) {
 			// Some items failed.. go to some-failed
 			store.parsedImportedList = rList;
-			goto("/import/some-failed");
+			goto(resolve("/import/some-failed"));
 		} else {
 			notify({
 				type: "success",
 				text: "All content successfully imported! Try refreshing if you are missing data.",
 				time: 15000,
 			});
-			goto("/");
+			goto(resolve("/"));
 		}
 	}
 
@@ -608,6 +612,8 @@
 						</tr>
 					</thead>
 					<tbody>
+						<!-- TODO: Fix this to use a keyed each somehow (need unique id for key) -->
+						<!-- eslint-disable-next-line svelte/require-each-key -->
 						{#each rList as l}
 							<tr>
 								{#if isImporting}
@@ -627,13 +633,13 @@
 										</div>
 									</td>
 								{/if}
-								<td
-									><input
+								<td>
+									<input
 										class="plain"
 										bind:value={l.name}
 										disabled={isImporting}
-									/></td
-								>
+									/>
+								</td>
 								<td class="year">
 									<input
 										class="plain"
@@ -706,7 +712,8 @@
 					</tbody>
 				</table>
 				<div class="btns">
-					<button onclick={() => goto("/import")}><Icon i="arrow" />Back</button
+					<button onclick={() => goto(resolve("/import"))}
+						><Icon i="arrow" />Back</button
 					>
 					<button onclick={() => changeAllStatuses()} disabled={isImporting}>
 						Change Statuses
@@ -747,7 +754,7 @@
 			}}
 		>
 			<PosterList type="vertical">
-				{#each importMultiItem.results as r}
+				{#each importMultiItem.results as r (r.ids)}
 					<Poster
 						media={r}
 						small={true}

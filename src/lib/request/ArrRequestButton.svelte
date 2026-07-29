@@ -60,10 +60,11 @@
 					getStatus();
 				}
 			}
-		} catch (err: any) {
+		} catch (err) {
 			if (
 				ReqerError.withBody(err) &&
 				err.response?.status === 404 &&
+				err.hasErrorInBody() &&
 				err.body.error === "request deleted"
 			) {
 				return;

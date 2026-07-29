@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from "$app/paths";
 	import type { TMDBContentCreditsCrew } from "@/types";
 
 	interface Props {
@@ -9,9 +10,9 @@
 </script>
 
 <div class="creators">
-	{#each topCrew as crew}
+	{#each topCrew as crew (crew.id)}
 		<div>
-			<a href={`/person/${crew.id}`}>{crew.name}</a>
+			<a href={resolve(`/person/${crew.id}`)}>{crew.name}</a>
 			<span>{crew.job}</span>
 		</div>
 	{/each}

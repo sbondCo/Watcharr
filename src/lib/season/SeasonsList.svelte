@@ -132,7 +132,7 @@
 
 <div class="ctr">
 	<ul class="seasons">
-		{#each seasons as season}
+		{#each seasons as season (season.number)}
 			<button
 				class="plain"
 				class:active={activeSeason === season.number}
@@ -216,7 +216,7 @@
 				</div>
 				{#if season?.episodes?.length > 0}
 					<ul>
-						{#each season.episodes as ep}
+						{#each season.episodes as ep (ep.id)}
 							<SeasonsListEpisode {ep} {watchedItem} />
 						{/each}
 					</ul>

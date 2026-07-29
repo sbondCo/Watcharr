@@ -43,7 +43,7 @@
 					text: "Changes saved!",
 				});
 				onClose();
-			} catch (err: any) {
+			} catch (err) {
 				console.error("Failed to save twitch cfg!", err);
 				error = ReqerError.getMsg(err, "Failed to save");
 			}
@@ -52,7 +52,7 @@
 </script>
 
 <Modal
-	title={"Twitch Config"}
+	title="Twitch Config"
 	desc="Setup your twitch application to enable game support."
 	{onClose}
 >

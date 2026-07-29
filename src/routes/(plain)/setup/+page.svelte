@@ -1,23 +1,24 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import type { AvailableAuthProviders } from "@/types";
+	import type { AuthResponse, AvailableAuthProviders } from "@/types";
 	import { onMount } from "svelte";
 	import { notify, unNotify } from "@/lib/util/notify";
 	import { noAuthReq } from "@/lib/util/api";
 	import { ReqerError } from "@/lib/util/fetch";
+	import { resolve } from "$app/paths";
 
 	let error: string | undefined = $state();
 
 	onMount(() => {
 		if (localStorage.getItem("token")) {
-			goto("/");
+			goto(resolve("/"));
 		}
 
 		noAuthReq.get<AvailableAuthProviders>("/auth/available").then((r) => {
 			if (r) {
 				if (!r.isInSetup) {
 					console.log("Server not in setup.. navigating to login page.");
-					goto("/login");
+					goto(resolve("/(plain)/login"));
 				}
 			}
 		});
@@ -36,7 +37,7 @@
 
 		const nid = notify({ text: "Setting Up Admin User", type: "loading" });
 		noAuthReq
-			.post<any>("/setup/create_admin", {
+			.post<AuthResponse>("/setup/create_admin", {
 				username: user,
 				password: pass,
 			})
@@ -44,7 +45,7 @@
 				if (resp.token) {
 					console.log("Received token... logging in.");
 					localStorage.setItem("token", resp.token);
-					goto("/");
+					goto(resolve("/"));
 					notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
 				}
 			})

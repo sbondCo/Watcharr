@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { ReqerError } from "./util/fetch";
+
 	interface Props {
 		pretty: string;
-		error: any;
+		error: unknown;
 		onRetry?: () => void | undefined;
 	}
 
@@ -12,10 +14,10 @@
 	<div>
 		<div class="error-text">
 			<strong>{pretty}</strong>
-			{#if error?.message}
+			{#if error instanceof Error && error.message}
 				<p>{error.message}</p>
-				{#if error.response?.data?.error}
-					<p>{error.response.data.error}</p>
+				{#if error instanceof ReqerError && error?.body?.error}
+					<p>{error.body.error}</p>
 				{/if}
 			{:else}
 				<p>{JSON.stringify(error)}</p>

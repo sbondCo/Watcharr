@@ -23,7 +23,7 @@ export default function paginatedLoader<T, U>(
 		page: number;
 		pageMax: number;
 		reqLoading: boolean;
-		reqLoadError: Error | undefined;
+		reqLoadError: unknown | undefined;
 	} = $state({
 		data: [],
 		meta: undefined,
@@ -89,9 +89,15 @@ export default function paginatedLoader<T, U>(
 		}
 
 		state.reqLoading = true;
-		reqController = new AbortController();
+		/**
+		 * Keep a "local" copy of the AbortController that will always exist in
+		 * this scope, to avoid race conditions where a future request overrides
+		 * the one for this scope that we want to check (eg: the `catch` below).
+		 */
+		const locReqController = new AbortController();
+		reqController = locReqController;
 		try {
-			const resp = await fn(reqController.signal);
+			const resp = await fn(locReqController.signal);
 			if (!resp) {
 				state.reqLoading = false;
 				console.error(
@@ -111,16 +117,13 @@ export default function paginatedLoader<T, U>(
 				return;
 			}
 			state.data.push(...resp.results);
-			state.data = state.data;
+			// state.data = state.data;
 			state.meta = resp.meta;
-		} catch (err: any) {
-			if (err?.code === "ERR_CANCELED") {
+		} catch (err) {
+			if (locReqController.signal.aborted) {
 				console.warn("loadWatchedList: Cancelled, not showing error.");
-				// If request cancelled (likely by us aborting), then return
-				// here to avoid updating reqLoading state to false below.
-				// This fixes the case where we abort a request and start the
-				// next one before this one throws, which sets reqLoading to
-				// false for our next request (race condition).
+				// If request cancelled (by us aborting), then we want to ignore
+				// this error and let the new request do its thing.
 				return;
 			} else {
 				console.error("loadWatchedList: failed!", err);

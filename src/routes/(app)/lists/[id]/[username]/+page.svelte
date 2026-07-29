@@ -36,7 +36,7 @@
 
 	let nextLoadParams: {
 		page: number;
-		[x: string]: any;
+		[x: string]: unknown;
 	} = $derived({
 		page: dataLoader.state.page + 1,
 		...store.sortAndFiltersForQueryParams,

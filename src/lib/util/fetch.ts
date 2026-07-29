@@ -1,13 +1,20 @@
 import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
 import { clearWatcharrData } from "../logout";
 import { notify } from "./notify";
 
-type ReqerParams = any;
+type ReqerParams = object;
 
 /**
  * Request config, extending upon base RequestInit.
  */
-export interface ReqerConfig extends RequestInit {
+export interface ReqerConfig extends Omit<RequestInit, "body"> {
+	/**
+	 * Request body.
+	 * See `prepareRequestBody()` for how this property is processed before
+	 * being attached to the request.
+	 */
+	body?: unknown;
 	/**
 	 * URL Parameters.
 	 *
@@ -21,7 +28,7 @@ type ReqerConfigWithoutMethod = Omit<ReqerConfig, "method">;
 export class ReqerError extends Error {
 	constructor(
 		public message: string,
-		public body?: any,
+		public body?: unknown,
 		public response?: Response,
 	) {
 		super(message);
@@ -31,7 +38,7 @@ export class ReqerError extends Error {
 	/**
 	 * If err is a ReqerError.
 	 */
-	static isReqerError(err: any) {
+	static isReqerError(err: unknown) {
 		return err instanceof ReqerError;
 	}
 
@@ -39,9 +46,21 @@ export class ReqerError extends Error {
 	 * If err is a ReqerError and has a `body`.
 	 */
 	static withBody(
-		err: any,
+		err: unknown,
 	): err is ReqerError & Required<Pick<ReqerError, "body">> {
-		return this.isReqerError(err) && err.body;
+		return this.isReqerError(err) && Boolean(err.body);
+	}
+
+	/**
+	 * If `body` is an object and contains a standard Watcharr `error` property
+	 * containing a string.
+	 */
+	hasErrorInBody(): this is this & { body: { error: string } } {
+		return (
+			this.body instanceof Object &&
+			"error" in this.body &&
+			typeof this.body.error === "string"
+		);
 	}
 
 	/**
@@ -54,7 +73,7 @@ export class ReqerError extends Error {
 	 * `act` should be the action that failed. It will be combined with the
 	 * error message to create one readable string of `action: err`.
 	 */
-	static getMsg(err: any, act: string): string {
+	static getMsg(err: unknown, act: string): string {
 		// If response body has `error` property, is is a standard error
 		// object that the Watcharr server returns. We don't want to return
 		// a raw `body` if there is no expected `error` property incase it is
@@ -62,9 +81,9 @@ export class ReqerError extends Error {
 		// error whenever possible, debugging errors are always in console),
 		// if there is no `error`, we try the `err.message`.
 		let msg = "You've encountered an extremely unguarded error!";
-		if (ReqerError.withBody(err) && err.body.error) {
+		if (ReqerError.withBody(err) && err.hasErrorInBody()) {
 			msg = err.body.error;
-		} else if (err.message) {
+		} else if (err instanceof Error && err.message) {
 			msg = err.message;
 		}
 		return `${act}: ${msg}`;
@@ -122,7 +141,7 @@ export class Reqer {
 
 	private buildUrlPath(p: string): string {
 		// Removes any slashes or "." from start of path.
-		return p.replace(/^[.\/\\]+/, "");
+		return p.replace(/^[./\\]+/, "");
 	}
 
 	private buildUrl(p: string, params?: ReqerParams): URL {
@@ -136,14 +155,12 @@ export class Reqer {
 				this.buildBaseUrl(this.baseUrl),
 			);
 			if (params && typeof params === "object") {
-				for (const k in params) {
-					if (!Object.hasOwn(params, k)) continue;
-					const el = params[k];
-					if (el) {
+				for (const [k, val] of Object.entries(params)) {
+					if (k && val) {
 						// We use append on url.searchParams instead of
 						// overwriting it with a new object incase it has any
 						// existing params parsed from the `p`ath.
-						url.searchParams.append(k, String(el));
+						url.searchParams.append(k, String(val));
 					}
 				}
 			}
@@ -155,7 +172,7 @@ export class Reqer {
 	}
 
 	private prepareRequestBody(
-		data: any,
+		data: unknown,
 		headers: Headers,
 	): BodyInit | undefined {
 		if (!data) {
@@ -186,7 +203,11 @@ export class Reqer {
 	private async parseResponseBody(res: Response) {
 		const contentType = res.headers.get("Content-Type");
 		if (!contentType) {
-			throw new ReqerError("response has no content-type", res);
+			// Fallback, just return text.
+			console.warn(
+				"Reqer->parseResponseBody: No content-type in response. Returning text.",
+			);
+			return await res.text();
 		}
 		if (contentType.includes("application/json")) {
 			return await res.json();
@@ -204,7 +225,7 @@ export class Reqer {
 				const token = localStorage.getItem("token");
 				if (!token) {
 					console.error("No token, going to login.");
-					goto("/login?again=1");
+					goto(resolve("/login?again=1"));
 					throw new ReqerError("No auth token found");
 				}
 				headers.append("Authorization", token);
@@ -218,7 +239,7 @@ export class Reqer {
 				headers,
 			});
 
-			let resBody = await this.parseResponseBody(res);
+			const resBody = await this.parseResponseBody(res);
 
 			if (!res.ok) {
 				throw new ReqerError(
@@ -240,7 +261,7 @@ export class Reqer {
 					console.error("Recieved 401 response, going to login.");
 					notify({ text: "Request Authorization Failed!", type: "error" });
 					clearWatcharrData();
-					goto("/login?again=1");
+					goto(resolve("/login?again=1"));
 				}
 				throw err;
 			} else if (err instanceof Error) {
@@ -272,7 +293,7 @@ export class Reqer {
 	 */
 	async post<T>(
 		p: string,
-		data?: any,
+		data?: unknown,
 		cfg?: Omit<ReqerConfigWithoutMethod, "body">,
 	): Promise<T> {
 		return (await this.do<T>(p, { ...cfg, method: "POST", body: data })).body;
@@ -283,7 +304,7 @@ export class Reqer {
 	 */
 	async postWhole<T>(
 		p: string,
-		data?: any,
+		data?: unknown,
 		cfg?: Omit<ReqerConfigWithoutMethod, "body">,
 	): Promise<ReqerResponse<T>> {
 		return await this.do<T>(p, { ...cfg, method: "POST", body: data });
@@ -294,7 +315,7 @@ export class Reqer {
 	 */
 	async put<T>(
 		p: string,
-		data?: any,
+		data?: unknown,
 		cfg?: ReqerConfigWithoutMethod,
 	): Promise<T> {
 		return (await this.do<T>(p, { ...cfg, method: "PUT", body: data })).body;
@@ -305,7 +326,7 @@ export class Reqer {
 	 */
 	async putWhole<T>(
 		p: string,
-		data?: any,
+		data?: unknown,
 		cfg?: ReqerConfigWithoutMethod,
 	): Promise<ReqerResponse<T>> {
 		return await this.do<T>(p, { ...cfg, method: "PUT", body: data });

@@ -19,6 +19,7 @@
 	import { toggleTheme } from "@/lib/util/theme";
 	import ExportListModal from "./modals/ExportListModal.svelte";
 	import { ReqerError } from "@/lib/util/fetch";
+	import { resolve } from "$app/paths";
 
 	let user = $derived(store.userInfo);
 	let settings = $derived(store.userSettings);
@@ -239,7 +240,7 @@
 				>
 					<Checkbox
 						name="privateThoughts"
-						disabled={privateDisabled}
+						disabled={privateThoughtsDisabled}
 						value={settings?.privateThoughts}
 						toggled={(on) => {
 							privateThoughtsDisabled = true;
@@ -309,7 +310,7 @@
 			<RatingSetting />
 
 			<div class="row btns">
-				<button onclick={() => goto("/import")}>Import</button>
+				<button onclick={() => goto(resolve("/import"))}>Import</button>
 				<button onclick={() => (exportModalOpen = true)}>Export</button>
 				{#if user?.type !== UserType.Plex && user?.type !== UserType.Jellyfin}
 					<button

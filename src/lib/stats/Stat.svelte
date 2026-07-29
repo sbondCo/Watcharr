@@ -1,11 +1,15 @@
 <script lang="ts">
+	import type { ResolvedPathname } from "$app/types";
 	import tooltip from "../actions/tooltip";
 
 	interface Props {
 		name: string;
 		value: string | number;
 		large?: boolean;
-		href?: string | undefined;
+		/**
+		 * **NOTE:** Make sure to use resolve() when passing in the href!
+		 */
+		href?: ResolvedPathname;
 		disc?: string | undefined;
 	}
 

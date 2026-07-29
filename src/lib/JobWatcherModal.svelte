@@ -39,7 +39,7 @@
 			jobId = r.jobId;
 			step = "job-running";
 			startJobWatcher();
-		} catch (err: any) {
+		} catch (err) {
 			console.error("startSync failed!", err);
 			step = "errored";
 			jobFailError = ReqerError.getMsg(err, "Starting sync failed");
@@ -146,7 +146,7 @@
 					</h4>
 					<span>Job finished, but with errors:</span>
 					<ul>
-						{#each latestJobStatus?.errors as e}
+						{#each latestJobStatus?.errors as e (e)}
 							<li>{e}</li>
 						{/each}
 					</ul>
@@ -162,7 +162,7 @@
 				{/if}
 				{#if latestJobStatus?.errors && latestJobStatus?.errors?.length > 0}
 					<ul>
-						{#each latestJobStatus?.errors as e}
+						{#each latestJobStatus?.errors as e (e)}
 							<li>{e}</li>
 						{/each}
 					</ul>

@@ -6,7 +6,7 @@
 </script>
 
 <div id="notifications">
-	{#each store.notifications as n}
+	{#each store.notifications as n (n.id)}
 		<div class={`${n.type} notif`}>
 			{#if n.type === "loading"}
 				<SpinnerTiny />

@@ -156,7 +156,7 @@
 					</h4>
 					<span>Syncing has finished, but with errors:</span>
 					<ul>
-						{#each latestJobStatus?.errors as e}
+						{#each latestJobStatus?.errors as e (e)}
 							<li>{e}</li>
 						{/each}
 					</ul>

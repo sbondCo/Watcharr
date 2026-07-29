@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import { req } from "@/lib/util/api";
 	import { notify } from "@/lib/util/notify";
 	import { store } from "@/store.svelte";
@@ -32,7 +33,7 @@
 				if (store.userInfo) {
 					store.userInfo.permissions = UserPermission.PERM_ADMIN;
 				}
-				goto("/");
+				goto(resolve("/"));
 			})
 			.catch((err) => {
 				console.error("Failed to use admin token", err);

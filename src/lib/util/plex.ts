@@ -18,6 +18,7 @@ interface PlexPin {
 
 //
 function uuidv4() {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
 		(
 			c ^
@@ -109,7 +110,7 @@ export async function plexPinPoll(
 	const doPoll = async () => {
 		try {
 			console.debug("plexPinPoll");
-			const r = await plexTvReq.get<any>(`/pins/${pin.id}`, {
+			const r = await plexTvReq.get<{ authToken?: string }>(`/pins/${pin.id}`, {
 				headers: { ...headers, code: pin.code },
 			});
 			if (r?.authToken) {
@@ -129,7 +130,7 @@ export async function plexPinPoll(
 }
 
 async function getPlexPin(headers: Record<string, string>): Promise<PlexPin> {
-	const r = await plexTvReq.post<any>(`/pins?strong=true`, undefined, {
+	const r = await plexTvReq.post<PlexPin>(`/pins?strong=true`, undefined, {
 		headers: headers,
 	});
 	console.debug("getPlexPin:", r);
