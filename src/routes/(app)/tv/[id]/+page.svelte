@@ -284,7 +284,7 @@
 
 				{#if credits.cast?.length > 0}
 					<HorizontalList title="Cast">
-						{#each credits.cast?.slice(0, 50) as cast (cast.id)}
+						{#each credits.cast?.slice(0, 50) as cast (cast.credit_id)}
 							<PersonPoster
 								id={cast.id}
 								name={cast.name}
