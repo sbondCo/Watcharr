@@ -96,11 +96,13 @@
 		<div class="content">
 			<div class="details-wrap">
 				<div class="details-container">
-					<PosterImage
-						src={"https://images.igdb.com/igdb/image/upload/t_cover_big/" +
-							game.extPosterPath +
-							".jpg"}
-					/>
+					{#if game.extPosterPath}
+						<PosterImage
+							src={"https://images.igdb.com/igdb/image/upload/t_cover_big/" +
+								game.extPosterPath +
+								".jpg"}
+						/>
+					{/if}
 
 					<div class="details">
 						<Title
