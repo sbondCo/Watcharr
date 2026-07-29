@@ -18,14 +18,37 @@ import {
 import { Reqer, ReqerError } from "./fetch";
 import { notify, unNotify } from "./notify";
 import { browser } from "$app/environment";
+import { page } from "$app/state";
 const { MODE } = import.meta.env;
 
-export const baseURL =
-	MODE === "development"
-		? browser
-			? `${location.protocol}//${location.hostname}:3080/api`
-			: "http://127.0.0.1:3080/api"
-		: "/api";
+export const baseURL: string = ((): string => {
+	try {
+		// NOTE: Only the values returned under the if (browser) statements matter,
+		// since we only use this variable from the browser, I've left in the
+		// untested fallbacks anyways.
+		if (MODE === "development") {
+			if (browser) {
+				return `${location.protocol}//${location.hostname}:3080/api`;
+			}
+			return "http://127.0.0.1:3080/api";
+		}
+		// prod
+		if (browser) {
+			return `${location.origin}/api`;
+		}
+		return `${page.url.origin}/api`;
+	} catch (err) {
+		console.error("api: baseURL construction failed!", err);
+		if (browser) {
+			notify({
+				type: "error",
+				text: "Failed to create your API baseURL. Please look in console for more details.",
+			});
+		}
+		// This return value won't work, but just returning something anyways.
+		return "/api";
+	}
+})();
 console.log("api: baseURL constructed:", baseURL);
 
 export const req = new Reqer(baseURL, true);
