@@ -42,7 +42,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each allUsers as u}
+					{#each allUsers as u (u.id)}
 						{@const joinDate = new Date(u.createdAt)}
 						<tr>
 							<td class="username">

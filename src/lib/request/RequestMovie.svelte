@@ -28,13 +28,11 @@
 
 	let servarrs: RadarrSettingsPublicResponseResult[] | undefined = $state();
 	let selectedServarrIndex: number = $state(0);
-	let inputsDisabled = true;
 	let selectedServerCfg: RadarrTestResponse | undefined = $state();
 	let addRequestRunning = $state(false);
 
 	async function getServers() {
 		try {
-			inputsDisabled = true;
 			const r = await req.get<RadarrSettingsPublicResponseResult[]>("/arr/rad");
 			if (r?.length > 0) {
 				servarrs = r;
@@ -42,7 +40,6 @@
 			} else {
 				notify({ text: "No servers found", type: "error" });
 			}
-			inputsDisabled = false;
 			processOriginalRequest();
 		} catch (err) {
 			console.error("Failed to get servers!", err);
@@ -52,10 +49,8 @@
 
 	async function getConfig(name: string) {
 		try {
-			inputsDisabled = true;
 			const r = await req.get<RadarrTestResponse>(`/arr/rad/config/${name}`);
 			selectedServerCfg = r;
-			inputsDisabled = false;
 		} catch (err) {
 			console.error("Failed to get config!", err);
 			notify({ text: "Failed to load config", type: "error" });

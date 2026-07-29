@@ -25,6 +25,7 @@
 	} from "@/lib/util/paginatedLoader.svelte.js";
 	import PageTitle from "@/lib/generic/PageTitle.svelte";
 	import MediaTypeFilter from "@/lib/search/MediaTypeFilter.svelte";
+	import { resolve } from "$app/paths";
 
 	let { data } = $props();
 
@@ -95,7 +96,7 @@
 		}
 		// Running the goto will cause afterNavigate hook to be called,
 		// which will run a fresh search, so nothing else to do here.
-		goto(`?${curLocation.searchParams.toString()}`);
+		goto(resolve(`/search?${curLocation.searchParams.toString()}`));
 	}
 
 	async function searchUsers(query: string) {
@@ -148,7 +149,7 @@
 		curLocation.searchParams.delete("preferMyList");
 		// Running the goto will cause afterNavigate hook to be called,
 		// which will run a fresh search, so nothing else to do here.
-		goto(`?${curLocation.searchParams.toString()}`);
+		goto(resolve(`/search?${curLocation.searchParams.toString()}`));
 	}
 </script>
 

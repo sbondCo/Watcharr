@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from "svelte/legacy";
-
 	import type { Tag } from "@/types";
 
 	interface Props {
@@ -9,24 +7,12 @@
 	}
 
 	let { tag, onClick = undefined! }: Props = $props();
-
-	let tagBtn: HTMLButtonElement = $state();
-
-	run(() => {
-		if (tagBtn) {
-			if (tag.color) {
-				tagBtn.style.color = tag.color;
-			}
-			if (tag.bgColor) {
-				tagBtn.style.background = tag.bgColor;
-			}
-		}
-	});
 </script>
 
 <button
-	bind:this={tagBtn}
-	class={`plain`}
+	class="plain"
+	style:color={tag.color}
+	style:background={tag.bgColor}
 	onclick={() => {
 		if (typeof onClick === "function") {
 			onClick();

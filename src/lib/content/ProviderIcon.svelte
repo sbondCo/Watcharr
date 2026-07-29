@@ -164,7 +164,7 @@
 		</svg>
 	</a>
 {:else if i === "Steam"}
-	<a aria-label={i} {href} target="_blank">
+	<a aria-label={i} {href} rel="external" target="_blank">
 		<svg
 			width="30"
 			height="30"
@@ -177,7 +177,7 @@
 		</svg>
 	</a>
 {:else if i === "GOG"}
-	<a aria-label={i} {href} target="_blank">
+	<a aria-label={i} {href} rel="external" target="_blank">
 		<svg
 			width="30"
 			height="30"
@@ -190,7 +190,7 @@
 		</svg>
 	</a>
 {:else if i === "Itch"}
-	<a aria-label={i} {href} target="_blank">
+	<a aria-label={i} {href} rel="external" target="_blank">
 		<svg
 			width="30"
 			height="30"

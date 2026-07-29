@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { store } from "@/store.svelte";
 	import Menu from "../Menu.svelte";
+	import { resolve } from "$app/paths";
 
 	interface Props {
-		close: () => {};
+		close: () => void;
 	}
 
 	let { close }: Props = $props();
@@ -13,9 +14,11 @@
 	{#if store.follows?.length > 0}
 		<h4 class="norm sm-caps">following</h4>
 		<div class="list">
-			{#each store.follows as f}
+			{#each store.follows as f (f.followedUser.id)}
 				<a
-					href="/lists/{f.followedUser.id}/{f.followedUser.username}"
+					href={resolve(
+						`/lists/${f.followedUser.id}/${f.followedUser.username}`,
+					)}
 					onclick={() => close()}
 				>
 					{f.followedUser.username}

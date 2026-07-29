@@ -139,7 +139,7 @@ export async function updateWatched(
 
 		// Add new watched item
 		notify({ id: nid, text: `Adding`, type: "loading" });
-		let reqBody: WatchedAddRequest = {
+		const reqBody: WatchedAddRequest = {
 			contentType: opts.contentType,
 			status: opts.status,
 			rating: opts.rating,

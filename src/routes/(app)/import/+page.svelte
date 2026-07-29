@@ -25,8 +25,8 @@
 		TodoMoviesMovie,
 	} from "@/types";
 	import Icon from "@/lib/Icon.svelte";
+	import { resolve } from "$app/paths";
 
-	let isDragOver = $state(false);
 	let isLoading = $state(false);
 
 	function processFiles(
@@ -42,7 +42,6 @@
 					text: "File not found in dropped items. Please try again or refresh.",
 					time: 6000,
 				});
-				isDragOver = false;
 				return;
 			}
 			isLoading = true;
@@ -61,7 +60,6 @@
 					text: "Text list export must be a .txt file!",
 				});
 				isLoading = false;
-				isDragOver = false;
 				return;
 			}
 			if ((type === "tmdb" || type === "imdb") && file.type !== "text/csv") {
@@ -70,7 +68,6 @@
 					text: `${type} export must be a .csv file!`,
 				});
 				isLoading = false;
-				isDragOver = false;
 				return;
 			}
 			const r = new FileReader();
@@ -82,7 +79,7 @@
 							data: r.result.toString(),
 							type,
 						};
-						goto("/import/process");
+						goto(resolve("/import/process"));
 					}
 				},
 				false,
@@ -139,7 +136,6 @@
 					text: "File not found in dropped items. Please try again or refresh.",
 					time: 6000,
 				});
-				isDragOver = false;
 				return;
 			}
 			if (files.length !== 3) {
@@ -148,7 +144,6 @@
 					text: "You must select or drop 3 files: history.csv, ratings.csv and watchlist.csv.",
 					time: 6000,
 				});
-				isDragOver = false;
 				return;
 			}
 			isLoading = true;
@@ -173,7 +168,6 @@
 					text: "Failed to read history, ratings or watchlist. Ensure you have attached 3 files: history.csv, ratings.csv and watchlist.csv.",
 					time: 6000,
 				});
-				isDragOver = false;
 				isLoading = false;
 				return;
 			}
@@ -254,7 +248,7 @@
 				data: JSON.stringify(toImport),
 				type: "movary",
 			};
-			goto("/import/process");
+			goto(resolve("/import/process"));
 		} catch (err) {
 			isLoading = false;
 			notify({ type: "error", text: "Failed to read files!" });
@@ -272,7 +266,6 @@
 					text: "File not found in dropped items. Please try again or refresh.",
 					time: 6000,
 				});
-				isDragOver = false;
 				return;
 			}
 			isLoading = true;
@@ -291,12 +284,12 @@
 					text: "Must be a Watcharr JSON export file",
 				});
 				isLoading = false;
-				isDragOver = false;
 				return;
 			}
 			// Build toImport array
 			const toImport: ImportedList[] = [];
 			const fileText = await readFile(new FileReader(), file);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const jsonData = JSON.parse(fileText) as any[];
 			let invalidStructureErrorOccurred = false;
 			let processedGame = false;
@@ -356,7 +349,7 @@
 				data: JSON.stringify(toImport),
 				type: "watcharr",
 			};
-			goto("/import/process");
+			goto(resolve("/import/process"));
 		} catch (err) {
 			isLoading = false;
 			notify({ type: "error", text: "Failed to read file!" });
@@ -374,7 +367,6 @@
 					text: "File not found in dropped items. Please try again or refresh.",
 					time: 6000,
 				});
-				isDragOver = false;
 				return;
 			}
 			isLoading = true;
@@ -393,7 +385,6 @@
 					text: "Your MyAnimeList export should be a xml file.",
 				});
 				isLoading = false;
-				isDragOver = false;
 				return;
 			}
 			const r = new FileReader();
@@ -405,7 +396,7 @@
 							data: r.result.toString(),
 							type: "myanimelist",
 						};
-						goto("/import/process");
+						goto(resolve("/import/process"));
 					}
 				},
 				false,
@@ -428,7 +419,6 @@
 					text: "File not found in dropped items. Please try again or refresh.",
 					time: 6000,
 				});
-				isDragOver = false;
 				return;
 			}
 			isLoading = true;
@@ -448,13 +438,13 @@
 					text: "Must be a Ryot JSON export file",
 				});
 				isLoading = false;
-				isDragOver = false;
 				return;
 			}
 
 			// Build toImport array
 			const toImport: ImportedList[] = [];
 			const fileText = await readFile(new FileReader(), file);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const jsonData = JSON.parse(fileText)["metadata"] as any[];
 			for (const v of jsonData) {
 				if (
@@ -522,13 +512,15 @@
 
 					datesWatched:
 						v.lot === "movie" && v.seen_history?.length
-							? v.seen_history.map((seen: any) => new Date(seen.ended_on))
+							? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+								v.seen_history.map((seen: any) => new Date(seen.ended_on))
 							: [],
 
 					// Episode ratings are on a separate field: "reviews"
 					watchedEpisodes:
 						v.lot === "show"
-							? v.seen_history?.map((episode: any) => ({
+							? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+								v.seen_history?.map((episode: any) => ({
 									status: episode.progress === "100" ? "FINISHED" : "WATCHING",
 
 									// Linear :( search the reviews for a match
@@ -537,6 +529,7 @@
 											Number(
 												(
 													v.reviews?.find(
+														// eslint-disable-next-line @typescript-eslint/no-explicit-any
 														(review: any) =>
 															review.show_season_number ===
 																episode.show_season_number &&
@@ -562,7 +555,7 @@
 				data: JSON.stringify(toImport),
 				type: "ryot",
 			};
-			goto("/import/process");
+			goto(resolve("/import/process"));
 		} catch (err) {
 			isLoading = false;
 			notify({ type: "error", text: "Failed to read file!" });
@@ -580,7 +573,6 @@
 					text: "File not found in dropped items. Please try again or refresh.",
 					time: 6000,
 				});
-				isDragOver = false;
 				return;
 			}
 			isLoading = true;
@@ -600,7 +592,6 @@
 					text: "Must be a TodoMovies backup file (.todomovieslist)",
 				});
 				isLoading = false;
-				isDragOver = false;
 				return;
 			}
 
@@ -614,7 +605,6 @@
 					text: "Failed to read export file. Ensure you have attached the correct file.",
 					time: 6000,
 				});
-				isDragOver = false;
 				isLoading = false;
 				return;
 			}
@@ -680,7 +670,7 @@
 				type: "todomovies",
 			};
 
-			goto("/import/process");
+			goto(resolve("/import/process"));
 		} catch (err) {
 			isLoading = false;
 			notify({ type: "error", text: "Failed to read files!" });
@@ -690,7 +680,7 @@
 
 	onMount(() => {
 		if (!localStorage.getItem("token")) {
-			goto("/login");
+			goto(resolve("/login"));
 		}
 	});
 </script>
@@ -725,7 +715,7 @@
 					filesSelected={(f) => processFiles(f, "tmdb")}
 				/>
 
-				<button class="plain" onclick={() => goto("/import/trakt")}>
+				<button class="plain" onclick={() => goto(resolve("/import/trakt"))}>
 					<Icon i="trakt" wh="100%" />
 					<h4 class="norm">Trakt Import</h4>
 				</button>

@@ -56,7 +56,7 @@
 			pos: "bot",
 		}}
 	>
-		<Icon i={"tag"} wh={19} />
+		<Icon i="tag" wh={19} />
 	</button>
 
 	{#if menuOpen}

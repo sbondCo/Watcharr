@@ -1,13 +1,9 @@
 import {
 	UserPermission,
 	type Icon,
-	type MediaType,
 	type TMDBContentCreditsCrew,
 	type TokenClaims,
-	type Watched,
 	type WatchedStatus,
-	type WatchedEpisode,
-	type WatchedSeason,
 } from "@/types";
 
 export const watchedStatuses: {
@@ -174,6 +170,7 @@ export function parseTokenPayload(): TokenClaims | undefined {
 		if (!token) return;
 		return JSON.parse(atob(token.split(".")[1])) as TokenClaims;
 	} catch (err) {
+		console.error("parseTokenPayload: Failed.", err);
 		return;
 	}
 }

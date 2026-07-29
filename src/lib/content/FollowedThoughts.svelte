@@ -37,7 +37,7 @@
 {:then fts}
 	{#if fts?.length > 0}
 		<HorizontalList title="Followed Thoughts">
-			{#each fts as ft}
+			{#each fts as ft (ft.followedUser.id)}
 				<button
 					class={["thoughts-card plain", ft.thoughts ? "" : "no-thoughts"].join(
 						" ",

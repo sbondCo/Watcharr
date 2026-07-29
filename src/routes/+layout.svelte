@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Notifications from "@/lib/notifications.svelte";
+	import Notifications from "@/lib/Notifications.svelte";
 	import { onMount } from "svelte";
 	import { pwaInfo } from "virtual:pwa-info";
 

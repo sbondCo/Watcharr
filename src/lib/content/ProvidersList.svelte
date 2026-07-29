@@ -13,14 +13,16 @@
 
 {#if providers?.length > 0}
 	<div class="streaming-providers">
-		{#each providers as provider}
+		{#each providers as provider (provider.name)}
 			<ProviderIcon i={provider.name} href={provider.link} wh={40} />
 		{/each}
 		{#if fullListLink}
 			<!-- The fullListLink is important for TMDB data, we always show it
 		 as "JustWatch" (set in component prop) because that data requires
 		 attribution! but also it helps support tmdb in some way. -->
-			<a href={fullListLink} target="_blank">{fullListLinkText}</a>
+			<a href={fullListLink} rel="external" target="_blank">
+				{fullListLinkText}
+			</a>
 		{/if}
 	</div>
 {/if}

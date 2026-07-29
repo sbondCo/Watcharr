@@ -23,7 +23,6 @@
 	let { user = $bindable(), onClose }: Props = $props();
 
 	let error: string | undefined = $state();
-	let formDisabled = false;
 
 	// Things we have changed
 	let changedPerms = false;
@@ -51,7 +50,7 @@
 					text: "Changes saved!",
 				});
 				onClose();
-			} catch (err: any) {
+			} catch (err) {
 				console.error("Failed to save user!", err);
 				error = ReqerError.getMsg(err, "Failed to save");
 			}
@@ -65,7 +64,7 @@
 </script>
 
 <Modal
-	title={`Edit User`}
+	title="Edit User"
 	desc={`Configuring ${user.username}`}
 	maxWidth="500px"
 	{onClose}

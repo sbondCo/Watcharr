@@ -38,6 +38,7 @@
 	import { activityRemovedHook } from "@/lib/activity.js";
 	import CountAsPlayModal from "@/lib/watched/CountAsPlayModal.svelte";
 	import { createSignal, type Signal } from "@/lib/util/signal.js";
+	import Genres from "@/lib/content/Genres.svelte";
 
 	let { data } = $props();
 
@@ -45,7 +46,7 @@
 	let jellyfinUrl: string | undefined = $state();
 	let arrRequestButtonComp: ArrRequestButton | undefined = $state();
 	let show: Media | undefined = $state();
-	let pageError: Error | undefined = $state();
+	let pageError: unknown | undefined = $state();
 	let countAsPlayModalSignal: Signal<boolean> | undefined = $state();
 
 	$effect(() => {
@@ -73,7 +74,7 @@
 				} else {
 					show = undefined;
 				}
-			} catch (err: any) {
+			} catch (err) {
 				show = undefined;
 				pageError = err;
 			}
@@ -170,17 +171,7 @@
 						/>
 
 						<span class="quick-info">
-							{#if show.genres && show.genres?.length > 0}
-								<div>
-									{#each show.genres as g, i}
-										<span
-											>{g.name}{i !== show.genres.length - 1 ? ", " : ""}</span
-										>
-									{/each}
-								</div>
-							{:else}
-								<span>Unknown Genres</span>
-							{/if}
+							<Genres genres={show.genres} />
 						</span>
 
 						<ExpandableText text={show.summary} style="margin-bottom: 18px;" />
@@ -188,7 +179,12 @@
 						<div class="btns">
 							<ViewTrailerButton videos={show.videos} />
 							{#if jellyfinUrl}
-								<a class="btn" href={jellyfinUrl} target="_blank">
+								<a
+									class="btn"
+									href={jellyfinUrl}
+									rel="external"
+									target="_blank"
+								>
 									{#if localStorage.getItem("useEmby")}
 										<Icon i="emby" wh={14} />Play On Emby
 									{:else}
@@ -288,7 +284,7 @@
 
 				{#if credits.cast?.length > 0}
 					<HorizontalList title="Cast">
-						{#each credits.cast?.slice(0, 50) as cast}
+						{#each credits.cast?.slice(0, 50) as cast (cast.id)}
 							<PersonPoster
 								id={cast.id}
 								name={cast.name}

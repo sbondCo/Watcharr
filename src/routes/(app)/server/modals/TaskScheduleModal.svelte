@@ -98,7 +98,7 @@
 		{#if taskSchedule?.length <= 0}
 			<Spinner />
 		{:else}
-			{#each taskSchedule as task}
+			{#each taskSchedule as task (task.name)}
 				{@const nextRun = toRelativeTime(
 					(new Date(task.nextRun).getTime() - now) / 1000,
 				)}

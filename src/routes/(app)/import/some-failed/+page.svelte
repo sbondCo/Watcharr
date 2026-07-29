@@ -12,6 +12,7 @@
 
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import { store } from "@/store.svelte";
 	import { ImportResponseType, type ImportedList } from "@/types";
 	import { onMount } from "svelte";
@@ -36,7 +37,7 @@
 			}
 			console.log("failedlen", failed.length);
 		} else {
-			goto("/import");
+			goto(resolve("/import"));
 		}
 	});
 </script>
@@ -51,6 +52,8 @@
 
 		{#if failed}
 			<ul>
+				<!-- TODO: Fix this to use a keyed each somehow (need unique id for key) -->
+				<!-- eslint-disable-next-line svelte/require-each-key -->
 				{#each failed as l}
 					<li>
 						<span>{l.name}</span>

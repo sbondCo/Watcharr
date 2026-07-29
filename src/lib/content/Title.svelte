@@ -23,7 +23,7 @@
 <span class="title-container">
 	<span class="title">
 		{#if homepage}
-			<a href={homepage} target="_blank">{titleSafe}</a>
+			<a href={homepage} rel="external" target="_blank">{titleSafe}</a>
 		{:else}
 			<span class="t">{titleSafe}</span>
 		{/if}

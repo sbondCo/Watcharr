@@ -12,7 +12,7 @@
 
 {#if similar?.length > 0}
 	<HorizontalList title="Similar">
-		{#each similar as content, i}
+		{#each similar as content, i (content.ids)}
 			<Poster media={content} small={true} bind:watched={similar[i].watched} />
 		{/each}
 	</HorizontalList>

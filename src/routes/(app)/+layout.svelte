@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { afterNavigate, goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import Error from "@/lib/Error.svelte";
 	import Icon from "@/lib/Icon.svelte";
@@ -22,6 +23,7 @@
 		UserSettings,
 	} from "@/types";
 	import { onMount } from "svelte";
+	import { SvelteURLSearchParams } from "svelte/reactivity";
 	interface Props {
 		children?: import("svelte").Snippet;
 	}
@@ -41,7 +43,7 @@
 
 	function handleProfileClick() {
 		if (!localStorage.getItem("token")) {
-			goto("/login");
+			goto(resolve("/login"));
 		} else {
 			closeAllSubMenus("sub");
 			subMenuShown = !subMenuShown;
@@ -78,7 +80,7 @@
 				const query = target?.value.trim();
 				if (!query) return;
 				const currentSearchType = page.url.searchParams.get("type");
-				const searchParams = new URLSearchParams({
+				const searchParams = new SvelteURLSearchParams({
 					query: encodeURIComponent(query),
 					preferMyList: "true",
 				});
@@ -92,7 +94,7 @@
 				// Using autofocus seems to work. Disables after goto runs.
 				// https://github.com/sbondCo/Watcharr/issues/169
 				target.autofocus = true;
-				goto(`/search?${searchParams.toString()}`).then(() => {
+				goto(resolve(`/search?${searchParams.toString()}`)).then(() => {
 					// Use mainSearchEl if nav not split, otherwise use ev target.
 					if (!document.body.classList.contains("split-nav") && mainSearchEl) {
 						mainSearchEl.focus();
@@ -110,7 +112,7 @@
 	async function getInitialData() {
 		if (!localStorage.getItem("token")) {
 			console.warn("getInitialData: No token found, redirecting to login!");
-			goto("/login?again=1");
+			goto(resolve("/login?again=1"));
 			return;
 		}
 		const [u, s, f, fo, ts] = await Promise.all([
@@ -238,7 +240,7 @@
 <nav bind:this={navEl}>
 	<div class="wrapper">
 		<div class="left-side">
-			<a href="/">
+			<a href={resolve("/")}>
 				<span class="large">Watcharr</span>
 				<span class="small">W</span>
 			</a>
@@ -330,7 +332,7 @@
 			{#if tagMenuShown}
 				<TagMenu
 					onTagClick={(tag) => {
-						goto(`/tag/${tag.id}`);
+						goto(resolve(`/tag/${tag.id}`));
 						tagMenuShown = false;
 					}}
 					showManageBtn={true}
@@ -338,7 +340,7 @@
 			{/if}
 			<button
 				class="plain other discover"
-				onclick={() => goto("/discover")}
+				onclick={() => goto(resolve("/discover"))}
 				use:tooltip={{ text: "Discover", pos: "bot" }}
 			>
 				<Icon i="compass" wh={26} />

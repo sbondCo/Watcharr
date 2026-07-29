@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { preventDefault } from "svelte/legacy";
-
 	import Modal from "@/lib/Modal.svelte";
 	import type { ChangePasswordForm } from "@/types";
 	import { changeUserPassword } from "$lib/util/api";
@@ -21,7 +19,7 @@
 		}),
 	}: Props = $props();
 
-	let error: string = $state();
+	let error: string | undefined = $state();
 	let errs: string[] = [];
 
 	function checkForm() {
@@ -67,6 +65,7 @@
 	}
 
 	function handleSubmit(ev: SubmitEvent) {
+		ev.preventDefault();
 		checkForm();
 		if (!error) {
 			console.log(
@@ -101,7 +100,7 @@
 	{#if error}
 		<span class="error">{error}!</span>
 	{/if}
-	<form onsubmit={preventDefault(handleSubmit)}>
+	<form onsubmit={handleSubmit}>
 		<div class="form-input-container">
 			<div class="form-input">
 				<!--Hiding username info as it is still useful to password managers-->

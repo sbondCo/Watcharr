@@ -23,6 +23,7 @@
 	import Error from "@/lib/Error.svelte";
 	import PersonPoster from "@/lib/poster/PersonPoster.svelte";
 	import FilterDropDown from "./FilterDropDown.svelte";
+	import { resolve } from "$app/paths";
 
 	const scroll = infScroll({ callback: onScrollToBottom });
 	const dataLoader = paginatedLoader<Media, undefined>(load);
@@ -73,7 +74,7 @@
 		}
 		// Running the goto will cause afterNavigate hook to be called,
 		// which will run a fresh search, so nothing else to do here.
-		goto(`?${curLocation.searchParams.toString()}`);
+		goto(resolve(`/discover?${curLocation.searchParams.toString()}`));
 	}
 
 	onMount(() => {

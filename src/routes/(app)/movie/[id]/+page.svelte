@@ -30,6 +30,7 @@
 	import WatchedDeleteBtn from "@/lib/content/WatchedDeleteBtn.svelte";
 	import TopCrewList from "@/lib/content/TopCrewList.svelte";
 	import { activityRemovedHook } from "@/lib/activity.js";
+	import Genres from "@/lib/content/Genres.svelte";
 
 	let { data } = $props();
 
@@ -37,7 +38,7 @@
 	let jellyfinUrl: string | undefined = $state();
 	let arrRequestButtonComp: ArrRequestButton | undefined = $state();
 	let movie: Media | undefined = $state();
-	let pageError: Error | undefined = $state();
+	let pageError: unknown | undefined = $state();
 
 	$effect(() => {
 		(async () => {
@@ -64,7 +65,7 @@
 				} else {
 					movie = undefined;
 				}
-			} catch (err: any) {
+			} catch (err) {
 				movie = undefined;
 				pageError = err;
 			}
@@ -148,17 +149,7 @@
 						<span class="quick-info">
 							<span>{movie.runtime} min</span>
 
-							{#if movie.genres && movie.genres?.length > 0}
-								<div>
-									{#each movie.genres as g, i}
-										<span>
-											{g.name}{i !== movie.genres.length - 1 ? ", " : ""}
-										</span>
-									{/each}
-								</div>
-							{:else}
-								<span>Unknown Genres</span>
-							{/if}
+							<Genres genres={movie.genres} />
 						</span>
 
 						<ExpandableText text={movie.summary} style="margin-bottom: 18px;" />
@@ -166,7 +157,12 @@
 						<div class="btns">
 							<ViewTrailerButton videos={movie.videos} />
 							{#if jellyfinUrl}
-								<a class="btn" href={jellyfinUrl} target="_blank">
+								<a
+									class="btn"
+									href={jellyfinUrl}
+									rel="external"
+									target="_blank"
+								>
 									{#if localStorage.getItem("useEmby")}
 										<Icon i="emby" wh={14} />Play On Emby
 									{:else}
@@ -263,7 +259,7 @@
 
 				{#if credits.cast?.length > 0}
 					<HorizontalList title="Cast">
-						{#each credits.cast?.slice(0, 50) as cast}
+						{#each credits.cast?.slice(0, 50) as cast (cast.id)}
 							<PersonPoster
 								id={cast.id}
 								name={cast.name}

@@ -2,11 +2,12 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import Icon from "@/lib/Icon.svelte";
-	import { type AvailableAuthProviders } from "@/types";
+	import { type AuthResponse, type AvailableAuthProviders } from "@/types";
 	import { noAuthReq } from "@/lib/util/api";
 	import { onMount } from "svelte";
 	import { notify, unNotify } from "@/lib/util/notify";
 	import { ReqerError } from "@/lib/util/fetch";
+	import { resolve } from "$app/paths";
 
 	let error: string | undefined = $state();
 	let login = $state(true);
@@ -19,7 +20,7 @@
 
 	onMount(() => {
 		if (localStorage.getItem("token")) {
-			goto("/");
+			goto(resolve("/"));
 		}
 
 		if (!error && page.url.searchParams.get("again")) {
@@ -57,7 +58,7 @@
 			console.log(
 				"AvailableAuth: Server is in setup.. navigating to web setup page.",
 			);
-			goto("/setup");
+			goto(resolve("/setup"));
 		}
 		availableProviders = r.available;
 		apHeader = availableProviders?.includes("header");
@@ -90,11 +91,11 @@
 
 		const nid = notify({ text: "Logging in", type: "loading" });
 		noAuthReq
-			.post(`/auth${login ? `/${customAuthEP}` : "/register"}`, {
+			.post<AuthResponse>(`/auth${login ? `/${customAuthEP}` : "/register"}`, {
 				username: user,
 				password: pass,
 			})
-			.then((resp: any) => {
+			.then((resp) => {
 				if (resp?.token) {
 					console.log("Received token... logging in.");
 					localStorage.setItem("token", resp.token);
@@ -103,7 +104,7 @@
 					} else {
 						localStorage.removeItem("useEmby");
 					}
-					goto("/");
+					goto(resolve("/"));
 					notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
 				}
 			})
@@ -127,15 +128,15 @@
 				}
 				const nid = notify({ text: "Logging in", type: "loading" });
 				noAuthReq
-					.post("/auth/plex", {
+					.post<AuthResponse>("/auth/plex", {
 						token,
 						clientIdentifier: p.clientId,
 					})
-					.then((resp: any) => {
+					.then((resp) => {
 						if (resp?.token) {
 							console.log("Received token... logging in.");
 							localStorage.setItem("token", resp.token);
-							goto("/");
+							goto(resolve("/"));
 							notify({ id: nid, text: `Welcome!`, type: "success" });
 						}
 					})
@@ -154,12 +155,12 @@
 	function proxyLogin(auto = false) {
 		const nid = notify({ text: "Logging in", type: "loading" });
 		noAuthReq
-			.post(`/auth/proxy`)
-			.then((resp: any) => {
+			.post<AuthResponse>(`/auth/proxy`)
+			.then((resp) => {
 				if (resp?.token) {
 					console.log("Received token... logging in.");
 					localStorage.setItem("token", resp.token);
-					goto("/");
+					goto(resolve("/"));
 					notify({ id: nid, text: `Welcome!`, type: "success" });
 				}
 			})

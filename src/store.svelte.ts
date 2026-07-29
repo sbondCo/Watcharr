@@ -13,15 +13,17 @@ import type { Notification } from "./lib/util/notify";
 import { browser } from "$app/environment";
 import { toggleTheme } from "./lib/util/theme";
 
-export const defaultSort = ["DATEADDED", "DOWN"];
+type ActiveSort = [string, string | undefined] | [];
+
+export const defaultSort: ActiveSort = ["DATEADDED", "DOWN"];
 
 interface Store {
 	userInfo: PrivateUser | undefined;
 	userSettings: UserSettings | undefined;
 	notifications: Notification[];
-	activeSort: string[];
+	activeSort: ActiveSort;
 	activeFilters: Filters;
-	sortAndFiltersForQueryParams: {};
+	sortAndFiltersForQueryParams: object;
 	appTheme: Theme;
 	importedList:
 		| {
@@ -67,7 +69,7 @@ const _store: Store = $state({
 
 const updateSortAndFiltersForQueryParams = () => {
 	try {
-		const qp: any = {};
+		const qp: Record<string, string> = {};
 		if (store.activeSort?.length === 2) {
 			qp.sort = store.activeSort[0];
 			qp.sortDir = store.activeSort[1] === "UP" ? "asc" : "desc";
@@ -280,7 +282,7 @@ function rehydrateStore() {
 			$state.snapshot(store.appTheme),
 		);
 	} else {
-		let defTheme: Theme = "system";
+		const defTheme: Theme = "system";
 		_store.appTheme = defTheme;
 		toggleTheme(defTheme, false);
 		console.debug(

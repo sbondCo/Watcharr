@@ -49,6 +49,7 @@ export default function tooltip(node: HTMLElement, opts: ToolTipOptions) {
 	return {
 		update(opts: ToolTipOptions) {
 			text = opts.text;
+			pos = opts.pos || "left";
 			condition = opts.condition ?? true;
 		},
 		destroy() {

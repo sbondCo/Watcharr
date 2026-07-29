@@ -36,7 +36,7 @@
 		ev.stopPropagation();
 		statusesShown = !statusesShown;
 	}}
-	onmouseleave={(ev) => {
+	onmouseleave={() => {
 		statusesShown = false;
 	}}
 	use:tooltip={{
@@ -58,13 +58,13 @@
 			direction,
 		].join(" ")}
 	>
-		{#each Object.entries(watchedStatuses) as [statusName, icon]}
+		{#each Object.entries(watchedStatuses) as [statusName, icon] (statusName)}
 			<!-- svelte-ignore node_invalid_placement_ssr -->
 			<button
 				class="plain{status && status !== statusName ? ' not-active' : ''}"
-				onclick={() => handleStatusClick(statusName)}
+				onclick={() => handleStatusClick(statusName as WatchedStatus)}
 				use:tooltip={{
-					text: toUnderstandableStatus(statusName, isForGame),
+					text: toUnderstandableStatus(statusName as WatchedStatus, isForGame),
 				}}
 			>
 				<Icon i={icon} />

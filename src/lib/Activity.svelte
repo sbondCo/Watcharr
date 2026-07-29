@@ -17,7 +17,7 @@
 	let { activity = undefined, onRemoved }: Props = $props();
 
 	let clickedActivity: Activity | undefined = $state();
-	let groupedActivities: { [index: string]: any } = $derived(
+	let groupedActivities: { [index: string]: Activity[] } = $derived(
 		getGroupedActivity(activity),
 	);
 
@@ -168,7 +168,7 @@
 		const a = activities?.sort(
 			(a, b) => getCreatedAtVis(b) - getCreatedAtVis(a),
 		);
-		let grouped: { [index: string]: any } = {};
+		let grouped: { [index: string]: Activity[] } = {};
 		if (a) {
 			for (let i = 0; i < a.length; i++) {
 				const activity = a[i];
@@ -231,10 +231,10 @@
 	<h2>Activity</h2>
 	{#if groupedActivities && Object.keys(groupedActivities).length > 0}
 		<ul>
-			{#each Object.keys(groupedActivities) as k}
+			{#each Object.keys(groupedActivities) as k (k)}
 				<h3>{k}</h3>
 
-				{#each groupedActivities[k] as a}
+				{#each groupedActivities[k] as a (a.id)}
 					{@const d = new Date(getCreatedAtVis(a))}
 					<li>
 						<button class="plain" onclick={() => openEditor(a)}>

@@ -75,6 +75,10 @@ export enum UserType {
 	Proxy = 3,
 }
 
+export interface AuthResponse {
+	token: string;
+}
+
 interface dbModel {
 	id: number;
 	createdAt: string;
@@ -172,6 +176,21 @@ export interface WatchedUpdateRequest {
 
 export interface WatchedUpdateResponse {
 	newActivity: Activity;
+}
+
+export type WatchedSort =
+	"DATEADDED" | "LASTCHANGED" | "LASTFIN" | "RATING" | "ALPHA" | "DATERELEASED";
+
+export type SortDirection = "asc" | "desc";
+
+export interface WatchedGetPageRequest {
+	// Sorting type.
+	sort?: WatchedSort;
+	// Sorting direction (asc or desc).
+	sortDir?: SortDirection;
+	// Filtering options.
+	type?: SupportedMedia[];
+	status?: WatchedStatus[];
 }
 
 export interface ActivityUpdateRequest {
@@ -567,15 +586,15 @@ export interface ManagedUser {
 }
 
 export interface ServerConfig {
-	DEFAULT_COUNTRY: string;
-	JELLYFIN_HOST: string;
+	DEFAULT_COUNTRY?: string;
+	JELLYFIN_HOST?: string;
 	USE_EMBY: boolean;
 	SIGNUP_ENABLED: boolean;
-	TMDB_KEY: string;
-	PLEX_HOST: string;
-	PLEX_MACHINE_ID: string;
-	SONARR: SonarrSettings[];
-	RADARR: RadarrSettings[];
+	TMDB_KEY?: string;
+	PLEX_HOST?: string;
+	PLEX_MACHINE_ID?: string;
+	SONARR?: SonarrSettings[];
+	RADARR?: RadarrSettings[];
 	TWITCH?: TwitchSettings;
 	DEBUG: boolean;
 }
@@ -656,7 +675,7 @@ export interface QualityProfile {
 			source: string;
 			resolution: number;
 		};
-		items: any[];
+		items: unknown[];
 		allowed: boolean;
 		name?: string;
 		id?: number;
@@ -668,7 +687,7 @@ export interface RootFolder {
 	path: string;
 	accessible: boolean;
 	freeSpace: number;
-	unmappedFolders: any[];
+	unmappedFolders: unknown[];
 	id: number;
 }
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from "$app/paths";
 	import Error from "@/lib/Error.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import RequestMovie from "@/lib/request/RequestMovie.svelte";
@@ -69,7 +70,7 @@
 			<Spinner />
 		{:then}
 			<div class="request-container">
-				{#each allRequests as r}
+				{#each allRequests as r (r.id)}
 					<div class={`request ${r.content.type}`}>
 						<div class="poster">
 							<img
@@ -89,7 +90,9 @@
 							<h2 class="norm">
 								<a
 									data-sveltekit-preload-data="tap"
-									href={`/${r.content.type}/${r.content.tmdbId}`}
+									href={r.content.type !== "tv_episode"
+										? resolve(`/${r.content.type}/${r.content.tmdbId}`)
+										: undefined}
 									class="plain"
 								>
 									{r.content.title}

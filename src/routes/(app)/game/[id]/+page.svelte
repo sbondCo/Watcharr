@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Spinner from "@/lib/Spinner.svelte";
-	import HorizontalList from "@/lib/HorizontalList.svelte";
 	import { type Media, type WatchedStatus } from "@/types";
 	import Activity from "@/lib/Activity.svelte";
 	import Title from "@/lib/content/Title.svelte";
@@ -15,15 +14,16 @@
 	import ViewTrailerButton from "@/lib/content/ViewTrailerButton.svelte";
 	import ProvidersList from "@/lib/content/ProvidersList.svelte";
 	import PosterImage from "@/lib/content/PosterImage.svelte";
-	import Poster from "@/lib/poster/Poster.svelte";
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
 	import WatchedDeleteBtn from "@/lib/content/WatchedDeleteBtn.svelte";
 	import { activityRemovedHook } from "@/lib/activity.js";
+	import Genres from "@/lib/content/Genres.svelte";
+	import SimilarContent from "@/lib/content/SimilarContent.svelte";
 
 	let { data } = $props();
 
 	let game: Media | undefined = $state();
-	let pageError: Error | undefined = $state();
+	let pageError: unknown | undefined = $state();
 	let backdropSrc = $derived.by(() => {
 		const base = "https://images.igdb.com/igdb/image/upload/t_1080p/";
 
@@ -43,7 +43,7 @@
 					return;
 				}
 				game = await req.get<Media>(`/game/${data.gameId}`);
-			} catch (err: any) {
+			} catch (err) {
 				game = undefined;
 				pageError = err;
 			}
@@ -114,31 +114,9 @@
 						/>
 
 						<span class="quick-info">
-							{#if game.genres && game.genres?.length > 0}
-								<div>
-									{#each game.genres as g, i}
-										<span
-											>{g.name}{i !== game.genres.length - 1 ? ", " : ""}</span
-										>
-									{/each}
-								</div>
-							{:else}
-								<span>Unknown Genres</span>
-							{/if}
+							<Genres genres={game.genres} />
 							<span></span>
-							<div>
-								{#if game.gameModes && game.gameModes?.length > 0}
-									{#each game.gameModes as g, i}
-										<span
-											>{g.name}{i !== game.gameModes.length - 1
-												? ", "
-												: ""}</span
-										>
-									{/each}
-								{:else}
-									<span>Unknown Game Modes</span>
-								{/if}
-							</div>
+							<Genres genres={game.gameModes} />
 						</span>
 
 						<ExpandableText text={game.summary} style="margin-bottom: 18px;" />
@@ -200,15 +178,7 @@
 			{/if}
 
 			{#if game.similar && game.similar?.length > 0}
-				<HorizontalList title="Similar">
-					{#each game.similar as g, i}
-						<Poster
-							media={g}
-							bind:watched={game.similar[i].watched}
-							small={true}
-						/>
-					{/each}
-				</HorizontalList>
+				<SimilarContent similar={game.similar} />
 			{/if}
 
 			{#if game.watched}

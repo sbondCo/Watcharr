@@ -8,6 +8,7 @@
 	import { clearWatcharrData } from "../logout";
 	import { notify } from "../util/notify";
 	import AboutModal from "./AboutModal.svelte";
+	import { resolve } from "$app/paths";
 
 	let user = $derived(store.userInfo);
 	let proxyUserLogoutShown = $state(false);
@@ -20,23 +21,23 @@
 			return;
 		}
 		clearWatcharrData();
-		goto("/login");
+		goto(resolve("/login"));
 	}
 
 	function profile() {
-		goto("/profile");
+		goto(resolve("/profile"));
 	}
 
 	function serverSettings() {
-		goto("/server");
+		goto(resolve("/server"));
 	}
 
 	function userManagement() {
-		goto("/manage_users");
+		goto(resolve("/manage_users"));
 	}
 
 	function requestManagement() {
-		goto("/arr_requests");
+		goto(resolve("/arr_requests"));
 	}
 
 	function shareWatchedList() {

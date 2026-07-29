@@ -8,7 +8,7 @@
 
 	let { type = "wrapped", children }: Props = $props();
 
-	let ulEl: HTMLUListElement = $state();
+	let ulEl: HTMLUListElement | undefined = $state();
 
 	onMount(() => {
 		if (ulEl) {

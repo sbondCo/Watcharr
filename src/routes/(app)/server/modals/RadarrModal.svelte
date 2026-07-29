@@ -98,7 +98,7 @@
 					text: isEditing ? "Changes saved!" : "Server added successfully!",
 				});
 				onClose();
-			} catch (err: any) {
+			} catch (err) {
 				console.error("Failed to save server!", err);
 				error = ReqerError.getMsg(
 					err,
@@ -116,7 +116,7 @@
 				text: "Removed server",
 			});
 			onClose();
-		} catch (err: any) {
+		} catch (err) {
 			console.error("Failed to remove server!", err);
 			error = ReqerError.getMsg(err, "Failed to remove");
 		}

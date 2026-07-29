@@ -33,7 +33,7 @@
 			<span>{allCheckBox}</span>
 		</div>
 	{/if}
-	{#each options as o}
+	{#each options as o (o.id)}
 		<div>
 			<Checkbox
 				name={o.displayValue}

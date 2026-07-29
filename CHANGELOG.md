@@ -10,8 +10,11 @@ These changes are awaiting release:
 
 - Login: Display error when request to get available auth providers fails.
 - Removed some legacy code that still thought there was a `store.watchedList`.
+- DropDown: Fix whole page scrolling when pressing letter to scroll to first relevant dropdown item (only the dropdown list should scroll now, which is less jarring).
 
 ## Maintenance
+
+I have been slacking in this department, so there has been a lot of house cleaning.
 
 - Package.json: Use exact version for all packages.
 - .npmrc: Enable `ignore-scripts` (still on npm 11) and set `min-release-age=14`.
@@ -26,8 +29,19 @@ These changes are awaiting release:
   - prettier-plugin-svelte: 3.4.0 -> 4.1.1
   - svelte-eslint-parser: 0.42.0 -> 1.8.0
   - typescript-eslint: 8.32.1 -> 8.63.0
+  - @sveltejs/adapter-node: 5.2.12 -> 5.5.7
+  - @sveltejs/kit: 2.21.0 -> 2.69.3
+  - @vite-pwa/sveltekit: 0.6.6 -> 1.1.0
+  - sass: 1.97.3 -> 1.101.0
+  - svelte: 5.17.3 -> 5.56.4
+  - svelte-check: 4.1.3 -> 4.7.2
+  - svelte-preprocess: 6.0.3 -> 6.0.5
+  - typescript: 5.8.3 -> 6.0.3 (going to give v7 time to mature before I try it)
+  - vite: 6.3.5 -> 8.1.4
 - Added devDependencies: `@eslint/js` (new eslint has split this module out into a new package) and `globals` (as a result of new eslint architecture, we now have this as a direct dev dependency).
 - ESLint: Migrate to flat config: I ran `npx sv add eslint` and modified the eslint.config.js it generated to line up better with our old one and work a bit better (i think) with our normal ts files. Also set `ecmaVersion` to `latest`, previously was `2020`.
+- Moved `env.d.ts` to `src` directory (which is covered by svelte-kits include) so that we can drop the custom `include` in our `tsconfig.json` (which when out of sync with the generated tsconfig by svelte-kit can lead to headaches because it's not immediately obvious, so this change will eliminate that dev time footgun).
+- Fixed lots of new (and probably old which may not have been applying with the old bad config) {ts,svelte} eslint rules, improving code quality.
 
 # [4.1.1] - 2026-07-26T02:00:00Z
 
