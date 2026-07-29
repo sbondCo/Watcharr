@@ -10,7 +10,7 @@
 </script>
 
 <div class="creators">
-	{#each topCrew as crew (crew.id)}
+	{#each topCrew as crew (crew.credit_id)}
 		<div>
 			<a href={resolve(`/person/${crew.id}`)}>{crew.name}</a>
 			<span>{crew.job}</span>
