@@ -19,7 +19,7 @@ Each line is a new entry. The name of the content (show/movie) must be provided.
 Optionally provide:
 
 - The year in brackets (eg: `(1983)`)
-- A rating (out of 10) in square brackets (eg: `[4]`)
+- A rating (out of 10) in square brackets (eg: `[4]` or `[6.9]`)
 
 ```
 <name> [(<year>)]

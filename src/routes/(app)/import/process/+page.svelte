@@ -78,7 +78,8 @@
 			// which we assume is the release year of content.
 			const yearRegex = new RegExp(/\([0-9]{4}\)/);
 			// Matches supported rating between square brackets.
-			const ratingRegex = new RegExp(/\[([0-9]|10)\]/);
+			// Supports (the sixes can be any number 0-9): [6], [6.6], and [10].
+			const ratingRegex = new RegExp(/\[([0-9](?:\.[0-9])?|10)\]/);
 			const s = list.data.split("\n");
 			for (let i = 0; i < s.length; i++) {
 				if (!s[i]) {
@@ -96,7 +97,7 @@
 				// Try extracting a rating.
 				const rating = l.name.match(ratingRegex);
 				if (rating && rating.length > 0) {
-					console.log("found rating", rating);
+					// console.log("found rating", rating);
 					l.rating = Number(rating[1]);
 					if (typeof rating.index === "number") {
 						l.name = l.name.slice(0, rating.index);
@@ -743,6 +744,7 @@
 											type="number"
 											min="0"
 											max="10"
+											step="0.1"
 											disabled={isImporting}
 										/>
 									</td>
