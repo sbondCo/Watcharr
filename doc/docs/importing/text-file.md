@@ -14,7 +14,12 @@ Hopefully it is useful for others with similar files or in scenarios where its t
 
 ## Format
 
-Each line is a new entry. The name of the content (show/movie) must be provided, the year can be optionally provided surrounded by brackets. Doesn't support specifying if name is for a show or movie, the importer will only automatically match on full search matches, if there are multiple results, you will be asked to pick the correct one.
+Each line is a new entry. The name of the content (show/movie) must be provided. Doesn't support specifying if name is for a show or movie, the importer will only automatically match on full search matches, if there are multiple results, you will be asked to pick the correct one.
+
+Optionally provide:
+
+- The year in brackets (eg: `(1983)`)
+- A rating (out of 10) in square brackets (eg: `[4]`)
 
 ```
 <name> [(<year>)]
