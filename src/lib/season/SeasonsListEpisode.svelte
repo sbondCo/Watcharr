@@ -130,6 +130,12 @@
 						>{ep.runtime} min</span
 					>
 				{/if}
+				{#if !isUnaired && airDate}
+					<!-- Air date for aired episodes. -->
+					<span class="episode-air-date">
+						{toRelativeDate(airDate)}
+					</span>
+				{/if}
 			</span>
 			{#if ep.vote_count <= 0 && isUnaired}
 				<!-- If no votes (and subsequently no rating) AND episode is
@@ -145,6 +151,7 @@
 			{/if}
 		</div>
 		{#if isUnaired && airDate}
+			<!-- Air date for unaired episodes. -->
 			<span class="episode-air-date">
 				Airs on {toRelativeDate(airDate)}
 			</span>

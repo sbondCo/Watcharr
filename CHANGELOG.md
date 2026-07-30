@@ -6,6 +6,7 @@ These changes are awaiting release:
 
 - HTTP Requests: Replace `axios` with `Fetch`.
 - Show `Airs On` date for episodes that have yet to air (thanks [@KarpachMarko]!).
+- Show `Aired Date` for episodes.
 
 ## Fixed
 
