@@ -23,6 +23,10 @@ These changes are awaiting release:
   - Mark import item as failed correctly when error is thrown from doImport.
   - Make the table horizontally scrollable when necessary (instead of just cutting off the end).
 
+## Docs
+
+- Update text import docs to show support for parsing ratings.
+
 ## Maintenance
 
 I have been slacking in this department, so there has been a lot of house cleaning.
