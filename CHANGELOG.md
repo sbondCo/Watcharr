@@ -5,6 +5,7 @@ These changes are awaiting release:
 ## Changed
 
 - HTTP Requests: Replace `axios` with `Fetch`.
+- Show `Airs On` date for episodes that have yet to air (thanks [@KarpachMarko]!).
 
 ## Fixed
 
@@ -1858,3 +1859,4 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@4qu4r1um]: https://github.com/4qu4r1um
 [@goestav]: https://github.com/goestav
 [@tonghuaroot]: https://github.com/tonghuaroot
+[@KarpachMarko]: https://github.com/KarpachMarko
