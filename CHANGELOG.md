@@ -2,6 +2,10 @@
 
 These changes are awaiting release:
 
+## New
+
+- Import(text list): Support providing a rating in square brackets.
+
 ## Changed
 
 - HTTP Requests: Replace `axios` with `Fetch`.
