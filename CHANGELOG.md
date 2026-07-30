@@ -26,6 +26,7 @@ These changes are awaiting release:
 ## Docs
 
 - Update text import docs to show support for parsing ratings.
+- Update `installation/for-development` guide (commands were outdated).
 
 ## Maintenance
 

@@ -17,7 +17,7 @@ This section assumes you will be forking the repo on Github, of course you can a
 
    ![Fork button](./img/forking-repo.png)
 
-2. Get the code by cloning your fork
+2. Get the code by cloning your fork (edit the command and replace `<your username>` with your GitHub username or replace the whole url with the correct one pointing to your fork).
 
    ```bash
    git clone https://github.com/<your username>/Watcharr.git && \
@@ -34,7 +34,7 @@ You only need to do this once after pulling the codebase for the first time, and
    npm i
    ```
 
-2. Install server dependencies (in the `server` folder)
+2. Install server dependencies (in the `server` folder). Go does this automatically if you try starting the server and it notices you don't have them.
 
    ```
    go get .
@@ -44,16 +44,18 @@ You only need to do this once after pulling the codebase for the first time, and
 
 To run the code, you will need to open up two terminals, one for the frontend and the other for the backend.
 
+We have `Makefile`s for the frontend and server, so you can simply call `make` in each directory. Most Linux distros (as far as I know) include `make`, so you don't need to install anything. If you don't have `make`, you can either install it (lookup how to get "GNU Make" for your specific OS) OR you can just look inside the Makefiles and manually run the first command in each.
+
 1. Run the frontend (first terminal, in the project root folder)
 
    ```bash
-   npm run dev
+   make
    ```
 
-2. Run the server (second terminal, in the project root folder)
+2. Run the server (second terminal, in the `server` folder)
 
    ```bash
-   npm run server
+   make
    ```
 
    **Note:** If you're using Windows, running the server can be a little more complicated. You can follow this: https://github.com/sbondCo/Watcharr/discussions/430#discussioncomment-8894110 which amounts to these steps (the first 3 steps only need to be done once):
