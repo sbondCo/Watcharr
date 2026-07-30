@@ -4,14 +4,14 @@ These changes are awaiting release:
 
 ## New
 
-- Import(text list): Support providing a rating (out of 10, supporting decimals) in square brackets.
+- Show `Airs On` date for episodes that have yet to air (thanks [@KarpachMarko]!).
+- Show `Aired Date` for episodes.
+- Import: Add `rating` column.
+- Import(text list): Support parsing a rating (out of 10, supporting decimals) in square brackets.
 
 ## Changed
 
 - HTTP Requests: Replace `axios` with `Fetch`.
-- Show `Airs On` date for episodes that have yet to air (thanks [@KarpachMarko]!).
-- Show `Aired Date` for episodes.
-- Import: Add a `rating` column.
 
 ## Fixed
 
