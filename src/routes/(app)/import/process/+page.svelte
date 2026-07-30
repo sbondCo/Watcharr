@@ -77,18 +77,33 @@
 			// Regex to match a year in between brackets,
 			// which we assume is the release year of content.
 			const yearRegex = new RegExp(/\([0-9]{4}\)/);
+			// Matches supported rating between square brackets.
+			const ratingRegex = new RegExp(/\[([0-9]|10)\]/);
 			const s = list.data.split("\n");
 			for (let i = 0; i < s.length; i++) {
-				const el = s[i]?.trim();
-				if (el) {
-					const l: ImportedList = { name: el };
-					const year = el.match(yearRegex);
-					if (year && year.length > 0) {
-						l.year = Number(year[0].replaceAll(/\(|\)/g, ""));
-						l.name = l.name?.replace(yearRegex, "").trim();
-					}
-					rList.push(l);
+				if (!s[i]) {
+					console.warn("getList: ignoring entry:", s[i]);
+					continue;
 				}
+				const l: ImportedList = {};
+				l.name = s[i];
+				// Try extracting a year.
+				const year = l.name.match(yearRegex);
+				if (year && year.length > 0) {
+					l.year = Number(year[0].replaceAll(/\(|\)/g, ""));
+					l.name = l.name.replace(yearRegex, "");
+				}
+				// Try extracting a rating.
+				const rating = l.name.match(ratingRegex);
+				if (rating && rating.length > 0) {
+					console.log("found rating", rating);
+					l.rating = Number(rating[1]);
+					if (typeof rating.index === "number") {
+						l.name = l.name.slice(0, rating.index);
+					}
+				}
+				l.name = l.name.trim();
+				rList.push(l);
 			}
 		} else if (list?.type === "tmdb") {
 			importText = "TMDB";
