@@ -4,7 +4,7 @@ These changes are awaiting release:
 
 ## New
 
-- Import(text list): Support providing a rating in square brackets.
+- Import(text list): Support providing a rating (out of 10, supporting decimals) in square brackets.
 
 ## Changed
 
