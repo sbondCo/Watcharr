@@ -41,6 +41,7 @@
 	let isImporting = $state(false);
 	let importText = $state("");
 	let cancelled = $state(false);
+	let importTableEl: HTMLTableElement | undefined = $state();
 
 	onDestroy(() => {
 		cancelled = true;
@@ -432,8 +433,47 @@
 		rList = rList;
 	}
 
+	/**
+	 * inputs that have a `data-validateme` property, we will validate with the
+	 * browser.
+	 */
+	function validatableInputsAreValid(): boolean {
+		if (!importTableEl) {
+			// Somehow the table isn't defined, i guess allow continuing so we
+			// dont block.
+			console.warn("validatableInputsAreValid: There is no table element.");
+			return true;
+		}
+		const inputs = importTableEl.querySelectorAll<HTMLInputElement>(
+			"tbody input[data-validateme]",
+		);
+		if (inputs.length <= 0) {
+			console.warn("validatableInputsAreValid: No inputs found.");
+			return true;
+		}
+		for (const input of inputs) {
+			if (!input.reportValidity()) {
+				// Stop the for loop after we hit one input that is invalid.
+				// No need to continue after we know at least one is invalid.
+				console.error("validatableInputsAreValid: Invalid input found.", input);
+				return false;
+			}
+		}
+		return true;
+	}
+
 	async function startImport() {
-		console.log(rList);
+		if (!validatableInputsAreValid()) {
+			console.warn(
+				"startImport: Some fields are not valid, not starting import!",
+			);
+			notify({
+				type: "error",
+				text: "An error was found in one of the inputs, please fix it and try starting the import again.",
+			});
+			return;
+		}
+		console.log("startImport: Starting.", rList);
 		isImporting = true;
 		window.scrollTo(0, 0);
 		for (let i = 0; i < rList.length; i++) {
@@ -446,6 +486,7 @@
 				console.log("Importing", li);
 				await doImport(li);
 			} catch (err) {
+				li.state = ImportResponseType.IMPORT_FAILED;
 				console.error("Failed to import item:", li, "reason:", err);
 				notify({
 					type: "error",
@@ -596,131 +637,150 @@
 						You can fix any failed imports when the process completes.
 					{/if}
 				</h5>
-				<table class={isImporting ? "is-importing" : ""}>
-					<thead>
-						<tr>
-							{#if isImporting}
-								<th class="loading-col"></th>
-							{/if}
-							<th>Name</th>
-							<th>Year</th>
-							<th>Type</th>
-							<th>Status</th>
-							{#if !isImporting}
-								<th></th>
-							{/if}
-						</tr>
-					</thead>
-					<tbody>
-						<!-- TODO: Fix this to use a keyed each somehow (need unique id for key) -->
-						<!-- eslint-disable-next-line svelte/require-each-key -->
-						{#each rList as l}
+				<div class="table-wrap">
+					<table
+						bind:this={importTableEl}
+						class={isImporting ? "is-importing" : ""}
+					>
+						<thead>
 							<tr>
 								{#if isImporting}
-									<td class="icon-cell">
-										<div>
-											{#if !l.state}
-												<SpinnerTiny />
-											{:else if l.state === ImportResponseType.IMPORT_SUCCESS}
-												<Icon i="check" wh={22} />
-											{:else if l.state === ImportResponseType.IMPORT_NOTFOUND}
-												<Icon i="close" wh={22} />
-											{:else if l.state === ImportResponseType.IMPORT_FAILED}
-												<Icon i="close" wh={22} />
-											{:else if l.state === ImportResponseType.IMPORT_EXISTS}
-												<Icon i="check" wh={22} />
-											{/if}
-										</div>
-									</td>
+									<th class="loading-col"></th>
 								{/if}
-								<td>
-									<input
-										class="plain"
-										bind:value={l.name}
-										disabled={isImporting}
-									/>
-								</td>
-								<td class="year">
-									<input
-										class="plain"
-										bind:value={l.year}
-										placeholder="YYYY"
-										type="number"
-										disabled={isImporting}
-									/>
-								</td>
-								<td class="type">
-									<DropDown
-										options={dropDownSupportedTypes}
-										bind:active={l.type}
-										placeholder="Type"
-										blendIn={true}
-										disabled={isImporting}
-									/>
-								</td>
-								<td class="type">
-									<DropDown
-										options={[
-											"FINISHED",
-											"PLANNED",
-											"WATCHING",
-											"HOLD",
-											"DROPPED",
-										]}
-										bind:active={l.status}
-										placeholder="Status"
-										blendIn={true}
-										disabled={isImporting}
-									/>
-								</td>
+								<th>Name</th>
+								<th>Year</th>
+								<th>Type</th>
+								<th>Status</th>
+								<th>Rating</th>
 								{#if !isImporting}
-									<td>
-										<button
-											class="plain delete"
-											onclick={() => {
-												removeRow(l);
-											}}
-										>
-											<Icon i="close" wh="25" />
-										</button>
-									</td>
+									<th></th>
 								{/if}
 							</tr>
-						{/each}
-						{#if !isImporting}
-							<tr>
-								<td
-									><input
-										class="plain"
-										placeholder="Name"
-										onblur={addRow}
-									/></td
-								>
-								<td class="year">
-									<input
-										class="plain"
-										id="addYear"
-										placeholder="YYYY"
-										type="number"
-									/>
-								</td>
-								<td class="type"></td>
-								<td class="status"></td>
-								<td></td>
-							</tr>
-						{/if}
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							<!-- TODO: Fix this to use a keyed each somehow (need unique id for key) -->
+							<!-- eslint-disable-next-line svelte/require-each-key -->
+							{#each rList as l}
+								<tr>
+									{#if isImporting}
+										<td class="icon-cell">
+											<div>
+												{#if !l.state}
+													<SpinnerTiny />
+												{:else if l.state === ImportResponseType.IMPORT_SUCCESS}
+													<Icon i="check" wh={22} />
+												{:else if l.state === ImportResponseType.IMPORT_NOTFOUND}
+													<Icon i="close" wh={22} />
+												{:else if l.state === ImportResponseType.IMPORT_FAILED}
+													<Icon i="close" wh={22} />
+												{:else if l.state === ImportResponseType.IMPORT_EXISTS}
+													<Icon i="check" wh={22} />
+												{/if}
+											</div>
+										</td>
+									{/if}
+									<td class="name">
+										<input
+											class="plain"
+											bind:value={l.name}
+											disabled={isImporting}
+										/>
+									</td>
+									<td class="year">
+										<input
+											class="plain"
+											bind:value={l.year}
+											placeholder="YYYY"
+											type="number"
+											disabled={isImporting}
+										/>
+									</td>
+									<td class="type">
+										<DropDown
+											options={dropDownSupportedTypes}
+											bind:active={l.type}
+											placeholder="Type"
+											blendIn={true}
+											disabled={isImporting}
+										/>
+									</td>
+									<td class="status">
+										<DropDown
+											options={[
+												"FINISHED",
+												"PLANNED",
+												"WATCHING",
+												"HOLD",
+												"DROPPED",
+											]}
+											bind:active={l.status}
+											placeholder="Status"
+											blendIn={true}
+											disabled={isImporting}
+										/>
+									</td>
+									<td class="rating">
+										<input
+											class="plain"
+											data-validateme
+											bind:value={l.rating}
+											placeholder="0"
+											type="number"
+											min="0"
+											max="10"
+											disabled={isImporting}
+										/>
+									</td>
+									{#if !isImporting}
+										<td>
+											<button
+												class="plain delete"
+												onclick={() => {
+													removeRow(l);
+												}}
+											>
+												<Icon i="close" wh="25" />
+											</button>
+										</td>
+									{/if}
+								</tr>
+							{/each}
+							{#if !isImporting}
+								<tr>
+									<td
+										><input
+											class="plain"
+											placeholder="Name"
+											onblur={addRow}
+										/></td
+									>
+									<td class="year">
+										<input
+											class="plain"
+											id="addYear"
+											placeholder="YYYY"
+											type="number"
+										/>
+									</td>
+									<td class="type"></td>
+									<td class="status"></td>
+									<td class="rating"></td>
+									<td></td>
+								</tr>
+							{/if}
+						</tbody>
+					</table>
+				</div>
 				<div class="btns">
-					<button onclick={() => goto(resolve("/import"))}
-						><Icon i="arrow" />Back</button
-					>
-					<button onclick={() => changeAllStatuses()} disabled={isImporting}>
-						Change Statuses
+					<button onclick={() => goto(resolve("/import"))}>
+						<Icon i="arrow" />Back
 					</button>
-					<button onclick={startImport} disabled={isImporting}
-						>Start Importing</button
-					>
+					<button onclick={() => changeAllStatuses()} disabled={isImporting}>
+						Change All Statuses
+					</button>
+					<button onclick={startImport} disabled={isImporting}>
+						Start Importing
+					</button>
 				</div>
 				{#if typeof changeAllStatusesModalCb === "function"}
 					<Modal
@@ -817,8 +877,7 @@
 			display: flex;
 			flex-flow: column;
 			min-width: 400px;
-			max-width: 600px;
-			overflow: hidden;
+			max-width: 1200px;
 
 			@media screen and (max-width: 410px) {
 				min-width: 100%;
@@ -826,14 +885,28 @@
 		}
 	}
 
+	.table-wrap {
+		overflow: auto;
+		margin-top: 20px;
+	}
+
 	table {
 		td {
+			&.name {
+				width: 100%;
+			}
+
 			&.year {
 				width: 70px;
+				min-width: 67px;
 			}
 
 			&.type {
 				width: 120px;
+			}
+
+			&.rating {
+				width: 82px;
 			}
 		}
 	}

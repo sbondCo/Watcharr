@@ -7,6 +7,7 @@ These changes are awaiting release:
 - HTTP Requests: Replace `axios` with `Fetch`.
 - Show `Airs On` date for episodes that have yet to air (thanks [@KarpachMarko]!).
 - Show `Aired Date` for episodes.
+- Import: Add a `rating` column.
 
 ## Fixed
 
@@ -14,6 +15,9 @@ These changes are awaiting release:
 - Removed some legacy code that still thought there was a `store.watchedList`.
 - DropDown: Fix whole page scrolling when pressing letter to scroll to first relevant dropdown item (only the dropdown list should scroll now, which is less jarring).
 - Media pages: Only show PosterImage if we have a poster path.
+- Import:
+  - Mark import item as failed correctly when error is thrown from doImport.
+  - Make the table horizontally scrollable when necessary (instead of just cutting off the end).
 
 ## Maintenance
 

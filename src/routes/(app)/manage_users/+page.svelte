@@ -89,6 +89,8 @@
 
 <style lang="scss">
 	table {
+		margin-top: 20px;
+
 		td {
 			padding: 12px 15px;
 			word-wrap: anywhere;
