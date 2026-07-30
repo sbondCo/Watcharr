@@ -525,7 +525,7 @@
 		} else {
 			notify({
 				type: "success",
-				text: "All content successfully imported! Try refreshing if you are missing data.",
+				text: "All content successfully imported!",
 				time: 15000,
 			});
 			goto(resolve("/"));
