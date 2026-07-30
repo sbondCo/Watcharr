@@ -11,6 +11,7 @@
 	import { store } from "@/store.svelte";
 	import { removeWatchedEpisode, updateWatchedEpisode } from "./api";
 	import { onMount } from "svelte";
+	import { toRelativeDate } from "../util/helpers";
 
 	interface Props {
 		ep: TMDBSeasonDetailsEpisode;
@@ -29,9 +30,22 @@
 
 	let isHidden: boolean = $state(!!store?.userSettings?.hideSpoilers);
 
-	const isUnaired = $derived(
-		ep.air_date && new Date(ep.air_date).getTime() > new Date().getTime(),
-	);
+	const airDate: Date | undefined = $derived.by(() => {
+		if (!ep.air_date) {
+			return;
+		}
+		const d = new Date(ep.air_date);
+		if (isNaN(d.getTime())) {
+			return;
+		}
+		return d;
+	});
+	const isUnaired: boolean = $derived.by(() => {
+		if (!airDate) {
+			return false;
+		}
+		return airDate.getTime() > new Date().getTime();
+	});
 
 	/**
 	 * Re-sets `isHidden` state.
@@ -117,18 +131,23 @@
 					>
 				{/if}
 			</span>
-			<span
-				class="rating"
-				title={`TMDB Rating: ${ep.vote_average} out of 10 (based on ${ep.vote_count} votes)`}
-			>
-				<span>*</span>
-				{Math.round(ep.vote_average * 10) / 10}
-			</span>
+			{#if ep.vote_count <= 0 && isUnaired}
+				<!-- If no votes (and subsequently no rating) AND episode is
+				 unaired, no need to show the rating star. -->
+			{:else}
+				<span
+					class="rating"
+					title={`TMDB Rating: ${ep.vote_average} out of 10 (based on ${ep.vote_count} votes)`}
+				>
+					<span>*</span>
+					{Math.round(ep.vote_average * 10) / 10}
+				</span>
+			{/if}
 		</div>
-		{#if isUnaired}
-			<span class="episode-air-date"
-				>Airs on {new Date(ep.air_date).toLocaleDateString()}</span
-			>
+		{#if isUnaired && airDate}
+			<span class="episode-air-date">
+				Airs on {toRelativeDate(airDate)}
+			</span>
 		{/if}
 		<span class="overview">{ep.overview}</span>
 	</div>
