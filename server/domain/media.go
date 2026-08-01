@@ -63,6 +63,9 @@ type Media struct {
 	// A link to the database we are using that lists all providers with max details.
 	// (especially for TMDB since it's data from JustWatch isn't available to us).
 	ProvidersFullListLink string `json:"providersFullListLink,omitempty"`
+	// Status of the media (released, ended, etc).
+	// Depending on media type, this will contain different values.
+	Status string `json:"status,omitempty"`
 
 	//
 	// Properties only for movies/tv.
@@ -78,6 +81,9 @@ type Media struct {
 	// details for the server to fetch fully/verify, i.e fetched full details from
 	// tmdb again to verify if show is anime itself, etc).
 	IsShowAnime bool `json:"isShowAnime,omitempty"`
+	// Last release date.
+	// Currently used for tv shows so frontend can display its end date.
+	ReleaseDateLast time.Time `json:"releaseDateLast,omitzero"`
 
 	//
 	// Properties only for Games

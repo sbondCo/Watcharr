@@ -335,6 +335,7 @@ func (t *TMDBContentDetails) AsMedia() domain.Media {
 		Rating:          uint(t.VoteAverage * 10),
 		RatingCount:     uint(t.VoteCount),
 		Homepage:        t.Homepage,
+		Status:          t.Status,
 	}
 	// Genres
 	for _, g := range t.Genres {
@@ -533,6 +534,13 @@ func (t *TMDBShowDetails) AsMedia() domain.Media {
 		m.ReleaseDate = releaseDate
 	} else {
 		slog.Error("AsMedia: Failed to parse release date", "name", m.Name, "error", err)
+	}
+	if releaseDateLast, err := time.Parse("2006-01-02", t.LastAirDate); err == nil {
+		m.ReleaseDateLast = releaseDateLast
+	} else {
+		slog.Error("AsMedia: Failed to parse release date last",
+			"name", m.Name,
+			"error", err)
 	}
 	// IDS
 	m.IDs.IMDB = t.ExternalIds.ImdbID

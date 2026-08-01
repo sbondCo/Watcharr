@@ -335,6 +335,8 @@ export interface Media {
 	watched?: Watched;
 	similar?: Media[];
 	releaseDate?: string;
+	releaseDateLast?: string;
+	status?: string;
 	extBackdropPath?: string;
 	genres?: MediaGenre[];
 	homepage?: string;

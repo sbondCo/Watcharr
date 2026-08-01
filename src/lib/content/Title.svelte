@@ -1,22 +1,30 @@
 <script lang="ts">
+	import { dateValid } from "../util/date";
+
 	interface Props {
 		homepage?: string;
 		title?: string;
 		releaseDate?: Date;
+		endDate?: Date;
 		voteAverage?: number;
 		voteCount?: number;
 	}
 
-	let { homepage, title, releaseDate, voteAverage, voteCount }: Props =
+	let { homepage, title, releaseDate, endDate, voteAverage, voteCount }: Props =
 		$props();
 
 	// if voteAvg bigger than 10, it is out of 100, so no need to * by 10
-	const vote = voteAverage
-		? Math.round(voteAverage > 10 ? voteAverage : voteAverage * 10) / 10
-		: 0;
+	const vote = $derived(
+		voteAverage
+			? Math.round(voteAverage > 10 ? voteAverage : voteAverage * 10) / 10
+			: 0,
+	);
 	const titleSafe = $derived(title ? title : "Unknown Title");
 	const releaseYear = $derived(
-		releaseDate ? releaseDate.getFullYear() : undefined,
+		dateValid(releaseDate) ? releaseDate.getFullYear() : undefined,
+	);
+	const endYear = $derived(
+		dateValid(endDate) ? endDate.getFullYear() : undefined,
 	);
 </script>
 
@@ -28,7 +36,13 @@
 			<span class="t">{titleSafe}</span>
 		{/if}
 		{#if releaseYear}
-			<span class="year">{releaseYear}</span>
+			<span class="year">
+				<!--First span ends on the line with the #if so there's no whitespace-->
+				<span title={releaseDate?.toLocaleDateString()}>{releaseYear}</span
+				>{#if endYear && endYear != releaseYear}
+					<span title={endDate?.toLocaleDateString()}>-{endYear}</span>
+				{/if}
+			</span>
 		{/if}
 	</span>
 	<span
