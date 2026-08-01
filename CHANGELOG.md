@@ -9,6 +9,7 @@ These changes are awaiting release:
 - Import: Add `rating` column.
 - Import(text list): Support parsing a rating (out of 10, supporting decimals) in square brackets.
 - Show `End Year` for TV Shows that have ended or been canceled.
+- Add full release date and last release date to their respective year elements as titles (browser tooltip).
 
 ## Changed
 
