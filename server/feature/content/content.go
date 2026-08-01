@@ -282,7 +282,10 @@ func (s *Service) GetOrCacheContent(contentType entity.ContentType, tmdbId int) 
 }
 
 // TMDB Multi Search.
-func (s *Service) SearchContent(query string, pageNum int) (tmdb.TMDBSearchMultiResponse, error) {
+func (s *Service) SearchContent(
+	query string,
+	pageNum int,
+) (tmdb.TMDBSearchMultiResponse, error) {
 	resp := new(tmdb.TMDBSearchMultiResponse)
 	if pageNum == 0 {
 		pageNum = 1
@@ -292,16 +295,27 @@ func (s *Service) SearchContent(query string, pageNum int) (tmdb.TMDBSearchMulti
 		slog.Debug("SearchContent: Returning cache.")
 		return *resp, nil
 	}
-	err := s.tmdb.Request("/search/multi", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	err := s.tmdb.Request(
+		"/search/multi",
+		map[string]string{
+			"query": query,
+			"page":  strconv.Itoa(pageNum),
+		},
+		&resp)
 	if err != nil {
-		slog.Error("Failed to complete multi search request!", "error", err.Error())
-		return tmdb.TMDBSearchMultiResponse{}, errors.New("failed to complete multi search request")
+		slog.Error("Failed to complete multi search request!",
+			"error", err.Error())
+		return tmdb.TMDBSearchMultiResponse{},
+			errors.New("failed to complete multi search request")
 	}
 	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
-func (s *Service) SearchMovies(query string, pageNum int) (tmdb.TMDBSearchMoviesResponse, error) {
+func (s *Service) SearchMovies(
+	query string,
+	pageNum int,
+) (tmdb.TMDBSearchMoviesResponse, error) {
 	resp := new(tmdb.TMDBSearchMoviesResponse)
 	if pageNum == 0 {
 		pageNum = 1
@@ -311,10 +325,18 @@ func (s *Service) SearchMovies(query string, pageNum int) (tmdb.TMDBSearchMovies
 		slog.Debug("SearchMovies: Returning cache.")
 		return *resp, nil
 	}
-	err := s.tmdb.Request("/search/movie", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	err := s.tmdb.Request(
+		"/search/movie",
+		map[string]string{
+			"query": query,
+			"page":  strconv.Itoa(pageNum),
+		},
+		&resp)
 	if err != nil {
-		slog.Error("Failed to complete movie search request!", "error", err.Error())
-		return tmdb.TMDBSearchMoviesResponse{}, errors.New("failed to complete movie search request")
+		slog.Error("Failed to complete movie search request!",
+			"error", err.Error())
+		return tmdb.TMDBSearchMoviesResponse{},
+			errors.New("failed to complete movie search request")
 	}
 	for i := range resp.Results {
 		resp.Results[i].MediaType = "movie"
@@ -323,7 +345,10 @@ func (s *Service) SearchMovies(query string, pageNum int) (tmdb.TMDBSearchMovies
 	return *resp, nil
 }
 
-func (s *Service) SearchTv(query string, pageNum int) (tmdb.TMDBSearchShowsResponse, error) {
+func (s *Service) SearchTv(
+	query string,
+	pageNum int,
+) (tmdb.TMDBSearchShowsResponse, error) {
 	resp := new(tmdb.TMDBSearchShowsResponse)
 	if pageNum == 0 {
 		pageNum = 1
@@ -333,10 +358,18 @@ func (s *Service) SearchTv(query string, pageNum int) (tmdb.TMDBSearchShowsRespo
 		slog.Debug("SearchTv: Returning cache.")
 		return *resp, nil
 	}
-	err := s.tmdb.Request("/search/tv", map[string]string{"query": query, "page": strconv.Itoa(pageNum)}, &resp)
+	err := s.tmdb.Request(
+		"/search/tv",
+		map[string]string{
+			"query": query,
+			"page":  strconv.Itoa(pageNum),
+		},
+		&resp)
 	if err != nil {
-		slog.Error("Failed to complete tv search request!", "error", err.Error())
-		return tmdb.TMDBSearchShowsResponse{}, errors.New("failed to complete tv search request")
+		slog.Error("Failed to complete tv search request!",
+			"error", err.Error())
+		return tmdb.TMDBSearchShowsResponse{},
+			errors.New("failed to complete tv search request")
 	}
 	for i := range resp.Results {
 		resp.Results[i].MediaType = "tv"
@@ -345,7 +378,10 @@ func (s *Service) SearchTv(query string, pageNum int) (tmdb.TMDBSearchShowsRespo
 	return *resp, nil
 }
 
-func (s *Service) SearchPeople(query string, pageNum int) (tmdb.TMDBSearchPeopleResponse, error) {
+func (s *Service) SearchPeople(
+	query string,
+	pageNum int,
+) (tmdb.TMDBSearchPeopleResponse, error) {
 	resp := new(tmdb.TMDBSearchPeopleResponse)
 	if pageNum == 0 {
 		pageNum = 1
@@ -355,13 +391,18 @@ func (s *Service) SearchPeople(query string, pageNum int) (tmdb.TMDBSearchPeople
 		slog.Debug("SearchPeople: Returning cache.")
 		return *resp, nil
 	}
-	err := s.tmdb.Request("/search/person", map[string]string{
-		"query": query,
-		"page":  strconv.Itoa(pageNum),
-	}, &resp)
+	err := s.tmdb.Request(
+		"/search/person",
+		map[string]string{
+			"query": query,
+			"page":  strconv.Itoa(pageNum),
+		},
+		&resp)
 	if err != nil {
-		slog.Error("Failed to complete people search request!", "error", err.Error())
-		return tmdb.TMDBSearchPeopleResponse{}, errors.New("failed to complete people search request")
+		slog.Error("Failed to complete people search request!",
+			"error", err.Error())
+		return tmdb.TMDBSearchPeopleResponse{},
+			errors.New("failed to complete people search request")
 	}
 	for i := range resp.Results {
 		resp.Results[i].MediaType = "person"
@@ -372,7 +413,10 @@ func (s *Service) SearchPeople(query string, pageNum int) (tmdb.TMDBSearchPeople
 
 // Search for content by an external id (imdb, etc).
 // Defaults to imdb if no source if provided (probably most common).
-func (s *Service) SearchByExternalId(id string, source string) (tmdb.TMDBSearchMultiResponse, error) {
+func (s *Service) SearchByExternalId(
+	id string,
+	source string,
+) (tmdb.TMDBSearchMultiResponse, error) {
 	resp := new(tmdb.TMDBFindByExternalIdResponse)
 	if source == "" {
 		source = "imdb"
@@ -382,10 +426,15 @@ func (s *Service) SearchByExternalId(id string, source string) (tmdb.TMDBSearchM
 		slog.Debug("SearchByExternalId: Got cache.")
 	} else {
 		// If not found in cache, request data from tmdb.
-		err := s.tmdb.Request("/find/"+id, map[string]string{"external_source": source + "_id"}, &resp)
+		err := s.tmdb.Request(
+			"/find/"+id,
+			map[string]string{"external_source": source + "_id"},
+			&resp)
 		if err != nil {
-			slog.Error("Failed to complete find/external_id request!", "error", err.Error())
-			return tmdb.TMDBSearchMultiResponse{}, errors.New("failed to complete find/external_id request")
+			slog.Error("Failed to complete find/external_id request!",
+				"error", err.Error())
+			return tmdb.TMDBSearchMultiResponse{},
+				errors.New("failed to complete find/external_id request")
 		}
 		ContentStore.Set(cacheKey, resp, time.Hour*24)
 	}
@@ -395,15 +444,18 @@ func (s *Service) SearchByExternalId(id string, source string) (tmdb.TMDBSearchM
 	comb = append(comb, resp.PersonResults...)
 	comb = append(comb, resp.TvSeasonResults...)
 	comb = append(comb, resp.TvEpisodeResults...)
-	return tmdb.TMDBSearchMultiResponse{TMDBSearchResponse: tmdb.TMDBSearchResponse[tmdb.TMDBSearchMultiResult]{
-		Results: comb,
-		TMDBPageFields: tmdb.TMDBPageFields{
-			TotalResults: len(comb),
-			// Just providing these so we don't break frontend pagination logic.
-			TotalPages: 1,
-			Page:       1,
+	return tmdb.TMDBSearchMultiResponse{
+			TMDBSearchResponse: tmdb.TMDBSearchResponse[tmdb.TMDBSearchMultiResult]{
+				Results: comb,
+				TMDBPageFields: tmdb.TMDBPageFields{
+					TotalResults: len(comb),
+					// Just providing these so we don't break frontend pagination logic.
+					TotalPages: 1,
+					Page:       1,
+				},
+			},
 		},
-	}}, nil
+		nil
 }
 
 func (s *Service) MovieDetails(
