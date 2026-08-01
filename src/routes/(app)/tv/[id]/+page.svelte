@@ -39,6 +39,7 @@
 	import CountAsPlayModal from "@/lib/watched/CountAsPlayModal.svelte";
 	import { createSignal, type Signal } from "@/lib/util/signal.js";
 	import Genres from "@/lib/content/Genres.svelte";
+	import { MediaStatusShow } from "@/lib/types/mediaStatus.js";
 
 	let { data } = $props();
 
@@ -167,6 +168,11 @@
 							homepage={show.homepage}
 							releaseDate={show.releaseDate
 								? new Date(show.releaseDate)
+								: undefined}
+							endDate={(show.status === MediaStatusShow.Ended ||
+								show.status === MediaStatusShow.Canceled) &&
+							show.releaseDateLast
+								? new Date(show.releaseDateLast)
 								: undefined}
 							voteAverage={show.rating}
 							voteCount={show.ratingCount}

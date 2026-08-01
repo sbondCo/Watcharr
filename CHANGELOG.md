@@ -8,6 +8,7 @@ These changes are awaiting release:
 - Show `Aired Date` for episodes.
 - Import: Add `rating` column.
 - Import(text list): Support parsing a rating (out of 10, supporting decimals) in square brackets.
+- Show `End Year` for TV Shows that have ended or been canceled.
 
 ## Changed
 
