@@ -53,10 +53,6 @@ type WatchedSeasonProvider interface {
 	AddWatchedSeason(userId uint, ar season.WatchedSeasonAddRequest) (season.WatchedSeasonAddResponse, error)
 }
 
-type ContentProvider interface {
-	SeasonDetails(tvId string, seasonNumber string) (tmdb.TMDBSeasonDetails, error)
-}
-
 type UserProvider interface {
 	UserGetSettings(userId uint) (entity.UserSettings, error)
 }
@@ -65,7 +61,7 @@ type Service struct {
 	db               *gorm.DB
 	wp               WatchedProvider
 	wsp              WatchedSeasonProvider
-	cp               ContentProvider
+	tmdb             *tmdb.TMDB
 	activityProvider domain.ActivityAddProvider
 	userProvider     UserProvider
 }
@@ -74,7 +70,7 @@ func NewService(
 	db *gorm.DB,
 	wp WatchedProvider,
 	wsp WatchedSeasonProvider,
-	cp ContentProvider,
+	tmdb *tmdb.TMDB,
 	activityProvider domain.ActivityAddProvider,
 	userProvider UserProvider,
 ) *Service {
@@ -82,7 +78,7 @@ func NewService(
 		db,
 		wp,
 		wsp,
-		cp,
+		tmdb,
 		activityProvider,
 		userProvider,
 	}
@@ -363,7 +359,7 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 	//     to Watching just above. I think this might never happen to anyone so um ye.
 	tmdbIdStr := strconv.Itoa(watchedShow.Content.TmdbID)
 	seasonNumStr := strconv.Itoa(seasonNum)
-	seasonDetails, err := s.cp.SeasonDetails(tmdbIdStr, seasonNumStr)
+	seasonDetails, err := s.tmdb.SeasonDetails(tmdbIdStr, seasonNumStr)
 	if err != nil {
 		slog.Error("hookEpisodeStatusChanged: Failed to get season details!", "error", err)
 		hookResponse.Errors = append(hookResponse.Errors, "failed to get season details for show")

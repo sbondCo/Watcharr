@@ -1,42 +1,40 @@
-package content
+package tmdb
 
 import (
 	"log/slog"
-
-	"github.com/sbondCo/Watcharr/media/tmdb"
 )
 
 // Getting only region needed from api is not a feature yet
 // https://trello.com/c/75tR4cpF/106-add-watch-provider-region-filtering
 // When it is, this can be removed for that instead.
-func transformProviders(c *any, country string) tmdb.WatchProviders {
+func transformProviders(c *any, country string) WatchProviders {
 	slog.Debug("transformProviders called", "country", country)
-	resp := tmdb.WatchProviders{}
+	resp := WatchProviders{}
 
 	cmap, ok := (*c).(map[string]any)
 	if !ok {
 		slog.Error("transformProviders: Assertion failed")
-		return tmdb.WatchProviders{}
+		return WatchProviders{}
 	}
 
 	rmap, ok := cmap["results"].(map[string]any)
 	if !ok {
 		slog.Warn("transformProviders: Couldn't find results property..")
-		return tmdb.WatchProviders{}
+		return WatchProviders{}
 	}
 
 	val, ok := rmap[country]
 	if !ok {
 		slog.Warn("transformProviders: Couldn't find country..",
 			"country", country)
-		return tmdb.WatchProviders{}
+		return WatchProviders{}
 	}
 	slog.Debug("transformProviders: Found country..", "obj", val)
 
 	rvmap, ok := val.(map[string]any)
 	if !ok {
 		slog.Warn("transformProviders: Couldn't assert country obj")
-		return tmdb.WatchProviders{}
+		return WatchProviders{}
 	}
 
 	// Turning any into a type safe object we can use later.
@@ -57,8 +55,8 @@ func transformProviders(c *any, country string) tmdb.WatchProviders {
 func transformProvidersType(
 	ptype string,
 	rvmap map[string]any,
-	providers []tmdb.WatchProvider,
-) []tmdb.WatchProvider {
+	providers []WatchProvider,
+) []WatchProvider {
 	tm, ok := rvmap[ptype].([]any)
 	if !ok {
 		slog.Warn("transformProvidersType: Assertion failed")
@@ -74,7 +72,7 @@ func transformProvidersType(
 			continue
 		}
 		providers = append(providers,
-			tmdb.WatchProvider{
+			WatchProvider{
 				ProviderName: providerName,
 			})
 	}

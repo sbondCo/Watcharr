@@ -9,25 +9,18 @@ import (
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
-	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/router"
 	"github.com/sbondCo/Watcharr/util"
 )
 
 type Router struct {
 	br *router.BaseRouter
-	t  *tmdb.TMDB
 	s  *Service
 }
 
-func NewRouter(
-	br *router.BaseRouter,
-	t *tmdb.TMDB,
-	service *Service,
-) *Router {
+func NewRouter(br *router.BaseRouter, service *Service) *Router {
 	return &Router{
 		br: br,
-		t:  t,
 		s:  service,
 	}
 }

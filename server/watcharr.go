@@ -196,12 +196,13 @@ func main() {
 	api := gine.Group("/api")
 	br := router.NewBaseRouter(db, api, cfg)
 
-	t := tmdb.NewTMDB(cfg.TMDB_KEY)
+	tmdbService := tmdb.NewTMDB(cfg.TMDB_KEY)
 
+	contentService := content.NewService(db, tmdbService)
+	tmdbService.AddContentProvider(contentService)
 	plexService := plex.NewService(cfg)
 	authService := auth.NewService(db, cfg, plexService)
 	authTrustedHeaderService := auth.NewTrustedHeaderService(db, cfg, authService)
-	contentService := content.NewService(db, t)
 	activityService := activity.NewService(db)
 	userService := user.NewService(db)
 	userManageService := user.NewManageService(db)
@@ -217,7 +218,7 @@ func main() {
 		db,
 		watchedService,
 		watchedSeasonService,
-		contentService,
+		tmdbService,
 		activityService,
 		userService)
 	jellyfinService := jellyfin.NewService(cfg)
@@ -238,22 +239,22 @@ func main() {
 	profileService := profile.NewService(db)
 	followService := follow.NewService(db)
 	tagService := tag.NewService(db, watchedService)
-	searchService := search.NewService(db, br.Cfg, contentService, watchedService)
-	discoverService := discover.NewService(db, br.Cfg, contentService)
+	searchService := search.NewService(db, br.Cfg, tmdbService, watchedService)
+	discoverService := discover.NewService(db, br.Cfg, tmdbService)
 	importService := imprt.NewService(
 		db,
 		watchedService,
 		watchedSeasonService,
 		watchedEpisodeService,
-		contentService,
+		tmdbService,
 		activityService,
 		tagService,
 		searchService)
 	importTraktService := imprt.NewTraktService(importService)
 
 	auth.NewRouter(br, authService, authTrustedHeaderService).AddRoutes()
-	content.NewRouter(br, contentService, watchedService).AddRoutes()
-	watched.NewRouter(br, t, watchedService).AddRoutes()
+	content.NewRouter(br, contentService, watchedService, tmdbService).AddRoutes()
+	watched.NewRouter(br, watchedService).AddRoutes()
 	season.NewRouter(br, watchedSeasonService).AddRoutes()
 	episode.NewRouter(br, watchedEpisodeService).AddRoutes()
 	activity.NewRouter(br, activityService).AddRoutes()

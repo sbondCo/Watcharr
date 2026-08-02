@@ -53,6 +53,12 @@ func CreateCacheKey(name string, u ...any) string {
 			}
 		case int:
 			appnd(strconv.Itoa(vv))
+		case bool:
+			if vv {
+				appnd("1")
+			} else {
+				appnd("0")
+			}
 		default:
 			// This should never happen, but incase of unknown
 			// value passed, hopefully this should make it easier

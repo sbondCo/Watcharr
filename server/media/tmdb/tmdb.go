@@ -7,20 +7,35 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"time"
+
+	gocache "github.com/robfig/go-cache"
+	"github.com/sbondCo/Watcharr/database/entity"
 )
 
-// TODO rewrite tmdb to work like how igdb package was made
 // TODO The *WithWatched structs likely need to go in the watched package (or with go 1.25 can we
 // fix needing so many extra structs for the *WithWatched types and functions)
 
+var ContentStore = gocache.New(time.Hour*24, time.Minute)
+
+type ContentProvider interface {
+	CacheContentTv(content TMDBShowDetails, onlyUpdate bool) (entity.Content, error)
+	CacheContentMovie(content TMDBMovieDetails, onlyUpdate bool) (entity.Content, error)
+}
+
 type TMDB struct {
-	Key string
+	Key             string
+	contentProvider ContentProvider
 }
 
 func NewTMDB(key string) *TMDB {
 	return &TMDB{
 		Key: key,
 	}
+}
+
+func (t *TMDB) AddContentProvider(contentProvider ContentProvider) {
+	t.contentProvider = contentProvider
 }
 
 func (t *TMDB) GetKey() string {
