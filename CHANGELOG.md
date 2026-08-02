@@ -60,6 +60,7 @@ I have been slacking in this department, so there has been a lot of house cleani
 - ESLint: Migrate to flat config: I ran `npx sv add eslint` and modified the eslint.config.js it generated to line up better with our old one and work a bit better (i think) with our normal ts files. Also set `ecmaVersion` to `latest`, previously was `2020`.
 - Moved `env.d.ts` to `src` directory (which is covered by svelte-kits include) so that we can drop the custom `include` in our `tsconfig.json` (which when out of sync with the generated tsconfig by svelte-kit can lead to headaches because it's not immediately obvious, so this change will eliminate that dev time footgun).
 - Fixed lots of new (and probably old which may not have been applying with the old bad config) {ts,svelte} eslint rules, improving code quality.
+- Finally made tmdb media package function like the igdb media package, so that our direct tmdb interfacing code is neatly tucked away and isn't infesting the Content package (probs some more improvements I could make in regards to db caching, but that is for the future).
 
 # [4.1.1] - 2026-07-26T02:00:00Z
 

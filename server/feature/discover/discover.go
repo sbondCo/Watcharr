@@ -11,28 +11,21 @@ import (
 	"gorm.io/gorm"
 )
 
-type ContentProvider interface {
-	Trending(t tmdb.TrendingType, pageNum int, region string) (tmdb.TMDBTrendingCombined, error)
-	DiscoverMovies(o tmdb.DiscoverOptions, pageNum int, region string) (tmdb.TMDBDiscoverMovies, error)
-	DiscoverTv(o tmdb.DiscoverOptions, pageNum int, region string) (tmdb.TMDBDiscoverShows, error)
-	PopularPeople(pageNum int) (tmdb.TMDBPopularPeople, error)
-}
-
 type Service struct {
-	db              *gorm.DB
-	cfg             *config.ServerConfig
-	contentProvider ContentProvider
+	db   *gorm.DB
+	cfg  *config.ServerConfig
+	tmdb *tmdb.TMDB
 }
 
 func NewService(
 	db *gorm.DB,
 	cfg *config.ServerConfig,
-	contentProvider ContentProvider,
+	tmdb *tmdb.TMDB,
 ) *Service {
 	return &Service{
 		db,
 		cfg,
-		contentProvider,
+		tmdb,
 	}
 }
 
@@ -167,7 +160,7 @@ func (s *Service) discoverMultiTrending(
 	meta domain.DiscoverRequestMeta,
 	resp *domain.DiscoverResponse,
 ) error {
-	tmdbRes, err := s.contentProvider.Trending(t, meta.PageParams.Page, meta.Region)
+	tmdbRes, err := s.tmdb.Trending(t, meta.PageParams.Page, meta.Region)
 	if err != nil {
 		slog.Error("discoverMulti: Failed to search tmdb!", "error", err)
 		return errors.New("content request failed")
@@ -188,7 +181,7 @@ func (s *Service) discoverMovieInTheatres(
 	meta domain.DiscoverRequestMeta,
 	resp *domain.DiscoverResponse,
 ) error {
-	tmdbRes, err := s.contentProvider.DiscoverMovies(
+	tmdbRes, err := s.tmdb.DiscoverMovies(
 		tmdb.DiscoverOptions{
 			ReleaseDateMin:  time.Now().AddDate(0, 0, -40),
 			ReleaseDateMax:  time.Now().AddDate(0, 0, 2),
@@ -218,7 +211,7 @@ func (s *Service) discoverMovieUpcoming(
 	meta domain.DiscoverRequestMeta,
 	resp *domain.DiscoverResponse,
 ) error {
-	tmdbRes, err := s.contentProvider.DiscoverMovies(
+	tmdbRes, err := s.tmdb.DiscoverMovies(
 		tmdb.DiscoverOptions{
 			ReleaseDateMin:  time.Now(),
 			ReleaseDateMax:  time.Now().AddDate(0, 1, 0),
@@ -248,7 +241,7 @@ func (s *Service) discoverMoviePopular(
 	meta domain.DiscoverRequestMeta,
 	resp *domain.DiscoverResponse,
 ) error {
-	tmdbRes, err := s.contentProvider.DiscoverMovies(
+	tmdbRes, err := s.tmdb.DiscoverMovies(
 		tmdb.DiscoverOptions{},
 		meta.PageParams.Page,
 		meta.Region,
@@ -274,7 +267,7 @@ func (s *Service) discoverTvUpcoming(
 	meta domain.DiscoverRequestMeta,
 	resp *domain.DiscoverResponse,
 ) error {
-	tmdbRes, err := s.contentProvider.DiscoverTv(
+	tmdbRes, err := s.tmdb.DiscoverShows(
 		tmdb.DiscoverOptions{
 			ReleaseDateMin:  time.Now(),
 			ReleaseDateMax:  time.Now().AddDate(0, 1, 0),
@@ -304,7 +297,7 @@ func (s *Service) discoverTvPopular(
 	meta domain.DiscoverRequestMeta,
 	resp *domain.DiscoverResponse,
 ) error {
-	tmdbRes, err := s.contentProvider.DiscoverTv(
+	tmdbRes, err := s.tmdb.DiscoverShows(
 		tmdb.DiscoverOptions{},
 		meta.PageParams.Page,
 		meta.Region,
@@ -330,7 +323,7 @@ func (s *Service) discoverPeoplePopular(
 	meta domain.DiscoverRequestMeta,
 	resp *domain.DiscoverResponse,
 ) error {
-	tmdbRes, err := s.contentProvider.PopularPeople(
+	tmdbRes, err := s.tmdb.PopularPeople(
 		meta.PageParams.Page,
 	)
 	if err != nil {

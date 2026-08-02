@@ -151,7 +151,7 @@ func (s *Service) importWithIMDBID(
 	userId uint,
 	ar *domain.ImportRequest,
 ) (domain.ImportResponse, error) {
-	if imdbResp, err := s.cp.SearchByExternalId(ar.ImdbID, "imdb"); err == nil {
+	if imdbResp, err := s.tmdb.SearchByExternalId(ar.ImdbID, "imdb"); err == nil {
 		if len(imdbResp.Results) == 1 {
 			onlyResult := imdbResp.Results[0]
 			if onlyResult.MediaType == string(entity.MOVIE) || onlyResult.MediaType == string(entity.SHOW) {

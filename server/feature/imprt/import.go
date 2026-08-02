@@ -30,10 +30,6 @@ type WatchedEpisodeProvider interface {
 	AddWatchedEpisodes(userId uint, ar episode.WatchedEpisodeAddRequest) (episode.WatchedEpisodeAddResponse, error)
 }
 
-type ContentProvider interface {
-	SearchByExternalId(id string, source string) (tmdb.TMDBSearchMultiResponse, error)
-}
-
 type TagProvider interface {
 	AddTag(userId uint, tr domain.TagAddRequest) (entity.Tag, error)
 	GetTagByNameAndColor(userId uint, tagName string, tagColor string, tagBgColor string) (entity.Tag, error)
@@ -48,7 +44,7 @@ type Service struct {
 	wp               WatchedProvider
 	wsp              WatchedSeasonProvider
 	wep              WatchedEpisodeProvider
-	cp               ContentProvider
+	tmdb             *tmdb.TMDB
 	activityProvider domain.ActivityAddProvider
 	tagProvider      TagProvider
 	searchProvider   SearchProvider
@@ -59,7 +55,7 @@ func NewService(
 	wp WatchedProvider,
 	wsp WatchedSeasonProvider,
 	wep WatchedEpisodeProvider,
-	cp ContentProvider,
+	tmdb *tmdb.TMDB,
 	activityProvider domain.ActivityAddProvider,
 	tagProvider TagProvider,
 	searchProvider SearchProvider,
@@ -69,7 +65,7 @@ func NewService(
 		wp,
 		wsp,
 		wep,
-		cp,
+		tmdb,
 		activityProvider,
 		tagProvider,
 		searchProvider,

@@ -12,6 +12,7 @@ import (
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
 	"github.com/sbondCo/Watcharr/feature/watched/addedtocontent"
+	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/router"
 	"github.com/sbondCo/Watcharr/util"
 )
@@ -23,16 +24,23 @@ type WatchedProvider interface {
 }
 
 type Router struct {
-	br *router.BaseRouter
-	cs *Service
-	wp WatchedProvider
+	br   *router.BaseRouter
+	cs   *Service
+	wp   WatchedProvider
+	tmdb *tmdb.TMDB
 }
 
-func NewRouter(br *router.BaseRouter, cs *Service, wp WatchedProvider) *Router {
+func NewRouter(
+	br *router.BaseRouter,
+	cs *Service,
+	wp WatchedProvider,
+	tmdb *tmdb.TMDB,
+) *Router {
 	return &Router{
-		br: br,
-		cs: cs,
-		wp: wp,
+		br:   br,
+		cs:   cs,
+		wp:   wp,
+		tmdb: tmdb,
 	}
 }
 
@@ -68,7 +76,7 @@ func (r *Router) GetMovieDetails(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: "an id was not provided"})
 		return
 	}
-	content, err := r.cs.MovieDetails(
+	content, err := r.tmdb.MovieDetails(
 		c.Param("id"),
 		c.MustGet("userCountry").(string),
 		map[string]string{
@@ -111,7 +119,7 @@ func (r *Router) GetMovieCredits(c *gin.Context) {
 		c.Status(400)
 		return
 	}
-	content, err := r.cs.MovieCredits(c.Param("id"))
+	content, err := r.tmdb.MovieCredits(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
@@ -126,7 +134,7 @@ func (r *Router) GetTvDetails(c *gin.Context) {
 		return
 	}
 	// 1. Get details
-	content, err := r.cs.TvDetails(
+	content, err := r.tmdb.ShowDetails(
 		c.Param("id"),
 		c.MustGet("userCountry").(string),
 		map[string]string{
@@ -169,7 +177,7 @@ func (r *Router) GetTvCredits(c *gin.Context) {
 		c.Status(400)
 		return
 	}
-	content, err := r.cs.TvCredits(c.Param("id"))
+	content, err := r.tmdb.ShowCredits(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
@@ -184,7 +192,7 @@ func (r *Router) GetSeasonDetails(c *gin.Context) {
 		c.Status(400)
 		return
 	}
-	content, err := r.cs.SeasonDetails(c.Param("id"), c.Param("num"))
+	content, err := r.tmdb.SeasonDetails(c.Param("id"), c.Param("num"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
@@ -221,7 +229,7 @@ func (r *Router) GetPerson(c *gin.Context) {
 		c.Status(400)
 		return
 	}
-	content, err := r.cs.PersonDetails(c.Param("id"))
+	content, err := r.tmdb.PersonDetails(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
@@ -235,7 +243,7 @@ func (r *Router) GetPersonCredits(c *gin.Context) {
 		c.Status(400)
 		return
 	}
-	content, err := r.cs.PersonCredits(c.Param("id"))
+	content, err := r.tmdb.PersonCredits(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
@@ -264,7 +272,7 @@ func (r *Router) GetPersonCredits(c *gin.Context) {
 }
 
 func (r *Router) GetRegions(c *gin.Context) {
-	re, err := r.cs.Regions()
+	re, err := r.tmdb.Regions()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
