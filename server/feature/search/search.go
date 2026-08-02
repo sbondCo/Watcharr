@@ -194,7 +194,9 @@ func (s *Service) searchMovieById(
 	resp *domain.SearchResponse,
 ) error {
 	slog.Debug("searchMovieById: Running.", "id", id)
-	details, err := s.tmdb.MovieDetails(id, "", map[string]string{})
+	details, err := s.tmdb.MovieDetails(tmdb.MovieDetailsOptions{
+		ID: id,
+	})
 	if err != nil {
 		slog.Error("searchMovieById: Failed to search tmdb!", "error", err)
 		return errors.New("content request failed")
@@ -236,7 +238,9 @@ func (s *Service) searchTvById(
 	resp *domain.SearchResponse,
 ) error {
 	slog.Debug("searchTvById: Running.", "id", id)
-	details, err := s.tmdb.ShowDetails(id, "", map[string]string{})
+	details, err := s.tmdb.ShowDetails(tmdb.ShowDetailsOptions{
+		ID: id,
+	})
 	if err != nil {
 		slog.Error("searchTvById: Failed to search tmdb!", "error", err)
 		return errors.New("content request failed")

@@ -76,13 +76,13 @@ func (r *Router) GetMovieDetails(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: "an id was not provided"})
 		return
 	}
-	content, err := r.tmdb.MovieDetails(
-		c.Param("id"),
-		c.MustGet("userCountry").(string),
-		map[string]string{
+	content, err := r.tmdb.MovieDetails(tmdb.MovieDetailsOptions{
+		ID:      c.Param("id"),
+		Country: c.MustGet("userCountry").(string),
+		Params: map[string]string{
 			"append_to_response": "videos,watch/providers,similar",
 		},
-	)
+	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
@@ -134,13 +134,13 @@ func (r *Router) GetTvDetails(c *gin.Context) {
 		return
 	}
 	// 1. Get details
-	content, err := r.tmdb.ShowDetails(
-		c.Param("id"),
-		c.MustGet("userCountry").(string),
-		map[string]string{
+	content, err := r.tmdb.ShowDetails(tmdb.ShowDetailsOptions{
+		ID:      c.Param("id"),
+		Country: c.MustGet("userCountry").(string),
+		Params: map[string]string{
 			"append_to_response": "videos,watch/providers,similar,external_ids,keywords",
 		},
-	)
+	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
