@@ -22,8 +22,8 @@ type MovieDetailsOptions struct {
 	DontRunDBCache bool
 }
 
-func (t *TMDB) MovieDetails(o MovieDetailsOptions) (TMDBMovieDetails, error) {
-	resp := new(TMDBMovieDetails)
+func (t *TMDB) MovieDetails(o MovieDetailsOptions) (MovieDetails, error) {
+	resp := new(MovieDetails)
 	cacheKey := cache.CreateCacheKey(
 		"MovieDetails",
 		o.ID,
@@ -36,7 +36,7 @@ func (t *TMDB) MovieDetails(o MovieDetailsOptions) (TMDBMovieDetails, error) {
 	err := t.req("/movie/"+o.ID, o.Params, &resp)
 	if err != nil {
 		slog.Error("MovieDetails: Request failed!", "error", err)
-		return TMDBMovieDetails{}, errors.New("request failed")
+		return MovieDetails{}, errors.New("request failed")
 	}
 	resp.WatchProvidersTransformed = transformProviders(
 		&resp.WatchProviders,
@@ -51,12 +51,12 @@ func (t *TMDB) MovieDetails(o MovieDetailsOptions) (TMDBMovieDetails, error) {
 	return *resp, nil
 }
 
-func (t *TMDB) MovieCredits(id string) (TMDBContentCredits, error) {
-	resp := new(TMDBContentCredits)
+func (t *TMDB) MovieCredits(id string) (ContentCredits, error) {
+	resp := new(ContentCredits)
 	err := t.req("/movie/"+id+"/credits", map[string]string{}, &resp)
 	if err != nil {
 		slog.Error("MovieCredits: Request failed!", "error", err)
-		return TMDBContentCredits{}, errors.New("request failed")
+		return ContentCredits{}, errors.New("request failed")
 	}
 	return *resp, nil
 }

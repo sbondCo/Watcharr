@@ -19,8 +19,8 @@ import (
 var ContentStore = gocache.New(time.Hour*24, time.Minute)
 
 type ContentProvider interface {
-	CacheContentShow(content TMDBShowDetails, onlyUpdate bool) (entity.Content, error)
-	CacheContentMovie(content TMDBMovieDetails, onlyUpdate bool) (entity.Content, error)
+	CacheContentShow(content ShowDetails, onlyUpdate bool) (entity.Content, error)
+	CacheContentMovie(content MovieDetails, onlyUpdate bool) (entity.Content, error)
 }
 
 type TMDB struct {

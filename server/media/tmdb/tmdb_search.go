@@ -51,8 +51,8 @@ func (o *SearchUniversalOptions) AsParamsMap() map[string]string {
 
 func (t *TMDB) SearchMulti(
 	o SearchUniversalOptions,
-) (TMDBSearchMultiResponse, error) {
-	resp := new(TMDBSearchMultiResponse)
+) (SearchMultiResponse, error) {
+	resp := new(SearchMultiResponse)
 	if !o.Valid() {
 		return *resp, errors.New("request is invalid")
 	}
@@ -71,7 +71,7 @@ func (t *TMDB) SearchMulti(
 		&resp)
 	if err != nil {
 		slog.Error("SearchMulti: Request failed!", "error", err)
-		return TMDBSearchMultiResponse{}, errors.New("request failed")
+		return SearchMultiResponse{}, errors.New("request failed")
 	}
 	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
@@ -96,8 +96,8 @@ func (o *SearchMoviesOptions) AsParamsMap() map[string]string {
 
 func (t *TMDB) SearchMovies(
 	o SearchMoviesOptions,
-) (TMDBSearchMoviesResponse, error) {
-	resp := new(TMDBSearchMoviesResponse)
+) (SearchMoviesResponse, error) {
+	resp := new(SearchMoviesResponse)
 	if !o.Valid() {
 		return *resp, errors.New("request is invalid")
 	}
@@ -118,7 +118,7 @@ func (t *TMDB) SearchMovies(
 		&resp)
 	if err != nil {
 		slog.Error("SearchMovies: Request failed!", "error", err)
-		return TMDBSearchMoviesResponse{}, errors.New("request failed")
+		return SearchMoviesResponse{}, errors.New("request failed")
 	}
 	for i := range resp.Results {
 		resp.Results[i].MediaType = "movie"
@@ -146,8 +146,8 @@ func (o *SearchShowsOptions) AsParamsMap() map[string]string {
 
 func (t *TMDB) SearchShows(
 	o SearchShowsOptions,
-) (TMDBSearchShowsResponse, error) {
-	resp := new(TMDBSearchShowsResponse)
+) (SearchShowsResponse, error) {
+	resp := new(SearchShowsResponse)
 	if !o.Valid() {
 		return *resp, errors.New("request is invalid")
 	}
@@ -168,7 +168,7 @@ func (t *TMDB) SearchShows(
 		&resp)
 	if err != nil {
 		slog.Error("SearchShows: Request failed!", "error", err)
-		return TMDBSearchShowsResponse{}, errors.New("request failed")
+		return SearchShowsResponse{}, errors.New("request failed")
 	}
 	for i := range resp.Results {
 		resp.Results[i].MediaType = "tv"
@@ -179,8 +179,8 @@ func (t *TMDB) SearchShows(
 
 func (t *TMDB) SearchPeople(
 	o SearchUniversalOptions,
-) (TMDBSearchPeopleResponse, error) {
-	resp := new(TMDBSearchPeopleResponse)
+) (SearchPeopleResponse, error) {
+	resp := new(SearchPeopleResponse)
 	if !o.Valid() {
 		return *resp, errors.New("request is invalid")
 	}
@@ -199,7 +199,7 @@ func (t *TMDB) SearchPeople(
 		&resp)
 	if err != nil {
 		slog.Error("SearchPeople: Request failed!", "error", err)
-		return TMDBSearchPeopleResponse{}, errors.New("request failed")
+		return SearchPeopleResponse{}, errors.New("request failed")
 	}
 	for i := range resp.Results {
 		resp.Results[i].MediaType = "person"
@@ -213,8 +213,8 @@ func (t *TMDB) SearchPeople(
 func (t *TMDB) SearchByExternalId(
 	id string,
 	source string,
-) (TMDBSearchMultiResponse, error) {
-	resp := new(TMDBFindByExternalIdResponse)
+) (SearchMultiResponse, error) {
+	resp := new(FindByExternalIdResponse)
 	if source == "" {
 		source = "imdb"
 	}
@@ -230,21 +230,21 @@ func (t *TMDB) SearchByExternalId(
 		if err != nil {
 			slog.Error("Failed to complete find/external_id request!",
 				"error", err.Error())
-			return TMDBSearchMultiResponse{},
+			return SearchMultiResponse{},
 				errors.New("failed to complete find/external_id request")
 		}
 		ContentStore.Set(cacheKey, resp, time.Hour*24)
 	}
-	comb := []TMDBSearchMultiResult{}
+	comb := []SearchMultiResult{}
 	comb = append(comb, resp.MovieResults...)
 	comb = append(comb, resp.TvResults...)
 	comb = append(comb, resp.PersonResults...)
 	comb = append(comb, resp.TvSeasonResults...)
 	comb = append(comb, resp.TvEpisodeResults...)
-	return TMDBSearchMultiResponse{
-			TMDBSearchResponse: TMDBSearchResponse[TMDBSearchMultiResult]{
+	return SearchMultiResponse{
+			SearchResponse: SearchResponse[SearchMultiResult]{
 				Results: comb,
-				TMDBPageFields: TMDBPageFields{
+				PageFields: PageFields{
 					TotalResults: len(comb),
 					// Just providing these so we don't break frontend pagination logic.
 					TotalPages: 1,
