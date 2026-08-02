@@ -183,19 +183,68 @@ func (i *IGDB) Init() error {
 	return nil
 }
 
-func (i *IGDB) Search(q string) (GameSearchResponse, error) {
-	slog.Debug("Search:", "query", q)
+type SearchOptions struct {
+	Query       string
+	Year        int
+	PrimaryYear int
+}
+
+// Turn supported filters from the SearchOptions struct into a `where` we can
+// send to APICalypse.
+func (o SearchOptions) AsWhere() string {
+	f := []string{}
+	if o.Year != 0 {
+		y := strconv.Itoa(o.Year)
+		// If `any` release of the game was on this year.
+		f = append(f, "release_dates.y = "+y)
+	}
+	if o.PrimaryYear != 0 {
+		start := strconv.FormatInt(
+			time.
+				Date(o.PrimaryYear, time.January, 1, 0, 0, 0, 0, time.UTC).
+				Unix(),
+			10)
+		end := strconv.FormatInt(
+			time.
+				// We add one to the year and get the first day of the next year
+				// BUT because day=0, we go back one day and end up with the
+				// very last day of `PrimaryYear`.
+				Date(o.PrimaryYear+1, time.January, 0, 23, 59, 59, 0, time.UTC).
+				Unix(),
+			10)
+		// If `first` release of the game was on this year.
+		f = append(f, "first_release_date > "+start)
+		f = append(f, "first_release_date < "+end)
+	}
+	if len(f) <= 0 {
+		return ""
+	}
+	return "where " + strings.Join(f, " & ") + ";"
+
+}
+
+func (i *IGDB) Search(o SearchOptions) (GameSearchResponse, error) {
+	slog.Debug("Search:", "query", o.Query)
 	var resp GameSearchResponse
-	cacheKey := cache.CreateCacheKey("Search", q)
+	cacheKey := cache.CreateCacheKey(
+		"Search",
+		o.Query,
+		o.Year,
+		o.PrimaryYear)
 	if cache.GetCache(GameStore, cacheKey, &resp) {
 		slog.Debug("Search: Returning cache.")
 		return resp, nil
+	}
+	apiQuery := "fields " + fieldsForSearch + "; search \"" + o.Query + "\"; limit 40;"
+	whereQ := o.AsWhere()
+	if whereQ != "" {
+		apiQuery += whereQ
 	}
 	err := i.req(
 		igdbHost,
 		"/games",
 		map[string]string{},
-		"fields "+fieldsForSearch+"; search \""+q+"\"; limit 40;",
+		apiQuery,
 		&resp,
 	)
 	if err != nil {
