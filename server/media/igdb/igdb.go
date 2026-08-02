@@ -183,6 +183,8 @@ func (i *IGDB) Init() error {
 	return nil
 }
 
+// NOTE: If search options are added, ensure they are also added to the cache
+// key if necessary!
 type SearchOptions struct {
 	Query       string
 	Year        int
