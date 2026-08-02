@@ -12,21 +12,21 @@ import (
 
 // Separated from `TMDBSearchResponse` so we can embed it for
 // easily assigning all page fields in one.
-type TMDBPageFields struct {
+type PageFields struct {
 	Page         int `json:"page"`
 	TotalPages   int `json:"total_pages"`
 	TotalResults int `json:"total_results"`
 }
 
-type TMDBSearchResponse[R any] struct {
-	TMDBPageFields
+type SearchResponse[R any] struct {
+	PageFields
 	Results []R `json:"results"`
 }
 
 // A common "base" type for search results.
 // Some properties are used commonly for all types except Person, but
 // are still embedded in person for ease of use right now.
-type TMDBSearchResult struct {
+type SearchResult struct {
 	// TMDB ID
 	ID int `json:"id"`
 	// Media Type (movie, tv, person)
@@ -46,7 +46,7 @@ type TMDBSearchResult struct {
 
 // Adds the base items to a Media struct, which can be used in the
 // structs that embed TMDBSearchResult to simplify and reduce duplication.
-func (t *TMDBSearchResult) AsMedia() domain.Media {
+func (t *SearchResult) AsMedia() domain.Media {
 	m := domain.Media{
 		IDs: domain.MediaIDs{
 			TMDB: t.ID,
@@ -71,12 +71,12 @@ func (t *TMDBSearchResult) AsMedia() domain.Media {
 // Multi Search
 //
 
-type TMDBSearchMultiResponse struct {
-	TMDBSearchResponse[TMDBSearchMultiResult]
+type SearchMultiResponse struct {
+	SearchResponse[SearchMultiResult]
 }
 
-type TMDBSearchMultiResult struct {
-	TMDBSearchResult
+type SearchMultiResult struct {
+	SearchResult
 	Adult            bool     `json:"adult"`
 	BackdropPath     string   `json:"backdrop_path"`
 	Title            string   `json:"title,omitempty"`
@@ -102,8 +102,8 @@ type TMDBSearchMultiResult struct {
 	StillPath      string `json:"still_path,omitempty"`
 }
 
-func (t *TMDBSearchMultiResult) AsMedia() domain.Media {
-	m := t.TMDBSearchResult.AsMedia()
+func (t *SearchMultiResult) AsMedia() domain.Media {
+	m := t.SearchResult.AsMedia()
 
 	m.Name = t.Title
 	if t.Name != "" {
@@ -127,12 +127,12 @@ func (t *TMDBSearchMultiResult) AsMedia() domain.Media {
 	return m
 }
 
-type TMDBSearchMultiResponseWithWatched struct {
-	TMDBSearchResponse[TMDBSearchMultiResultWithWatched]
+type SearchMultiResponseWithWatched struct {
+	SearchResponse[SearchMultiResultWithWatched]
 }
 
-type TMDBSearchMultiResultWithWatched struct {
-	TMDBSearchMultiResult
+type SearchMultiResultWithWatched struct {
+	SearchMultiResult
 	Watched *entity.Watched `json:"watched,omitempty"`
 }
 
@@ -140,12 +140,12 @@ type TMDBSearchMultiResultWithWatched struct {
 // Movie Search
 //
 
-type TMDBSearchMoviesResponse struct {
-	TMDBSearchResponse[TMDBSearchMovieResult]
+type SearchMoviesResponse struct {
+	SearchResponse[SearchMovieResult]
 }
 
-type TMDBSearchMovieResult struct {
-	TMDBSearchResult
+type SearchMovieResult struct {
+	SearchResult
 	Adult            bool    `json:"adult"`
 	BackdropPath     string  `json:"backdrop_path"`
 	GenreIds         []int   `json:"genre_ids"`
@@ -157,8 +157,8 @@ type TMDBSearchMovieResult struct {
 	Video            bool    `json:"video"`
 }
 
-func (t *TMDBSearchMovieResult) AsMedia() domain.Media {
-	m := t.TMDBSearchResult.AsMedia()
+func (t *SearchMovieResult) AsMedia() domain.Media {
+	m := t.SearchResult.AsMedia()
 	m.Name = t.Title
 	if releaseDate, err := time.Parse("2006-01-02", t.ReleaseDate); err == nil {
 		m.ReleaseDate = releaseDate
@@ -168,12 +168,12 @@ func (t *TMDBSearchMovieResult) AsMedia() domain.Media {
 	return m
 }
 
-type TMDBSearchMoviesResponseWithWatched struct {
-	TMDBSearchResponse[TMDBSearchMovieResultWithWatched]
+type SearchMoviesResponseWithWatched struct {
+	SearchResponse[SearchMovieResultWithWatched]
 }
 
-type TMDBSearchMovieResultWithWatched struct {
-	TMDBSearchMovieResult
+type SearchMovieResultWithWatched struct {
+	SearchMovieResult
 	Watched *entity.Watched `json:"watched,omitempty"`
 }
 
@@ -181,12 +181,12 @@ type TMDBSearchMovieResultWithWatched struct {
 // Tv Shows Search
 //
 
-type TMDBSearchShowsResponse struct {
-	TMDBSearchResponse[TMDBSearchShowsResult]
+type SearchShowsResponse struct {
+	SearchResponse[SearchShowsResult]
 }
 
-type TMDBSearchShowsResult struct {
-	TMDBSearchResult
+type SearchShowsResult struct {
+	SearchResult
 	Adult            bool     `json:"adult"`
 	BackdropPath     string   `json:"backdrop_path"`
 	GenreIds         []int    `json:"genre_ids"`
@@ -198,8 +198,8 @@ type TMDBSearchShowsResult struct {
 	Name             string   `json:"name"`
 }
 
-func (t *TMDBSearchShowsResult) AsMedia() domain.Media {
-	m := t.TMDBSearchResult.AsMedia()
+func (t *SearchShowsResult) AsMedia() domain.Media {
+	m := t.SearchResult.AsMedia()
 	m.Name = t.Name
 	if releaseDate, err := time.Parse("2006-01-02", t.FirstAirDate); err == nil {
 		m.ReleaseDate = releaseDate
@@ -209,12 +209,12 @@ func (t *TMDBSearchShowsResult) AsMedia() domain.Media {
 	return m
 }
 
-type TMDBSearchShowsResponseWithWatched struct {
-	TMDBSearchResponse[TMDBSearchShowsResultWithWatched]
+type SearchShowsResponseWithWatched struct {
+	SearchResponse[SearchShowsResultWithWatched]
 }
 
-type TMDBSearchShowsResultWithWatched struct {
-	TMDBSearchShowsResult
+type SearchShowsResultWithWatched struct {
+	SearchShowsResult
 	Watched *entity.Watched `json:"watched,omitempty"`
 }
 
@@ -222,8 +222,8 @@ type TMDBSearchShowsResultWithWatched struct {
 // People Search
 //
 
-type TMDBSearchPeopleResult struct {
-	TMDBSearchResult
+type SearchPeopleResult struct {
+	SearchResult
 	Adult              bool    `json:"adult"`
 	Gender             int     `json:"gender"`
 	KnownForDepartment string  `json:"known_for_department"`
@@ -250,31 +250,31 @@ type TMDBSearchPeopleResult struct {
 	} `json:"known_for"`
 }
 
-func (t *TMDBSearchPeopleResult) AsMedia() domain.Media {
-	m := t.TMDBSearchResult.AsMedia()
+func (t *SearchPeopleResult) AsMedia() domain.Media {
+	m := t.SearchResult.AsMedia()
 	m.Name = t.Name
 	m.ExtPosterPath = t.ProfilePath
 	return m
 }
 
-type TMDBSearchPeopleResponse struct {
-	TMDBSearchResponse[TMDBSearchPeopleResult]
+type SearchPeopleResponse struct {
+	SearchResponse[SearchPeopleResult]
 }
 
 //
 // Search By External ID
 //
 
-type TMDBFindByExternalIdResponse struct {
-	// These are all a TMDBSearchMultiResult so our search func can easily
-	// combine all of them into one []TMDBSearchMultiResult for response
-	// to client (seems not easy to convert to TMDBSearchMultiResult for
+type FindByExternalIdResponse struct {
+	// These are all a SearchMultiResult so our search func can easily
+	// combine all of them into one []SearchMultiResult for response
+	// to client (seems not easy to convert to SearchMultiResult for
 	// concatenation after unmarshalling to correct type).
-	MovieResults     []TMDBSearchMultiResult `json:"movie_results"`
-	PersonResults    []TMDBSearchMultiResult `json:"person_results"`
-	TvResults        []TMDBSearchMultiResult `json:"tv_results"`
-	TvSeasonResults  []TMDBSearchMultiResult `json:"tv_season_results"`
-	TvEpisodeResults []TMDBSearchMultiResult `json:"tv_episode_results"`
+	MovieResults     []SearchMultiResult `json:"movie_results"`
+	PersonResults    []SearchMultiResult `json:"person_results"`
+	TvResults        []SearchMultiResult `json:"tv_results"`
+	TvSeasonResults  []SearchMultiResult `json:"tv_season_results"`
+	TvEpisodeResults []SearchMultiResult `json:"tv_episode_results"`
 }
 
 //
@@ -282,7 +282,7 @@ type TMDBFindByExternalIdResponse struct {
 // A base for details structs.
 //
 
-type TMDBContentDetails struct {
+type ContentDetails struct {
 	ID           int    `json:"id"`
 	PosterPath   string `json:"poster_path"`
 	BackdropPath string `json:"backdrop_path"`
@@ -315,7 +315,7 @@ type TMDBContentDetails struct {
 	} `json:"spoken_languages"`
 
 	// Extra items because we use `append_to_response` on the request
-	Videos TMDBContentVideos `json:"videos"`
+	Videos ContentVideos `json:"videos"`
 	// Raw watched providers object from tmdb
 	WatchProviders interface{} `json:"watch/providers"`
 	// Watched providers but after we apply our transformations to it.
@@ -323,8 +323,8 @@ type TMDBContentDetails struct {
 }
 
 // Adds the base items to a Media struct, which can be used in the
-// structs that embed TMDBSearchResult to simplify and reduce duplication.
-func (t *TMDBContentDetails) AsMedia() domain.Media {
+// structs that embed SearchResult to simplify and reduce duplication.
+func (t *ContentDetails) AsMedia() domain.Media {
 	m := domain.Media{
 		IDs: domain.MediaIDs{
 			TMDB: t.ID,
@@ -385,8 +385,8 @@ func (t *TMDBContentDetails) AsMedia() domain.Media {
 // Movie Details
 //
 
-type TMDBMovieDetails struct {
-	TMDBContentDetails
+type MovieDetails struct {
+	ContentDetails
 	Adult               bool   `json:"adult"`
 	BelongsToCollection any    `json:"belongs_to_collection"`
 	Budget              uint32 `json:"budget"`
@@ -399,12 +399,12 @@ type TMDBMovieDetails struct {
 	Video               bool   `json:"video"`
 
 	// Extra items because we use `append_to_response` on the request
-	ExternalIds TMDBExternalIdsMovie `json:"external_ids"`
-	Similar     TMDBMovieSimilar     `json:"similar"`
+	ExternalIds ExternalIdsMovie `json:"external_ids"`
+	Similar     MovieSimilar     `json:"similar"`
 }
 
-func (t *TMDBMovieDetails) AsMedia() domain.Media {
-	m := t.TMDBContentDetails.AsMedia()
+func (t *MovieDetails) AsMedia() domain.Media {
+	m := t.ContentDetails.AsMedia()
 	m.Type = domain.MediaTypeTMDBMovie
 	m.Name = t.Title
 	m.Runtime = uint(t.Runtime)
@@ -427,11 +427,11 @@ func (t *TMDBMovieDetails) AsMedia() domain.Media {
 // Movie Details Similar
 //
 
-type TMDBMovieSimilar struct {
-	TMDBSearchResponse[TMDBMovieSimilarResult]
+type MovieSimilar struct {
+	SearchResponse[MovieSimilarResult]
 }
 
-type TMDBMovieSimilarResult struct {
+type MovieSimilarResult struct {
 	ID               int     `json:"id"`
 	Title            string  `json:"title"`
 	Adult            bool    `json:"adult"`
@@ -447,7 +447,7 @@ type TMDBMovieSimilarResult struct {
 	VoteCount        uint32  `json:"vote_count"`
 }
 
-func (t *TMDBMovieSimilarResult) AsMedia() domain.Media {
+func (t *MovieSimilarResult) AsMedia() domain.Media {
 	m := domain.Media{
 		IDs: domain.MediaIDs{
 			TMDB: t.ID,
@@ -471,8 +471,8 @@ func (t *TMDBMovieSimilarResult) AsMedia() domain.Media {
 // Show Details
 //
 
-type TMDBShowDetails struct {
-	TMDBContentDetails
+type ShowDetails struct {
+	ContentDetails
 	CreatedBy []struct {
 		ID          int    `json:"id"`
 		CreditID    string `json:"credit_id"`
@@ -521,13 +521,13 @@ type TMDBShowDetails struct {
 	Type string `json:"type"`
 
 	// Extra items because we use `append_to_response` on the request
-	ExternalIds TMDBExternalIdsShow `json:"external_ids"`
-	Keywords    TMDBKeywords        `json:"keywords"`
-	Similar     TMDBShowSimilar     `json:"similar"`
+	ExternalIds ExternalIdsShow `json:"external_ids"`
+	Keywords    Keywords        `json:"keywords"`
+	Similar     ShowSimilar     `json:"similar"`
 }
 
-func (t *TMDBShowDetails) AsMedia() domain.Media {
-	m := t.TMDBContentDetails.AsMedia()
+func (t *ShowDetails) AsMedia() domain.Media {
+	m := t.ContentDetails.AsMedia()
 	m.Type = domain.MediaTypeTMDBShow
 	m.Name = t.Name
 	if releaseDate, err := time.Parse("2006-01-02", t.FirstAirDate); err == nil {
@@ -575,7 +575,7 @@ func (t *TMDBShowDetails) AsMedia() domain.Media {
 	return m
 }
 
-type TMDBSeasonDetails struct {
+type SeasonDetails struct {
 	ID       string `json:"_id"`
 	AirDate  string `json:"air_date"`
 	Episodes []struct {
@@ -629,11 +629,11 @@ type TMDBSeasonDetails struct {
 // Show Details Similar
 //
 
-type TMDBShowSimilar struct {
-	TMDBSearchResponse[TMDBShowSimilarResult]
+type ShowSimilar struct {
+	SearchResponse[ShowSimilarResult]
 }
 
-type TMDBShowSimilarResult struct {
+type ShowSimilarResult struct {
 	ID               int      `json:"id"`
 	Name             string   `json:"name"`
 	Adult            bool     `json:"adult"`
@@ -650,7 +650,7 @@ type TMDBShowSimilarResult struct {
 	VoteCount        uint32   `json:"vote_count"`
 }
 
-func (t *TMDBShowSimilarResult) AsMedia() domain.Media {
+func (t *ShowSimilarResult) AsMedia() domain.Media {
 	m := domain.Media{
 		IDs: domain.MediaIDs{
 			TMDB: t.ID,
@@ -674,7 +674,7 @@ func (t *TMDBShowSimilarResult) AsMedia() domain.Media {
 // Person Details
 //
 
-type TMDBPersonDetails struct {
+type PersonDetails struct {
 	ID                 int      `json:"id"`
 	Name               string   `json:"name"`
 	Birthday           string   `json:"birthday"`
@@ -689,7 +689,7 @@ type TMDBPersonDetails struct {
 	Homepage           string   `json:"homepage"`
 }
 
-func (t *TMDBPersonDetails) AsPersonDetailsResponse() domain.PersonDetailsResponse {
+func (t *PersonDetails) AsPersonDetailsResponse() domain.PersonDetailsResponse {
 	m := domain.PersonDetailsResponse{
 		Name:               t.Name,
 		PlaceOfBirth:       t.PlaceOfBirth,
@@ -718,13 +718,13 @@ func (t *TMDBPersonDetails) AsPersonDetailsResponse() domain.PersonDetailsRespon
 // Person Combined Credits
 //
 
-type TMDBPersonCombinedCredits struct {
-	ID   int                                   `json:"id"`
-	Cast []TMDBPersonCombinedCreditsCastResult `json:"cast"`
-	// crew TMDBPersonCombinedCreditsCrew
+type PersonCombinedCredits struct {
+	ID   int                               `json:"id"`
+	Cast []PersonCombinedCreditsCastResult `json:"cast"`
+	// crew PersonCombinedCreditsCrew
 }
 
-type TMDBPersonCombinedCreditsCastResult struct {
+type PersonCombinedCreditsCastResult struct {
 	ID               int      `json:"id"`
 	OriginalLanguage string   `json:"original_language"`
 	EpisodeCount     int      `json:"episode_count"`
@@ -749,7 +749,7 @@ type TMDBPersonCombinedCreditsCastResult struct {
 	Adult            bool     `json:"adult"`
 }
 
-func (t *TMDBPersonCombinedCreditsCastResult) AsMedia() domain.Media {
+func (t *PersonCombinedCreditsCastResult) AsMedia() domain.Media {
 	m := domain.Media{
 		IDs: domain.MediaIDs{
 			TMDB: t.ID,
@@ -787,7 +787,7 @@ func (t *TMDBPersonCombinedCreditsCastResult) AsMedia() domain.Media {
 // Content Credits
 //
 
-type TMDBContentCredits struct {
+type ContentCredits struct {
 	ID   int `json:"id"`
 	Cast []struct {
 		Adult              bool    `json:"adult"`
@@ -831,12 +831,12 @@ const (
 	TrendingTypePerson TrendingType = "person"
 )
 
-type TMDBTrendingCombined struct {
-	TMDBSearchResponse[TMDBTrendingCombinedResult]
+type TrendingCombined struct {
+	SearchResponse[TrendingCombinedResult]
 }
 
-type TMDBTrendingCombinedResult struct {
-	TMDBSearchResult
+type TrendingCombinedResult struct {
+	SearchResult
 	Adult            bool     `json:"adult"`
 	BackdropPath     string   `json:"backdrop_path"`
 	Title            string   `json:"title,omitempty"`
@@ -853,8 +853,8 @@ type TMDBTrendingCombinedResult struct {
 	ProfilePath      string   `json:"profile_path"`
 }
 
-func (t *TMDBTrendingCombinedResult) AsMedia() domain.Media {
-	m := t.TMDBSearchResult.AsMedia()
+func (t *TrendingCombinedResult) AsMedia() domain.Media {
+	m := t.SearchResult.AsMedia()
 
 	m.Name = t.Title
 	if t.Name != "" {
@@ -899,11 +899,11 @@ type DiscoverOptions struct {
 // Discover Movies
 //
 
-type TMDBDiscoverMovies struct {
-	TMDBSearchResponse[TMDBDiscoverMoviesResult]
+type DiscoverMovies struct {
+	SearchResponse[DiscoverMoviesResult]
 }
 
-type TMDBDiscoverMoviesResult struct {
+type DiscoverMoviesResult struct {
 	Adult            bool    `json:"adult"`
 	BackdropPath     string  `json:"backdrop_path"`
 	GenreIds         []int   `json:"genre_ids"`
@@ -920,7 +920,7 @@ type TMDBDiscoverMoviesResult struct {
 	VoteCount        int     `json:"vote_count"`
 }
 
-func (t *TMDBDiscoverMoviesResult) AsMedia() domain.Media {
+func (t *DiscoverMoviesResult) AsMedia() domain.Media {
 	m := domain.Media{
 		IDs: domain.MediaIDs{
 			TMDB: t.ID,
@@ -944,11 +944,11 @@ func (t *TMDBDiscoverMoviesResult) AsMedia() domain.Media {
 // Discover Shows
 //
 
-type TMDBDiscoverShows struct {
-	TMDBSearchResponse[TMDBDiscoverShowsResult]
+type DiscoverShows struct {
+	SearchResponse[DiscoverShowsResult]
 }
 
-type TMDBDiscoverShowsResult struct {
+type DiscoverShowsResult struct {
 	BackdropPath     string   `json:"backdrop_path"`
 	FirstAirDate     string   `json:"first_air_date"`
 	GenreIds         []int    `json:"genre_ids"`
@@ -964,7 +964,7 @@ type TMDBDiscoverShowsResult struct {
 	VoteCount        int      `json:"vote_count"`
 }
 
-func (t *TMDBDiscoverShowsResult) AsMedia() domain.Media {
+func (t *DiscoverShowsResult) AsMedia() domain.Media {
 	m := domain.Media{
 		IDs: domain.MediaIDs{
 			TMDB: t.ID,
@@ -988,17 +988,17 @@ func (t *TMDBDiscoverShowsResult) AsMedia() domain.Media {
 // Discover Shows
 //
 
-type TMDBPopularPeople struct {
-	TMDBSearchResponse[TMDBPopularPeopleResult]
+type PopularPeople struct {
+	SearchResponse[PopularPeopleResult]
 }
 
-type TMDBPopularPeopleResult struct {
+type PopularPeopleResult struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	ProfilePath string `json:"profile_path"`
 }
 
-func (t *TMDBPopularPeopleResult) AsMedia() domain.Media {
+func (t *PopularPeopleResult) AsMedia() domain.Media {
 	m := domain.Media{
 		IDs: domain.MediaIDs{
 			TMDB: t.ID,
@@ -1030,7 +1030,7 @@ type WatchProvider struct {
 	DisplayPriority int    `json:"display_priority"`
 }
 
-type TMDBContentVideos struct {
+type ContentVideos struct {
 	ID      int `json:"id"`
 	Results []struct {
 		Iso6391     string    `json:"iso_639_1"`
@@ -1046,7 +1046,7 @@ type TMDBContentVideos struct {
 	} `json:"results"`
 }
 
-type TMDBExternalIds struct {
+type ExternalIds struct {
 	ImdbID      string `json:"imdb_id"`
 	WikidataID  string `json:"wikidata_id"`
 	FacebookID  string `json:"facebook_id"`
@@ -1054,19 +1054,19 @@ type TMDBExternalIds struct {
 	TwitterID   string `json:"twitter_id"`
 }
 
-type TMDBExternalIdsMovie struct {
-	TMDBExternalIds
+type ExternalIdsMovie struct {
+	ExternalIds
 }
 
-type TMDBExternalIdsShow struct {
-	TMDBExternalIds
+type ExternalIdsShow struct {
+	ExternalIds
 	FreebaseMid string `json:"freebase_mid"`
 	FreebaseID  string `json:"freebase_id"`
 	TvdbID      int    `json:"tvdb_id"`
 	TvrageID    int    `json:"tvrage_id"`
 }
 
-type TMDBKeywords struct {
+type Keywords struct {
 	// ID      int `json:"id"`
 	Results []struct {
 		Name string `json:"name"`
@@ -1074,7 +1074,7 @@ type TMDBKeywords struct {
 	} `json:"results"`
 }
 
-type TMDBRegions struct {
+type Regions struct {
 	Results []struct {
 		ISO3166_1    string `json:"iso_3166_1"`
 		English_Name string `json:"english_name"`

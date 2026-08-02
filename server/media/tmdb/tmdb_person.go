@@ -9,19 +9,19 @@ import (
 	"github.com/sbondCo/Watcharr/cache"
 )
 
-func (t *TMDB) PersonDetails(id string) (TMDBPersonDetails, error) {
-	resp := new(TMDBPersonDetails)
+func (t *TMDB) PersonDetails(id string) (PersonDetails, error) {
+	resp := new(PersonDetails)
 	err := t.req("/person/"+id, map[string]string{}, &resp)
 	if err != nil {
 		slog.Error("PersonDetails: Request failed!", "error", err)
-		return TMDBPersonDetails{}, errors.New("request failed")
+		return PersonDetails{}, errors.New("request failed")
 	}
 	return *resp, nil
 }
 
-func (t *TMDB) PersonCredits(id string) (TMDBPersonCombinedCredits, error) {
+func (t *TMDB) PersonCredits(id string) (PersonCombinedCredits, error) {
 	cacheKey := cache.CreateCacheKey("PersonCredits", id)
-	resp := new(TMDBPersonCombinedCredits)
+	resp := new(PersonCombinedCredits)
 	if cache.GetCache(ContentStore, cacheKey, &resp) {
 		slog.Debug("PersonCredits: Returning cache.")
 		return *resp, nil
@@ -32,15 +32,15 @@ func (t *TMDB) PersonCredits(id string) (TMDBPersonCombinedCredits, error) {
 		&resp)
 	if err != nil {
 		slog.Error("PersonCredits: Request failed!", "error", err)
-		return TMDBPersonCombinedCredits{}, errors.New("request failed")
+		return PersonCombinedCredits{}, errors.New("request failed")
 	}
 	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
 }
 
-func (t *TMDB) PopularPeople(pageNum int) (TMDBPopularPeople, error) {
+func (t *TMDB) PopularPeople(pageNum int) (PopularPeople, error) {
 	cacheKey := cache.CreateCacheKey("PopularPeople", pageNum)
-	resp := new(TMDBPopularPeople)
+	resp := new(PopularPeople)
 	if cache.GetCache(ContentStore, cacheKey, &resp) {
 		slog.Debug("PopularPeople: Returning cache.")
 		return *resp, nil
@@ -51,7 +51,7 @@ func (t *TMDB) PopularPeople(pageNum int) (TMDBPopularPeople, error) {
 		&resp)
 	if err != nil {
 		slog.Error("PopularPeople: Request failed!", "error", err)
-		return TMDBPopularPeople{}, errors.New("request failed")
+		return PopularPeople{}, errors.New("request failed")
 	}
 	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil

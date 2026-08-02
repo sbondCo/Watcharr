@@ -159,7 +159,7 @@ func (s *Service) saveContent(c *entity.Content, onlyUpdate bool) error {
 }
 
 func (s *Service) CacheContentShow(
-	content tmdb.TMDBShowDetails,
+	content tmdb.ShowDetails,
 	onlyUpdate bool,
 ) (entity.Content, error) {
 	slog.Debug("CacheContentShow", "content", content)
@@ -202,7 +202,7 @@ func (s *Service) CacheContentShow(
 }
 
 func (s *Service) CacheContentMovie(
-	content tmdb.TMDBMovieDetails,
+	content tmdb.MovieDetails,
 	onlyUpdate bool,
 ) (entity.Content, error) {
 	var (

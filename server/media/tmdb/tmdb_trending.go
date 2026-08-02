@@ -13,8 +13,8 @@ func (t *TMDB) Trending(
 	ttype TrendingType,
 	pageNum int,
 	region string,
-) (TMDBTrendingCombined, error) {
-	resp := new(TMDBTrendingCombined)
+) (TrendingCombined, error) {
+	resp := new(TrendingCombined)
 	if ttype != TrendingTypeAll &&
 		ttype != TrendingTypeMovie &&
 		ttype != TrendingTypeShow &&

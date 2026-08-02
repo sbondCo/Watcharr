@@ -13,8 +13,8 @@ func (t *TMDB) DiscoverMovies(
 	o DiscoverOptions,
 	pageNum int,
 	region string,
-) (TMDBDiscoverMovies, error) {
-	resp := new(TMDBDiscoverMovies)
+) (DiscoverMovies, error) {
+	resp := new(DiscoverMovies)
 	reqParams := map[string]string{
 		"page":   strconv.Itoa(pageNum),
 		"region": region,
@@ -31,7 +31,7 @@ func (t *TMDB) DiscoverMovies(
 	err := t.req("/discover/movie", reqParams, &resp)
 	if err != nil {
 		slog.Error("DiscoverMovies: Request failed!", "error", err)
-		return TMDBDiscoverMovies{}, errors.New("request failed")
+		return DiscoverMovies{}, errors.New("request failed")
 	}
 	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
@@ -41,8 +41,8 @@ func (t *TMDB) DiscoverShows(
 	o DiscoverOptions,
 	pageNum int,
 	region string,
-) (TMDBDiscoverShows, error) {
-	resp := new(TMDBDiscoverShows)
+) (DiscoverShows, error) {
+	resp := new(DiscoverShows)
 	reqParams := map[string]string{
 		"page":   strconv.Itoa(pageNum),
 		"region": region,
@@ -59,7 +59,7 @@ func (t *TMDB) DiscoverShows(
 	err := t.req("/discover/tv", reqParams, &resp)
 	if err != nil {
 		slog.Error("DiscoverShows: Request failed!", "error", err)
-		return TMDBDiscoverShows{}, errors.New("request failed")
+		return DiscoverShows{}, errors.New("request failed")
 	}
 	ContentStore.Set(cacheKey, resp, time.Hour*24)
 	return *resp, nil
