@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/util"
 )
@@ -127,15 +126,6 @@ func (t *SearchMultiResult) AsMedia() domain.Media {
 	return m
 }
 
-type SearchMultiResponseWithWatched struct {
-	SearchResponse[SearchMultiResultWithWatched]
-}
-
-type SearchMultiResultWithWatched struct {
-	SearchMultiResult
-	Watched *entity.Watched `json:"watched,omitempty"`
-}
-
 //
 // Movie Search
 //
@@ -168,15 +158,6 @@ func (t *SearchMovieResult) AsMedia() domain.Media {
 	return m
 }
 
-type SearchMoviesResponseWithWatched struct {
-	SearchResponse[SearchMovieResultWithWatched]
-}
-
-type SearchMovieResultWithWatched struct {
-	SearchMovieResult
-	Watched *entity.Watched `json:"watched,omitempty"`
-}
-
 //
 // Tv Shows Search
 //
@@ -207,15 +188,6 @@ func (t *SearchShowsResult) AsMedia() domain.Media {
 		slog.Error("AsMedia: Failed to parse release date", "name", m.Name, "error", err)
 	}
 	return m
-}
-
-type SearchShowsResponseWithWatched struct {
-	SearchResponse[SearchShowsResultWithWatched]
-}
-
-type SearchShowsResultWithWatched struct {
-	SearchShowsResult
-	Watched *entity.Watched `json:"watched,omitempty"`
 }
 
 //

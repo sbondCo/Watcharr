@@ -13,9 +13,6 @@ import (
 	"github.com/sbondCo/Watcharr/database/entity"
 )
 
-// TODO The *WithWatched structs likely need to go in the watched package (or with go 1.25 can we
-// fix needing so many extra structs for the *WithWatched types and functions)
-
 var ContentStore = gocache.New(time.Hour*24, time.Minute)
 
 type ContentProvider interface {
