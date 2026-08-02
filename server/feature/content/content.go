@@ -1,7 +1,6 @@
 package content
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -159,8 +158,11 @@ func (s *Service) saveContent(c *entity.Content, onlyUpdate bool) error {
 	return nil
 }
 
-func (s *Service) CacheContentTv(content tmdb.TMDBShowDetails, onlyUpdate bool) (entity.Content, error) {
-	slog.Debug("cacheContentTv", "content", content)
+func (s *Service) CacheContentShow(
+	content tmdb.TMDBShowDetails,
+	onlyUpdate bool,
+) (entity.Content, error) {
+	slog.Debug("CacheContentShow", "content", content)
 	var (
 		releaseDate time.Time
 		runtime     uint32
@@ -192,14 +194,17 @@ func (s *Service) CacheContentTv(content tmdb.TMDBShowDetails, onlyUpdate bool) 
 
 	err = s.saveContent(&c, onlyUpdate)
 	if err != nil {
-		slog.Error("cacheContentTv: Failed to save content!", "error", err)
+		slog.Error("CacheContentShow: Failed to save content!", "error", err)
 		return entity.Content{}, errors.New("failed to save content")
 	}
 
 	return c, nil
 }
 
-func (s *Service) CacheContentMovie(content tmdb.TMDBMovieDetails, onlyUpdate bool) (entity.Content, error) {
+func (s *Service) CacheContentMovie(
+	content tmdb.TMDBMovieDetails,
+	onlyUpdate bool,
+) (entity.Content, error) {
 	var (
 		releaseDate time.Time
 	)
@@ -237,7 +242,10 @@ func (s *Service) CacheContentMovie(content tmdb.TMDBMovieDetails, onlyUpdate bo
 }
 
 // Get content from our db cache, or cache it if it doesn't exist.
-func (s *Service) GetOrCacheContent(contentType entity.ContentType, tmdbId int) (entity.Content, error) {
+func (s *Service) GetOrCacheContent(
+	contentType entity.ContentType,
+	tmdbId int,
+) (entity.Content, error) {
 	var content entity.Content
 	// Look in db for content.
 	s.db.Where("type = ? AND tmdb_id = ?", contentType, tmdbId).Find(&content)
@@ -245,37 +253,51 @@ func (s *Service) GetOrCacheContent(contentType entity.ContentType, tmdbId int) 
 	if content == (entity.Content{}) {
 		slog.Debug("Content not in db, fetching...", "type", contentType, "tmdbId", tmdbId)
 
-		resp, err := s.tmdb.APIRequest("/"+string(contentType)+"/"+strconv.Itoa(tmdbId), map[string]string{})
-		if err != nil {
-			slog.Error("GetOrCacheContent: content tmdb api request failed", "error", err)
-			return entity.Content{}, errors.New("failed to find requested media")
+		tmdbId := strconv.Itoa(tmdbId)
+
+		switch contentType {
+		case entity.MOVIE:
+			resp, err := s.tmdb.MovieDetails(tmdb.MovieDetailsOptions{
+				ID:             tmdbId,
+				DontRunDBCache: true,
+			})
+			if err != nil {
+				slog.Error("GetOrCacheContent: MovieDetails failed.",
+					"content_id", tmdbId,
+					"err", err)
+				return entity.Content{}, errors.New("details request failed")
+			}
+			content, err = s.CacheContentMovie(resp, false)
+			if err != nil {
+				slog.Error("GetOrCacheContent: Caching movie failed",
+					"content_id", tmdbId,
+					"err", err)
+				return entity.Content{}, errors.New("caching failed")
+			}
+		case entity.SHOW:
+			resp, err := s.tmdb.ShowDetails(tmdb.ShowDetailsOptions{
+				ID:             tmdbId,
+				DontRunDBCache: true,
+			})
+			if err != nil {
+				slog.Error("GetOrCacheContent: ShowDetails failed.",
+					"content_id", tmdbId,
+					"err", err)
+			}
+			content, err = s.CacheContentShow(resp, false)
+			if err != nil {
+				slog.Error("GetOrCacheContent: Caching show failed",
+					"content_id", tmdbId,
+					"err", err)
+				return entity.Content{}, errors.New("caching failed")
+			}
+		default:
+			slog.Error("GetOrCacheContent: Unsupported contentType",
+				"type", contentType,
+				"content_id", tmdbId)
+			return entity.Content{}, errors.New("unsupported contentType")
 		}
 
-		if contentType == "movie" {
-			c := new(tmdb.TMDBMovieDetails)
-			err := json.Unmarshal([]byte(resp), &c)
-			if err != nil {
-				slog.Error("Failed to unmarshal movie details", "error", err)
-				return entity.Content{}, errors.New("failed to process movie details response")
-			}
-			content, err = s.CacheContentMovie(*c, false)
-			if err != nil {
-				slog.Error("GetOrCacheContent: failed to cache movie content", "type", contentType, "content_id", tmdbId, "err", err)
-				return entity.Content{}, errors.New("failed to cache content")
-			}
-		} else {
-			c := new(tmdb.TMDBShowDetails)
-			err := json.Unmarshal(resp, &c)
-			if err != nil {
-				slog.Error("Failed to unmarshal tv details", "error", err)
-				return entity.Content{}, errors.New("failed to process tv details response")
-			}
-			content, err = s.CacheContentTv(*c, false)
-			if err != nil {
-				slog.Error("GetOrCacheContent: failed to cache tv content", "type", contentType, "content_id", tmdbId, "err", err)
-				return entity.Content{}, errors.New("failed to cache content")
-			}
-		}
 	}
 	return content, nil
 }
