@@ -19,7 +19,7 @@ import (
 var ContentStore = gocache.New(time.Hour*24, time.Minute)
 
 type ContentProvider interface {
-	CacheContentTv(content TMDBShowDetails, onlyUpdate bool) (entity.Content, error)
+	CacheContentShow(content TMDBShowDetails, onlyUpdate bool) (entity.Content, error)
 	CacheContentMovie(content TMDBMovieDetails, onlyUpdate bool) (entity.Content, error)
 }
 
@@ -45,7 +45,7 @@ func (t *TMDB) GetKey() string {
 	return "d047fa61d926371f277e7a83c9c4ff2c"
 }
 
-func (t *TMDB) APIRequest(ep string, p map[string]string) ([]byte, error) {
+func (t *TMDB) apiRequest(ep string, p map[string]string) ([]byte, error) {
 	slog.Debug("tmdbAPIRequest", "endpoint", ep, "params", p)
 	base, err := url.Parse("https://api.themoviedb.org/3")
 	if err != nil {
@@ -83,8 +83,8 @@ func (t *TMDB) APIRequest(ep string, p map[string]string) ([]byte, error) {
 	return body, nil
 }
 
-func (t *TMDB) Request(ep string, p map[string]string, resp interface{}) error {
-	body, err := t.APIRequest(ep, p)
+func (t *TMDB) req(ep string, p map[string]string, resp interface{}) error {
+	body, err := t.apiRequest(ep, p)
 	if err != nil {
 		return err
 	}

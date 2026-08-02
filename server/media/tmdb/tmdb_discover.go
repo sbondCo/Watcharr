@@ -28,7 +28,7 @@ func (t *TMDB) DiscoverMovies(
 		slog.Debug("DiscoverMovies: Returning cache.")
 		return *resp, nil
 	}
-	err := t.Request("/discover/movie", reqParams, &resp)
+	err := t.req("/discover/movie", reqParams, &resp)
 	if err != nil {
 		slog.Error("DiscoverMovies: Request failed!", "error", err)
 		return TMDBDiscoverMovies{}, errors.New("request failed")
@@ -56,7 +56,7 @@ func (t *TMDB) DiscoverShows(
 		slog.Debug("DiscoverShows: Returning cache.")
 		return *resp, nil
 	}
-	err := t.Request("/discover/tv", reqParams, &resp)
+	err := t.req("/discover/tv", reqParams, &resp)
 	if err != nil {
 		slog.Error("DiscoverShows: Request failed!", "error", err)
 		return TMDBDiscoverShows{}, errors.New("request failed")

@@ -34,7 +34,7 @@ func (t *TMDB) Trending(
 		slog.Debug("Trending: Returning cache.")
 		return *resp, nil
 	}
-	err := t.Request(
+	err := t.req(
 		"/trending/"+string(ttype)+"/day",
 		map[string]string{
 			"page":   strconv.Itoa(pageNum),

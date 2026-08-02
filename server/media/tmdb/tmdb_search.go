@@ -65,7 +65,7 @@ func (t *TMDB) SearchMulti(
 		slog.Debug("SearchMulti: Returning cache.")
 		return *resp, nil
 	}
-	err := t.Request(
+	err := t.req(
 		"/search/multi",
 		o.AsParamsMap(),
 		&resp)
@@ -112,7 +112,7 @@ func (t *TMDB) SearchMovies(
 		slog.Debug("SearchMovies: Returning cache.")
 		return *resp, nil
 	}
-	err := t.Request(
+	err := t.req(
 		"/search/movie",
 		o.AsParamsMap(),
 		&resp)
@@ -162,7 +162,7 @@ func (t *TMDB) SearchShows(
 		slog.Debug("SearchShows: Returning cache.")
 		return *resp, nil
 	}
-	err := t.Request(
+	err := t.req(
 		"/search/tv",
 		o.AsParamsMap(),
 		&resp)
@@ -193,7 +193,7 @@ func (t *TMDB) SearchPeople(
 		slog.Debug("SearchPeople: Returning cache.")
 		return *resp, nil
 	}
-	err := t.Request(
+	err := t.req(
 		"/search/person",
 		o.AsParamsMap(),
 		&resp)
@@ -223,7 +223,7 @@ func (t *TMDB) SearchByExternalId(
 		slog.Debug("SearchByExternalId: Got cache.")
 	} else {
 		// If not found in cache, request data from tmdb.
-		err := t.Request(
+		err := t.req(
 			"/find/"+id,
 			map[string]string{"external_source": source + "_id"},
 			&resp)

@@ -7,7 +7,7 @@ import (
 
 func (t *TMDB) Regions() (TMDBRegions, error) {
 	resp := new(TMDBRegions)
-	err := t.Request(
+	err := t.req(
 		"/watch/providers/regions",
 		map[string]string{},
 		&resp)

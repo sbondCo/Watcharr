@@ -11,7 +11,7 @@ import (
 
 func (t *TMDB) PersonDetails(id string) (TMDBPersonDetails, error) {
 	resp := new(TMDBPersonDetails)
-	err := t.Request("/person/"+id, map[string]string{}, &resp)
+	err := t.req("/person/"+id, map[string]string{}, &resp)
 	if err != nil {
 		slog.Error("PersonDetails: Request failed!", "error", err)
 		return TMDBPersonDetails{}, errors.New("request failed")
@@ -26,7 +26,7 @@ func (t *TMDB) PersonCredits(id string) (TMDBPersonCombinedCredits, error) {
 		slog.Debug("PersonCredits: Returning cache.")
 		return *resp, nil
 	}
-	err := t.Request(
+	err := t.req(
 		"/person/"+id+"/combined_credits",
 		map[string]string{},
 		&resp)
@@ -45,7 +45,7 @@ func (t *TMDB) PopularPeople(pageNum int) (TMDBPopularPeople, error) {
 		slog.Debug("PopularPeople: Returning cache.")
 		return *resp, nil
 	}
-	err := t.Request(
+	err := t.req(
 		"/person/popular",
 		map[string]string{"page": strconv.Itoa(pageNum)},
 		&resp)
