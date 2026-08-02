@@ -10,6 +10,7 @@ These changes are awaiting release:
 - Import(text list): Support parsing a rating (out of 10, supporting decimals) in square brackets.
 - Show `End Year` for TV Shows that have ended or been canceled.
 - Add full release date and last release date to their respective year elements as titles (browser tooltip).
+- Search: Support inline filters for Non-Multi searches (ex: You can now search `Spider Man year:2026` or `Spider Man fyear:2026` if you care strictly about the first release year).
 
 ## Changed
 

@@ -11,6 +11,7 @@ import (
 	"github.com/sbondCo/Watcharr/config"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
+	"github.com/sbondCo/Watcharr/media/igdb"
 	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/util"
 	"gorm.io/gorm"
@@ -80,7 +81,10 @@ func (s *Service) Search(
 			Page:  pp.Page,
 			Adult: qfilters.Adult,
 		}
-		if err := s.searchMulti(sreq, &resp); err != nil {
+		greq := igdb.SearchOptions{
+			Query: query,
+		}
+		if err := s.searchMulti(sreq, greq, &resp); err != nil {
 			return resp, errors.New("multi search failed")
 		}
 	case domain.SearchTypeMovie:
@@ -119,7 +123,12 @@ func (s *Service) Search(
 			return resp, errors.New("person search failed")
 		}
 	case domain.SearchTypeGame:
-		if err := s.searchGame(r.Query, pp.Page, &resp); err != nil {
+		greq := igdb.SearchOptions{
+			Query:       query,
+			Year:        qfilters.Year,
+			PrimaryYear: qfilters.FirstYear,
+		}
+		if err := s.searchGame(greq, &resp); err != nil {
 			return resp, errors.New("game search failed")
 		}
 	}
@@ -132,6 +141,7 @@ func (s *Service) Search(
 // SearchMulti is TMDB Multi search but with game data added to first page.
 func (s *Service) searchMulti(
 	req tmdb.SearchUniversalOptions,
+	igdbReq igdb.SearchOptions,
 	resp *domain.SearchResponse,
 ) error {
 	slog.Debug("searchMulti: Running.", "req", req)
@@ -149,7 +159,7 @@ func (s *Service) searchMulti(
 	}
 	// IGDB (we will only get results for the first page)
 	if req.Page == 1 && s.cfg.TwitchEnabled() {
-		igdbRes, err := s.cfg.TWITCH.Search(req.Query)
+		igdbRes, err := s.cfg.TWITCH.Search(igdbReq)
 		if err != nil {
 			slog.Error("SearchMulti: Failed to search igdb!", "error", err)
 			return errors.New("content request failed")
@@ -278,12 +288,11 @@ func (s *Service) searchPeople(
 }
 
 func (s *Service) searchGame(
-	query string,
-	page int,
+	req igdb.SearchOptions,
 	resp *domain.SearchResponse,
 ) error {
-	slog.Debug("searchGame: Running.", "query", query, "page", page)
-	igdbRes, err := s.cfg.TWITCH.Search(query)
+	slog.Debug("searchGame: Running.", "req", req)
+	igdbRes, err := s.cfg.TWITCH.Search(req)
 	if err != nil {
 		slog.Error("searchGame: Failed to search igdb!", "error", err)
 		return errors.New("content request failed")
