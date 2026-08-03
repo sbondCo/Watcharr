@@ -28,7 +28,8 @@ Have a look at when this document was last updated, it may have missing features
 - Person detail pages
   - Basic overview
   - All credits (movies & tv they appear in or worked on)
-- Searching for content
+- Searching for media
+  - Inline filters (ex: `y:2008` to get media released in 2008)
 - Custom tags
 - Discovery page
 - Following other users
