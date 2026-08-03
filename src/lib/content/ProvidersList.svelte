@@ -13,7 +13,7 @@
 
 {#if providers?.length > 0}
 	<div class="streaming-providers">
-		{#each providers as provider (provider.name)}
+		{#each providers as provider (provider)}
 			<ProviderIcon i={provider.name} href={provider.link} wh={40} />
 		{/each}
 		{#if fullListLink}
