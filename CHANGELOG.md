@@ -2,6 +2,11 @@
 
 These changes are awaiting release:
 
+# [4.2.0] - 2026-08-03T07:45:00Z
+
+> [!NOTE]
+> v4.2.0 - That's pretty funny right? Hah. Let's all chuckle together :)
+
 ## New
 
 - Show `Airs On` date for episodes that have yet to air (thanks [@KarpachMarko]!).
@@ -73,6 +78,10 @@ I have been slacking in this department, so there has been a lot of house cleani
   - github.com/golang-jwt/jwt/v5: v5.2.2 -> v5.3.1
   - golang.org/x/crypto: v0.40.0 -> v0.54.0
   - gorm.io/gorm: v1.31.1: -> v1.31.2
+
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/orgs/sbondCo/packages/container/watcharr/1092583539?tag=v4.2.0) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.2.0/images/sha256-1063b31d3254fe74ca1960eb78c1992dc809b4f7122b4d28547337a9fb8afc51).
 
 # [4.1.1] - 2026-07-26T02:00:00Z
 
@@ -1782,6 +1791,7 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 <!-- Version Changelog References (newest first) -->
 
 [Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...HEAD
+[4.2.0]: https://github.com/sbondCo/Watcharr/compare/v4.1.1...v4.2.0
 [4.1.1]: https://github.com/sbondCo/Watcharr/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/sbondCo/Watcharr/compare/v4.0.1...v4.1.0
 [4.0.1]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...v4.0.1
