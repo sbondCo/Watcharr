@@ -26,6 +26,7 @@
 	import PageTitle from "@/lib/generic/PageTitle.svelte";
 	import MediaTypeFilter from "@/lib/search/MediaTypeFilter.svelte";
 	import { resolve } from "$app/paths";
+	import Filters from "./components/Filters.svelte";
 
 	let { data } = $props();
 
@@ -183,6 +184,7 @@
 						setActiveSearchFilter(nowActive as SearchType | undefined);
 					}}
 				/>
+				<Filters />
 			</PageTitle>
 
 			{#if showingResultsFromMyList}
