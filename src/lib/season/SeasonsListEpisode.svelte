@@ -243,6 +243,7 @@
 					display: flex;
 					align-items: start;
 					justify-content: center;
+					min-width: 43px;
 					font-size: 15px;
 					color: $rating-color;
 					font-weight: bolder;
@@ -378,6 +379,10 @@
 			flex-flow: column;
 			width: 100%;
 			height: 100%;
+
+			.info {
+				align-items: center;
+			}
 
 			.status-rating-ctr {
 				flex-flow: row;
