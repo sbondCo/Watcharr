@@ -28,6 +28,8 @@ Demo: [https://beta.watcharr.app/](https://beta.watcharr.app/)
 
 Most patches are tracked through [our project board](https://github.com/orgs/sbondCo/projects/9/views/3), though I am very unorganised so expect surprise updates (or don't, if you like surprises)!
 
+You can also [view a list of all current features](FEATURES.md).
+
 ### Contents
 
 - [Screenshots](#screenshots)

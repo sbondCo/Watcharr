@@ -4,7 +4,7 @@ A basic top-level view of the features included in Watcharr.
 
 When the word `watched` is used, assume it can be `played` for games too.
 
-Have a look at when this document was last updated, it may have missing features.
+**NOTE:** Have a look at when this document was last updated, it may have missing features. This document was made years after starting the project, so I have no doubt I've missed some stuff, this is a good overview anyways.
 
 - Watched List
   - Supported Content:
@@ -25,6 +25,7 @@ Have a look at when this document was last updated, it may have missing features
   - Available streaming providers in your region
   - Cast
   - Similar content
+  - List of all seasons and their episodes (for tv shows).
 - Person detail pages
   - Basic overview
   - All credits (movies & tv they appear in or worked on)
