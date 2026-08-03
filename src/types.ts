@@ -368,9 +368,15 @@ export interface MediaGenre {
 	name: string;
 }
 
+export enum MediaProviderType {
+	Sub = "sub",
+	Free = "free",
+}
+
 export interface MediaProvider {
 	name: string;
-	link: string;
+	type?: MediaProviderType;
+	link?: string;
 }
 
 export enum MediaVideoType {

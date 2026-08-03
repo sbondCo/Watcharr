@@ -2,6 +2,10 @@
 
 These changes are awaiting release:
 
+## Fixed
+
+- ProvidersList: Duplicate key error.
+
 # [4.2.0] - 2026-08-03T07:45:00Z
 
 > [!NOTE]
