@@ -63,6 +63,16 @@ I have been slacking in this department, so there has been a lot of house cleani
 - Moved `env.d.ts` to `src` directory (which is covered by svelte-kits include) so that we can drop the custom `include` in our `tsconfig.json` (which when out of sync with the generated tsconfig by svelte-kit can lead to headaches because it's not immediately obvious, so this change will eliminate that dev time footgun).
 - Fixed lots of new (and probably old which may not have been applying with the old bad config) {ts,svelte} eslint rules, improving code quality.
 - Finally made tmdb media package function like the igdb media package, so that our direct tmdb interfacing code is neatly tucked away and isn't infesting the Content package (probs some more improvements I could make in regards to db caching, but that is for the future).
+- Upgrade server dependencies:
+  - go: 1.25 -> 1.26
+  - github.com/gin-contrib/cache: v1.4.1 -> v1.4.4
+  - github.com/gin-contrib/cors: v1.7.6 -> v1.7.7
+  - github.com/gin-gonic/gin: v1.11.0 -> v1.12.0
+  - github.com/go-co-op/gocron/v2: v2.16.2 -> v2.22.0
+  - github.com/go-playground/validator/v10: v10.27.0 -> v10.30.3
+  - github.com/golang-jwt/jwt/v5: v5.2.2 -> v5.3.1
+  - golang.org/x/crypto: v0.40.0 -> v0.54.0
+  - gorm.io/gorm: v1.31.1: -> v1.31.2
 
 # [4.1.1] - 2026-07-26T02:00:00Z
 
