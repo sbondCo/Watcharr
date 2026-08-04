@@ -8,6 +8,10 @@ These changes are awaiting release:
 
 - ProvidersList: Duplicate key error (that was causing an infinite loading issue for some media).
 
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/orgs/sbondCo/packages/container/watcharr/1095711172?tag=v4.2.1) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.2.1/images/sha256-10100c88751ff6ad4d8d7ea8af9c299adc70cc0cb5e89ccd849d0b0d6e7637a8).
+
 # [4.2.0] - 2026-08-03T07:45:00Z
 
 > [!NOTE]
