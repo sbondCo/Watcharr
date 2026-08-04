@@ -2,9 +2,11 @@
 
 These changes are awaiting release:
 
+# [4.2.1] - 2026-08-04T00:40:00Z
+
 ## Fixed
 
-- ProvidersList: Duplicate key error.
+- ProvidersList: Duplicate key error (that was causing an infinite loading issue for some media).
 
 # [4.2.0] - 2026-08-03T07:45:00Z
 
@@ -1795,6 +1797,7 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 <!-- Version Changelog References (newest first) -->
 
 [Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...HEAD
+[4.2.1]: https://github.com/sbondCo/Watcharr/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/sbondCo/Watcharr/compare/v4.1.1...v4.2.0
 [4.1.1]: https://github.com/sbondCo/Watcharr/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/sbondCo/Watcharr/compare/v4.0.1...v4.1.0
