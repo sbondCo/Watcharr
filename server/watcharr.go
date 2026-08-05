@@ -28,6 +28,7 @@ import (
 	"github.com/sbondCo/Watcharr/feature/activity"
 	"github.com/sbondCo/Watcharr/feature/arr"
 	"github.com/sbondCo/Watcharr/feature/auth"
+	"github.com/sbondCo/Watcharr/feature/book"
 	"github.com/sbondCo/Watcharr/feature/content"
 	"github.com/sbondCo/Watcharr/feature/discover"
 	"github.com/sbondCo/Watcharr/feature/feature"
@@ -49,6 +50,7 @@ import (
 	"github.com/sbondCo/Watcharr/feature/watched/episode"
 	"github.com/sbondCo/Watcharr/feature/watched/season"
 	"github.com/sbondCo/Watcharr/logging"
+	"github.com/sbondCo/Watcharr/media/openlibrary"
 	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/router"
 	taskl "github.com/sbondCo/Watcharr/task"
@@ -197,6 +199,7 @@ func main() {
 	br := router.NewBaseRouter(db, api, cfg)
 
 	tmdbService := tmdb.NewTMDB(cfg.TMDB_KEY)
+	openLibrary := openlibrary.NewOpenLibrary()
 
 	contentService := content.NewService(db, tmdbService)
 	tmdbService.AddContentProvider(contentService)
@@ -206,11 +209,13 @@ func main() {
 	activityService := activity.NewService(db)
 	userService := user.NewService(db)
 	userManageService := user.NewManageService(db)
+	bookService := book.NewService(db, &openLibrary, activityService)
 	gameService := game.NewService(db, &br.Cfg.TWITCH, activityService)
 	watchedService := watched.NewService(
 		db,
 		contentService,
 		gameService,
+		bookService,
 		activityService,
 		userService)
 	watchedSeasonService := season.NewService(db, activityService)
@@ -271,6 +276,7 @@ func main() {
 	task.NewRouter(br).AddRoutes()
 	tag.NewRouter(br, tagService).AddRoutes()
 	game.NewRouter(br, gameService, watchedService).AddRoutes()
+	book.NewRouter(br, bookService, watchedService).AddRoutes()
 	search.NewRouter(br, searchService, watchedService).AddRoutes()
 	discover.NewRouter(br, discoverService, watchedService).AddRoutes()
 	img.NewRouter(br).AddRoutes()

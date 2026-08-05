@@ -33,11 +33,13 @@ type Watched struct {
 	Rating          float64          `json:"rating" gorm:"type:numeric(2,1)"`
 	Thoughts        string           `json:"thoughts"`
 	Pinned          bool             `json:"pinned" gorm:"default:false;not null"`
-	UserID          uint             `json:"-" gorm:"uniqueIndex:usernctnidx;uniqueIndex:userngamidx"`
+	UserID          uint             `json:"-" gorm:"uniqueIndex:usernctnidx;uniqueIndex:userngamidx;uniqueIndex:usernbookidx"`
 	ContentID       *int             `json:"-" gorm:"uniqueIndex:usernctnidx"`
 	Content         *Content         `json:"content,omitempty"`
 	GameID          *int             `json:"-" gorm:"uniqueIndex:userngamidx"`
 	Game            *Game            `json:"game,omitempty"`
+	BookID          *int             `json:"-" gorm:"uniqueIndex:usernbookidx"`
+	Book            *Book            `json:"book,omitempty"`
 	Activity        []Activity       `json:"activity"`
 	WatchedSeasons  []WatchedSeason  `json:"watchedSeasons,omitempty"`  // For shows
 	WatchedEpisodes []WatchedEpisode `json:"watchedEpisodes,omitempty"` // For shows
