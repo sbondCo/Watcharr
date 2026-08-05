@@ -105,6 +105,10 @@
 				id = media.ids.igdb;
 				type = "game";
 				break;
+			case MediaTypeE.olBook:
+				id = media.ids.olid;
+				type = "book";
+				break;
 			default:
 				return;
 		}
@@ -136,6 +140,8 @@
 			} else {
 				return `https://image.tmdb.org/t/p/w500${media.extPosterPath}`;
 			}
+		} else if (media.type == MediaTypeE.olBook) {
+			return `https://covers.openlibrary.org/w/olid/${media.extPosterPath}-M.jpg`;
 		} else if (media.type == MediaTypeE.igdbGame) {
 			return `https://images.igdb.com/igdb/image/upload/t_cover_big/${media.extPosterPath}.jpg`;
 		}

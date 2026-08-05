@@ -6,7 +6,7 @@
 </script>
 
 <PersonDetailsPage
-	personId={data.personId!}
-	apiPath="/content/person"
-	mediaType={MediaTypeE.tmdbPerson}
+	personId={data.authorId!}
+	apiPath="/book/author"
+	mediaType={MediaTypeE.olBookAuthor}
 />
