@@ -85,7 +85,17 @@ func (s *Service) JellyfinAccessRequired(cfg *config.ServerConfig) gin.HandlerFu
 	}
 }
 
-func (s *Service) JellyfinAPIRequest(method string, ep string, p map[string]string, username string, userToken string, resp interface{}) error {
+// Jellyfin API request using a users token.
+// This is for jellyfin calls that we want to do as a specific user.
+// Since we use the users token, jellyfin can handle access control, etc.
+func (s *Service) userAPIRequest(
+	method string,
+	ep string,
+	p map[string]string,
+	username string,
+	userToken string,
+	resp any,
+) error {
 	if s.cfg.JELLYFIN_HOST == "" {
 		slog.Error("jellyfinAPIRequest: JELLYFIN_HOST not configured.")
 		return errors.New("jellyfin not enabled")
@@ -129,12 +139,14 @@ func (s *Service) JellyfinAPIRequest(method string, ep string, p map[string]stri
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		slog.Error("Error reading jellyfin auth response", "error", err.Error())
+		slog.Error("Error reading jellyfin auth response", "error", err)
 		return err
 	}
 	if res.StatusCode != 200 {
-		slog.Error("Jellyfin auth non 200 status code", "status_code", res.StatusCode, "error", string(body))
-		return errors.New("incorrect details")
+		slog.Error("Jellyfin non 200 status code",
+			"status_code", res.StatusCode,
+			"error", string(body))
+		return errors.New("non 200")
 	}
 	// Unmarshal response
 	err = json.Unmarshal([]byte(body), &resp)
@@ -163,7 +175,7 @@ func (s *Service) JellyfinContentFind(
 	}
 
 	resp := new(JellyfinItemSearchResponse)
-	err := s.JellyfinAPIRequest(
+	err := s.userAPIRequest(
 		"GET",
 		"/Users/"+userThirdPartyId+"/Items",
 		map[string]string{

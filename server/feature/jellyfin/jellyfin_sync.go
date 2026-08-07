@@ -92,7 +92,7 @@ func (s *SyncService) startJellyfinSync(
 	// Get played movies
 	job.UpdateJobCurrentTask(jobId, userId, "syncing movies")
 	playedMovies := new(JellyfinItemSearchResponse)
-	err := s.service.JellyfinAPIRequest(
+	err := s.service.userAPIRequest(
 		"GET",
 		"/Users/"+userThirdPartyId+"/Items",
 		map[string]string{
@@ -198,7 +198,7 @@ func (s *SyncService) startJellyfinSync(
 	// Can't rely on IsPlayed filter, since we want to get partially played series too.
 	job.UpdateJobCurrentTask(jobId, userId, "syncing series")
 	allSeries := new(JellyfinItemSearchResponse)
-	err = s.service.JellyfinAPIRequest(
+	err = s.service.userAPIRequest(
 		"GET",
 		"/Users/"+userThirdPartyId+"/Items",
 		map[string]string{
@@ -311,7 +311,7 @@ func (s *SyncService) startJellyfinSync(
 				// 4. Import watched seasons for this serie
 				// Get all show seasons (filtering isPlayed doesn't seem to be a thing, so we will have to do that ourselves)
 				seriesSeasons := new(JellyfinSeriesSeasonsResponse)
-				err = s.service.JellyfinAPIRequest(
+				err = s.service.userAPIRequest(
 					"GET",
 					"/Shows/"+v.Id+"/Seasons",
 					map[string]string{
@@ -353,7 +353,7 @@ func (s *SyncService) startJellyfinSync(
 				// 5. Import watched episodes for this serie
 				// Gets all show episodes (filtering isPlayed doesn't seem to be a thing, so we will have to do that ourselves)
 				seriesEpisodes := new(JellyfinSeriesEpisodesResponse)
-				err = s.service.JellyfinAPIRequest(
+				err = s.service.userAPIRequest(
 					"GET",
 					"/Shows/"+v.Id+"/Episodes",
 					map[string]string{
