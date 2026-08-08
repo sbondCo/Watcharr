@@ -10,9 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/sbondCo/Watcharr/config"
-	"github.com/sbondCo/Watcharr/database/entity"
 )
 
 type JellyfinItemSearchResponse struct {
@@ -55,33 +53,6 @@ type Service struct {
 func NewService(cfg *config.ServerConfig) *Service {
 	return &Service{
 		cfg: cfg,
-	}
-}
-
-// Jellyfin access middleware, ensures user is a jellyfin user.
-// To be ran after AuthRequired middleware with extra data.
-func (s *Service) JellyfinAccessRequired(cfg *config.ServerConfig) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userId := c.MustGet("userId").(uint)
-		slog.Debug("JellyfinAccessRequired middleware hit", "user_id", userId)
-		userType := c.MustGet("userType").(entity.UserType)
-		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
-		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
-		if cfg.JELLYFIN_HOST == "" {
-			slog.Error("JellyfinAccessRequired: Request made to login via Jellyfin, but JELLYFIN_HOST has not been configured.")
-			c.AbortWithStatus(401)
-			return
-		}
-		if userType != entity.JELLYFIN_USER || userThirdPartyId == "" {
-			slog.Error("JellyfinAccessRequired: User is not a jellyfin user..", "user_type", userType, "user_third_party_id", userThirdPartyId)
-			c.AbortWithStatus(401)
-			return
-		}
-		if userThirdPartyAuth == "" {
-			slog.Error("JellyfinAccessRequired: User has no thirdPartyAuth token..")
-			c.AbortWithStatus(401)
-			return
-		}
 	}
 }
 
@@ -158,7 +129,6 @@ func (s *Service) userAPIRequest(
 
 func (s *Service) JellyfinContentFind(
 	userId uint,
-	userType entity.UserType,
 	username string,
 	userThirdPartyId string,
 	userThirdPartyAuth string,

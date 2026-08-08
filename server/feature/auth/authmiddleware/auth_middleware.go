@@ -14,10 +14,6 @@ import (
 
 // Auth middleware
 // If db is passed, extra user info from the database will be fetched.
-//
-// **NOTE:** Instead of providing the `db` parameter, it is probably better to
-// fetch what you need in the handler directly! We might follow that pattern
-// from now on and potentially remove `db` from this func in the future.
 func AuthRequired(db *gorm.DB, cfg *config.ServerConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		slog.Debug("AuthRequired middleware hit")
@@ -55,15 +51,13 @@ func AuthRequired(db *gorm.DB, cfg *config.ServerConfig) gin.HandlerFunc {
 			if db != nil {
 				slog.Debug("AuthRequired: db passed.. getting extra user info")
 				dbUser := new(entity.User)
-				res := db.Where("id = ?", claims.UserID).Take(&dbUser)
+				res := db.Where("id = ?", claims.UserID).Take(dbUser)
 				if res.Error != nil {
 					slog.Error("AuthRequired: Failed to select user from database", "error", res.Error)
 					c.AbortWithStatus(401)
 					return
 				}
-				slog.Debug("AuthRequired: fetched extra user info. Setting vars.", "userThirdPartyId", dbUser.ThirdPartyID, "userThirdPartyAuth", "lol this is censored dude")
-				c.Set("userThirdPartyId", dbUser.ThirdPartyID)
-				c.Set("userThirdPartyAuth", dbUser.ThirdPartyAuth)
+				slog.Debug("AuthRequired: fetched extra user info. Setting vars.")
 				c.Set("username", dbUser.Username)
 				c.Set("userPermissions", dbUser.Permissions)
 				if dbUser.Country != nil {
