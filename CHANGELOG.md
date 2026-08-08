@@ -2,6 +2,16 @@
 
 These changes are awaiting release:
 
+## Changed
+
+- Migrate Jellyfin users to using `user_services` table for auth (deprecating the old ThirdPartyId and ThirdPartyAuth columns in the process).
+
+## Maintenance
+
+- Organize user entity structs.
+- Moved JellyfinAccessRequired middleware to `authmiddleware` package.
+- Created `usermiddleware` package with `WithUser` and `WithUserService` middleware. These will help us migrate from the all-encompassing `AuthRequired` middleware (so that it can just stick to purely auth and any routes needing the User from database can add the extra middleware which is more modular).
+
 # [4.2.1] - 2026-08-04T00:40:00Z
 
 ## Fixed

@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/router"
 )
 
@@ -24,27 +25,34 @@ func NewRouter(br *router.BaseRouter, s *Service, syncService *SyncService) *Rou
 }
 
 func (r *Router) AddRoutes() {
-	jf := r.br.Router.Group("/jellyfin").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg), r.s.JellyfinAccessRequired(r.br.Cfg))
+	jf := r.br.Router.Group("/jellyfin")
 
-	// Check if jf has item
-	jf.GET("/:type/:name/:tmdbId", r.GetFindContent)
-	// Sync users jellyfin watched items to watchlist
-	jf.GET("/sync", r.GetSync)
+	// Authenticated and jellyfin access required.
+	jf.Use(
+		authmiddleware.AuthRequired(nil, r.br.Cfg),
+		usermiddleware.WithUser(r.br.DB),
+		usermiddleware.WithUserServiceByName(r.br.DB, entity.UserServiceNameJellyfin),
+		authmiddleware.JellyfinAccessRequired(r.br.Cfg),
+	)
+	{
+		// Check if jf has item
+		jf.GET("/:type/:name/:tmdbId", r.GetFindContent)
+		// Sync users jellyfin watched items to watchlist
+		jf.GET("/sync", r.GetSync)
+	}
 }
 
 // Check if jf has item
 func (r *Router) GetFindContent(c *gin.Context) {
 	userId := c.MustGet("userId").(uint)
-	userType := c.MustGet("userType").(entity.UserType)
-	username := c.MustGet("username").(string)
-	userThirdPartyId := c.MustGet("userThirdPartyId").(string)
-	userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
+	user := usermiddleware.UserFromContext(c)
+	userJellyfinService := usermiddleware.UserServiceFromContext(
+		c, entity.UserServiceNameJellyfin)
 	response, err := r.s.JellyfinContentFind(
 		userId,
-		userType,
-		username,
-		userThirdPartyId,
-		userThirdPartyAuth,
+		user.Username,
+		userJellyfinService.ClientID,
+		userJellyfinService.AuthToken,
 		c.Param("type"),
 		c.Param("name"),
 		c.Param("tmdbId"),
@@ -59,11 +67,15 @@ func (r *Router) GetFindContent(c *gin.Context) {
 // Sync users jellyfin watched items to watchlist
 func (r *Router) GetSync(c *gin.Context) {
 	userId := c.MustGet("userId").(uint)
-	userType := c.MustGet("userType").(entity.UserType)
-	username := c.MustGet("username").(string)
-	userThirdPartyId := c.MustGet("userThirdPartyId").(string)
-	userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
-	response, err := r.syncService.jellyfinSyncWatched(userId, userType, username, userThirdPartyId, userThirdPartyAuth)
+	user := usermiddleware.UserFromContext(c)
+	userJellyfinService := usermiddleware.UserServiceFromContext(
+		c, entity.UserServiceNameJellyfin)
+	response, err := r.syncService.jellyfinSyncWatched(
+		userId,
+		user.Username,
+		userJellyfinService.ClientID,
+		userJellyfinService.AuthToken,
+	)
 	if err != nil {
 		c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 		return

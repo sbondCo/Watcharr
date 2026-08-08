@@ -4,6 +4,27 @@ import (
 	"github.com/sbondCo/Watcharr/database/dbmodel"
 )
 
+type UserType uint8
+
+var (
+	WATCHARR_USER UserType = 0
+	JELLYFIN_USER UserType = 1
+	PLEX_USER     UserType = 2
+	// Registered via trusted header auth
+	PROXY_USER UserType = 3
+)
+
+// User Perms
+// iota auto increments for us so when adding new
+// perms, add to bottom as to not change other perm
+// values.
+const (
+	PERM_NONE int = 1 << iota
+	PERM_ADMIN
+	PERM_REQUEST_CONTENT
+	PERM_REQUEST_CONTENT_AUTO_APPROVE
+)
+
 // uniqueIndex applied between Username and UserType, so same usernames can exist, but only with different types.
 // This is incase different users with same name from different services try to signup.
 type User struct {
@@ -16,11 +37,7 @@ type User struct {
 	// The type of user/which auth service they originate from.
 	// Empty if from Watcharr, or the name of the service (eg. jellyfin)
 	Type UserType `gorm:"uniqueIndex:usr_name_to_type;not null;default:0" json:"type"`
-	// ID of user from the third party service, this will be used purely for lookup of user at signin.
-	ThirdPartyID string `json:"-"`
-	// Auth token from third party (jellyfin)
-	ThirdPartyAuth string `json:"-"`
-	// Users third party integrations (minus jellyfin for now)
+	// Users third party integrations
 	UserServices []UserServices `json:"-"`
 	Watched      []Watched
 	// All Tags

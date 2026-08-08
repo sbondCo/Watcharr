@@ -401,7 +401,6 @@ func (s *SyncService) startJellyfinSync(
 
 func (s *SyncService) jellyfinSyncWatched(
 	userId uint,
-	userType entity.UserType,
 	username string,
 	userThirdPartyId string,
 	userThirdPartyAuth string,

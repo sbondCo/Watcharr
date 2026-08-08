@@ -232,31 +232,44 @@ func (s *Service) LoginJellyfin(userL *entity.User) (AuthResponse, error) {
 	}
 
 	dbUser := new(entity.User)
-	dbRes := s.db.Where("third_party_id = ? AND type = ?", resp.User.ID, entity.JELLYFIN_USER).Take(&dbUser)
-	if dbRes.Error != nil {
-		if errors.Is(dbRes.Error, gorm.ErrRecordNotFound) {
-			// Record not found, so we should create the user
-			// dbUser will be empty, so we can just reuse it for this purpose.
-			dbUser.ThirdPartyID = resp.User.ID
-			dbUser.ThirdPartyAuth = resp.AccessToken
-			dbUser.Username = resp.User.Name
-			dbUser.Type = entity.JELLYFIN_USER
-			dbUser.Country = &s.cfg.DEFAULT_COUNTRY
 
-			dbRes = s.db.Create(&dbUser)
-			if dbRes.Error != nil {
-				slog.Error("Failed to create new user in db from jellyfin response", "error", dbRes.Error)
-				return AuthResponse{}, errors.New("failed to create new user from jellyfin")
+	userID, err := s.GetUserIDFromServiceClientId(
+		entity.UserServiceNameJellyfin,
+		resp.User.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// If the userID cant be found because the service doesn't exist,
+			// then the user must not exist either, so create one.
+			err := s.createJellyfinUser(dbUser, *resp)
+			if err != nil {
+				slog.Error("LoginJellyfin: Creating user failed.", "error", err)
+				return AuthResponse{},
+					errors.New("failed to create new user from jellyfin")
 			}
 		} else {
-			return AuthResponse{}, errors.New("error locating user in db")
+			return AuthResponse{}, errors.New("couldn't find a user_id")
 		}
-	}
-	// If user exists.. update their access token in db
-	if resp.AccessToken != "" {
-		slog.Debug("Jellyfin user login - updating user with new access token")
-		dbUser.ThirdPartyAuth = resp.AccessToken
-		s.db.Save(&dbUser)
+	} else {
+		dbRes := s.db.
+			Where("id = ? AND type = ?",
+				userID,
+				entity.JELLYFIN_USER).
+			Preload("UserServices").
+			Take(dbUser)
+		if dbRes.Error != nil {
+			return AuthResponse{}, errors.New("error locating user in db")
+		} else if resp.AccessToken != "" {
+			// We got the user.. update their access token in db
+			slog.Debug("LoginJellyfin: Updating user with new access token")
+			for i, v := range dbUser.UserServices {
+				if v.Name == entity.UserServiceNameJellyfin {
+					slog.Info("LoginJellyfin: Found jellyfin user service.. attemping to update")
+					dbUser.UserServices[i].AuthToken = resp.AccessToken
+					break
+				}
+			}
+			s.db.Save(&dbUser.UserServices)
+		}
 	}
 
 	token, err := s.signJWT(dbUser)
@@ -265,6 +278,33 @@ func (s *Service) LoginJellyfin(userL *entity.User) (AuthResponse, error) {
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
+}
+
+// Create Watcharr user from jellyfin auth response.
+// Only to be ran after verifying the user doesn't exist.
+func (s *Service) createJellyfinUser(
+	dbUser *entity.User,
+	resp JellyfinAuthResponse,
+) error {
+	if dbUser == nil {
+		slog.Error("createJellyfinUser: dbUser is nil")
+		return errors.New("dbUser is nil")
+	}
+	dbUser.UserServices = append(dbUser.UserServices, entity.UserServices{
+		Name:      entity.UserServiceNameJellyfin,
+		ClientID:  resp.User.ID,
+		AuthToken: resp.AccessToken,
+	})
+	dbUser.Username = resp.User.Name
+	dbUser.Type = entity.JELLYFIN_USER
+	dbUser.Country = &s.cfg.DEFAULT_COUNTRY
+
+	err := s.db.Create(&dbUser).Error
+	if err != nil {
+		slog.Error("createJellyfinUser: Create Failed!", "error", err)
+		return err
+	}
+	return nil
 }
 
 // Login via Plex.
@@ -376,6 +416,37 @@ func (s *Service) UseAdminToken(req *UseAdminTokenRequest, userId uint) error {
 		return errors.New("failed to use token")
 	}
 	return nil
+}
+
+// Get user_id from UserServices by service name & client_id.
+func (s *Service) GetUserIDFromServiceClientId(
+	name entity.UserServiceName,
+	cid string,
+) (uint, error) {
+	if name == "" || cid == "" {
+		slog.Error("GetUserIDFromServiceClientId: name or cid empty",
+			"name", name,
+			"cid", cid)
+		return 0, errors.New("name or cid is empty")
+	}
+	var userId uint = 0
+	err := s.db.
+		Model(&entity.UserServices{}).
+		Select("user_id").
+		Where("name = ? AND client_id = ?", name, cid).
+		Scan(&userId).
+		Error
+	if err != nil {
+		slog.Error("GetUserIDFromServiceClientId: Lookup failed.", "error", err)
+		// This importantly should always return `err` from gorm as dependants
+		// check for type of error.
+		return 0, err
+	}
+	if userId == 0 {
+		slog.Error("GetUserIDFromServiceClientId: No user id.")
+		return 0, errors.New("didn't get a valid user id")
+	}
+	return userId, nil
 }
 
 func (s *Service) signJWT(user *entity.User) (token string, err error) {

@@ -16,6 +16,9 @@ import (
 // who already have applied it and only apply for people who haven't yet,
 // so we are risking splitting the consistency of everyones databases as a
 // whole. I can't forsee any circumstance that would require doing so..
+// We should still delete older migrations once they can't safely run on new
+// schemas at all in the future (we can only truly support upgrading Watcharr
+// to the next and not skipping version in between.).
 
 var migrations = []Migration{
 	{
@@ -129,6 +132,41 @@ var migrations = []Migration{
 				return errors.New("Database is not in WAL mode after setting journal_mode=WAL")
 			}
 			slog.Info("WAL journal_mode migration succeeded.", "mig", migID)
+
+			slog.Info("Migration complete.", "mig", migID)
+			return nil
+		},
+	},
+	{
+		// Migrating third_party_{id,auth} data from Users table to the
+		// user_services table. Only Jellyfin users have their auth using the
+		// third_party columns so we can safely assume this.
+		ID: "202608070037_0004",
+		Up: func(tx *gorm.DB) error {
+			migID := "202608070037_0004"
+			slog.Info("Migration is starting.", "mig", migID)
+
+			// If the columns to migrate dont exist in this db, we can assume
+			// this migration has succeeded before OR this is a fresh db that
+			// doesn't need this migration to run.
+			if !tx.Migrator().HasColumn(&entity.User{}, "third_party_id") ||
+				!tx.Migrator().HasColumn(&entity.User{}, "third_party_auth") {
+				slog.Info("Current user table doesn't have third_party_id or third_party_auth columns. Skipping.",
+					"mig", migID)
+				return nil
+			}
+
+			// Migrate the data to user_services table.
+			err := tx.Exec(`
+				INSERT INTO user_services (user_id, name, client_id, auth_token, created_at, updated_at)
+				SELECT id, 'jellyfin', third_party_id, third_party_auth, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+				FROM users
+				WHERE third_party_id IS NOT NULL AND third_party_id != ''
+			`).Error
+			if err != nil {
+				slog.Error("migration query failed!", "mig", migID)
+				return err
+			}
 
 			slog.Info("Migration complete.", "mig", migID)
 			return nil
