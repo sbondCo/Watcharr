@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/sbondCo/Watcharr/database/entity"
 	"gorm.io/gorm"
@@ -157,12 +158,13 @@ var migrations = []Migration{
 			}
 
 			// Migrate the data to user_services table.
+			tnow := time.Now()
 			err := tx.Exec(`
 				INSERT INTO user_services (user_id, name, client_id, auth_token, created_at, updated_at)
-				SELECT id, 'jellyfin', third_party_id, third_party_auth, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+				SELECT id, ?, third_party_id, third_party_auth, ?, ?
 				FROM users
 				WHERE third_party_id IS NOT NULL AND third_party_id != ''
-			`).Error
+			`, "jellyfin", tnow, tnow).Error
 			if err != nil {
 				slog.Error("migration query failed!", "mig", migID)
 				return err
