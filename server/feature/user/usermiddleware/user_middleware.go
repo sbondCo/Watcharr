@@ -15,12 +15,22 @@ const (
 	reqContextKeyUserService = "userService"
 )
 
+// Fields we want for the User object when stored in request context.
+// We don't need all the fields, especially not any sensitive ones.
+// If a handler needs sensitive fields, it should get them itself, but also
+// consider why a handler would even need anything sensitive.
+type UserForMiddleware struct {
+	Username    string
+	Type        entity.UserType
+	Permissions int
+}
+
 // Attach user to context.
 // Must be ran after AuthRequired middleware.
 func WithUser(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userId").(uint)
-		user := new(entity.PrivateUser)
+		user := new(UserForMiddleware)
 		err := db.
 			Model(&entity.User{}).
 			Where("id = ?", userID).
@@ -37,8 +47,8 @@ func WithUser(db *gorm.DB) gin.HandlerFunc {
 }
 
 // Get user from request context.
-func UserFromContext(c *gin.Context) *entity.User {
-	return c.MustGet(reqContextKeyUser).(*entity.User)
+func UserFromContext(c *gin.Context) *UserForMiddleware {
+	return c.MustGet(reqContextKeyUser).(*UserForMiddleware)
 }
 
 // Attach user_service (SINGULAR!) of `name` to context.
