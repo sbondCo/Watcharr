@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/sbondCo/Watcharr/database/entity"
+	"github.com/sbondCo/Watcharr/tri"
 )
 
 type (
@@ -15,6 +16,13 @@ type (
 		CustomDate *time.Time          `json:"customDate,omitempty"`
 	}
 
+	ActivityAddExtraProps struct {
+		// If this activity counts as a play.
+		CountAsPlay tri.State
+		// Activity synced by?
+		SyncedBy entity.ActivitySyncedBy
+	}
+
 	ActivityUpdateRequest struct {
 		CustomDate time.Time `json:"customDate" binding:"required"`
 	}
@@ -23,7 +31,7 @@ type (
 		AddActivity(
 			userId uint,
 			ar ActivityAddProps,
-			countAsPlay bool,
+			extra ActivityAddExtraProps,
 		) (entity.Activity, error)
 	}
 )

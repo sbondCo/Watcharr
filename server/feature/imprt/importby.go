@@ -7,7 +7,6 @@ import (
 
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
-	"github.com/sbondCo/Watcharr/feature/watched/episode"
 	"github.com/sbondCo/Watcharr/util"
 )
 
@@ -173,7 +172,7 @@ func (s *Service) importWithIMDBID(
 					slog.Error("import: imdb match: Failed to add watched episode (failed to find watched item, it must exist!).", "rq", ar, "error", err)
 					return domain.ImportResponse{Type: domain.IMPORT_FAILED}, nil
 				}
-				ws, err := s.wep.AddWatchedEpisodes(userId, episode.WatchedEpisodeAddRequest{
+				ws, err := s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
 					WatchedID:       w.ID,
 					SeasonNumber:    onlyResult.SeasonNumber,
 					EpisodeNumber:   onlyResult.EpisodeNumber,

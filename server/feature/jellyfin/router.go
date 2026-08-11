@@ -1,6 +1,7 @@
 package jellyfin
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,21 +12,34 @@ import (
 )
 
 type Router struct {
-	br          *router.BaseRouter
-	s           *Service
-	syncService *SyncService
+	br             *router.BaseRouter
+	s              *Service
+	syncService    *SyncService
+	webhookService *WebhookService
 }
 
-func NewRouter(br *router.BaseRouter, s *Service, syncService *SyncService) *Router {
+func NewRouter(
+	br *router.BaseRouter,
+	s *Service,
+	syncService *SyncService,
+	webhookService *WebhookService,
+) *Router {
 	return &Router{
-		br:          br,
-		s:           s,
-		syncService: syncService,
+		br:             br,
+		s:              s,
+		syncService:    syncService,
+		webhookService: webhookService,
 	}
 }
 
 func (r *Router) AddRoutes() {
 	jf := r.br.Router.Group("/jellyfin")
+
+	// Unauthenticated.
+	{
+		// Jellyfin webhook data ingest endpoint.
+		jf.POST("/webhook/:uuid", r.PostWebhook)
+	}
 
 	// Authenticated and jellyfin access required.
 	jf.Use(
@@ -81,4 +95,30 @@ func (r *Router) GetSync(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, response)
+}
+
+// (unauthenticated) Webhook endpoint.
+// Ingest service will use the `uuid` param as a "secret".
+
+	uuid := c.Param("uuid")
+	var data WebhookData
+	err := c.ShouldBindJSON(&data)
+	if err != nil {
+		slog.Warn("PostWebhook: Bad request recieved.", "error", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest,
+			router.ErrorResponse{Error: err.Error()})
+		return
+	}
+	err = r.webhookService.Ingest(uuid, data)
+	if err != nil {
+		// Since the error data might be sensitive (regarding auth/if a user
+		// exists), we just return a generic "failed" message.
+		// The real error should be obtained from watcharrs logs, since this
+		// endpoint is "unauthenticated" unless you have the secret uuid,
+		// we don't want to give randoms any more info if they are prying.
+		c.AbortWithStatusJSON(http.StatusInternalServerError,
+			router.ErrorResponse{Error: "ingest failed"})
+		return
+	}
+	c.Status(http.StatusOK)
 }

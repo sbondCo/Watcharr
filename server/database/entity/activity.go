@@ -68,4 +68,13 @@ type Activity struct {
 	// Indexed (check migrations) to make search faster, since we frequently
 	// do it over the whole table for watched sorting at the moment.
 	CountAsPlay bool `json:"countAsPlay"`
+	// Was this activity created because of a sync from another service?
+	// Currently ONLY for syncers NOT importers.
+	SyncedBy ActivitySyncedBy `json:"synced,omitempty"`
 }
+
+type ActivitySyncedBy int
+
+const (
+	ActivitySyncedByJellyfin ActivitySyncedBy = 1
+)

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
 	"github.com/sbondCo/Watcharr/router"
 )
@@ -33,7 +34,7 @@ func (r *Router) AddRoutes() {
 
 func (r *Router) AddWatchedEpisode(c *gin.Context) {
 	userId := c.MustGet("userId").(uint)
-	var ar WatchedEpisodeAddRequest
+	var ar domain.WatchedEpisodeAddRequest
 	err := c.ShouldBindJSON(&ar)
 	if err == nil {
 		response, err := r.s.AddWatchedEpisodes(userId, ar)
