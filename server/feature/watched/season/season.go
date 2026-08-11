@@ -4,30 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
-	"time"
 
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
+	"github.com/sbondCo/Watcharr/tri"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
-type WatchedSeasonAddRequest struct {
-	WatchedID       uint                 `json:"watchedId"`
-	SeasonNumber    int                  `json:"seasonNumber"`
-	Status          entity.WatchedStatus `json:"status"`
-	Rating          int8                 `json:"rating" binding:"max=10"`
-	AddActivity     entity.ActivityType  `json:"-"`
-	AddActivityDate time.Time            `json:"-"`
-	// Data to add to activity if the season is created.
-	// Combined with data we already add.
-	AddActivityData map[string]interface{} `json:"-"`
-}
-
-type WatchedSeasonAddResponse struct {
-	WatchedSeasons []entity.WatchedSeason `json:"watchedSeasons"`
-	AddedActivity  entity.Activity        `json:"addedActivity"`
-}
 
 type Service struct {
 	db               *gorm.DB
@@ -42,7 +25,10 @@ func NewService(db *gorm.DB, activityProvider domain.ActivityAddProvider) *Servi
 }
 
 // Add/edit a watched season.
-func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (WatchedSeasonAddResponse, error) {
+func (s *Service) AddWatchedSeason(
+	userId uint,
+	ar domain.WatchedSeasonAddRequest,
+) (domain.WatchedSeasonAddResponse, error) {
 	slog.Debug("Adding watched season item", "userId", userId, "watchedID", ar.WatchedID, "season", ar.SeasonNumber)
 	// 1. Make sure watched item exists and it is the correct type (TV)
 	var w entity.Watched
@@ -52,14 +38,14 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 		Preload("WatchedSeasons").
 		Find(&w); resp.Error != nil {
 		slog.Error("Failed when adding a watched season", "error", "failed to get watched item from db")
-		return WatchedSeasonAddResponse{}, errors.New("failed when retrieving watched item")
+		return domain.WatchedSeasonAddResponse{}, errors.New("failed when retrieving watched item")
 	}
 	if w.ID == 0 {
 		slog.Error("Failed when adding a watched season", "error", "watched item does not exist in db")
-		return WatchedSeasonAddResponse{}, errors.New("can't add a watched season for a show that doesnt have a status itself")
+		return domain.WatchedSeasonAddResponse{}, errors.New("can't add a watched season for a show that doesnt have a status itself")
 	}
 	if w.Content.Type != entity.SHOW {
-		return WatchedSeasonAddResponse{}, errors.New("can't add watched season for non show content")
+		return domain.WatchedSeasonAddResponse{}, errors.New("can't add watched season for non show content")
 	}
 	found := false
 	updated := false
@@ -91,7 +77,7 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 	}
 	if resp := s.db.Save(&w.WatchedSeasons); resp.Error != nil {
 		slog.Debug("Failed to save watched season item in db", "error", resp.Error)
-		return WatchedSeasonAddResponse{}, errors.New("failed to save")
+		return domain.WatchedSeasonAddResponse{}, errors.New("failed to save")
 	}
 	// Add activity
 	if found {
@@ -107,7 +93,9 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 						Type:      entity.SEASON_STATUS_CHANGED,
 						Data:      string(json),
 					},
-					false,
+					domain.ActivityAddExtraProps{
+						CountAsPlay: tri.False,
+					},
 				)
 			}
 			if ar.Rating != 0 {
@@ -119,7 +107,9 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 						Type:      entity.SEASON_RATING_CHANGED,
 						Data:      string(json),
 					},
-					false,
+					domain.ActivityAddExtraProps{
+						CountAsPlay: tri.False,
+					},
 				)
 			}
 		}
@@ -140,9 +130,15 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 		if !ar.AddActivityDate.IsZero() {
 			act.CustomDate = &ar.AddActivityDate
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(userId, act, false)
+		addedActivity, _ = s.activityProvider.AddActivity(
+			userId,
+			act,
+			domain.ActivityAddExtraProps{
+				CountAsPlay: tri.False,
+			},
+		)
 	}
-	return WatchedSeasonAddResponse{
+	return domain.WatchedSeasonAddResponse{
 		WatchedSeasons: w.WatchedSeasons,
 		AddedActivity:  addedActivity,
 	}, nil
@@ -180,7 +176,9 @@ func (s *Service) RmWatchedSeason(userId uint, seasonId uint) (entity.Activity, 
 				Type:      entity.SEASON_REMOVED,
 				Data:      string(json),
 			},
-			false,
+			domain.ActivityAddExtraProps{
+				CountAsPlay: tri.False,
+			},
 		)
 		return addedActivity, nil
 	}

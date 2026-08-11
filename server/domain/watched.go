@@ -53,19 +53,6 @@ type WatchedGetPageExtraProps struct {
 	Query string
 }
 
-type WatchedAddExtraProps struct {
-	// The type of activity this is (will be added to db as this type).
-	ActivityType entity.ActivityType
-	// When watched entry to db, if a unique constraint is hit, should
-	// we skip the restoration logic (bring back soft deleted record)?
-	// - Syncing logic may use this field as it might not make sense to restore
-	// a record when doing a task like a regular sync, otherwise the user could
-	// soft delte a record and then have it come back when they next sync.
-	// - Importers however probably shouldn't use this flag as true because
-	// importing will always be a manual decision.
-	DontRestore bool
-}
-
 type WatchedDto struct {
 	// Properties that always exist in every watched dto below.
 
@@ -193,6 +180,21 @@ type WatchedAddRequest struct {
 	WatchedDate time.Time `json:"watchedDate,omitempty"`
 }
 
+type WatchedAddExtraProps struct {
+	// The type of activity this is (will be added to db as this type).
+	ActivityType entity.ActivityType
+	// Set the SyncedBy value on the created activity (only use if coming from sync job).
+	ActivitySyncedBy entity.ActivitySyncedBy
+	// When watched entry to db, if a unique constraint is hit, should
+	// we skip the restoration logic (bring back soft deleted record)?
+	// - Syncing logic may use this field as it might not make sense to restore
+	// a record when doing a task like a regular sync, otherwise the user could
+	// soft delte a record and then have it come back when they next sync.
+	// - Importers however probably shouldn't use this flag as true because
+	// importing will always be a manual decision.
+	DontRestore bool
+}
+
 // Update watched entry request
 type WatchedUpdateRequest struct {
 	Status         entity.WatchedStatus `json:"status"`
@@ -224,6 +226,11 @@ func (w WatchedUpdateRequest) Valid() error {
 		return errors.New("rating can only be a value from 0-10")
 	}
 	return nil
+}
+
+type WatchedUpdateRequestExtraProps struct {
+	// Set the SyncedBy value on the created activity (only use if coming from sync job).
+	ActivitySyncedBy entity.ActivitySyncedBy
 }
 
 // Update response.

@@ -9,9 +9,8 @@ import (
 
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
-	"github.com/sbondCo/Watcharr/feature/watched/episode"
-	"github.com/sbondCo/Watcharr/feature/watched/season"
 	"github.com/sbondCo/Watcharr/job"
+	"github.com/sbondCo/Watcharr/tri"
 	"github.com/sbondCo/Watcharr/util"
 )
 
@@ -24,11 +23,11 @@ type WatchedProvider interface {
 }
 
 type WatchedSeasonProvider interface {
-	AddWatchedSeason(userId uint, ar season.WatchedSeasonAddRequest) (season.WatchedSeasonAddResponse, error)
+	AddWatchedSeason(userId uint, ar domain.WatchedSeasonAddRequest) (domain.WatchedSeasonAddResponse, error)
 }
 
 type WatchedEpisodeProvider interface {
-	AddWatchedEpisodes(userId uint, ar episode.WatchedEpisodeAddRequest) (episode.WatchedEpisodeAddResponse, error)
+	AddWatchedEpisodes(userId uint, ar domain.WatchedEpisodeAddRequest) (domain.WatchedEpisodeAddResponse, error)
 }
 
 type SyncService struct {
@@ -157,7 +156,9 @@ func (s *SyncService) startPlexSync(
 								Type:       entity.IMPORTED_ADDED_WATCHED_PLEX,
 								CustomDate: &lastViewedAt,
 							},
-							false,
+							domain.ActivityAddExtraProps{
+								CountAsPlay: tri.False,
+							},
 						)
 						if err != nil {
 							slog.Error("plexSyncWatched: Failed to add dateswatched activity.", "movie_name", movie.Title,
@@ -247,7 +248,9 @@ func (s *SyncService) startPlexSync(
 								Type:       entity.IMPORTED_ADDED_WATCHED_PLEX,
 								CustomDate: &lastViewedAt,
 							},
-							false,
+							domain.ActivityAddExtraProps{
+								CountAsPlay: tri.False,
+							},
 						)
 						if err != nil {
 							slog.Error("plexSyncWatched: Failed to add dateswatched activity.", "movie_name", show.Title,
@@ -275,7 +278,7 @@ func (s *SyncService) startPlexSync(
 						if vs.LastViewedAt != 0 {
 							seasonLastViewedAt = time.Unix(vs.LastViewedAt, 0)
 						}
-						_, err = s.wsp.AddWatchedSeason(userId, season.WatchedSeasonAddRequest{
+						_, err = s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
 							WatchedID:       w.ID,
 							SeasonNumber:    vs.Index,
 							Status:          entity.FINISHED,
@@ -308,7 +311,7 @@ func (s *SyncService) startPlexSync(
 						if vs.LastViewedAt != 0 {
 							episodeLastViewedAt = time.Unix(vs.LastViewedAt, 0)
 						}
-						_, err = s.wep.AddWatchedEpisodes(userId, episode.WatchedEpisodeAddRequest{
+						_, err = s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
 							WatchedID:       w.ID,
 							SeasonNumber:    vs.ParentIndex,
 							EpisodeNumber:   vs.Index,

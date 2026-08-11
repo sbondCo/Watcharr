@@ -167,3 +167,22 @@ func (s *Service) UploadUserAvatar(
 
 	return img, nil
 }
+
+// Get a User Service by Name.
+// This is only useful for services where the user can only have one connected.
+func (s *Service) GetUserServiceByName(
+	userID uint,
+	name entity.UserServiceName,
+) (entity.UserServices, error) {
+	userService := new(entity.UserServices)
+	err := s.db.
+		Model(&entity.UserServices{}).
+		Where("user_id = ? AND name = ?", userID, name).
+		Take(&userService).
+		Error
+	if err != nil {
+		slog.Error("GetUserServiceByName: Query failed!", "error", err)
+		return *userService, err
+	}
+	return *userService, nil
+}

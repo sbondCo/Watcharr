@@ -10,9 +10,8 @@ import (
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/watched"
-	"github.com/sbondCo/Watcharr/feature/watched/episode"
-	"github.com/sbondCo/Watcharr/feature/watched/season"
 	"github.com/sbondCo/Watcharr/media/tmdb"
+	"github.com/sbondCo/Watcharr/tri"
 	"github.com/sbondCo/Watcharr/util"
 	"gorm.io/gorm"
 )
@@ -23,11 +22,11 @@ type WatchedProvider interface {
 }
 
 type WatchedSeasonProvider interface {
-	AddWatchedSeason(userId uint, ar season.WatchedSeasonAddRequest) (season.WatchedSeasonAddResponse, error)
+	AddWatchedSeason(userId uint, ar domain.WatchedSeasonAddRequest) (domain.WatchedSeasonAddResponse, error)
 }
 
 type WatchedEpisodeProvider interface {
-	AddWatchedEpisodes(userId uint, ar episode.WatchedEpisodeAddRequest) (episode.WatchedEpisodeAddResponse, error)
+	AddWatchedEpisodes(userId uint, ar domain.WatchedEpisodeAddRequest) (domain.WatchedEpisodeAddResponse, error)
 }
 
 type TagProvider interface {
@@ -191,7 +190,9 @@ func (s *Service) SuccessfulImport(
 					Data:       string(activityJson),
 					CustomDate: ar.RatingCustomDate,
 				},
-				false,
+				domain.ActivityAddExtraProps{
+					CountAsPlay: tri.False,
+				},
 			)
 		} else {
 			addedActivity, _ = s.activityProvider.AddActivity(
@@ -202,7 +203,9 @@ func (s *Service) SuccessfulImport(
 					Data:       strconv.Itoa(int(ar.Rating)),
 					CustomDate: ar.RatingCustomDate,
 				},
-				false,
+				domain.ActivityAddExtraProps{
+					CountAsPlay: tri.False,
+				},
 			)
 		}
 		w.Activity = append(w.Activity, addedActivity)
@@ -210,13 +213,13 @@ func (s *Service) SuccessfulImport(
 	// Add all dates watched as activity, if any
 	if len(ar.DatesWatched) > 0 {
 		for i, v := range ar.DatesWatched {
-			countAsPlay := true
+			countAsPlay := tri.True
 			if i == 0 && ar.Status == entity.FINISHED {
 				// If the watched status we are importing is of FINISHED
 				// then the first DatesWatched must not count as a play,
 				// since the import activity (set in AddWatched) will already.
 				// Any subsequent DatesWatched should count as a play though.
-				countAsPlay = false
+				countAsPlay = tri.False
 				slog.Info("successfulImport: Set countAsPlay=false for first" +
 					"DatesWatched to avoid duplicate play count with AddWatched activity.")
 			}
@@ -228,7 +231,9 @@ func (s *Service) SuccessfulImport(
 					Type:       entity.IMPORTED_ADDED_WATCHED,
 					CustomDate: &customDate,
 				},
-				countAsPlay,
+				domain.ActivityAddExtraProps{
+					CountAsPlay: countAsPlay,
+				},
 			)
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
@@ -255,7 +260,9 @@ func (s *Service) SuccessfulImport(
 					Data:       v.Data,
 					CustomDate: activityDate,
 				},
-				v.CountAsPlay,
+				domain.ActivityAddExtraProps{
+					CountAsPlay: tri.FromBool(v.CountAsPlay),
+				},
 			)
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
@@ -269,7 +276,7 @@ func (s *Service) SuccessfulImport(
 	if len(ar.WatchedSeason) > 0 {
 		slog.Debug("successfulImport: Importing watched seasons")
 		for _, v := range ar.WatchedSeason {
-			ws, err := s.wsp.AddWatchedSeason(userId, season.WatchedSeasonAddRequest{
+			ws, err := s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
 				WatchedID:       w.ID,
 				SeasonNumber:    v.SeasonNumber,
 				Status:          v.Status,
@@ -288,7 +295,7 @@ func (s *Service) SuccessfulImport(
 	if len(ar.WatchedEpisodes) > 0 {
 		slog.Debug("successfulImport: Importing watched episodes")
 		for _, v := range ar.WatchedEpisodes {
-			ws, err := s.wep.AddWatchedEpisodes(userId, episode.WatchedEpisodeAddRequest{
+			ws, err := s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
 				WatchedID:       w.ID,
 				SeasonNumber:    v.SeasonNumber,
 				EpisodeNumber:   v.EpisodeNumber,

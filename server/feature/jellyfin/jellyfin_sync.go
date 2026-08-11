@@ -8,9 +8,8 @@ import (
 	"github.com/sbondCo/Watcharr/config"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
-	"github.com/sbondCo/Watcharr/feature/watched/episode"
-	"github.com/sbondCo/Watcharr/feature/watched/season"
 	"github.com/sbondCo/Watcharr/job"
+	"github.com/sbondCo/Watcharr/tri"
 	"github.com/sbondCo/Watcharr/util"
 )
 
@@ -19,7 +18,7 @@ type JellyfinSeriesSeasonsResponse struct {
 }
 
 type JellyfinSeriesSeasonItem struct {
-	JellyfinItems
+	Item
 	// aka the season number
 	IndexNumber int `json:"IndexNumber"`
 }
@@ -29,7 +28,7 @@ type JellyfinSeriesEpisodesResponse struct {
 }
 
 type JellyfinSeriesEpisodeItem struct {
-	JellyfinItems
+	Item
 	// the episode number
 	IndexNumber int `json:"IndexNumber"`
 	// the episodes season number
@@ -45,11 +44,11 @@ type WatchedProvider interface {
 }
 
 type WatchedSeasonProvider interface {
-	AddWatchedSeason(userId uint, ar season.WatchedSeasonAddRequest) (season.WatchedSeasonAddResponse, error)
+	AddWatchedSeason(userId uint, ar domain.WatchedSeasonAddRequest) (domain.WatchedSeasonAddResponse, error)
 }
 
 type WatchedEpisodeProvider interface {
-	AddWatchedEpisodes(userId uint, ar episode.WatchedEpisodeAddRequest) (episode.WatchedEpisodeAddResponse, error)
+	AddWatchedEpisodes(userId uint, ar domain.WatchedEpisodeAddRequest) (domain.WatchedEpisodeAddResponse, error)
 }
 
 type SyncService struct {
@@ -182,7 +181,9 @@ func (s *SyncService) startJellyfinSync(
 								Type:       entity.IMPORTED_ADDED_WATCHED_JF,
 								CustomDate: &v.UserData.LastPlayedDate,
 							},
-							false,
+							domain.ActivityAddExtraProps{
+								CountAsPlay: tri.False,
+							},
 						)
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to add dateswatched activity.", "movie_name", v.Name,
@@ -295,7 +296,9 @@ func (s *SyncService) startJellyfinSync(
 								Type:       entity.IMPORTED_ADDED_WATCHED_JF,
 								CustomDate: &v.UserData.LastPlayedDate,
 							},
-							false,
+							domain.ActivityAddExtraProps{
+								CountAsPlay: tri.False,
+							},
 						)
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to add dateswatched activity.",
@@ -336,7 +339,7 @@ func (s *SyncService) startJellyfinSync(
 							continue
 						}
 						job.UpdateJobCurrentTask(jobId, userId, "syncing "+v.Name+" season "+strconv.Itoa(vs.IndexNumber))
-						_, err = s.wsp.AddWatchedSeason(userId, season.WatchedSeasonAddRequest{
+						_, err = s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
 							WatchedID:       w.ID,
 							SeasonNumber:    vs.IndexNumber,
 							Status:          entity.FINISHED,
@@ -378,7 +381,7 @@ func (s *SyncService) startJellyfinSync(
 							continue
 						}
 						job.UpdateJobCurrentTask(jobId, userId, "syncing "+v.Name+" season "+strconv.Itoa(vs.ParentIndexNumber)+" episode "+strconv.Itoa(vs.IndexNumber))
-						_, err = s.wep.AddWatchedEpisodes(userId, episode.WatchedEpisodeAddRequest{
+						_, err = s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
 							WatchedID:       w.ID,
 							SeasonNumber:    vs.ParentIndexNumber,
 							EpisodeNumber:   vs.IndexNumber,

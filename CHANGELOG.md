@@ -2,6 +2,11 @@
 
 These changes are awaiting release:
 
+## Added
+
+- Jellyfin: Automatic tracking via [jellyfin webhook](https://github.com/jellyfin/jellyfin-plugin-webhook).
+- Activity: Created `synced_by` property. Currently used for marking activity synced automatically by jellyfin webhook.
+
 ## Changed
 
 - Migrate Jellyfin users to using `user_services` table for auth (deprecating the old ThirdPartyId and ThirdPartyAuth columns in the process).
@@ -11,6 +16,10 @@ These changes are awaiting release:
 - Organize user entity structs.
 - Moved JellyfinAccessRequired middleware to `authmiddleware` package.
 - Created `usermiddleware` package with `WithUser` and `WithUserService` middleware. These will help us migrate from the all-encompassing `AuthRequired` middleware (so that it can just stick to purely auth and any routes needing the User from database can add the extra middleware which is more modular).
+- Created `tri` package for representing "tribools". Helps us avoid using `*bool` when possible (for inter-watcharr communications).
+- Activity: Changed `AddActivity` to accept a struct for extra props.
+- WatchedEpisode: Moved request/response structs to `domain` package.
+- WatchedSeason: Moved request/response structs to `domain` package.
 
 # [4.2.1] - 2026-08-04T00:40:00Z
 
