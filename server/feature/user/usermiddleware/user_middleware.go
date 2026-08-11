@@ -68,7 +68,7 @@ func WithUserServiceByName(
 			Take(&userService).
 			Error
 		if err != nil {
-			slog.Error("WithUserServices: Query failed!", "error", err)
+			slog.Error("WithUserServiceByName: Query failed!", "error", err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}

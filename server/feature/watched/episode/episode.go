@@ -6,43 +6,14 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
-	"time"
 
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
-	"github.com/sbondCo/Watcharr/feature/watched/season"
 	"github.com/sbondCo/Watcharr/media/tmdb"
+	"github.com/sbondCo/Watcharr/tri"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
-type WatchedEpisodeAddRequest struct {
-	WatchedID       uint                 `json:"watchedId"`
-	SeasonNumber    int                  `json:"seasonNumber"`
-	EpisodeNumber   int                  `json:"episodeNumber"`
-	Status          entity.WatchedStatus `json:"status"`
-	Rating          int8                 `json:"rating" binding:"max=10"`
-	AddActivity     entity.ActivityType  `json:"-"`
-	AddActivityDate time.Time            `json:"-"`
-}
-
-type WatchedEpisodeAddResponse struct {
-	WatchedEpisodes []entity.WatchedEpisode `json:"watchedEpisodes"`
-	AddedActivity   entity.Activity         `json:"addedActivity"`
-	// Response from hook
-	EpisodeStatusChangedHookResponse EpisodeStatusChangedHookResponse `json:"episodeStatusChangedHookResponse,omitempty"`
-}
-
-type EpisodeStatusChangedHookResponse struct {
-	// The watched shows status if we modified it.
-	NewShowStatus entity.WatchedStatus `json:"newShowStatus,omitempty"`
-	// The full watched season (if created or modified).
-	WatchedSeason *entity.WatchedSeason `json:"watchedSeason,omitempty"`
-	// All activies we have added.
-	AddedActivities []entity.Activity `json:"addedActivities,omitempty"`
-	// All errors (fatal and non-fatal) that were encountered.
-	Errors []string `json:"errors,omitempty"`
-}
 
 type WatchedProvider interface {
 	GetWatchedItemById(userId uint, id uint) (entity.Watched, error)
@@ -50,7 +21,7 @@ type WatchedProvider interface {
 
 type WatchedSeasonProvider interface {
 	GetWatchedSeason(userId uint, watchedId uint, seasonNumber int) (*entity.WatchedSeason, error)
-	AddWatchedSeason(userId uint, ar season.WatchedSeasonAddRequest) (season.WatchedSeasonAddResponse, error)
+	AddWatchedSeason(userId uint, ar domain.WatchedSeasonAddRequest) (domain.WatchedSeasonAddResponse, error)
 }
 
 type UserProvider interface {
@@ -85,20 +56,23 @@ func NewService(
 }
 
 // Add/edit a watched episode.
-func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (WatchedEpisodeAddResponse, error) {
+func (s *Service) AddWatchedEpisodes(
+	userId uint,
+	ar domain.WatchedEpisodeAddRequest,
+) (domain.WatchedEpisodeAddResponse, error) {
 	slog.Debug("Adding watched episode item", "userId", userId, "watchedID", ar.WatchedID, "season", ar.SeasonNumber, "episode", ar.EpisodeNumber)
 	// 1. Make sure watched item exists and it is the correct type (TV)
 	var w entity.Watched
 	if resp := s.db.Where("id = ? AND user_id = ?", ar.WatchedID, userId).Preload("Content").Preload("WatchedEpisodes").Find(&w); resp.Error != nil {
 		slog.Error("Failed when adding a watched episode", "error", "failed to get watched item from db")
-		return WatchedEpisodeAddResponse{}, errors.New("failed when retrieving watched item")
+		return domain.WatchedEpisodeAddResponse{}, errors.New("failed when retrieving watched item")
 	}
 	if w.ID == 0 {
 		slog.Error("Failed when adding a watched episode", "error", "watched item does not exist in db")
-		return WatchedEpisodeAddResponse{}, errors.New("can't add a watched episode for a show that doesnt have a status itself")
+		return domain.WatchedEpisodeAddResponse{}, errors.New("can't add a watched episode for a show that doesnt have a status itself")
 	}
 	if w.Content.Type != entity.SHOW {
-		return WatchedEpisodeAddResponse{}, errors.New("can't add watched episode for non show content")
+		return domain.WatchedEpisodeAddResponse{}, errors.New("can't add watched episode for non show content")
 	}
 	found := false
 	updated := false
@@ -131,7 +105,7 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 	}
 	if resp := s.db.Save(&w.WatchedEpisodes); resp.Error != nil {
 		slog.Debug("Failed to save watched episode item in db", "error", resp.Error)
-		return WatchedEpisodeAddResponse{}, errors.New("failed to save")
+		return domain.WatchedEpisodeAddResponse{}, errors.New("failed to save")
 	}
 	// Add activity
 	if found {
@@ -150,7 +124,10 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 						Type:      entity.EPISODE_STATUS_CHANGED,
 						Data:      string(json),
 					},
-					false,
+					domain.ActivityAddExtraProps{
+						CountAsPlay: tri.False,
+						SyncedBy:    ar.ActivitySyncedBy,
+					},
 				)
 			}
 			if ar.Rating != 0 {
@@ -165,7 +142,10 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 						Type:      entity.EPISODE_RATING_CHANGED,
 						Data:      string(json),
 					},
-					false,
+					domain.ActivityAddExtraProps{
+						CountAsPlay: tri.False,
+						SyncedBy:    ar.ActivitySyncedBy,
+					},
 				)
 			}
 		}
@@ -186,9 +166,16 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 		if !ar.AddActivityDate.IsZero() {
 			act.CustomDate = &ar.AddActivityDate
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(userId, act, false)
+		addedActivity, _ = s.activityProvider.AddActivity(
+			userId,
+			act,
+			domain.ActivityAddExtraProps{
+				CountAsPlay: tri.False,
+				SyncedBy:    ar.ActivitySyncedBy,
+			},
+		)
 	}
-	episodeAddResp := WatchedEpisodeAddResponse{
+	episodeAddResp := domain.WatchedEpisodeAddResponse{
 		WatchedEpisodes: w.WatchedEpisodes,
 		AddedActivity:   addedActivity,
 	}
@@ -238,7 +225,9 @@ func (s *Service) rmWatchedEpisode(userId uint, id uint) (entity.Activity, error
 				Type:      entity.EPISODE_REMOVED,
 				Data:      string(json),
 			},
-			false,
+			domain.ActivityAddExtraProps{
+				CountAsPlay: tri.False,
+			},
 		)
 		return addedActivity, nil
 	}
@@ -254,18 +243,24 @@ func (s *Service) getNumberOfWatchedEpisodesInSeason(userId uint, watchedId uint
 }
 
 // Called after an episode watched status has been set.
-func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNum int, episodeNum int, newEpisodeStatus entity.WatchedStatus) EpisodeStatusChangedHookResponse {
+func (s *Service) hookEpisodeStatusChanged(
+	userId uint,
+	watchedId uint,
+	seasonNum int,
+	episodeNum int,
+	newEpisodeStatus entity.WatchedStatus,
+) domain.EpisodeStatusChangedHookResponse {
 	userSettings, err := s.userProvider.UserGetSettings(userId)
 	if err != nil {
 		slog.Error("hookEpisodeStatusChanged: Failed to get user settings! Hook will continue.", "error", err)
 	} else {
 		if !*userSettings.AutomateShowStatuses {
 			slog.Debug("hookEpisodeStatusChanged: User has AutomateShowStatuses disabled. Skipping hook.", "user_id", userId)
-			return EpisodeStatusChangedHookResponse{}
+			return domain.EpisodeStatusChangedHookResponse{}
 		}
 	}
 
-	hookResponse := EpisodeStatusChangedHookResponse{}
+	hookResponse := domain.EpisodeStatusChangedHookResponse{}
 
 	addHookActivity := func(aType entity.ActivityType, data string) {
 		addedActivity, _ := s.activityProvider.AddActivity(
@@ -275,7 +270,9 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 				Type:      aType,
 				Data:      (data),
 			},
-			false,
+			domain.ActivityAddExtraProps{
+				CountAsPlay: tri.False,
+			},
 		)
 		hookResponse.AddedActivities = append(hookResponse.AddedActivities, addedActivity)
 	}
@@ -284,7 +281,7 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 	watchedSeason, err := s.wsp.GetWatchedSeason(userId, watchedId, seasonNum)
 	if err != nil {
 		slog.Error("hookEpisodeStatusChanged: Cannot continue, failed to get watchedSeason!", "error", err)
-		return EpisodeStatusChangedHookResponse{Errors: []string{("failed to query db for watched season")}}
+		return domain.EpisodeStatusChangedHookResponse{Errors: []string{("failed to query db for watched season")}}
 	}
 	// If season not found, create it.
 	if watchedSeason == nil {
@@ -293,7 +290,7 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 		if newEpisodeStatus == entity.FINISHED || newEpisodeStatus == entity.DROPPED {
 			seasonStatus = entity.WATCHING
 		}
-		resp, err := s.wsp.AddWatchedSeason(userId, season.WatchedSeasonAddRequest{
+		resp, err := s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
 			AddActivity:     entity.SEASON_ADDED_AUTO,
 			AddActivityData: map[string]interface{}{"reason": fmt.Sprintf("Episode %d was set to %s while the season had no status.", episodeNum, newEpisodeStatus)},
 			WatchedID:       watchedId,

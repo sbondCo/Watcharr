@@ -10,6 +10,7 @@ import (
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/watched/addedtocontent"
+	"github.com/sbondCo/Watcharr/tri"
 	"github.com/sbondCo/Watcharr/util"
 	"gorm.io/gorm"
 )
@@ -212,9 +213,40 @@ func (s *Service) GetWatchedItemById(userId uint, id uint) (entity.Watched, erro
 	return *watched, nil
 }
 
+// Get a watched list item ID by tmdb id for userID.
+func (s *Service) GetWatchedItemIDByTmdbID(
+	userId uint,
+	tmdbId uint,
+	contentType entity.ContentType,
+) (uint, error) {
+	slog.Debug("GetWatchedItemIDByTmdbID: Running.",
+		"userId", userId, "tmdbId", tmdbId)
+	var wID uint
+	err := s.db.
+		Model(&entity.Watched{}).
+		Joins("INNER JOIN contents Content ON watcheds.content_id = Content.id").
+		Select("watcheds.id").
+		Where("user_id = ? AND Content.tmdb_id = ? AND Content.type = ?",
+			userId, tmdbId, contentType).
+		Scan(&wID).
+		Error
+	if err != nil {
+		slog.Error("GetWatchedItemIDByTmdbID: Failed!", "error", err)
+		return 0, err
+	}
+	slog.Debug("GetWatchedItemIDByTmdbID: Done.",
+		"userId", userId, "tmdbId", tmdbId, "wID", wID)
+	return wID, nil
+}
+
 // Get a watched list item by content (tmdb) id (must be for `userId`).
-func (s *Service) GetWatchedItemByTmdbId(userId uint, tmdbId uint, contentType entity.ContentType) (entity.Watched, error) {
-	slog.Debug("GetWatchedItemByTmdbId: Running.", "userId", userId, "tmdbId", tmdbId)
+func (s *Service) GetWatchedItemByTmdbId(
+	userId uint,
+	tmdbId uint,
+	contentType entity.ContentType,
+) (entity.Watched, error) {
+	slog.Debug("GetWatchedItemByTmdbId: Running.",
+		"userId", userId, "tmdbId", tmdbId)
 	watched := new(entity.Watched)
 	res := s.db.Model(&entity.Watched{}).
 		Joins("Content").
@@ -222,13 +254,15 @@ func (s *Service) GetWatchedItemByTmdbId(userId uint, tmdbId uint, contentType e
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
 		Preload("Tags").
-		Where("user_id = ? AND Content.tmdb_id = ? AND Content.type = ?", userId, tmdbId, contentType).
+		Where("user_id = ? AND Content.tmdb_id = ? AND Content.type = ?",
+			userId, tmdbId, contentType).
 		Take(&watched)
 	if res.Error != nil {
 		slog.Error("GetWatchedItemByTmdbId: Failed!", "error", res.Error)
 		return entity.Watched{}, res.Error
 	}
-	slog.Debug("GetWatchedItemByTmdbId: Done.", "userId", userId, "tmdbId", tmdbId, "watched_item", watched)
+	slog.Debug("GetWatchedItemByTmdbId: Done.",
+		"userId", userId, "tmdbId", tmdbId, "watched_item", watched)
 	return *watched, nil
 }
 
@@ -485,14 +519,17 @@ func (s *Service) AddWatched(
 	} else {
 		activityAddReq.Data = string(activityJson)
 	}
-	countAsPlay := false
+	activityAddExtras := domain.ActivityAddExtraProps{
+		CountAsPlay: tri.False,
+		SyncedBy:    extraProps.ActivitySyncedBy,
+	}
 	if ar.Status == entity.FINISHED {
-		countAsPlay = true
+		activityAddExtras.CountAsPlay = tri.True
 	}
 	act, _ := s.activityProvider.AddActivity(
 		userId,
 		activityAddReq,
-		countAsPlay,
+		activityAddExtras,
 	)
 	watched.Activity = append(watched.Activity, act)
 
@@ -592,24 +629,34 @@ func (s *Service) restoreWatchedAfterDuplicatedKeyErr(
 	return nil
 }
 
-// this method is too ugly to look at please make him look better, future irhm
-func (s *Service) updateWatched(
+// Update Watched entry.
+func (s *Service) UpdateWatched(
 	userId uint,
 	id uint,
 	ar domain.WatchedUpdateRequest,
+	extra domain.WatchedUpdateRequestExtraProps,
 ) (domain.WatchedUpdateResponse, error) {
 	slog.Debug("UpdateWatched", "request_data", ar)
+
 	if err := ar.Valid(); err != nil {
 		slog.Error("UpdateWatched: UpdateRequest struct is invalid.",
 			"id", id, "error", err)
 		return domain.WatchedUpdateResponse{}, err
 	}
+
 	upwat := entity.Watched{}
-	res := s.db.Model(&entity.Watched{}).Where("id = ? AND user_id = ?", id, userId).Take(&upwat)
-	if res.Error != nil {
-		slog.Error("Watched entry update failed:", "id", id, "error", res.Error.Error())
-		return domain.WatchedUpdateResponse{}, errors.New("failed to update watched entry")
+	err := s.db.
+		Model(&entity.Watched{}).
+		Where("id = ? AND user_id = ?", id, userId).
+		Take(&upwat).
+		Error
+	if err != nil {
+		slog.Error("UpdateWatched: Failed to get existing record.",
+			"id", id, "error", err)
+		return domain.WatchedUpdateResponse{},
+			errors.New("failed to get watched entry")
 	}
+
 	originalThoughts := upwat.Thoughts
 	if ar.Rating != 0 {
 		upwat.Rating = ar.Rating
@@ -626,10 +673,15 @@ func (s *Service) updateWatched(
 	if ar.Pinned != nil {
 		upwat.Pinned = *ar.Pinned
 	}
-	res = s.db.Save(upwat)
-	if res.RowsAffected <= 0 {
+	res := s.db.Save(upwat)
+	if res.Error != nil {
+		slog.Error("UpdateWatched: Update query failed!", "error", err)
+		return domain.WatchedUpdateResponse{}, errors.New("update failed")
+	} else if res.RowsAffected <= 0 {
+		slog.Error("UpdateWatched: Update query failed! No rows affected.")
 		return domain.WatchedUpdateResponse{}, errors.New("no watched entry found")
 	}
+
 	addedActivity := entity.Activity{}
 	if ar.Rating != 0 {
 		addedActivity, _ = s.activityProvider.AddActivity(
@@ -639,43 +691,55 @@ func (s *Service) updateWatched(
 				Type:      entity.RATING_CHANGED,
 				Data:      strconv.Itoa(int(ar.Rating)),
 			},
-			false,
+			domain.ActivityAddExtraProps{
+				CountAsPlay: tri.False,
+			},
 		)
 	}
 	if ar.Status != "" {
-		countAsPlay := false
+		countAsPlay := tri.False
 		if ar.Status == entity.FINISHED &&
 			util.Deref(ar.LetCountAsPlay, true) != false {
-			countAsPlay = true
+			countAsPlay = tri.True
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(userId,
+		addedActivity, _ = s.activityProvider.AddActivity(
+			userId,
 			domain.ActivityAddProps{
 				WatchedID: id,
 				Type:      entity.STATUS_CHANGED,
 				Data:      string(ar.Status),
 			},
-			countAsPlay,
+			domain.ActivityAddExtraProps{
+				CountAsPlay: countAsPlay,
+			},
 		)
 	}
 	if ar.Thoughts != "" {
-		addedActivity, _ = s.activityProvider.AddActivity(userId,
+		addedActivity, _ = s.activityProvider.AddActivity(
+			userId,
 			domain.ActivityAddProps{
 				WatchedID: id,
 				Type:      entity.THOUGHTS_CHANGED,
 			},
-			false,
+			domain.ActivityAddExtraProps{
+				CountAsPlay: tri.False,
+			},
 		)
 	}
 	if ar.RemoveThoughts {
-		addedActivity, _ = s.activityProvider.AddActivity(userId,
+		addedActivity, _ = s.activityProvider.AddActivity(
+			userId,
 			domain.ActivityAddProps{
 				WatchedID: id,
 				Type:      entity.THOUGHTS_REMOVED,
 				Data:      originalThoughts,
 			},
-			false,
+			domain.ActivityAddExtraProps{
+				CountAsPlay: tri.False,
+			},
 		)
 	}
+
 	return domain.WatchedUpdateResponse{NewActivity: addedActivity}, nil
 }
 
@@ -733,7 +797,9 @@ func (s *Service) removeWatched(
 			WatchedID: id,
 			Type:      entity.REMOVED_WATCHED,
 		},
-		false,
+		domain.ActivityAddExtraProps{
+			CountAsPlay: tri.False,
+		},
 	)
 	return domain.WatchedRemoveResponse{NewActivity: addedActivity}, nil
 }

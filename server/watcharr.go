@@ -229,6 +229,14 @@ func main() {
 		watchedSeasonService,
 		watchedEpisodeService,
 		activityService)
+	jellyfinWebhookService := jellyfin.NewWebhookService(
+		cfg,
+		jellyfinService,
+		authService,
+		userService,
+		watchedService,
+		watchedEpisodeService,
+	)
 	plexSyncService := plex.NewSyncService(
 		plexService,
 		watchedService,
@@ -259,7 +267,14 @@ func main() {
 	episode.NewRouter(br, watchedEpisodeService).AddRoutes()
 	activity.NewRouter(br, activityService).AddRoutes()
 	profile.NewRouter(br, profileService).AddRoutes()
-	jellyfin.NewRouter(br, jellyfinService, jellyfinSyncService).AddRoutes()
+	jellyfin.
+		NewRouter(
+			br,
+			jellyfinService,
+			jellyfinSyncService,
+			jellyfinWebhookService,
+		).
+		AddRoutes()
 	plex.NewRouter(br, plexSyncService).AddRoutes()
 	user.NewRouter(br, userService, userManageService).AddRoutes()
 	follow.NewRouter(br, followService).AddRoutes()

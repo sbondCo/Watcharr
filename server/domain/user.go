@@ -35,3 +35,9 @@ type (
 		Manage(userId uint, ur UpdateUserRequest) error
 	}
 )
+
+// Query builder for getting User from db.
+type GetUserQueryBuilder interface {
+	WithUserServices() GetUserQueryBuilder
+	Done() (entity.User, error)
+}

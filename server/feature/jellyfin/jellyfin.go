@@ -14,16 +14,20 @@ import (
 )
 
 type JellyfinItemSearchResponse struct {
-	Items []JellyfinItems `json:"Items"`
+	Items []Item `json:"Items"`
 }
 
-type JellyfinItems struct {
+// A jellyfin item.
+// Eg: What `GET /Items/{id}` returns.
+type Item struct {
 	Name        string `json:"Name"`
 	Type        string `json:"Type"`
 	ServerID    string `json:"ServerId"`
 	Id          string `json:"Id"`
 	ProviderIds struct {
 		Tmdb string `json:"Tmdb"`
+		Tvdb string `json:"Tvdb"`
+		Imdb string `json:"Imdb"`
 	} `json:"ProviderIds"`
 	UserData struct {
 		Rating                float64   `json:"Rating"`
@@ -182,4 +186,32 @@ func (s *Service) JellyfinContentFind(
 		}
 	}
 	return *ret, nil
+}
+
+// Get a series from Jellyfin by its jellyfin series item id.
+// Uses /Items/{id} endpoint, which is generic, but this function is specific
+// to series so we can easily change anything around later if needed.
+func (s *Service) GetSeriesByID(
+	id string,
+	username string,
+	userThirdPartyAuth string,
+) (Item, error) {
+	if id == "" {
+		return Item{}, errors.New("no id provided")
+	}
+
+	resp := new(Item)
+	err := s.userAPIRequest(
+		"GET",
+		"/Items/"+id,
+		map[string]string{},
+		username,
+		userThirdPartyAuth,
+		&resp,
+	)
+	if err != nil {
+		slog.Error("GetSeriesByID: Jellyfin API request failed", "error", err)
+		return Item{}, errors.New("failed to get jellyfin response")
+	}
+	return *resp, nil
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
+	"github.com/sbondCo/Watcharr/tri"
 	"gorm.io/gorm"
 )
 
@@ -43,12 +44,15 @@ func (s *Service) GetActivity(
 func (s *Service) AddActivity(
 	userId uint,
 	ar domain.ActivityAddProps,
-	// If this activity counts as a play.
-	countAsPlay bool,
+	extra domain.ActivityAddExtraProps,
 ) (entity.Activity, error) {
 	if ar.WatchedID == 0 {
 		return entity.Activity{},
 			errors.New("watchedId must be set to add an activity")
+	}
+	if extra.CountAsPlay == tri.Unset {
+		// All callers should specify if activity CountsAsPlay!
+		return entity.Activity{}, errors.New("didn't specific CountAsPlay")
 	}
 	activity := entity.Activity{
 		UserID:      userId,
@@ -56,7 +60,8 @@ func (s *Service) AddActivity(
 		Type:        ar.Type,
 		Data:        ar.Data,
 		CustomDate:  ar.CustomDate,
-		CountAsPlay: countAsPlay,
+		CountAsPlay: tri.ToBool(extra.CountAsPlay),
+		SyncedBy:    extra.SyncedBy,
 	}
 	res := s.db.Create(&activity)
 	if res.Error != nil {
