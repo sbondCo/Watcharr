@@ -6,11 +6,11 @@ import (
 	"log/slog"
 	"strconv"
 
+	"github.com/sbondCo/Watcharr/activity"
 	"github.com/sbondCo/Watcharr/database/dbmodel"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/watched/addedtocontent"
-	"github.com/sbondCo/Watcharr/tri"
 	"github.com/sbondCo/Watcharr/util"
 	"gorm.io/gorm"
 )
@@ -28,25 +28,22 @@ type UserProvider interface {
 }
 
 type Service struct {
-	db               *gorm.DB
-	cp               ContentProvider
-	gameProvider     GameProvider
-	activityProvider domain.ActivityAddProvider
-	userProvider     UserProvider
+	db           *gorm.DB
+	cp           ContentProvider
+	gameProvider GameProvider
+	userProvider UserProvider
 }
 
 func NewService(
 	db *gorm.DB,
 	cp ContentProvider,
 	gameProvider GameProvider,
-	activityProvider domain.ActivityAddProvider,
 	userProvider UserProvider,
 ) *Service {
 	return &Service{
 		db,
 		cp,
 		gameProvider,
-		activityProvider,
 		userProvider,
 	}
 }
@@ -506,10 +503,14 @@ func (s *Service) AddWatched(
 	slog.Debug("AddWatched: Added watched list item", "item", watched)
 
 	// Finally add activity
-	activityAddReq := domain.ActivityAddProps{
-		WatchedID: watched.ID,
-		Type:      extraProps.ActivityType,
-	}
+	activityAddReq := activity.NewCreator(
+		s.db,
+		userId,
+		watched.ID,
+		extraProps.ActivityType,
+		false,
+		extraProps.ActivityCreatedBy,
+	)
 	if activityJson, err := json.Marshal(map[string]any{
 		"status": ar.Status,
 		"rating": ar.Rating,
@@ -517,20 +518,12 @@ func (s *Service) AddWatched(
 		slog.Error("AddWatched: Failed to marshal json for add activity request, adding without data",
 			"error", err)
 	} else {
-		activityAddReq.Data = string(activityJson)
-	}
-	activityAddExtras := domain.ActivityAddExtraProps{
-		CountAsPlay: tri.False,
-		SyncedBy:    extraProps.ActivitySyncedBy,
+		activityAddReq.SetData(string(activityJson))
 	}
 	if ar.Status == entity.FINISHED {
-		activityAddExtras.CountAsPlay = tri.True
+		activityAddReq.SetCountAsPlay(true)
 	}
-	act, _ := s.activityProvider.AddActivity(
-		userId,
-		activityAddReq,
-		activityAddExtras,
-	)
+	act, _ := activityAddReq.Create()
 	watched.Activity = append(watched.Activity, act)
 
 	return watched, nil
@@ -684,60 +677,32 @@ func (s *Service) UpdateWatched(
 
 	addedActivity := entity.Activity{}
 	if ar.Rating != 0 {
-		addedActivity, _ = s.activityProvider.AddActivity(
-			userId,
-			domain.ActivityAddProps{
-				WatchedID: id,
-				Type:      entity.RATING_CHANGED,
-				Data:      strconv.Itoa(int(ar.Rating)),
-			},
-			domain.ActivityAddExtraProps{
-				CountAsPlay: tri.False,
-			},
-		)
+		addedActivity, _ = activity.
+			NewCreator(s.db, userId, id, entity.RATING_CHANGED, false, 0).
+			SetData(strconv.Itoa(int(ar.Rating))).
+			Create()
 	}
 	if ar.Status != "" {
-		countAsPlay := tri.False
+		countAsPlay := false
 		if ar.Status == entity.FINISHED &&
 			util.Deref(ar.LetCountAsPlay, true) != false {
-			countAsPlay = tri.True
+			countAsPlay = true
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(
-			userId,
-			domain.ActivityAddProps{
-				WatchedID: id,
-				Type:      entity.STATUS_CHANGED,
-				Data:      string(ar.Status),
-			},
-			domain.ActivityAddExtraProps{
-				CountAsPlay: countAsPlay,
-			},
-		)
+		addedActivity, _ = activity.
+			NewCreator(s.db, userId, id, entity.STATUS_CHANGED, countAsPlay, 0).
+			SetData(string(ar.Status)).
+			Create()
 	}
 	if ar.Thoughts != "" {
-		addedActivity, _ = s.activityProvider.AddActivity(
-			userId,
-			domain.ActivityAddProps{
-				WatchedID: id,
-				Type:      entity.THOUGHTS_CHANGED,
-			},
-			domain.ActivityAddExtraProps{
-				CountAsPlay: tri.False,
-			},
-		)
+		addedActivity, _ = activity.
+			NewCreator(s.db, userId, id, entity.THOUGHTS_CHANGED, false, 0).
+			Create()
 	}
 	if ar.RemoveThoughts {
-		addedActivity, _ = s.activityProvider.AddActivity(
-			userId,
-			domain.ActivityAddProps{
-				WatchedID: id,
-				Type:      entity.THOUGHTS_REMOVED,
-				Data:      originalThoughts,
-			},
-			domain.ActivityAddExtraProps{
-				CountAsPlay: tri.False,
-			},
-		)
+		addedActivity, _ = activity.
+			NewCreator(s.db, userId, id, entity.THOUGHTS_REMOVED, false, 0).
+			SetData(originalThoughts).
+			Create()
 	}
 
 	return domain.WatchedUpdateResponse{NewActivity: addedActivity}, nil
@@ -791,15 +756,8 @@ func (s *Service) removeWatched(
 	if res.RowsAffected <= 0 {
 		return domain.WatchedRemoveResponse{}, errors.New("no watched entry found")
 	}
-	addedActivity, _ := s.activityProvider.AddActivity(
-		userId,
-		domain.ActivityAddProps{
-			WatchedID: id,
-			Type:      entity.REMOVED_WATCHED,
-		},
-		domain.ActivityAddExtraProps{
-			CountAsPlay: tri.False,
-		},
-	)
+	addedActivity, _ := activity.
+		NewCreator(s.db, userId, id, entity.REMOVED_WATCHED, false, 0).
+		Create()
 	return domain.WatchedRemoveResponse{NewActivity: addedActivity}, nil
 }

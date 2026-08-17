@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sbondCo/Watcharr/activity"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/watched"
 	"github.com/sbondCo/Watcharr/media/tmdb"
-	"github.com/sbondCo/Watcharr/tri"
 	"github.com/sbondCo/Watcharr/util"
 	"gorm.io/gorm"
 )
@@ -39,14 +39,13 @@ type SearchProvider interface {
 }
 
 type Service struct {
-	db               *gorm.DB
-	wp               WatchedProvider
-	wsp              WatchedSeasonProvider
-	wep              WatchedEpisodeProvider
-	tmdb             *tmdb.TMDB
-	activityProvider domain.ActivityAddProvider
-	tagProvider      TagProvider
-	searchProvider   SearchProvider
+	db             *gorm.DB
+	wp             WatchedProvider
+	wsp            WatchedSeasonProvider
+	wep            WatchedEpisodeProvider
+	tmdb           *tmdb.TMDB
+	tagProvider    TagProvider
+	searchProvider SearchProvider
 }
 
 func NewService(
@@ -55,7 +54,6 @@ func NewService(
 	wsp WatchedSeasonProvider,
 	wep WatchedEpisodeProvider,
 	tmdb *tmdb.TMDB,
-	activityProvider domain.ActivityAddProvider,
 	tagProvider TagProvider,
 	searchProvider SearchProvider,
 ) *Service {
@@ -65,7 +63,6 @@ func NewService(
 		wsp,
 		wep,
 		tmdb,
-		activityProvider,
 		tagProvider,
 		searchProvider,
 	}
@@ -182,59 +179,59 @@ func (s *Service) SuccessfulImport(
 				"rating":         ar.Rating,
 				"linkedActivity": w.Activity[0].ID,
 			})
-			addedActivity, _ = s.activityProvider.AddActivity(
-				userId,
-				domain.ActivityAddProps{
-					WatchedID:  w.ID,
-					Type:       entity.IMPORTED_RATING,
-					Data:       string(activityJson),
-					CustomDate: ar.RatingCustomDate,
-				},
-				domain.ActivityAddExtraProps{
-					CountAsPlay: tri.False,
-				},
-			)
+			addedActivity, _ = activity.
+				NewCreator(
+					s.db,
+					userId,
+					w.ID,
+					entity.IMPORTED_RATING,
+					false,
+					entity.ActivityCreatedByGenericImport,
+				).
+				SetData(string(activityJson)).
+				SetCustomDate(ar.RatingCustomDate).
+				Create()
 		} else {
-			addedActivity, _ = s.activityProvider.AddActivity(
-				userId,
-				domain.ActivityAddProps{
-					WatchedID:  w.ID,
-					Type:       entity.IMPORTED_RATING,
-					Data:       strconv.Itoa(int(ar.Rating)),
-					CustomDate: ar.RatingCustomDate,
-				},
-				domain.ActivityAddExtraProps{
-					CountAsPlay: tri.False,
-				},
-			)
+			addedActivity, _ = activity.
+				NewCreator(
+					s.db,
+					userId,
+					w.ID,
+					entity.IMPORTED_RATING,
+					false,
+					entity.ActivityCreatedByGenericImport,
+				).
+				SetData(strconv.Itoa(int(ar.Rating))).
+				SetCustomDate(ar.RatingCustomDate).
+				Create()
 		}
 		w.Activity = append(w.Activity, addedActivity)
 	}
 	// Add all dates watched as activity, if any
 	if len(ar.DatesWatched) > 0 {
 		for i, v := range ar.DatesWatched {
-			countAsPlay := tri.True
+			countAsPlay := true
 			if i == 0 && ar.Status == entity.FINISHED {
 				// If the watched status we are importing is of FINISHED
 				// then the first DatesWatched must not count as a play,
 				// since the import activity (set in AddWatched) will already.
 				// Any subsequent DatesWatched should count as a play though.
-				countAsPlay = tri.False
+				countAsPlay = false
 				slog.Info("successfulImport: Set countAsPlay=false for first" +
 					"DatesWatched to avoid duplicate play count with AddWatched activity.")
 			}
 			customDate := v
-			addedActivity, err := s.activityProvider.AddActivity(
-				userId,
-				domain.ActivityAddProps{
-					WatchedID:  w.ID,
-					Type:       entity.IMPORTED_ADDED_WATCHED,
-					CustomDate: &customDate,
-				},
-				domain.ActivityAddExtraProps{
-					CountAsPlay: countAsPlay,
-				},
-			)
+			addedActivity, err := activity.
+				NewCreator(
+					s.db,
+					userId,
+					w.ID,
+					entity.IMPORTED_ADDED_WATCHED,
+					countAsPlay,
+					entity.ActivityCreatedByGenericImport,
+				).
+				SetCustomDate(&customDate).
+				Create()
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
 			} else {
@@ -252,18 +249,11 @@ func (s *Service) SuccessfulImport(
 			if activityDate == nil || activityDate.IsZero() {
 				activityDate = &ar.Activity[i].CreatedAt
 			}
-			addedActivity, err := s.activityProvider.AddActivity(
-				userId,
-				domain.ActivityAddProps{
-					WatchedID:  w.ID,
-					Type:       v.Type,
-					Data:       v.Data,
-					CustomDate: activityDate,
-				},
-				domain.ActivityAddExtraProps{
-					CountAsPlay: tri.FromBool(v.CountAsPlay),
-				},
-			)
+			addedActivity, err := activity.
+				NewCreator(s.db, userId, w.ID, v.Type, v.CountAsPlay, 0).
+				SetData(v.Data).
+				SetCustomDate(activityDate).
+				Create()
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
 			} else {

@@ -15,8 +15,8 @@ type (
 		Rating          int8                 `json:"rating" binding:"max=10"`
 		AddActivity     entity.ActivityType  `json:"-"`
 		AddActivityDate time.Time            `json:"-"`
-		// Set the SyncedBy value on the created activity (only use if coming from sync job).
-		ActivitySyncedBy entity.ActivitySyncedBy `json:"-"`
+		// Set the CreatedBy value on the created activity.
+		ActivityCreatedBy entity.ActivityCreatedBy `json:"-"`
 	}
 
 	WatchedEpisodeAddResponse struct {

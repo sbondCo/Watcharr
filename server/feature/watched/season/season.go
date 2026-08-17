@@ -5,22 +5,20 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/sbondCo/Watcharr/activity"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
-	"github.com/sbondCo/Watcharr/tri"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 type Service struct {
-	db               *gorm.DB
-	activityProvider domain.ActivityAddProvider
+	db *gorm.DB
 }
 
-func NewService(db *gorm.DB, activityProvider domain.ActivityAddProvider) *Service {
+func NewService(db *gorm.DB) *Service {
 	return &Service{
 		db,
-		activityProvider,
 	}
 }
 
@@ -85,36 +83,32 @@ func (s *Service) AddWatchedSeason(
 		// (changing value to same value doesn't count).
 		if updated {
 			if ar.Status != "" {
-				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status})
-				addedActivity, _ = s.activityProvider.AddActivity(
-					userId,
-					domain.ActivityAddProps{
-						WatchedID: w.ID,
-						Type:      entity.SEASON_STATUS_CHANGED,
-						Data:      string(json),
-					},
-					domain.ActivityAddExtraProps{
-						CountAsPlay: tri.False,
-					},
-				)
+				json, _ := json.Marshal(map[string]interface{}{
+					"season": ar.SeasonNumber,
+					"status": ar.Status,
+				})
+				addedActivity, _ = activity.
+					NewCreator(s.db, userId, w.ID, entity.SEASON_STATUS_CHANGED, false, 0).
+					SetData(string(json)).
+					Create()
 			}
 			if ar.Rating != 0 {
-				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "rating": ar.Rating})
-				addedActivity, _ = s.activityProvider.AddActivity(
-					userId,
-					domain.ActivityAddProps{
-						WatchedID: w.ID,
-						Type:      entity.SEASON_RATING_CHANGED,
-						Data:      string(json),
-					},
-					domain.ActivityAddExtraProps{
-						CountAsPlay: tri.False,
-					},
-				)
+				json, _ := json.Marshal(map[string]interface{}{
+					"season": ar.SeasonNumber,
+					"rating": ar.Rating,
+				})
+				addedActivity, _ = activity.
+					NewCreator(s.db, userId, w.ID, entity.SEASON_RATING_CHANGED, false, 0).
+					SetData(string(json)).
+					Create()
 			}
 		}
 	} else {
-		actData := map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status, "rating": ar.Rating}
+		actData := map[string]interface{}{
+			"season": ar.SeasonNumber,
+			"status": ar.Status,
+			"rating": ar.Rating,
+		}
 		if len(ar.AddActivityData) > 0 {
 			for k, v := range ar.AddActivityData {
 				if _, ok := ar.AddActivityData[k]; ok {
@@ -123,20 +117,16 @@ func (s *Service) AddWatchedSeason(
 			}
 		}
 		json, _ := json.Marshal(actData)
-		act := domain.ActivityAddProps{WatchedID: w.ID, Type: entity.SEASON_ADDED, Data: string(json)}
+		act := activity.
+			NewCreator(s.db, userId, w.ID, entity.SEASON_ADDED, false, 0).
+			SetData(string(json))
 		if ar.AddActivity != "" {
-			act.Type = ar.AddActivity
+			act.SetType(ar.AddActivity)
 		}
 		if !ar.AddActivityDate.IsZero() {
-			act.CustomDate = &ar.AddActivityDate
+			act.SetCustomDate(&ar.AddActivityDate)
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(
-			userId,
-			act,
-			domain.ActivityAddExtraProps{
-				CountAsPlay: tri.False,
-			},
-		)
+		addedActivity, _ = act.Create()
 	}
 	return domain.WatchedSeasonAddResponse{
 		WatchedSeasons: w.WatchedSeasons,
@@ -169,17 +159,10 @@ func (s *Service) RmWatchedSeason(userId uint, seasonId uint) (entity.Activity, 
 			"status": watchedSeason.Status,
 			"rating": watchedSeason.Rating,
 		})
-		addedActivity, _ := s.activityProvider.AddActivity(
-			userId,
-			domain.ActivityAddProps{
-				WatchedID: watchedSeason.WatchedID,
-				Type:      entity.SEASON_REMOVED,
-				Data:      string(json),
-			},
-			domain.ActivityAddExtraProps{
-				CountAsPlay: tri.False,
-			},
-		)
+		addedActivity, _ := activity.
+			NewCreator(s.db, userId, watchedSeason.WatchedID, entity.SEASON_REMOVED, false, 0).
+			SetData(string(json)).
+			Create()
 		return addedActivity, nil
 	}
 	return entity.Activity{}, errors.New("removed, but failed to add activity entry")

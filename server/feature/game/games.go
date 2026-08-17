@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/sbondCo/Watcharr/database/entity"
-	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/image"
 	"github.com/sbondCo/Watcharr/media/igdb"
 	"gorm.io/gorm"
@@ -14,16 +13,14 @@ import (
 )
 
 type Service struct {
-	db               *gorm.DB
-	igdb             *igdb.IGDB
-	activityProvider domain.ActivityAddProvider
+	db   *gorm.DB
+	igdb *igdb.IGDB
 }
 
-func NewService(db *gorm.DB, igdb *igdb.IGDB, activityProvider domain.ActivityAddProvider) *Service {
+func NewService(db *gorm.DB, igdb *igdb.IGDB) *Service {
 	return &Service{
 		db,
 		igdb,
-		activityProvider,
 	}
 }
 

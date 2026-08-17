@@ -6,25 +6,26 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sbondCo/Watcharr/activity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
 	"github.com/sbondCo/Watcharr/router"
 )
 
 type Router struct {
-	br      *router.BaseRouter
-	service *Service
+	br *router.BaseRouter
 }
 
-func NewRouter(br *router.BaseRouter, service *Service) *Router {
+func NewRouter(br *router.BaseRouter) *Router {
 	return &Router{
 		br,
-		service,
 	}
 }
 
 func (r *Router) AddRoutes() {
-	activity := r.br.Router.Group("/activity").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	activity := r.br.Router.
+		Group("/activity").
+		Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
 
 	activity.GET(":watchedId", r.GetActivity)
 	activity.PUT(":id", r.UpdateActivity)
@@ -38,7 +39,7 @@ func (r *Router) GetActivity(c *gin.Context) {
 		return
 	}
 	userId := c.MustGet("userId").(uint)
-	activity, err := r.service.GetActivity(userId, uint(watchedId))
+	activity, err := activity.Get(r.br.DB, userId, uint(watchedId))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, router.ErrorResponse{Error: err.Error()})
 		return
@@ -56,7 +57,7 @@ func (r *Router) UpdateActivity(c *gin.Context) {
 	var activityUpdateRequest domain.ActivityUpdateRequest
 	err = c.ShouldBindJSON(&activityUpdateRequest)
 	if err == nil {
-		err = r.service.UpdateActivity(userId, uint(id), activityUpdateRequest)
+		err = activity.Update(r.br.DB, userId, uint(id), activityUpdateRequest)
 		if err != nil {
 			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 			return
@@ -72,10 +73,11 @@ func (r *Router) DeleteActivity(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.Status(400)
-		slog.Error("Could not process activity id when attempting a deletion", "error", err.Error(), "id", c.Param("id"))
+		slog.Error("DeleteActivity: Couldn't parse id.",
+			"error", err.Error(), "id", c.Param("id"))
 		return
 	}
-	err = r.service.DeleteActivity(userId, uint(id))
+	err = activity.Delete(r.br.DB, userId, uint(id))
 	if err != nil {
 		c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 		return

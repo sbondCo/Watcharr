@@ -203,32 +203,27 @@ func main() {
 	plexService := plex.NewService(cfg)
 	authService := auth.NewService(db, cfg, plexService)
 	authTrustedHeaderService := auth.NewTrustedHeaderService(db, cfg, authService)
-	activityService := activity.NewService(db)
 	userService := user.NewService(db)
 	userManageService := user.NewManageService(db)
-	gameService := game.NewService(db, &br.Cfg.TWITCH, activityService)
-	watchedService := watched.NewService(
-		db,
-		contentService,
-		gameService,
-		activityService,
-		userService)
-	watchedSeasonService := season.NewService(db, activityService)
+	gameService := game.NewService(db, &br.Cfg.TWITCH)
+	watchedService := watched.NewService(db, contentService, gameService, userService)
+	watchedSeasonService := season.NewService(db)
 	watchedEpisodeService := episode.NewService(
 		db,
 		watchedService,
 		watchedSeasonService,
 		tmdbService,
-		activityService,
-		userService)
+		userService,
+	)
 	jellyfinService := jellyfin.NewService(cfg)
 	jellyfinSyncService := jellyfin.NewSyncService(
+		db,
 		cfg,
 		jellyfinService,
 		watchedService,
 		watchedSeasonService,
 		watchedEpisodeService,
-		activityService)
+	)
 	jellyfinWebhookService := jellyfin.NewWebhookService(
 		cfg,
 		jellyfinService,
@@ -238,11 +233,12 @@ func main() {
 		watchedEpisodeService,
 	)
 	plexSyncService := plex.NewSyncService(
+		db,
 		plexService,
 		watchedService,
 		watchedSeasonService,
 		watchedEpisodeService,
-		activityService)
+	)
 	featureService := feature.NewService(cfg)
 	profileService := profile.NewService(db)
 	followService := follow.NewService(db)
@@ -255,9 +251,9 @@ func main() {
 		watchedSeasonService,
 		watchedEpisodeService,
 		tmdbService,
-		activityService,
 		tagService,
-		searchService)
+		searchService,
+	)
 	importTraktService := imprt.NewTraktService(importService)
 
 	auth.NewRouter(br, authService, authTrustedHeaderService).AddRoutes()
@@ -265,7 +261,7 @@ func main() {
 	watched.NewRouter(br, watchedService).AddRoutes()
 	season.NewRouter(br, watchedSeasonService).AddRoutes()
 	episode.NewRouter(br, watchedEpisodeService).AddRoutes()
-	activity.NewRouter(br, activityService).AddRoutes()
+	activity.NewRouter(br).AddRoutes()
 	profile.NewRouter(br, profileService).AddRoutes()
 	jellyfin.
 		NewRouter(

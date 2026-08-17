@@ -259,7 +259,7 @@ func (w *WebhookService) applyStatusToWatched(
 				Status: newTopLevelStatus,
 			},
 			domain.WatchedUpdateRequestExtraProps{
-				ActivitySyncedBy: entity.ActivitySyncedByJellyfin,
+				ActivityCreatedBy: entity.ActivityCreatedByJellyfinWebhook,
 			},
 		)
 		if err != nil {
@@ -277,8 +277,8 @@ func (w *WebhookService) applyStatusToWatched(
 				Status:      newTopLevelStatus,
 			},
 			domain.WatchedAddExtraProps{
-				ActivityType:     entity.ADDED_WATCHED,
-				ActivitySyncedBy: entity.ActivitySyncedByJellyfin,
+				ActivityType:      entity.ADDED_WATCHED,
+				ActivityCreatedBy: entity.ActivityCreatedByJellyfinWebhook,
 			},
 		)
 		if err != nil {
@@ -315,11 +315,11 @@ func (w *WebhookService) applyStatusToSeriesEpisode(
 	w.episodeProvider.AddWatchedEpisodes(
 		user.ID,
 		domain.WatchedEpisodeAddRequest{
-			WatchedID:        watchedID,
-			SeasonNumber:     *data.SeasonNumber,
-			EpisodeNumber:    data.EpisodeNumber,
-			Status:           newStatus,
-			ActivitySyncedBy: entity.ActivitySyncedByJellyfin,
+			WatchedID:         watchedID,
+			SeasonNumber:      *data.SeasonNumber,
+			EpisodeNumber:     data.EpisodeNumber,
+			Status:            newStatus,
+			ActivityCreatedBy: entity.ActivityCreatedByJellyfinWebhook,
 		},
 	)
 	return nil
