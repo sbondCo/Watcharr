@@ -69,11 +69,9 @@ func (c *Creator) Create() (entity.Activity, error) {
 	}
 	res := c.db.Create(&activity)
 	if res.Error != nil {
-		slog.Error("Error adding activity to database",
-			"error", res.Error.Error())
-		return entity.Activity{},
-			errors.New("failed adding new activity to database")
+		slog.Error("Create: Query failed!", "error", res.Error)
+		return entity.Activity{}, errors.New("query failed")
 	}
-	slog.Debug("Adding activity", "added_activity", activity)
+	slog.Debug("Create: Added activity", "added_activity", activity)
 	return activity, nil
 }
