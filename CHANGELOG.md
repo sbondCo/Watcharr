@@ -17,7 +17,8 @@ These changes are awaiting release:
 - Moved JellyfinAccessRequired middleware to `authmiddleware` package.
 - Created `usermiddleware` package with `WithUser` and `WithUserService` middleware. These will help us migrate from the all-encompassing `AuthRequired` middleware (so that it can just stick to purely auth and any routes needing the User from database can add the extra middleware which is more modular).
 - Created `tri` package for representing "tribools". Helps us avoid using `*bool` when possible (for inter-watcharr communications).
-- Activity: Changed `AddActivity` to accept a struct for extra props.
+- Activity: Moved service code to a new top-level activity package (no longer injected into other services that need it).
+  - Made a builder API for creating activities (so the builder constructor can have required props, enabling compiler errors for this case & makes the call sites more readable).
 - WatchedEpisode: Moved request/response structs to `domain` package.
 - WatchedSeason: Moved request/response structs to `domain` package.
 

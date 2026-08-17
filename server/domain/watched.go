@@ -183,8 +183,8 @@ type WatchedAddRequest struct {
 type WatchedAddExtraProps struct {
 	// The type of activity this is (will be added to db as this type).
 	ActivityType entity.ActivityType
-	// Set the SyncedBy value on the created activity (only use if coming from sync job).
-	ActivitySyncedBy entity.ActivitySyncedBy
+	// Set the CreatedBy value on the created activity.
+	ActivityCreatedBy entity.ActivityCreatedBy
 	// When watched entry to db, if a unique constraint is hit, should
 	// we skip the restoration logic (bring back soft deleted record)?
 	// - Syncing logic may use this field as it might not make sense to restore
@@ -229,8 +229,8 @@ func (w WatchedUpdateRequest) Valid() error {
 }
 
 type WatchedUpdateRequestExtraProps struct {
-	// Set the SyncedBy value on the created activity (only use if coming from sync job).
-	ActivitySyncedBy entity.ActivitySyncedBy
+	// Set the CreatedBy value on the created activity.
+	ActivityCreatedBy entity.ActivityCreatedBy
 }
 
 // Update response.

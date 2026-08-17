@@ -5,12 +5,13 @@ import (
 	"log/slog"
 	"strconv"
 
+	"github.com/sbondCo/Watcharr/activity"
 	"github.com/sbondCo/Watcharr/config"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/job"
-	"github.com/sbondCo/Watcharr/tri"
 	"github.com/sbondCo/Watcharr/util"
+	"gorm.io/gorm"
 )
 
 type JellyfinSeriesSeasonsResponse struct {
@@ -52,29 +53,29 @@ type WatchedEpisodeProvider interface {
 }
 
 type SyncService struct {
-	cfg              *config.ServerConfig
-	service          *Service
-	wp               WatchedProvider
-	wsp              WatchedSeasonProvider
-	wep              WatchedEpisodeProvider
-	activityProvider domain.ActivityAddProvider
+	db      *gorm.DB
+	cfg     *config.ServerConfig
+	service *Service
+	wp      WatchedProvider
+	wsp     WatchedSeasonProvider
+	wep     WatchedEpisodeProvider
 }
 
 func NewSyncService(
+	db *gorm.DB,
 	cfg *config.ServerConfig,
 	service *Service,
 	wp WatchedProvider,
 	wsp WatchedSeasonProvider,
 	wep WatchedEpisodeProvider,
-	activityProvider domain.ActivityAddProvider,
 ) *SyncService {
 	return &SyncService{
+		db,
 		cfg,
 		service,
 		wp,
 		wsp,
 		wep,
-		activityProvider,
 	}
 }
 
@@ -174,17 +175,17 @@ func (s *SyncService) startJellyfinSync(
 				} else {
 					// 3. Add IMPORTED_ADDED_WATCHED_JF activity
 					if !v.UserData.LastPlayedDate.IsZero() {
-						_, err := s.activityProvider.AddActivity(
-							userId,
-							domain.ActivityAddProps{
-								WatchedID:  w.ID,
-								Type:       entity.IMPORTED_ADDED_WATCHED_JF,
-								CustomDate: &v.UserData.LastPlayedDate,
-							},
-							domain.ActivityAddExtraProps{
-								CountAsPlay: tri.False,
-							},
-						)
+						_, err := activity.
+							NewCreator(
+								s.db,
+								userId,
+								w.ID,
+								entity.IMPORTED_ADDED_WATCHED_JF,
+								false,
+								entity.ActivityCreatedByJellyfinImport,
+							).
+							SetCustomDate(&v.UserData.LastPlayedDate).
+							Create()
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to add dateswatched activity.", "movie_name", v.Name,
 								"movie_ids", v.ProviderIds, "user_id", userId, "date", v.UserData.LastPlayedDate, "error", err)
@@ -289,17 +290,17 @@ func (s *SyncService) startJellyfinSync(
 				} else {
 					// 3. Add IMPORTED_ADDED_WATCHED activity (only if no err above, show also must not have already been on our list)
 					if !v.UserData.LastPlayedDate.IsZero() {
-						_, err := s.activityProvider.AddActivity(
-							userId,
-							domain.ActivityAddProps{
-								WatchedID:  w.ID,
-								Type:       entity.IMPORTED_ADDED_WATCHED_JF,
-								CustomDate: &v.UserData.LastPlayedDate,
-							},
-							domain.ActivityAddExtraProps{
-								CountAsPlay: tri.False,
-							},
-						)
+						_, err := activity.
+							NewCreator(
+								s.db,
+								userId,
+								w.ID,
+								entity.IMPORTED_ADDED_WATCHED_JF,
+								false,
+								entity.ActivityCreatedByJellyfinImport,
+							).
+							SetCustomDate(&v.UserData.LastPlayedDate).
+							Create()
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to add dateswatched activity.",
 								"series_name", v.Name,
