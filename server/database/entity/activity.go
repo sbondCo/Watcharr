@@ -68,13 +68,30 @@ type Activity struct {
 	// Indexed (check migrations) to make search faster, since we frequently
 	// do it over the whole table for watched sorting at the moment.
 	CountAsPlay bool `json:"countAsPlay"`
-	// Was this activity created because of a sync from another service?
-	// Currently ONLY for syncers NOT importers.
-	SyncedBy ActivitySyncedBy `json:"synced,omitempty"`
+	// If this activity wasn't created because of a manual interaction by the
+	// user, the creator should store who they are in this property.
+	// Eg: Jellyfin webhook syncer will store that it Created this activity.
+	CreatedBy ActivityCreatedBy `json:"createdBy,omitempty"`
+	// The reason behind this activity existing (if there's one worth setting).
+	// Eg: Watcharr automations can place their full human-readable reason for
+	// triggering in this property for display on the frontend.
+	Reason string `json:"reason,omitempty"`
 }
 
-type ActivitySyncedBy int
+type ActivityCreatedBy int
 
+// Obviously do not re-assign these, they link to db cells! New properties
+// should be appended to the bottom! Note to self: I couldn't decide on a way
+// of organizing these so I opted for a simple "enum".
 const (
-	ActivitySyncedByJellyfin ActivitySyncedBy = 1
+	// Watcharr automation.
+	ActivityCreatedByWatcharr ActivityCreatedBy = iota + 1
+	// Our generic importer service.
+	ActivityCreatedByGenericImport
+	// Jellyfin import.
+	ActivityCreatedByJellyfinImport
+	// Jellyfin webhook auto sync.
+	ActivityCreatedByJellyfinWebhook
+	// Plex import.
+	ActivityCreatedByPlexImport
 )

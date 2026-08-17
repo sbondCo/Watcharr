@@ -99,6 +99,7 @@ func (r *Router) GetSync(c *gin.Context) {
 
 // (unauthenticated) Webhook endpoint.
 // Ingest service will use the `uuid` param as a "secret".
+func (r *Router) PostWebhook(c *gin.Context) {
 
 	uuid := c.Param("uuid")
 	var data WebhookData

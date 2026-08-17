@@ -7,11 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sbondCo/Watcharr/activity"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/job"
-	"github.com/sbondCo/Watcharr/tri"
 	"github.com/sbondCo/Watcharr/util"
+	"gorm.io/gorm"
 )
 
 type PlexSyncResponse struct {
@@ -31,26 +32,26 @@ type WatchedEpisodeProvider interface {
 }
 
 type SyncService struct {
-	s                *Service
-	wp               WatchedProvider
-	wsp              WatchedSeasonProvider
-	wep              WatchedEpisodeProvider
-	activityProvider domain.ActivityAddProvider
+	db  *gorm.DB
+	s   *Service
+	wp  WatchedProvider
+	wsp WatchedSeasonProvider
+	wep WatchedEpisodeProvider
 }
 
 func NewSyncService(
+	db *gorm.DB,
 	s *Service,
 	wp WatchedProvider,
 	wsp WatchedSeasonProvider,
 	wep WatchedEpisodeProvider,
-	activityProvider domain.ActivityAddProvider,
 ) *SyncService {
 	return &SyncService{
+		db,
 		s,
 		wp,
 		wsp,
 		wep,
-		activityProvider,
 	}
 }
 
@@ -149,17 +150,17 @@ func (s *SyncService) startPlexSync(
 				} else {
 					// 3. Add IMPORTED_ADDED_WATCHED_PLEX activity
 					if !lastViewedAt.IsZero() {
-						_, err := s.activityProvider.AddActivity(
-							userId,
-							domain.ActivityAddProps{
-								WatchedID:  w.ID,
-								Type:       entity.IMPORTED_ADDED_WATCHED_PLEX,
-								CustomDate: &lastViewedAt,
-							},
-							domain.ActivityAddExtraProps{
-								CountAsPlay: tri.False,
-							},
-						)
+						_, err := activity.
+							NewCreator(
+								s.db,
+								userId,
+								w.ID,
+								entity.IMPORTED_ADDED_WATCHED_PLEX,
+								false,
+								entity.ActivityCreatedByPlexImport,
+							).
+							SetCustomDate(&lastViewedAt).
+							Create()
 						if err != nil {
 							slog.Error("plexSyncWatched: Failed to add dateswatched activity.", "movie_name", movie.Title,
 								"movie_id", movie.GUID, "user_id", userId, "date", lastViewedAt, "unparsed_date", movie.LastViewedAt, "error", err)
@@ -241,17 +242,17 @@ func (s *SyncService) startPlexSync(
 				} else {
 					// 3. Add IMPORTED_ADDED_WATCHED_PLEX activity
 					if !lastViewedAt.IsZero() {
-						_, err := s.activityProvider.AddActivity(
-							userId,
-							domain.ActivityAddProps{
-								WatchedID:  w.ID,
-								Type:       entity.IMPORTED_ADDED_WATCHED_PLEX,
-								CustomDate: &lastViewedAt,
-							},
-							domain.ActivityAddExtraProps{
-								CountAsPlay: tri.False,
-							},
-						)
+						_, err := activity.
+							NewCreator(
+								s.db,
+								userId,
+								w.ID,
+								entity.IMPORTED_ADDED_WATCHED_PLEX,
+								false,
+								entity.ActivityCreatedByPlexImport,
+							).
+							SetCustomDate(&lastViewedAt).
+							Create()
 						if err != nil {
 							slog.Error("plexSyncWatched: Failed to add dateswatched activity.", "movie_name", show.Title,
 								"movie_id", show.GUID, "user_id", userId, "date", lastViewedAt, "unparsed_date", show.LastViewedAt, "error", err)
