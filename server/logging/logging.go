@@ -9,8 +9,15 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+type (
+	LevelChangedHook func(debug bool)
+)
+
 var (
-	logLevel = new(slog.LevelVar)
+	// The logging level.
+	level = new(slog.LevelVar)
+	// Callbacks for whenever we change the log level.
+	levelChangedHooks []LevelChangedHook
 )
 
 // Setup slog defaults
@@ -24,7 +31,7 @@ func Setup(logfp string) io.Writer {
 	}, os.Stdout)
 	slog.SetDefault(slog.New(
 		slog.NewTextHandler(multiw, &slog.HandlerOptions{
-			Level:     logLevel,
+			Level:     level,
 			AddSource: true,
 			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 				// `AddSource=true` adds source code location to each log,
@@ -43,12 +50,23 @@ func Setup(logfp string) io.Writer {
 	return multiw
 }
 
-// Set loggin level from config
-func SetLevel(debug bool) {
+// Add a hook to levelChangedHooks.
+//
+// **NOTE:** Ideally all hooks are added BEFORE the first `Level()` call, so
+// all hooks are ran for the first init of the logger level.
+func AddLevelChangedHook(lch LevelChangedHook) {
+	levelChangedHooks = append(levelChangedHooks, lch)
+}
+
+// Set loggin level.
+func Level(debug bool) {
 	if debug {
-		logLevel.Set(slog.LevelDebug)
+		level.Set(slog.LevelDebug)
 	} else {
-		logLevel.Set(slog.LevelInfo)
+		level.Set(slog.LevelInfo)
 	}
-	slog.Info("Logging level set", "logging_level", logLevel)
+	for i := range levelChangedHooks {
+		levelChangedHooks[i](debug)
+	}
+	slog.Info("Logging level set", "level", level)
 }

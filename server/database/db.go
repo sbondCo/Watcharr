@@ -13,27 +13,20 @@ import (
 )
 
 // Create a new database connection.
-// Also runs migrations, etc, before returning connection.
-// Any error returned from this func should always make our app Exit (caller
-// handled).
+// For initial database connection in `main()`, also call `Setup()` on the
+// returned `db` to run migrations, etc!
 //
 // NOTE: Our mock db used in tests mimics this function, so if this func is
 // changed, you should look at the mock db to make it match if it makes
 // sense, so our tests stay accurate to prod.
-func New() (*gorm.DB, error) {
-	slog.Info("New: Opening new database connection")
-	// Open the database.
+func Open() (*gorm.DB, error) {
+	slog.Info("Open: Opening new database connection")
 	db, err := gorm.Open(
 		sqlite.Open(path.Join(config.DataPath, "watcharr.db")),
 		&gorm.Config{TranslateError: true},
 	)
 	if err != nil {
-		slog.Error("New: Opening database failed.")
-		return nil, err
-	}
-	// Setup the db (migrations, etc)
-	if err := Setup(db); err != nil {
-		slog.Error("New: Setting up connection failed!", "error", err)
+		slog.Error("Open: Opening database failed.")
 		return nil, err
 	}
 	return db, nil

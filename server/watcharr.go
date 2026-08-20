@@ -52,6 +52,7 @@ import (
 	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/router"
 	taskl "github.com/sbondCo/Watcharr/task"
+	"gorm.io/gorm/logger"
 )
 
 //go:embed VERSION
@@ -131,8 +132,6 @@ func main() {
 		log.Fatal("Failed to get server config!", err)
 	}
 
-	logging.SetLevel(cfg.DEBUG)
-
 	// Check if we want to be in DEV or PROD
 	isProd := true
 	if os.Getenv("MODE") == "DEV" {
@@ -142,9 +141,32 @@ func main() {
 
 	// Create our database connection.
 	// Migrations are ran before our connection is returned for use.
-	db, err := database.New()
+	db, err := database.Open()
 	if err != nil {
 		slog.Error("Database initialization failed!", "error", err)
+		os.Exit(1)
+	}
+
+	// Add a logging level hook that updates db Logger mode too, so in debug,
+	// we can log ALL db queries to stdout (mainly for development, but could
+	// potentially help someone debugging their instance).
+	logging.AddLevelChangedHook(func(debug bool) {
+		if debug {
+			// Setting gorm logger to `Info` makes it log all queries, which is
+			// what we want for debug mode.
+			db.Logger = db.Logger.LogMode(logger.Info)
+		} else {
+			// When not in debug, we go back to `Warn`, which is the default
+			// level for db.
+			db.Logger = db.Logger.LogMode(logger.Warn)
+		}
+	})
+	logging.Level(cfg.DEBUG)
+
+	// Setup the db (migrations, etc). This step purposefully comes after we
+	// setup logging above.
+	if err := database.Setup(db); err != nil {
+		slog.Error("Database setup failed!", "error", err)
 		os.Exit(1)
 	}
 

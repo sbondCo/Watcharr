@@ -163,7 +163,7 @@ func (c *ServerConfig) UpdateConfig(k string, v any) error {
 		c.TMDB_KEY = v.(string)
 	} else if k == "DEBUG" {
 		c.DEBUG = v.(bool)
-		logging.SetLevel(c.DEBUG)
+		logging.Level(c.DEBUG)
 	} else if k == "DEFAULT_COUNTRY" {
 		c.DEFAULT_COUNTRY = v.(string)
 	} else {
