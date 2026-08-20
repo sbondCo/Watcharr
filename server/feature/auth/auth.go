@@ -629,7 +629,7 @@ func (s *Service) UserChangePassword(p UserPasswordUpdateRequest, userId uint) e
 	}
 	if !match {
 		slog.Error("UserChangePassword: Passwords do not match.",
-			"user_id", userId, "error", err)
+			"user_id", userId)
 		return errors.New("password incorrect")
 	}
 	slog.Debug("UserChangePassword: Password matched. Hashing new pass.",
