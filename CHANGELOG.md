@@ -15,6 +15,7 @@ These changes are awaiting release:
 - User: Changed Password gorm permission to "create only", to avoid loading pass hash into memory unnecessarily. Services that need to read the password field, now use their own specific single use struct.
 - Logging: When `debug` logging is enabled, all database queries will be logged to `stdout`.
 - Menu: Add border-radius to buttons on hover.
+- FaceMenu: Show $error color as bg when hovering over logout button.
 
 ## Fixed
 
