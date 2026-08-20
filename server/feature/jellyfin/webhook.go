@@ -277,7 +277,6 @@ func (w *WebhookService) applyStatusToWatched(
 				Status:      newTopLevelStatus,
 			},
 			domain.WatchedAddExtraProps{
-				ActivityType:      entity.ADDED_WATCHED,
 				ActivityCreatedBy: entity.ActivityCreatedByJellyfinWebhook,
 			},
 		)

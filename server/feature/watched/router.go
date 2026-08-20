@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
 	"github.com/sbondCo/Watcharr/router"
@@ -116,9 +115,7 @@ func (r *Router) AddWatched(c *gin.Context) {
 		newWatched, err := r.s.AddWatched(
 			userId,
 			ar,
-			domain.WatchedAddExtraProps{
-				ActivityType: entity.ADDED_WATCHED,
-			},
+			domain.WatchedAddExtraProps{},
 		)
 		if err != nil {
 			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})

@@ -158,7 +158,7 @@ func (s *Service) SuccessfulImport(
 		userId,
 		wAddReq,
 		domain.WatchedAddExtraProps{
-			ActivityType: entity.IMPORTED_WATCHED,
+			ActivityCreatedBy: entity.ActivityCreatedByGenericImport,
 		})
 	if err != nil {
 		if errors.Is(err, domain.ErrWatchedExists) {

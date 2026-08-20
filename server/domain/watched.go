@@ -181,8 +181,6 @@ type WatchedAddRequest struct {
 }
 
 type WatchedAddExtraProps struct {
-	// The type of activity this is (will be added to db as this type).
-	ActivityType entity.ActivityType
 	// Set the CreatedBy value on the created activity.
 	ActivityCreatedBy entity.ActivityCreatedBy
 	// When watched entry to db, if a unique constraint is hit, should

@@ -1,13 +1,12 @@
 <script lang="ts">
-	import type { Activity } from "@/types";
+	import { type Activity, ActivityCreatedBy } from "@/types";
 	import {
 		getOrdinalSuffix,
 		months,
 		seasonAndEpToReadable,
-	} from "./util/helpers";
+	} from "../util/helpers";
 	import ActivityEditor from "./ActivityEditor.svelte";
-	import Icon from "./Icon.svelte";
-	import tooltip from "./actions/tooltip";
+	import ActivityIcon from "./ActivityIcon.svelte";
 
 	interface Props {
 		activity: Activity[] | undefined;
@@ -40,24 +39,18 @@
 				return "Rating Changed";
 			case "STATUS_CHANGED":
 				if (a.data) {
-					return `Status Changed to ${toFullTitleCase(a.data)}`;
-				}
-				return "Status Changed";
-			case "STATUS_CHANGED_AUTO":
-				if (a.data) {
-					const data = JSON.parse(a.data);
-					return `Status Changed to ${toFullTitleCase(data.status)}`;
+					let status = a.data;
+					if (a.data.startsWith("{")) {
+						const data = JSON.parse(a.data);
+						status = data.status;
+					}
+					return `Status Changed to ${toFullTitleCase(status)}`;
 				}
 				return "Status Changed";
 			case "THOUGHTS_CHANGED":
 				return "Thoughts Changed";
 			case "THOUGHTS_REMOVED":
 				return "Thoughts Removed";
-			case "IMPORTED_WATCHED":
-				return "Imported";
-			case "IMPORTED_WATCHED_JF":
-			case "IMPORTED_WATCHED_PLEX":
-				return "Synced";
 			case "IMPORTED_RATING":
 				if (a.data) {
 					const data = JSON.parse(a.data);
@@ -69,23 +62,13 @@
 				}
 				return "Imported Rating";
 			case "IMPORTED_ADDED_WATCHED":
-			case "IMPORTED_ADDED_WATCHED_JF":
-			case "IMPORTED_ADDED_WATCHED_PLEX":
 				return "Imported Watch Date";
 			case "SEASON_ADDED":
-			case "SEASON_ADDED_AUTO":
 				if (a.data) {
 					const data = JSON.parse(a.data);
 					return `Season ${data.season} Added as ${toFullTitleCase(data.status)}`;
 				}
 				return "Season Added";
-			case "SEASON_ADDED_JF":
-			case "SEASON_ADDED_PLEX":
-				if (a.data) {
-					const data = JSON.parse(a.data);
-					return `Season ${data.season} Synced as ${toFullTitleCase(data.status)}`;
-				}
-				return "Season Synced";
 			case "SEASON_RATING_CHANGED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
@@ -93,7 +76,6 @@
 				}
 				return "Season Rating Changed";
 			case "SEASON_STATUS_CHANGED":
-			case "SEASON_STATUS_CHANGED_AUTO":
 				if (a.data) {
 					const data = JSON.parse(a.data);
 					return `Changed Season ${data.season} Status to ${toFullTitleCase(data.status)}`;
@@ -111,13 +93,6 @@
 					return `${seasonAndEpToReadable(data.season, data.episode)} Added ${data.status ? `as ${toFullTitleCase(data.status)}` : data.rating ? `with Rating ${data.rating}` : ""}`;
 				}
 				return "Episode Added";
-			case "EPISODE_ADDED_JF":
-			case "EPISODE_ADDED_PLEX":
-				if (a.data) {
-					const data = JSON.parse(a.data);
-					return `${seasonAndEpToReadable(data.season, data.episode)} Synced ${data.status ? `as ${toFullTitleCase(data.status)}` : data.rating ? `with Rating ${data.rating}` : ""}`;
-				}
-				return "Episode Synced";
 			case "EPISODE_RATING_CHANGED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
@@ -188,16 +163,6 @@
 		clickedActivity = a;
 		return;
 	}
-
-	function getActivityDataParsed(a: Activity) {
-		try {
-			if (a.data) {
-				return JSON.parse(a.data);
-			}
-		} catch (err) {
-			console.error("getActivityDataParsed: Failed!", err);
-		}
-	}
 </script>
 
 {#if clickedActivity}
@@ -241,31 +206,24 @@
 							<span title={d.toDateString()}>{toDayTime(d)}</span>
 							<span>{getMsg(a)}</span>
 						</button>
-						{#if a.type?.endsWith("_AUTO")}
-							{@const data = getActivityDataParsed(a)}
-							<i
-								use:tooltip={{
-									text:
-										data && data.reason
-											? `Automated because ${data.reason}`
-											: "Completed by an automation.",
-									pos: "top",
-								}}
-								style="width: 20px; height: 20px;"
-							>
-								<Icon i="sparkles" wh={20} />
-							</i>
+						{#if a.createdBy == ActivityCreatedBy.Watcharr}
+							<ActivityIcon
+								icon="sparkles"
+								tooltipText={a.reason
+									? `Automated because ${a.reason}`
+									: "Completed by an automation."}
+							/>
+						{:else if a.createdBy == ActivityCreatedBy.GenericImport}
+							<ActivityIcon icon="calendar" tooltipText="Imported" />
+						{:else if a.createdBy == ActivityCreatedBy.JellyfinImport}
+							<ActivityIcon icon="jellyfin" tooltipText="Jellyfin Import" />
+						{:else if a.createdBy == ActivityCreatedBy.JellyfinWebhook}
+							<ActivityIcon icon="jellyfin" tooltipText="Jellyfin Webhook" />
+						{:else if a.createdBy == ActivityCreatedBy.PlexImport}
+							<ActivityIcon icon="plex" tooltipText="Plex Import" />
 						{/if}
 						{#if a.countAsPlay}
-							<i
-								use:tooltip={{
-									text: "Counts as a Play.",
-									pos: "top",
-								}}
-								style="width: 20px; height: 20px;"
-							>
-								<Icon i="play" wh={20} />
-							</i>
+							<ActivityIcon icon="play" tooltipText="Counts as a Play." />
 						{/if}
 					</li>
 				{/each}

@@ -5,11 +5,13 @@ These changes are awaiting release:
 ## Added
 
 - Jellyfin: Automatic tracking via [jellyfin webhook](https://github.com/jellyfin/jellyfin-plugin-webhook).
-- Activity: Created `synced_by` property. Currently used for marking activity synced automatically by jellyfin webhook.
+- Activity: Created `created_by` & `reason` properties.
+- ActivityEditor: Added expandable section for viewing full raw activity.
 
 ## Changed
 
-- Migrate Jellyfin users to using `user_services` table for auth (deprecating the old ThirdPartyId and ThirdPartyAuth columns in the process).
+- (NEW MIGRATION) Migrate Jellyfin users to using `user_services` table for auth (deprecating the old ThirdPartyId and ThirdPartyAuth columns in the process).
+- (NEW MIGRATION) Activity: Migrate all `_AUTO`, `_JF` & `_PLEX` activities so that they now use the base activity type (affixes dropped), along with the new `created_by` property for telling the difference. `_AUTO` activities have had the `reason` properties that used to be in a JSON blob, moved to the new `reason` column (been normalized). This migration makes activities more flexible and easier to work with on the backend/frontend (I couldn't just keep adding a bunch of new activities for the same thing just to denote a new service created it!).
 
 ## Maintenance
 
@@ -17,8 +19,10 @@ These changes are awaiting release:
 - Moved JellyfinAccessRequired middleware to `authmiddleware` package.
 - Created `usermiddleware` package with `WithUser` and `WithUserService` middleware. These will help us migrate from the all-encompassing `AuthRequired` middleware (so that it can just stick to purely auth and any routes needing the User from database can add the extra middleware which is more modular).
 - Created `tri` package for representing "tribools". Helps us avoid using `*bool` when possible (for inter-watcharr communications).
-- Activity: Moved service code to a new top-level activity package (no longer injected into other services that need it).
+- Activity:
+  - Moved service code to a new top-level activity package (no longer injected into other services that need it).
   - Made a builder API for creating activities (so the builder constructor can have required props, enabling compiler errors for this case & makes the call sites more readable).
+  - (frontend) Group component files in a new sub dir.
 - WatchedEpisode: Moved request/response structs to `domain` package.
 - WatchedSeason: Moved request/response structs to `domain` package.
 

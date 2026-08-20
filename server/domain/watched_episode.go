@@ -8,14 +8,14 @@ import (
 
 type (
 	WatchedEpisodeAddRequest struct {
-		WatchedID       uint                 `json:"watchedId"`
-		SeasonNumber    int                  `json:"seasonNumber"`
-		EpisodeNumber   int                  `json:"episodeNumber"`
-		Status          entity.WatchedStatus `json:"status"`
-		Rating          int8                 `json:"rating" binding:"max=10"`
-		AddActivity     entity.ActivityType  `json:"-"`
-		AddActivityDate time.Time            `json:"-"`
-		// Set the CreatedBy value on the created activity.
+		WatchedID     uint                 `json:"watchedId"`
+		SeasonNumber  int                  `json:"seasonNumber"`
+		EpisodeNumber int                  `json:"episodeNumber"`
+		Status        entity.WatchedStatus `json:"status"`
+		Rating        int8                 `json:"rating" binding:"max=10"`
+
+		AddActivityDate   time.Time                `json:"-"`
+		AddActivityReason string                   `json:"-"`
 		ActivityCreatedBy entity.ActivityCreatedBy `json:"-"`
 	}
 

@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { updateActivity, removeActivity } from "@/lib/util/api";
-	import Modal from "./Modal.svelte";
+	import Modal from "../Modal.svelte";
 	import type { Activity } from "@/types";
-	import { notify } from "./util/notify";
+	import { notify } from "../util/notify";
+	import ActivityEditorRawView from "./ActivityEditorRawView.svelte";
 
 	interface Props {
 		activity: Activity;
@@ -107,6 +108,8 @@
 			bind:value={selectedTimeString}
 			onchange={validateNewDate}
 		/>
+
+		<ActivityEditorRawView {activity} />
 
 		<div class="button-row">
 			<button class="danger" onclick={remove}>Delete</button>

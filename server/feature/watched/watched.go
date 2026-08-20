@@ -398,11 +398,6 @@ func (s *Service) AddWatched(
 		"add_request", ar,
 		"extra_props", extraProps)
 
-	if extraProps.ActivityType == "" {
-		// We ALWAYS require the ActivityType to be provided by any caller.
-		return entity.Watched{}, errors.New("extraProp ActivityType not specified")
-	}
-
 	watched := entity.Watched{
 		UserID: userId,
 	}
@@ -507,7 +502,7 @@ func (s *Service) AddWatched(
 		s.db,
 		userId,
 		watched.ID,
-		extraProps.ActivityType,
+		entity.ADDED_WATCHED,
 		false,
 		extraProps.ActivityCreatedBy,
 	)

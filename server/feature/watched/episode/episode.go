@@ -149,15 +149,23 @@ func (s *Service) AddWatchedEpisodes(
 			"season":  ar.SeasonNumber,
 			"episode": ar.EpisodeNumber,
 			"status":  ar.Status,
-			"rating":  ar.Rating})
-		act := activity.NewCreator(
-			s.db, userId, w.ID, entity.EPISODE_ADDED, false, ar.ActivityCreatedBy)
-		act.SetData(string(json))
-		if ar.AddActivity != "" {
-			act.SetType(ar.AddActivity)
-		}
+			"rating":  ar.Rating,
+		})
+		act := activity.
+			NewCreator(
+				s.db,
+				userId,
+				w.ID,
+				entity.EPISODE_ADDED,
+				false,
+				ar.ActivityCreatedBy,
+			).
+			SetData(string(json))
 		if !ar.AddActivityDate.IsZero() {
 			act.SetCustomDate(&ar.AddActivityDate)
+		}
+		if ar.AddActivityReason != "" {
+			act.SetReason(ar.AddActivityReason)
 		}
 		addedActivity, _ = act.Create()
 	}
@@ -248,7 +256,13 @@ func (s *Service) hookEpisodeStatusChanged(
 
 	hookResponse := domain.EpisodeStatusChangedHookResponse{}
 
-	addHookActivity := func(aType entity.ActivityType, data string) {
+	addHookActivity := func(aType entity.ActivityType, data map[string]any, reason string) {
+		json, err := json.Marshal(data)
+		if err != nil {
+			slog.Error("hookEpisodeStatusChanged->addHookActivity: json marshal failed!",
+				"error", err)
+			// Continues..
+		}
 		addedActivity, _ := activity.
 			NewCreator(
 				s.db,
@@ -258,7 +272,8 @@ func (s *Service) hookEpisodeStatusChanged(
 				false,
 				entity.ActivityCreatedByWatcharr,
 			).
-			SetData(data).
+			SetData(string(json)).
+			SetReason(reason).
 			Create()
 		hookResponse.AddedActivities = append(hookResponse.AddedActivities, addedActivity)
 	}
@@ -277,11 +292,16 @@ func (s *Service) hookEpisodeStatusChanged(
 			seasonStatus = entity.WATCHING
 		}
 		resp, err := s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
-			AddActivity:     entity.SEASON_ADDED_AUTO,
-			AddActivityData: map[string]interface{}{"reason": fmt.Sprintf("Episode %d was set to %s while the season had no status.", episodeNum, newEpisodeStatus)},
-			WatchedID:       watchedId,
-			SeasonNumber:    seasonNum,
-			Status:          seasonStatus,
+			WatchedID:    watchedId,
+			SeasonNumber: seasonNum,
+			Status:       seasonStatus,
+
+			AddActivityReason: fmt.Sprintf(
+				"Episode %d was set to %s while the season had no status.",
+				episodeNum,
+				newEpisodeStatus,
+			),
+			AddActivityCreatedBy: entity.ActivityCreatedByWatcharr,
 		})
 		if err != nil {
 			slog.Error("hookEpisodeStatusChanged: Failed to add watched season!", "error", err)
@@ -299,7 +319,11 @@ func (s *Service) hookEpisodeStatusChanged(
 		}
 	} else if watchedSeason.Status == "" || watchedSeason.Status == entity.PLANNED ||
 		((newEpisodeStatus == entity.FINISHED || newEpisodeStatus == entity.WATCHING) && (watchedSeason.Status == entity.HOLD || watchedSeason.Status == entity.DROPPED)) {
-		reasonStr := fmt.Sprintf("Episode %d was set to %s while the season had ", episodeNum, newEpisodeStatus)
+		reasonStr := fmt.Sprintf(
+			"Episode %d was set to %s while the season had ",
+			episodeNum,
+			newEpisodeStatus,
+		)
 		if watchedSeason.Status == "" {
 			reasonStr += "no status."
 		} else {
@@ -311,8 +335,14 @@ func (s *Service) hookEpisodeStatusChanged(
 			hookResponse.Errors = append(hookResponse.Errors, "failed to update season status")
 		} else {
 			hookResponse.WatchedSeason = watchedSeason
-			json, _ := json.Marshal(map[string]interface{}{"season": seasonNum, "status": watchedSeason.Status, "reason": reasonStr})
-			addHookActivity(entity.SEASON_STATUS_CHANGED_AUTO, string(json))
+			addHookActivity(
+				entity.SEASON_STATUS_CHANGED,
+				map[string]any{
+					"season": seasonNum,
+					"status": watchedSeason.Status,
+				},
+				reasonStr,
+			)
 		}
 	}
 
@@ -330,8 +360,18 @@ func (s *Service) hookEpisodeStatusChanged(
 				slog.Error("hookEpisodeStatusChanged: Failed to update show status!", "error", res.Error)
 			} else {
 				hookResponse.NewShowStatus = watchedShow.Status
-				json, _ := json.Marshal(map[string]interface{}{"status": watchedShow.Status, "reason": fmt.Sprintf("S%dE%d was set to %s.", seasonNum, episodeNum, newEpisodeStatus)})
-				addHookActivity(entity.STATUS_CHANGED_AUTO, string(json))
+				addHookActivity(
+					entity.STATUS_CHANGED,
+					map[string]any{
+						"status": watchedShow.Status,
+					},
+					fmt.Sprintf(
+						"S%dE%d was set to %s.",
+						seasonNum,
+						episodeNum,
+						newEpisodeStatus,
+					),
+				)
 			}
 		}
 	}
@@ -349,7 +389,8 @@ func (s *Service) hookEpisodeStatusChanged(
 		return hookResponse
 	}
 	allEpisodesCount := len(seasonDetails.Episodes)
-	finishedEpisodesCount, err := s.getNumberOfWatchedEpisodesInSeason(userId, watchedId, seasonNum, []entity.WatchedStatus{entity.FINISHED, entity.DROPPED})
+	finishedEpisodesCount, err := s.getNumberOfWatchedEpisodesInSeason(
+		userId, watchedId, seasonNum, []entity.WatchedStatus{entity.FINISHED, entity.DROPPED})
 	if err != nil {
 		slog.Error("hookEpisodeStatusChanged: Failed to get number of watched episodes in this season!", "error", err)
 		hookResponse.Errors = append(hookResponse.Errors, "failed to get number of watched episodes in this season")
@@ -374,8 +415,18 @@ func (s *Service) hookEpisodeStatusChanged(
 			} else {
 				slog.Error("hookEpisodeStatusChanged: watchedSeason was nil HOW DID THIS HAPPEN? Anyways the client won't be able to update its state with the new season status until it is refreshed.")
 			}
-			json, _ := json.Marshal(map[string]interface{}{"season": seasonNum, "status": newStatus, "reason": fmt.Sprintf("The season was deemed completed when episode %d was set to %s.", episodeNum, newEpisodeStatus)})
-			addHookActivity(entity.SEASON_STATUS_CHANGED_AUTO, string(json))
+			addHookActivity(
+				entity.SEASON_STATUS_CHANGED,
+				map[string]any{
+					"season": seasonNum,
+					"status": newStatus,
+				},
+				fmt.Sprintf(
+					"The season was deemed completed when episode %d was set to %s.",
+					episodeNum,
+					newEpisodeStatus,
+				),
+			)
 		}
 	}
 

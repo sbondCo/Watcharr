@@ -8,15 +8,14 @@ import (
 
 type (
 	WatchedSeasonAddRequest struct {
-		WatchedID       uint                 `json:"watchedId"`
-		SeasonNumber    int                  `json:"seasonNumber"`
-		Status          entity.WatchedStatus `json:"status"`
-		Rating          int8                 `json:"rating" binding:"max=10"`
-		AddActivity     entity.ActivityType  `json:"-"`
-		AddActivityDate time.Time            `json:"-"`
-		// Data to add to activity if the season is created.
-		// Combined with data we already add.
-		AddActivityData map[string]interface{} `json:"-"`
+		WatchedID    uint                 `json:"watchedId"`
+		SeasonNumber int                  `json:"seasonNumber"`
+		Status       entity.WatchedStatus `json:"status"`
+		Rating       int8                 `json:"rating" binding:"max=10"`
+
+		AddActivityDate      time.Time                `json:"-"`
+		AddActivityReason    string                   `json:"-"`
+		AddActivityCreatedBy entity.ActivityCreatedBy `json:"-"`
 	}
 
 	WatchedSeasonAddResponse struct {
