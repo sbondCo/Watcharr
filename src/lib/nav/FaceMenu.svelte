@@ -88,7 +88,7 @@
 			</button>
 		{/if}
 	{/if}
-	<button class="plain" onclick={() => logout()}>Logout</button>
+	<button class="plain logout" onclick={() => logout()}>Logout</button>
 	{#if proxyUserLogoutShown}
 		<ProxyUserLogoutModal onClose={() => (proxyUserLogoutShown = false)} />
 	{/if}
@@ -115,3 +115,12 @@
 {#if aboutModalOpen}
 	<AboutModal onClose={closeAbout} />
 {/if}
+
+<style lang="scss">
+	button.plain.logout {
+		&:hover {
+			color: white;
+			background-color: $error;
+		}
+	}
+</style>
