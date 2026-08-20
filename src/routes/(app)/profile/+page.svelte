@@ -312,7 +312,7 @@
 			<div class="row btns">
 				<button onclick={() => goto(resolve("/import"))}>Import</button>
 				<button onclick={() => (exportModalOpen = true)}>Export</button>
-				{#if user?.type !== UserType.Plex && user?.type !== UserType.Jellyfin}
+				{#if user?.type == UserType.Watcharr}
 					<button
 						onclick={() => {
 							pwChangeModalOpen = true;

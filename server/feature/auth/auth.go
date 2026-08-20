@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -96,7 +95,8 @@ func (s *Service) Register(ur *UserRegisterRequest, initialPerm int) (AuthRespon
 	slog.Info("Register: A user is registering", "username", user.Username)
 	hash, err := s.hashPassword(user.Password, entity.GetPassArgonParams())
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("Register: Hashing password failed!", "error", err)
+		return AuthResponse{}, errors.New("registering failed")
 	}
 
 	// Update user obj to replace the plaintext pass with hash
@@ -128,7 +128,7 @@ func (s *Service) Register(ur *UserRegisterRequest, initialPerm int) (AuthRespon
 		return AuthResponse{}, errors.New("failed to get user id, try login")
 	}
 
-	token, err := s.signJWT(&user)
+	token, err := s.signJWT(user.ID, user.Username, user.Type)
 	if err != nil {
 		slog.Error("Registration: Failed to sign new jwt", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
@@ -154,8 +154,18 @@ func (s *Service) RegisterFirstUser(urr *UserRegisterRequest) (AuthResponse, err
 
 func (s *Service) Login(userL *entity.User) (AuthResponse, error) {
 	slog.Debug("A User Is Logging In", "username", userL.Username)
-	dbUser := new(entity.User)
-	res := s.db.Where("username = ? AND (type IS NULL OR type = 0)", userL.Username).Take(&dbUser)
+
+	type WatcharrUser struct {
+		ID       uint
+		Username string
+		Password string
+	}
+
+	dbUser := new(WatcharrUser)
+	res := s.db.
+		Model(&entity.User{}).
+		Where("username = ? AND (type IS NULL OR type = 0)", userL.Username).
+		Take(&dbUser)
 	if res.Error != nil {
 		slog.Error("Failed to select user from database for login", "error", res.Error)
 		return AuthResponse{}, errors.New("User does not exist")
@@ -171,9 +181,9 @@ func (s *Service) Login(userL *entity.User) (AuthResponse, error) {
 		return AuthResponse{}, errors.New("incorrect details")
 	}
 
-	token, err := s.signJWT(dbUser)
+	token, err := s.signJWT(dbUser.ID, dbUser.Username, entity.WATCHARR_USER)
 	if err != nil {
-		slog.Error("Failed to sign new jwt", "error", err)
+		slog.Error("Failed to sign new jwt!", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
@@ -272,9 +282,9 @@ func (s *Service) LoginJellyfin(userL *entity.User) (AuthResponse, error) {
 		}
 	}
 
-	token, err := s.signJWT(dbUser)
+	token, err := s.signJWT(dbUser.ID, dbUser.Username, entity.JELLYFIN_USER)
 	if err != nil {
-		slog.Error("Failed to sign new (jellyfin login) jwt", "error", err)
+		slog.Error("LoginJellyfin: Failed to sign new jwt!", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
@@ -368,9 +378,9 @@ func (s *Service) LoginPlex(lr *plex.PlexLoginRequest) (AuthResponse, error) {
 		}
 		s.db.Save(&dbUser.UserServices)
 	}
-	token, err := s.signJWT(dbUser)
+	token, err := s.signJWT(dbUser.ID, dbUser.Username, entity.PLEX_USER)
 	if err != nil {
-		slog.Error("loginPlex: Failed to sign new jwt", "error", err)
+		slog.Error("loginPlex: Failed to sign new jwt!", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
@@ -449,12 +459,25 @@ func (s *Service) GetUserIDFromServiceClientId(
 	return userId, nil
 }
 
-func (s *Service) signJWT(user *entity.User) (token string, err error) {
+func (s *Service) signJWT(
+	userID uint,
+	userName string,
+	userType entity.UserType,
+) (string, error) {
+	slog.Debug("signJWT: Signing a new token.",
+		"user_id", userID, "user_name", userName, "user_type", userType)
+
+	if userID == 0 {
+		return "", errors.New("no userID provided")
+	} else if userName == "" {
+		return "", errors.New("no userName provided")
+	}
+
 	// Create new jwt with claim data
 	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.TokenClaims{
-		UserID:   user.ID,
-		Username: user.Username,
-		Type:     user.Type,
+		UserID:   userID,
+		Username: userName,
+		Type:     userType,
 		RegisteredClaims: jwt.RegisteredClaims{
 			// ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
@@ -572,37 +595,64 @@ func (s *Service) decodeHash(encodedHash string) (p *entity.ArgonParams, salt, h
 	return p, salt, hash, nil
 }
 
-func (s *Service) UserChangePassword(pwds UserPasswordUpdateRequest, userId uint) error {
-	slog.Debug("userChangePassword request running", "user_id", userId)
-	user := new(entity.User)
-	res := s.db.Where("id = ?", userId).Select("password").Take(&user)
+func (s *Service) UserChangePassword(p UserPasswordUpdateRequest, userId uint) error {
+	slog.Debug("UserChangePassword: Running.", "user_id", userId)
+
+	type User struct {
+		ID       uint
+		Password string
+		Type     entity.UserType
+	}
+
+	user := new(User)
+	res := s.db.
+		Model(&entity.User{}).
+		Where("id = ?", userId).
+		Take(&user)
 	if res.Error != nil {
-		slog.Error("userChangePassword failed - failed to retrieve user from database", "user_id", userId, "error", res.Error)
+		slog.Error("UserChangePassword: Failed to retrieve user from database!",
+			"user_id", userId, "error", res.Error)
 		return errors.New("failed to retrieve user")
 	}
-	slog.Debug("userChangePassword user found", "user_id", userId)
-	match, err := s.compareHash(pwds.OldPassword, user.Password)
+	if user.Type != entity.WATCHARR_USER {
+		slog.Error("UserChangePassword: Only Watcharr users can change their password!",
+			"user_id", userId, "user_type", user.Type)
+		return errors.New("incorrect user type")
+	}
+	slog.Debug("UserChangePassword: User found.", "user_id", userId)
+
+	match, err := s.compareHash(p.OldPassword, user.Password)
 	if err != nil {
-		slog.Error("userChangePassword failed - failed to compare passwords", "user_id", userId, "error", err)
+		slog.Error("UserChangePassword: Failed to compare passwords!",
+			"user_id", userId, "error", err)
 		return errors.New("failed to compare passwords")
 	}
 	if !match {
-		slog.Error("userChangePassword failed - current password hash doesn't match password hash in database", "user_id", userId, "error", err)
-		return errors.New("current password provided doesn't match password in database")
+		slog.Error("UserChangePassword: Passwords do not match.",
+			"user_id", userId, "error", err)
+		return errors.New("password incorrect")
 	}
-	slog.Debug("userChangePassword hash for current password matches hash in the database", "user_id", userId)
-	slog.Debug("userChangePassword hashing new password", "user_id", userId)
-	hash, err := s.hashPassword(pwds.NewPassword, entity.GetPassArgonParams())
+	slog.Debug("UserChangePassword: Password matched. Hashing new pass.",
+		"user_id", userId)
+
+	hash, err := s.hashPassword(p.NewPassword, entity.GetPassArgonParams())
 	if err != nil {
-		slog.Error("userChangePassword failed - failed to hash new password", "user_id", userId, "error", err)
+		slog.Error("UserChangePassword: Failed to hash new password!",
+			"user_id", userId, "error", err)
 		return errors.New("failed to hash new password")
 	}
-	slog.Debug("userChangePassword new password hashed", "user_id", userId)
-	if err := s.db.Model(&entity.User{}).Where("id = ?", userId).Update("password", hash).Error; err != nil {
-		slog.Error("userChangePassword failed - failed to update password in database", "user_id", userId, "error", err)
+	slog.Debug("UserChangePassword: New password hashed.", "user_id", userId)
+	err = s.db.
+		Model(&entity.User{}).
+		Where("id = ?", userId).
+		Update("password", hash).
+		Error
+	if err != nil {
+		slog.Error("UserChangePassword: Update password query failed!",
+			"user_id", userId, "error", err)
 		return errors.New("failed to update password")
-	} else {
-		slog.Debug("userChangePassword password updated", "user_id", userId)
 	}
+	slog.Debug("UserChangePassword: Password updated.", "user_id", userId)
+
 	return nil
 }

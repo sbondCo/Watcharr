@@ -12,6 +12,11 @@ These changes are awaiting release:
 
 - (NEW MIGRATION) Migrate Jellyfin users to using `user_services` table for auth (deprecating the old ThirdPartyId and ThirdPartyAuth columns in the process).
 - (NEW MIGRATION) Activity: Migrate all `_AUTO`, `_JF` & `_PLEX` activities so that they now use the base activity type (affixes dropped), along with the new `created_by` property for telling the difference. `_AUTO` activities have had the `reason` properties that used to be in a JSON blob, moved to the new `reason` column (been normalized). This migration makes activities more flexible and easier to work with on the backend/frontend (I couldn't just keep adding a bunch of new activities for the same thing just to denote a new service created it!).
+- User: Changed Password gorm permission to "create only", to avoid loading pass hash into memory unnecessarily. Services that need to read the password field, now use their own specific single use struct.
+
+## Fixed
+
+- Auth: UserChangePassword: Added `User.Type` check.
 
 ## Maintenance
 
@@ -25,6 +30,7 @@ These changes are awaiting release:
   - (frontend) Group component files in a new sub dir.
 - WatchedEpisode: Moved request/response structs to `domain` package.
 - WatchedSeason: Moved request/response structs to `domain` package.
+- Auth: Refactored UserChangePassword func.
 
 # [4.2.1] - 2026-08-04T00:40:00Z
 
