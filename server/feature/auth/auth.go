@@ -643,7 +643,10 @@ func (s *Service) UserChangePassword(p UserPasswordUpdateRequest, userId uint) e
 	}
 	slog.Debug("UserChangePassword: New password hashed.", "user_id", userId)
 	err = s.db.
-		Model(&entity.User{}).
+		// Using `Table` instead of `Model` to get around the Password field
+		// create only gorm permission. This method doesn't seem to update the
+		// updated_at column automatically, but I'm not bothered about that rn.
+		Table("users").
 		Where("id = ?", userId).
 		Update("password", hash).
 		Error
