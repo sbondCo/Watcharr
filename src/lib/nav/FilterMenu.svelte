@@ -155,7 +155,8 @@
 		button {
 			flex: 1 1 45%;
 			padding: 8px 0;
-			border-radius: 10px;
+			/* The !important overrides the border-radius set in <Menu> on hover for all buttons. */
+			border-radius: 10px !important;
 		}
 	}
 </style>
