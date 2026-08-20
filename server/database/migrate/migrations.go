@@ -1,6 +1,7 @@
 package migrate
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"strings"
@@ -54,10 +55,10 @@ var migrations = []Migration{
 			// as a play, so count them.
 			res = tx.
 				Model(&entity.Activity{}).
-				Where("type IN ?", []entity.ActivityType{
-					entity.IMPORTED_ADDED_WATCHED,
-					entity.IMPORTED_ADDED_WATCHED_JF,
-					entity.IMPORTED_ADDED_WATCHED_PLEX,
+				Where("type IN ?", []string{
+					string(entity.IMPORTED_ADDED_WATCHED),
+					"IMPORTED_ADDED_WATCHED_JF",
+					"IMPORTED_ADDED_WATCHED_PLEX",
 				}).
 				Update("count_as_play", 1)
 			if res.Error != nil {
@@ -167,6 +168,155 @@ var migrations = []Migration{
 			`, "jellyfin", tnow, tnow).Error
 			if err != nil {
 				slog.Error("migration query failed!", "mig", migID)
+				return err
+			}
+
+			slog.Info("Migration complete.", "mig", migID)
+			return nil
+		},
+	},
+	{
+		// Replacing old activities that had `_AUTO`, `_JF` & `_PLEX` affixes
+		// to just use the base activity type (which is what we now do, so this
+		// migration updates all old data to conform with how we do this now).
+		ID: "202608181937_0005",
+		Up: func(tx *gorm.DB) error {
+			migID := "202608181937_0005"
+			slog.Info("Migration is starting.", "mig", migID)
+
+			// Migrate the _AUTO activities and their "reason".
+			migAutoActivity := func(from, to string) error {
+				var a []entity.Activity
+				err := tx.
+					Model(&entity.Activity{}).
+					Where("type = ?", from).
+					Find(&a).
+					Error
+				if err != nil {
+					slog.Error("migAutoActivity: query failed!",
+						"mig", migID, "from", from)
+					return err
+				}
+				for _, v := range a {
+					if v.Data == "" {
+						continue
+					}
+					var data map[string]any
+					if err := json.Unmarshal([]byte(v.Data), &data); err != nil {
+						slog.Error("migAutoActivity: Unmarshal failed!",
+							"mig", migID, "from", from, "activity", v)
+						return err
+					}
+
+					// Get reason, but avoid panic if it doesn't exist.
+					reason, _ := data["reason"].(string)
+
+					delete(data, "reason")
+					newData, err := json.Marshal(data)
+					if err != nil {
+						slog.Error("migAutoActivity: Re-marshal failed!",
+							"mig", migID, "from", from, "data", data, "activity_id", v.ID)
+						return err
+					}
+
+					res := tx.
+						Model(&entity.Activity{}).
+						Where("id = ?", v.ID).
+						Updates(map[string]any{
+							"reason":     reason,
+							"data":       string(newData),
+							"type":       entity.ActivityType(to),
+							"created_by": entity.ActivityCreatedByWatcharr,
+						})
+					if res.Error != nil {
+						slog.Error("migAutoActivity: Update query failed!",
+							"mig", migID, "from", from, "activity", v)
+						return res.Error
+					}
+					if res.RowsAffected == 0 {
+						slog.Error("migAutoActivity: Update query didnt affect any rows!",
+							"mig", migID, "from", from, "activity", v)
+						return errors.New("no rows affected")
+					}
+				}
+				return nil
+			}
+
+			// _AUTO
+			if err := migAutoActivity("STATUS_CHANGED_AUTO", "STATUS_CHANGED"); err != nil {
+				return err
+			}
+			if err := migAutoActivity("SEASON_ADDED_AUTO", "SEASON_ADDED"); err != nil {
+				return err
+			}
+			if err := migAutoActivity("SEASON_STATUS_CHANGED_AUTO", "SEASON_STATUS_CHANGED"); err != nil {
+				return err
+			}
+
+			// Migrate the other activities (where we are just changing type
+			// from -> to & createdBy).
+			migOtherActivity := func(from, to string, createdBy entity.ActivityCreatedBy) error {
+				var a []entity.Activity
+				err := tx.
+					Model(&entity.Activity{}).
+					Where("type = ?", from).
+					Find(&a).
+					Error
+				if err != nil {
+					slog.Error("migOtherActivity: query failed!",
+						"mig", migID, "from", from)
+					return err
+				}
+				for _, v := range a {
+					res := tx.
+						Model(&entity.Activity{}).
+						Where("id = ?", v.ID).
+						Updates(map[string]any{
+							"type":       entity.ActivityType(to),
+							"created_by": createdBy,
+						})
+					if res.Error != nil {
+						slog.Error("migOtherActivity: Update query failed!",
+							"mig", migID, "from", from, "activity", v)
+						return res.Error
+					}
+					if res.RowsAffected == 0 {
+						slog.Error("migOtherActivity: Update query didnt affect any rows!",
+							"mig", migID, "from", from, "activity", v)
+						return errors.New("no rows affected")
+					}
+				}
+				return nil
+			}
+
+			if err := migOtherActivity("IMPORTED_WATCHED", "ADDED_WATCHED", entity.ActivityCreatedByGenericImport); err != nil {
+				return err
+			}
+			if err := migOtherActivity("IMPORTED_WATCHED_JF", "ADDED_WATCHED", entity.ActivityCreatedByJellyfinImport); err != nil {
+				return err
+			}
+			if err := migOtherActivity("IMPORTED_WATCHED_PLEX", "ADDED_WATCHED", entity.ActivityCreatedByPlexImport); err != nil {
+				return err
+			}
+
+			if err := migOtherActivity("IMPORTED_ADDED_WATCHED_JF", "IMPORTED_ADDED_WATCHED", entity.ActivityCreatedByJellyfinImport); err != nil {
+				return err
+			}
+			if err := migOtherActivity("IMPORTED_ADDED_WATCHED_PLEX", "IMPORTED_ADDED_WATCHED", entity.ActivityCreatedByPlexImport); err != nil {
+				return err
+			}
+
+			if err := migOtherActivity("SEASON_ADDED_JF", "SEASON_ADDED", entity.ActivityCreatedByJellyfinImport); err != nil {
+				return err
+			}
+			if err := migOtherActivity("SEASON_ADDED_PLEX", "SEASON_ADDED", entity.ActivityCreatedByPlexImport); err != nil {
+				return err
+			}
+
+			if err := migOtherActivity("EPISODE_ADDED_JF", "EPISODE_ADDED", entity.ActivityCreatedByJellyfinImport); err != nil {
+				return err
+			}
+			if err := migOtherActivity("EPISODE_ADDED_PLEX", "EPISODE_ADDED", entity.ActivityCreatedByPlexImport); err != nil {
 				return err
 			}
 

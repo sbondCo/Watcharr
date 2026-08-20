@@ -11,7 +11,7 @@
 		WatchedStatus,
 	} from "@/types";
 	import { getTopCrew } from "@/lib/util/helpers.js";
-	import Activity from "@/lib/Activity.svelte";
+	import Activity from "@/lib/activity/Activity.svelte";
 	import Title from "@/lib/content/Title.svelte";
 	import ProvidersList from "@/lib/content/ProvidersList.svelte";
 	import Icon from "@/lib/Icon.svelte";
@@ -29,7 +29,7 @@
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
 	import WatchedDeleteBtn from "@/lib/content/WatchedDeleteBtn.svelte";
 	import TopCrewList from "@/lib/content/TopCrewList.svelte";
-	import { activityRemovedHook } from "@/lib/activity.js";
+	import { activityRemovedHook } from "@/lib/activity/activity.js";
 	import Genres from "@/lib/content/Genres.svelte";
 
 	let { data } = $props();

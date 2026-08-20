@@ -125,8 +125,8 @@ func (s *SyncService) startPlexSync(
 						WatchedDate: lastViewedAt,
 					},
 					domain.WatchedAddExtraProps{
-						ActivityType: entity.IMPORTED_WATCHED_PLEX,
-						DontRestore:  true,
+						ActivityCreatedBy: entity.ActivityCreatedByPlexImport,
+						DontRestore:       true,
 					})
 				if err != nil {
 					if errors.Is(err, domain.ErrWatchedExists) {
@@ -148,14 +148,14 @@ func (s *SyncService) startPlexSync(
 					slog.Error("plexSyncWatched: Failed to add movie as watched", "error", err)
 					job.AddJobError(jobId, userId, "failed to add movie "+movie.Title)
 				} else {
-					// 3. Add IMPORTED_ADDED_WATCHED_PLEX activity
+					// 3. Add IMPORTED_ADDED_WATCHED activity
 					if !lastViewedAt.IsZero() {
 						_, err := activity.
 							NewCreator(
 								s.db,
 								userId,
 								w.ID,
-								entity.IMPORTED_ADDED_WATCHED_PLEX,
+								entity.IMPORTED_ADDED_WATCHED,
 								false,
 								entity.ActivityCreatedByPlexImport,
 							).
@@ -216,8 +216,8 @@ func (s *SyncService) startPlexSync(
 						WatchedDate: lastViewedAt,
 					},
 					domain.WatchedAddExtraProps{
-						ActivityType: entity.IMPORTED_WATCHED_PLEX,
-						DontRestore:  true,
+						ActivityCreatedBy: entity.ActivityCreatedByPlexImport,
+						DontRestore:       true,
 					})
 				if err != nil {
 					if errors.Is(err, domain.ErrWatchedExists) {
@@ -240,14 +240,14 @@ func (s *SyncService) startPlexSync(
 						job.AddJobError(jobId, userId, "failed to add show "+show.Title)
 					}
 				} else {
-					// 3. Add IMPORTED_ADDED_WATCHED_PLEX activity
+					// 3. Add IMPORTED_ADDED_WATCHED activity
 					if !lastViewedAt.IsZero() {
 						_, err := activity.
 							NewCreator(
 								s.db,
 								userId,
 								w.ID,
-								entity.IMPORTED_ADDED_WATCHED_PLEX,
+								entity.IMPORTED_ADDED_WATCHED,
 								false,
 								entity.ActivityCreatedByPlexImport,
 							).
@@ -280,11 +280,12 @@ func (s *SyncService) startPlexSync(
 							seasonLastViewedAt = time.Unix(vs.LastViewedAt, 0)
 						}
 						_, err = s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
-							WatchedID:       w.ID,
-							SeasonNumber:    vs.Index,
-							Status:          entity.FINISHED,
-							AddActivity:     entity.SEASON_ADDED_PLEX,
-							AddActivityDate: seasonLastViewedAt,
+							WatchedID:    w.ID,
+							SeasonNumber: vs.Index,
+							Status:       entity.FINISHED,
+
+							AddActivityDate:      seasonLastViewedAt,
+							AddActivityCreatedBy: entity.ActivityCreatedByPlexImport,
 						})
 						if err != nil {
 							slog.Error("plexSyncWatched: Failed to fetch series seasons.", "series_name", show.Title, "series_id", show.GUID, "user_id", userId, "error", err)
@@ -313,12 +314,13 @@ func (s *SyncService) startPlexSync(
 							episodeLastViewedAt = time.Unix(vs.LastViewedAt, 0)
 						}
 						_, err = s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
-							WatchedID:       w.ID,
-							SeasonNumber:    vs.ParentIndex,
-							EpisodeNumber:   vs.Index,
-							Status:          entity.FINISHED,
-							AddActivity:     entity.EPISODE_ADDED_PLEX,
-							AddActivityDate: episodeLastViewedAt,
+							WatchedID:     w.ID,
+							SeasonNumber:  vs.ParentIndex,
+							EpisodeNumber: vs.Index,
+							Status:        entity.FINISHED,
+
+							ActivityCreatedBy: entity.ActivityCreatedByPlexImport,
+							AddActivityDate:   episodeLastViewedAt,
 						})
 						if err != nil {
 							slog.Error("plexSyncWatched: Failed to import series episode.", "series_name", show.Title, "season_num", vs.ParentIndex, "episode_num", vs.Index, "user_id", userId, "error", err)
