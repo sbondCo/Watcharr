@@ -106,12 +106,40 @@ export interface Content {
 	first_air_date: string;
 }
 
+export type ActivityType =
+	| "ADDED_WATCHED"
+	| "REMOVED_WATCHED"
+	| "RATING_CHANGED"
+	| "STATUS_CHANGED"
+	| "THOUGHTS_CHANGED"
+	| "THOUGHTS_REMOVED"
+	| "IMPORTED_RATING"
+	| "IMPORTED_ADDED_WATCHED"
+	| "SEASON_ADDED"
+	| "SEASON_REMOVED"
+	| "SEASON_RATING_CHANGED"
+	| "SEASON_STATUS_CHANGED"
+	| "EPISODE_ADDED"
+	| "EPISODE_REMOVED"
+	| "EPISODE_RATING_CHANGED"
+	| "EPISODE_STATUS_CHANGED";
+
+export enum ActivityCreatedBy {
+	Watcharr = 1,
+	GenericImport,
+	JellyfinImport,
+	JellyfinWebhook,
+	PlexImport,
+}
+
 export interface Activity extends dbModel {
 	watchedId: number;
-	type: string;
+	type: ActivityType;
 	data: string;
 	customDate: string;
 	countAsPlay: boolean;
+	createdBy?: ActivityCreatedBy;
+	reason?: string;
 }
 
 export interface WatchedSeason {

@@ -141,8 +141,8 @@ func (s *SyncService) startJellyfinSync(
 						WatchedDate: v.UserData.LastPlayedDate,
 					},
 					domain.WatchedAddExtraProps{
-						ActivityType: entity.IMPORTED_WATCHED_JF,
-						DontRestore:  true,
+						ActivityCreatedBy: entity.ActivityCreatedByJellyfinImport,
+						DontRestore:       true,
 					})
 				if err != nil {
 					if errors.Is(err, domain.ErrWatchedExists) {
@@ -173,14 +173,14 @@ func (s *SyncService) startJellyfinSync(
 							"movie could not be imported (failed when adding to watched list): "+v.Name)
 					}
 				} else {
-					// 3. Add IMPORTED_ADDED_WATCHED_JF activity
+					// 3. Add IMPORTED_ADDED_WATCHED activity
 					if !v.UserData.LastPlayedDate.IsZero() {
 						_, err := activity.
 							NewCreator(
 								s.db,
 								userId,
 								w.ID,
-								entity.IMPORTED_ADDED_WATCHED_JF,
+								entity.IMPORTED_ADDED_WATCHED,
 								false,
 								entity.ActivityCreatedByJellyfinImport,
 							).
@@ -256,8 +256,8 @@ func (s *SyncService) startJellyfinSync(
 						WatchedDate: v.UserData.LastPlayedDate,
 					},
 					domain.WatchedAddExtraProps{
-						ActivityType: entity.IMPORTED_WATCHED_JF,
-						DontRestore:  true,
+						ActivityCreatedBy: entity.ActivityCreatedByJellyfinImport,
+						DontRestore:       true,
 					})
 				if err != nil {
 					if errors.Is(err, domain.ErrWatchedExists) {
@@ -295,7 +295,7 @@ func (s *SyncService) startJellyfinSync(
 								s.db,
 								userId,
 								w.ID,
-								entity.IMPORTED_ADDED_WATCHED_JF,
+								entity.IMPORTED_ADDED_WATCHED,
 								false,
 								entity.ActivityCreatedByJellyfinImport,
 							).
@@ -341,11 +341,12 @@ func (s *SyncService) startJellyfinSync(
 						}
 						job.UpdateJobCurrentTask(jobId, userId, "syncing "+v.Name+" season "+strconv.Itoa(vs.IndexNumber))
 						_, err = s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
-							WatchedID:       w.ID,
-							SeasonNumber:    vs.IndexNumber,
-							Status:          entity.FINISHED,
-							AddActivity:     entity.SEASON_ADDED_JF,
-							AddActivityDate: vs.UserData.LastPlayedDate,
+							WatchedID:    w.ID,
+							SeasonNumber: vs.IndexNumber,
+							Status:       entity.FINISHED,
+
+							AddActivityDate:      vs.UserData.LastPlayedDate,
+							AddActivityCreatedBy: entity.ActivityCreatedByJellyfinImport,
 						})
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to fetch series seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId, "error", err)
@@ -383,12 +384,13 @@ func (s *SyncService) startJellyfinSync(
 						}
 						job.UpdateJobCurrentTask(jobId, userId, "syncing "+v.Name+" season "+strconv.Itoa(vs.ParentIndexNumber)+" episode "+strconv.Itoa(vs.IndexNumber))
 						_, err = s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
-							WatchedID:       w.ID,
-							SeasonNumber:    vs.ParentIndexNumber,
-							EpisodeNumber:   vs.IndexNumber,
-							Status:          entity.FINISHED,
-							AddActivity:     entity.EPISODE_ADDED_JF,
-							AddActivityDate: vs.UserData.LastPlayedDate,
+							WatchedID:     w.ID,
+							SeasonNumber:  vs.ParentIndexNumber,
+							EpisodeNumber: vs.IndexNumber,
+							Status:        entity.FINISHED,
+
+							ActivityCreatedBy: entity.ActivityCreatedByJellyfinImport,
+							AddActivityDate:   vs.UserData.LastPlayedDate,
 						})
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to import series episode.", "series_name", v.Name, "season_num", vs.ParentIndexNumber, "episode_num", vs.IndexNumber, "user_id", userId, "error", err)

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Spinner from "@/lib/Spinner.svelte";
 	import { type Media, type WatchedStatus } from "@/types";
-	import Activity from "@/lib/Activity.svelte";
+	import Activity from "@/lib/activity/Activity.svelte";
 	import Title from "@/lib/content/Title.svelte";
 	import Error from "@/lib/Error.svelte";
 	import FollowedThoughts from "@/lib/content/FollowedThoughts.svelte";
@@ -16,7 +16,7 @@
 	import PosterImage from "@/lib/content/PosterImage.svelte";
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
 	import WatchedDeleteBtn from "@/lib/content/WatchedDeleteBtn.svelte";
-	import { activityRemovedHook } from "@/lib/activity.js";
+	import { activityRemovedHook } from "@/lib/activity/activity.js";
 	import Genres from "@/lib/content/Genres.svelte";
 	import SimilarContent from "@/lib/content/SimilarContent.svelte";
 

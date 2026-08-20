@@ -109,22 +109,22 @@ func (s *Service) AddWatchedSeason(
 			"status": ar.Status,
 			"rating": ar.Rating,
 		}
-		if len(ar.AddActivityData) > 0 {
-			for k, v := range ar.AddActivityData {
-				if _, ok := ar.AddActivityData[k]; ok {
-					actData[k] = v
-				}
-			}
-		}
 		json, _ := json.Marshal(actData)
 		act := activity.
-			NewCreator(s.db, userId, w.ID, entity.SEASON_ADDED, false, 0).
+			NewCreator(
+				s.db,
+				userId,
+				w.ID,
+				entity.SEASON_ADDED,
+				false,
+				ar.AddActivityCreatedBy,
+			).
 			SetData(string(json))
-		if ar.AddActivity != "" {
-			act.SetType(ar.AddActivity)
-		}
 		if !ar.AddActivityDate.IsZero() {
 			act.SetCustomDate(&ar.AddActivityDate)
+		}
+		if ar.AddActivityReason != "" {
+			act.SetReason(ar.AddActivityReason)
 		}
 		addedActivity, _ = act.Create()
 	}
