@@ -30,7 +30,10 @@ const (
 type User struct {
 	dbmodel.GormModel
 	Username string `gorm:"uniqueIndex:usr_name_to_type;not null" json:"username" binding:"required"`
-	Password string `gorm:"not null" json:"password" binding:"required"`
+	// The Password field is "create only". When we query to get the User,
+	// it won't be SELECTED (read). Ops that need to read (login, changepass)
+	// should instead use their own small struct for that use case.
+	Password string `gorm:"not null;->:false;<-:create" json:"password" binding:"required"`
 	AvatarID uint   `json:"-"`
 	Avatar   Image  `json:"avatar"`
 	Bio      string `json:"bio"`
