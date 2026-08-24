@@ -20,6 +20,9 @@ I am built with Go and Svelte(Kit).
 
 Feel free to abuse this demo instance (nicely). It runs on the latest `dev` build so there may be bugs, as new features are tested on here too. The demo is a worst-case scenario for speed (which is why I like it as a testing ground), if you host it yourself the app will be snappy.
 
+> [!IMPORTANT]
+> Unfortunately the server used to host the Watcharr Demo is experiencing pain right now, so it will likely be offline for a couple of days while I massage it back to health (problem started 23rd Aug 2026). If you like the look of Watcharr based on screenshots, but the Demo is still down, I assure you setting up your own instance just to have a look around will take less than a minute. Thanks & sorry for the inconvenience!
+
 Demo: [https://beta.watcharr.app/](https://beta.watcharr.app/)
 
 **NOTE:** There is no demo account, just type in a random username/password (smashing hand into keyboard is supported), then click `Not a user?` at the bottom and a `Sign Up` button will appear.
