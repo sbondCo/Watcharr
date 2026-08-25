@@ -679,6 +679,16 @@ func (s *Service) updateWatched(
 	return domain.WatchedUpdateResponse{NewActivity: addedActivity}, nil
 }
 
+// Update only the rating of an existing watched item.
+//
+// Used by the importer to fill in a rating for content that is already on the
+// users list, eg content added by a Plex or Jellyfin sync, which often has no
+// rating on it.
+func (s *Service) UpdateWatchedRating(userId uint, watchedId uint, rating float64) error {
+	_, err := s.updateWatched(userId, watchedId, domain.WatchedUpdateRequest{Rating: rating})
+	return err
+}
+
 func (s *Service) UpdateWatchedLastViewedSeason(
 	userId uint,
 	id uint,
