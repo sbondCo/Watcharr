@@ -6,6 +6,7 @@
 
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import Checkbox from "@/lib/Checkbox.svelte";
 	import DropDown from "@/lib/DropDown.svelte";
 	import Error from "@/lib/Error.svelte";
 	import Icon from "@/lib/Icon.svelte";
@@ -38,6 +39,10 @@
 	}
 
 	let rList: ImportedList[] = $state([]);
+	// When on, previously saved matches are ignored, so every ambiguous name
+	// is asked about again. Deliberately not remembered between imports, it
+	// is a choice for this run rather than a preference.
+	let ignoreSavedMatches = $state(false);
 	let isImporting = $state(false);
 	let importText = $state("");
 	let cancelled = $state(false);
@@ -539,7 +544,10 @@
 			rList = rList;
 			return;
 		}
-		const resp = await req.post<ImportResponse>("/import", item);
+		const resp = await req.post<ImportResponse>("/import", {
+			...item,
+			ignoreSavedMatches,
+		});
 		return new Promise((res, rej) => {
 			if (resp.type === ImportResponseType.IMPORT_MULTI) {
 				console.log("Import found multiple responses for content", resp);
@@ -788,6 +796,17 @@
 						</tbody>
 					</table>
 				</div>
+				<div class="import-opts">
+					<Checkbox
+						name="Ask about every match again"
+						bind:value={ignoreSavedMatches}
+						disabled={isImporting}
+					/>
+					<span class="opt-desc">
+						Ignores matches saved from previous imports, so you can pick
+						again for names that were matched incorrectly.
+					</span>
+				</div>
 				<div class="btns">
 					<button onclick={() => goto(resolve("/import"))}>
 						<Icon i="arrow" />Back
@@ -944,6 +963,20 @@
 					padding-left: 3px;
 				}
 			}
+		}
+	}
+
+	.import-opts {
+		display: flex;
+		flex-flow: row;
+		align-items: center;
+		flex-wrap: wrap;
+		margin-top: 20px;
+		gap: 8px;
+
+		.opt-desc {
+			font-size: 14px;
+			opacity: 0.7;
 		}
 	}
 

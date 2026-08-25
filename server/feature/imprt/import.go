@@ -78,6 +78,22 @@ func (s *Service) ImportContent(
 ) (domain.ImportResponse, error) {
 	slog.Debug("import: Processing request:", "request", ar)
 
+	// An id in the request means the caller already knows what this is,
+	// either from the import file or because the user has just picked it
+	// out of an IMPORT_MULTI response. Remember it so the same name does
+	// not have to be asked about again.
+	if ar.TmdbID != 0 || ar.IgdbID != 0 {
+		s.saveImportMapping(userId, &ar)
+	} else if ar.IgnoreSavedMatches {
+		slog.Debug("import: Ignoring any saved mapping, as requested", "name", ar.Name)
+	} else if mapping := s.findImportMapping(userId, ar.Name, ar.Type); mapping != nil {
+		// A previous import already settled what this name refers to.
+		slog.Debug("import: Using a saved mapping for name",
+			"name", ar.Name, "tmdb_id", mapping.TmdbID, "igdb_id", mapping.IgdbID)
+		ar.TmdbID = mapping.TmdbID
+		ar.IgdbID = mapping.IgdbID
+	}
+
 	// If we have a TMDB ID given to us, we can go directly to
 	// `SuccessfulImport` and let AddWatched fail if it doesn't exist.
 	if ar.TmdbID != 0 {

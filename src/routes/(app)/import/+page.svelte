@@ -750,12 +750,22 @@
 					text="TodoMovies"
 					filesSelected={(f) => processTodoMoviesFile(f)}
 				/>
+
+				<a class="mappings-link" href="/import/mappings">
+					View saved import matches
+				</a>
 			{/if}
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
+	.mappings-link {
+		margin-top: 15px;
+		font-size: 14px;
+		text-align: center;
+	}
+
 	.content {
 		display: flex;
 		width: 100%;

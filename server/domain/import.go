@@ -62,6 +62,11 @@ type ImportRequest struct {
 	WatchedEpisodes  []entity.WatchedEpisode `json:"watchedEpisodes"`
 	WatchedSeason    []entity.WatchedSeason  `json:"watchedSeasons"`
 	Tags             []TagAddRequest         `json:"tags"`
+
+	// Skip any previously saved mapping for this name, so the user is asked
+	// to pick again. Lets a wrong saved choice be corrected, and allows
+	// re-picking everything when that is what the user wants.
+	IgnoreSavedMatches bool `json:"ignoreSavedMatches"`
 }
 
 // Internal struct given to the SuccessfulImport function.
@@ -82,6 +87,12 @@ func NewSuccessfulImportPropsFromMedia(m *Media) (SuccessfulImportProps, error) 
 		return p, errors.New("unsupported content type on media")
 	}
 	return p, nil
+}
+
+// Change which content a saved mapping points at.
+type ImportMappingUpdateRequest struct {
+	TmdbID int `json:"tmdbId"`
+	IgdbID int `json:"igdbId"`
 }
 
 type ImportResponse struct {
