@@ -14,14 +14,14 @@ import "github.com/sbondCo/Watcharr/database/dbmodel"
 type ImportMapping struct {
 	dbmodel.GormModel
 	// ID of the user this mapping belongs to.
-	UserID uint `json:"-" gorm:"not null;uniqueIndex:usernameidx"`
+	UserID uint `json:"-" gorm:"not null;uniqueIndex:im_user_to_name_to_type"`
 	// The name from the import file, lowercased so lookups are not
 	// case sensitive. The original casing is not needed, we only ever
 	// match on it.
-	Name string `json:"name" gorm:"not null;uniqueIndex:usernameidx"`
+	Name string `json:"name" gorm:"not null;uniqueIndex:im_user_to_name_to_type"`
 	// Content type the name was imported as. Part of the key because the
 	// same name can legitimately be both a movie and a show.
-	Type string `json:"type" gorm:"not null;uniqueIndex:usernameidx"`
+	Type string `json:"type" gorm:"not null;uniqueIndex:im_user_to_name_to_type"`
 	// The chosen tmdb id (movies and shows).
 	TmdbID int `json:"tmdbId"`
 	// The chosen igdb id (games).
