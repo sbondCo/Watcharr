@@ -121,6 +121,29 @@
 		busyIds = busyIds.filter((id) => id !== m.id);
 	}
 
+	// Set while the delete all confirmation modal is open.
+	let confirmingDeleteAll = $state(false);
+	let isDeletingAll = $state(false);
+
+	async function deleteAll() {
+		isDeletingAll = true;
+		const nid = notify({ text: "Deleting saved matches", type: "loading" });
+		try {
+			await req.delete("/import/mappings");
+			mappings = [];
+			notify({ id: nid, text: "All saved matches deleted!", type: "success" });
+			confirmingDeleteAll = false;
+		} catch (err) {
+			console.error("mappings: failed to delete all", err);
+			notify({
+				id: nid,
+				text: "Couldn't delete your saved matches",
+				type: "error",
+			});
+		}
+		isDeletingAll = false;
+	}
+
 	function startChanging(m: ImportMapping) {
 		changing = m;
 		searchQuery = m.name;
@@ -201,9 +224,37 @@
 			<button onclick={() => goto(resolve("/import"))}>
 				<Icon i="arrow" />Back
 			</button>
+			{#if mappings.length > 0}
+				<button onclick={() => (confirmingDeleteAll = true)}>
+					Delete All Matches
+				</button>
+			{/if}
 		</div>
 	</div>
 </div>
+
+{#if confirmingDeleteAll}
+	<Modal
+		title="Delete All Saved Matches"
+		desc="Are you sure you want to forget all {mappings.length} of your saved matches?"
+		maxWidth="500px"
+		onClose={() => (confirmingDeleteAll = false)}
+	>
+		<div class="confirm-inner">
+			<span class="desc">
+				Your watched list isn't touched, only the remembered choices. You'll be
+				asked to pick again for these names on your next import.
+			</span>
+			<button
+				class="delete-all-btn"
+				onclick={() => deleteAll()}
+				disabled={isDeletingAll}
+			>
+				Yes, delete all saved matches
+			</button>
+		</div>
+	</Modal>
+{/if}
 
 {#if changing}
 	<Modal
@@ -314,6 +365,28 @@
 
 		button {
 			width: max-content;
+		}
+	}
+
+	.confirm-inner {
+		display: flex;
+		flex-flow: column;
+		gap: 10px;
+
+		// The pages .desc styling is scoped to the table view, so the same
+		// look is repeated here for the text inside the modal.
+		.desc {
+			font-size: 14px;
+			opacity: 0.7;
+		}
+	}
+
+	.delete-all-btn {
+		width: max-content;
+		margin-left: auto;
+
+		&:hover {
+			color: $error;
 		}
 	}
 
