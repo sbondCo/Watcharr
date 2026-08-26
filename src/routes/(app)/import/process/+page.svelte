@@ -803,7 +803,7 @@
 						disabled={isImporting}
 					/>
 					<span class="opt-desc">
-						Ignores matches saved from previous imports, so you can pick again
+						Ignore matches saved from previous imports, so you can pick again
 						for names that were matched incorrectly.
 					</span>
 				</div>
