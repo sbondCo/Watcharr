@@ -56,7 +56,10 @@
 			notify({ type: "success", text: `Forgot the match for ${m.name}` });
 		} catch (err) {
 			console.error("mappings: failed to forget", err);
-			notify({ type: "error", text: `Couldn't forget the match for ${m.name}` });
+			notify({
+				type: "error",
+				text: `Couldn't forget the match for ${m.name}`,
+			});
 		}
 		busyIds = busyIds.filter((id) => id !== m.id);
 	}
@@ -92,7 +95,10 @@
 			changing = undefined;
 		} catch (err) {
 			console.error("mappings: failed to update", err);
-			notify({ type: "error", text: `Couldn't update the match for ${m.name}` });
+			notify({
+				type: "error",
+				text: `Couldn't update the match for ${m.name}`,
+			});
 		}
 		busyIds = busyIds.filter((id) => id !== m.id);
 	}
