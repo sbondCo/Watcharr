@@ -9,7 +9,12 @@
 	import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
 	import { req } from "@/lib/util/api";
 	import { notify } from "@/lib/util/notify";
-	import type { Media, ImportMapping } from "@/types";
+	import {
+		getContentTypeFromMedia,
+		type ContentType,
+		type Media,
+		type ImportMapping,
+	} from "@/types";
 
 	let mappings: ImportMapping[] = $state([]);
 	let isLoading = $state(true);
@@ -64,6 +69,18 @@
 		busyIds = busyIds.filter((id) => id !== m.id);
 	}
 
+	// Import content types line up with content types, apart from episodes,
+	// which are searched for as their show.
+	function mappingContentType(t: string): ContentType | undefined {
+		if (t === "tv_episode") {
+			return "tv";
+		}
+		if (t === "movie" || t === "tv" || t === "game") {
+			return t;
+		}
+		return undefined;
+	}
+
 	async function runSearch() {
 		if (!searchQuery) {
 			return;
@@ -74,8 +91,19 @@
 			const resp = await req.get<{ results: Media[] }>(
 				`/search?query=${encodeURIComponent(searchQuery)}`,
 			);
-			// People can't be mapped to, so don't offer them.
-			searchResults = (resp?.results ?? []).filter((r) => r.type !== "person");
+			// A mapping keeps the content type it was saved with, so only
+			// offer results of that same type. Picking a different type would
+			// leave the row keyed as one type while holding another types id,
+			// and lookups are done on the type, so it would never match.
+			const wanted = changing ? mappingContentType(changing.type) : undefined;
+			searchResults = (resp?.results ?? []).filter((r) => {
+				const t = getContentTypeFromMedia(r);
+				// People, and anything we can't type, can't be mapped to.
+				if (!t) {
+					return false;
+				}
+				return !wanted || t === wanted;
+			});
 		} catch (err) {
 			console.error("mappings: search failed", err);
 			notify({ type: "error", text: "Search failed" });
