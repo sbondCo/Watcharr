@@ -49,15 +49,84 @@ func TestImportMappingRoundTrip(t *testing.T) {
 		}
 	})
 
-	t.Run("same name as a different content type is not used", func(t *testing.T) {
-		if m := s.findImportMapping(userId, "Oshi no Ko", domain.ImportContentTypeMovie); m != nil {
-			t.Fatalf("show mapping was returned for a movie import (tmdb %d)", m.TmdbID)
+	t.Run("same name as a different content type keeps its own mapping", func(t *testing.T) {
+		s.saveImportMapping(userId, &domain.ImportRequest{
+			Name:   "Oshi no Ko",
+			Type:   domain.ImportContentTypeMovie,
+			TmdbID: 1114894,
+		})
+		m := s.findImportMapping(userId, "Oshi no Ko", domain.ImportContentTypeMovie)
+		if m == nil {
+			t.Fatal("movie mapping was not found")
+		}
+		if m.TmdbID != 1114894 {
+			t.Errorf("tmdb id = %d, want 1114894 (the movie, not the show)", m.TmdbID)
 		}
 	})
 
 	t.Run("unknown name returns nothing", func(t *testing.T) {
 		if m := s.findImportMapping(userId, "Some Other Show", domain.ImportContentTypeShow); m != nil {
 			t.Fatalf("found a mapping for a name that was never saved (tmdb %d)", m.TmdbID)
+		}
+	})
+}
+
+// TestImportMappingWhenImportFileHasNoType checks the case an import file
+// gives us an entry with no type we recognise (MyAnimeList exports do this
+// for OVA, ONA and Special entries), so the saved choice is looked for with
+// no type to match on.
+func TestImportMappingWhenImportFileHasNoType(t *testing.T) {
+	testutil.SetupLogging()
+	s := &Service{db: testutil.SetupDB(t)}
+
+	const userId = 1
+
+	// The type saved is the type of the content the user picked, which the
+	// import file never told us about.
+	s.saveImportMapping(userId, &domain.ImportRequest{
+		Name:   "Aa! Megami-sama!",
+		Type:   domain.ImportContentTypeShow,
+		TmdbID: 29117,
+	})
+
+	t.Run("untyped import finds the mapping", func(t *testing.T) {
+		m := s.findImportMapping(userId, "Aa! Megami-sama!", "")
+		if m == nil {
+			t.Fatal("mapping was not found for an import entry with no type")
+		}
+		if m.TmdbID != 29117 {
+			t.Errorf("tmdb id = %d, want 29117", m.TmdbID)
+		}
+	})
+
+	t.Run("import typed differently to the pick finds the mapping", func(t *testing.T) {
+		m := s.findImportMapping(userId, "Aa! Megami-sama!", domain.ImportContentTypeMovie)
+		if m == nil {
+			t.Fatal("mapping was not found when the file type differed from the picked type")
+		}
+		if m.TmdbID != 29117 {
+			t.Errorf("tmdb id = %d, want 29117", m.TmdbID)
+		}
+	})
+
+	t.Run("an ambiguous name is not guessed at", func(t *testing.T) {
+		// Same name saved as a movie too, so the name alone no longer says
+		// which content is meant.
+		s.saveImportMapping(userId, &domain.ImportRequest{
+			Name:   "Aa! Megami-sama!",
+			Type:   domain.ImportContentTypeMovie,
+			TmdbID: 12345,
+		})
+
+		if m := s.findImportMapping(userId, "Aa! Megami-sama!", ""); m != nil {
+			t.Fatalf("a mapping (tmdb %d) was used for a name meaning more than one thing", m.TmdbID)
+		}
+		// Each type still finds its own mapping.
+		if m := s.findImportMapping(userId, "Aa! Megami-sama!", domain.ImportContentTypeShow); m == nil || m.TmdbID != 29117 {
+			t.Errorf("show mapping = %v, want tmdb 29117", m)
+		}
+		if m := s.findImportMapping(userId, "Aa! Megami-sama!", domain.ImportContentTypeMovie); m == nil || m.TmdbID != 12345 {
+			t.Errorf("movie mapping = %v, want tmdb 12345", m)
 		}
 	})
 }
@@ -232,6 +301,35 @@ func TestImportMappingCRUD(t *testing.T) {
 	t.Run("deleting a mapping that does not exist errors", func(t *testing.T) {
 		if err := s.DeleteImportMapping(userId, 99999); err == nil {
 			t.Error("expected an error deleting a non existent mapping")
+		}
+	})
+
+	t.Run("delete all forgets only our own mappings", func(t *testing.T) {
+		numDeleted, err := s.DeleteAllImportMappings(userId)
+		if err != nil {
+			t.Fatalf("DeleteAllImportMappings failed: %v", err)
+		}
+		ours, _ := s.GetImportMappings(userId)
+		if len(ours) != 0 {
+			t.Errorf("we still have %d mappings, want 0", len(ours))
+		}
+		if numDeleted != 1 {
+			// One of ours was already deleted by an earlier subtest.
+			t.Errorf("reported %d deleted, want 1", numDeleted)
+		}
+		theirs, _ := s.GetImportMappings(otherUserId)
+		if len(theirs) != 1 {
+			t.Errorf("another users mappings now number %d, want 1", len(theirs))
+		}
+	})
+
+	t.Run("delete all with nothing saved is not an error", func(t *testing.T) {
+		numDeleted, err := s.DeleteAllImportMappings(userId)
+		if err != nil {
+			t.Fatalf("DeleteAllImportMappings failed: %v", err)
+		}
+		if numDeleted != 0 {
+			t.Errorf("reported %d deleted, want 0", numDeleted)
 		}
 	})
 }

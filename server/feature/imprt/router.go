@@ -33,6 +33,7 @@ func (r *Router) AddRoutes() {
 	// Saved choices of what a name from an import file refers to.
 	imprt.GET("/mappings", r.GetImportMappings)
 	imprt.PUT("/mappings/:id", r.UpdateImportMapping)
+	imprt.DELETE("/mappings", r.DeleteAllImportMappings)
 	imprt.DELETE("/mappings/:id", r.DeleteImportMapping)
 }
 
@@ -66,6 +67,17 @@ func (r *Router) UpdateImportMapping(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, mapping)
+}
+
+// Forget all of our saved import mappings.
+func (r *Router) DeleteAllImportMappings(c *gin.Context) {
+	userId := c.MustGet("userId").(uint)
+	numDeleted, err := r.service.DeleteAllImportMappings(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, router.ErrorResponse{Error: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"numDeleted": numDeleted})
 }
 
 // Forget a saved import mapping.

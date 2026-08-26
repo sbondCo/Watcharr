@@ -161,6 +161,22 @@ func (s *Service) UpdateImportMapping(
 	return mapping, nil
 }
 
+// Forget every saved mapping, so all names are searched for again on the next
+// import. Only ever touches the given users mappings.
+func (s *Service) DeleteAllImportMappings(userId uint) (int64, error) {
+	res := s.db.
+		Where("user_id = ?", userId).
+		Delete(&entity.ImportMapping{})
+	if res.Error != nil {
+		slog.Error("DeleteAllImportMappings: Failed",
+			"user_id", userId, "error", res.Error)
+		return 0, errors.New("failed to delete mappings")
+	}
+	slog.Info("DeleteAllImportMappings: Mappings deleted",
+		"user_id", userId, "num_deleted", res.RowsAffected)
+	return res.RowsAffected, nil
+}
+
 // Forget a mapping, so the name is searched for again on the next import.
 func (s *Service) DeleteImportMapping(userId uint, mappingId uint) error {
 	res := s.db.
