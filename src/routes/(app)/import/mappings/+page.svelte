@@ -43,16 +43,6 @@
 
 	load();
 
-	function contentLink(m: ImportMapping): string | undefined {
-		if (m.tmdbId) {
-			return m.type === "movie" ? `/movie/${m.tmdbId}` : `/tv/${m.tmdbId}`;
-		}
-		if (m.igdbId) {
-			return `/game/${m.igdbId}`;
-		}
-		return undefined;
-	}
-
 	async function forget(m: ImportMapping) {
 		busyIds = [...busyIds, m.id];
 		try {
@@ -139,6 +129,18 @@
 	}
 </script>
 
+{#snippet matchLink(m: ImportMapping)}
+	{#if m.tmdbId && m.type === "movie"}
+		<a href={resolve("/movie/{m.tmdbId}")}>tmdb {m.tmdbId}</a>
+	{:else if m.tmdbId}
+		<a href={resolve("/tv/{m.tmdbId}")}>tmdb {m.tmdbId}</a>
+	{:else if m.igdbId}
+		<a href={resolve("/game/{m.igdbId}")}>igdb {m.igdbId}</a>
+	{:else}
+		<span class="unknown">nothing</span>
+	{/if}
+{/snippet}
+
 <svelte:head>
 	<title>Saved Import Matches</title>
 </svelte:head>
@@ -178,13 +180,7 @@
 								<td class="name">{m.name}</td>
 								<td>{m.type}</td>
 								<td>
-									{#if contentLink(m)}
-										<a href={contentLink(m)}>
-											{m.tmdbId ? `tmdb ${m.tmdbId}` : `igdb ${m.igdbId}`}
-										</a>
-									{:else}
-										<span class="unknown">nothing</span>
-									{/if}
+									{@render matchLink(m)}
 								</td>
 								<td class="row-btns">
 									{#if busyIds.includes(m.id)}
@@ -228,6 +224,11 @@
 			/>
 			<button onclick={() => runSearch()}>Search</button>
 		</div>
+		<span class="current-match">
+			Currently matched to {@render matchLink(changing)}. This does not affect
+			your saved list, you must manually add or remove entries to modify your
+			saved list.
+		</span>
 		{#if isSearching}
 			<Spinner />
 		{:else if searchResults.length <= 0}
@@ -314,6 +315,13 @@
 		button {
 			width: max-content;
 		}
+	}
+
+	.current-match {
+		display: block;
+		font-size: 14px;
+		opacity: 0.7;
+		margin-bottom: 10px;
 	}
 
 	.search-row {

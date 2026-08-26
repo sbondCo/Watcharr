@@ -751,19 +751,25 @@
 					filesSelected={(f) => processTodoMoviesFile(f)}
 				/>
 
-				<a class="mappings-link" href="/import/mappings">
-					View saved import matches
-				</a>
+				<div class="mappings-btn">
+					<button onclick={() => goto(resolve("/import/mappings"))}>
+						View saved import matches
+					</button>
+				</div>
 			{/if}
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
-	.mappings-link {
+	.mappings-btn {
+		display: flex;
+		justify-content: center;
 		margin-top: 15px;
-		font-size: 14px;
-		text-align: center;
+
+		button {
+			width: max-content;
+		}
 	}
 
 	.content {
