@@ -89,9 +89,16 @@ func (s *Service) ImportContent(
 	} else if mapping := s.findImportMapping(userId, ar.Name, ar.Type); mapping != nil {
 		// A previous import already settled what this name refers to.
 		slog.Debug("import: Using a saved mapping for name",
-			"name", ar.Name, "tmdb_id", mapping.TmdbID, "igdb_id", mapping.IgdbID)
+			"name", ar.Name, "type", mapping.Type,
+			"tmdb_id", mapping.TmdbID, "igdb_id", mapping.IgdbID)
 		ar.TmdbID = mapping.TmdbID
 		ar.IgdbID = mapping.IgdbID
+		// The id belongs to the type that was picked, which isn't always the
+		// type the import file declared (and the file doesn't always declare
+		// one), so take the type from the mapping too. Without this an entry
+		// the file gave no type to would fall through to a name search and
+		// ask again, despite having a saved choice.
+		ar.Type = domain.ImportContentType(mapping.Type)
 	}
 
 	// If we have a TMDB ID given to us, we can go directly to

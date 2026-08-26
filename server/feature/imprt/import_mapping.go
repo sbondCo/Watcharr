@@ -19,6 +19,13 @@ func normalizeMappingName(name string) string {
 
 // Look for a previously saved choice for this name and content type.
 //
+// The content type is only a preference, not a requirement. Import files
+// don't always say what type an entry is (a MyAnimeList export gives OVA,
+// ONA and Special entries a type we have no equivalent for, so they arrive
+// with no type at all), and the type the user picked can differ from the one
+// the file declared. In both of those cases the name on its own is enough,
+// as long as only one saved choice uses it.
+//
 // Returns a nil mapping when there is nothing saved, which is the normal case
 // and not an error.
 func (s *Service) findImportMapping(
@@ -27,25 +34,40 @@ func (s *Service) findImportMapping(
 	contentType domain.ImportContentType,
 ) *entity.ImportMapping {
 	normalized := normalizeMappingName(name)
-	if normalized == "" || contentType == "" {
+	if normalized == "" {
 		return nil
 	}
-	var mapping entity.ImportMapping
+	var mappings []entity.ImportMapping
 	res := s.db.
-		Where("user_id = ? AND name = ? AND type = ?", userId, normalized, string(contentType)).
-		Take(&mapping)
+		Where("user_id = ? AND name = ?", userId, normalized).
+		Find(&mappings)
 	if res.Error != nil {
-		if !errors.Is(res.Error, gorm.ErrRecordNotFound) {
-			slog.Error("findImportMapping: Lookup failed",
-				"user_id", userId, "name", normalized, "error", res.Error)
+		slog.Error("findImportMapping: Lookup failed",
+			"user_id", userId, "name", normalized, "error", res.Error)
+		return nil
+	}
+	// Mappings with nothing usable saved are treated as if they aren't there,
+	// including when deciding whether the name is ambiguous.
+	usable := []entity.ImportMapping{}
+	for _, m := range mappings {
+		if m.TmdbID != 0 || m.IgdbID != 0 {
+			usable = append(usable, m)
 		}
-		return nil
 	}
-	if mapping.TmdbID == 0 && mapping.IgdbID == 0 {
-		// Nothing usable saved, treat it as if we found nothing.
-		return nil
+	// A mapping saved for this exact type is always the best answer.
+	if contentType != "" {
+		for i := range usable {
+			if usable[i].Type == string(contentType) {
+				return &usable[i]
+			}
+		}
 	}
-	return &mapping
+	// Otherwise the name alone decides, but only while it can't mean more
+	// than one thing.
+	if len(usable) == 1 {
+		return &usable[0]
+	}
+	return nil
 }
 
 // Remember which content a name was imported as, so a later import of the
