@@ -552,6 +552,7 @@
 
 		input {
 			width: 100%;
+			font-size: 16px;
 			font-weight: bold;
 			text-align: center;
 			box-shadow: 4px 4px 0px 0px $text-color;
