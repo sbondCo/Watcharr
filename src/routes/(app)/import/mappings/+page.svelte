@@ -107,6 +107,10 @@
 			const updated = await req.put<ImportMapping>(`/import/mappings/${m.id}`, {
 				tmdbId: media.ids.tmdb ?? 0,
 				igdbId: media.ids.igdb ?? 0,
+				// Only used by the server when the mapping has no type of its
+				// own, which happens for ignored names the import file gave
+				// no type to.
+				type: getContentTypeFromMedia(media),
 			});
 			mappings = mappings.map((x) => (x.id === m.id ? updated : x));
 			notify({ type: "success", text: `Updated the match for ${m.name}` });
@@ -144,6 +148,18 @@
 		isDeletingAll = false;
 	}
 
+	// Matches first, ignored names after them, each set alphabetical. Sorted
+	// here rather than by the server so a row moves as soon as it changes,
+	// without reloading the list.
+	const sortedMappings = $derived(
+		[...mappings].sort((a, b) => {
+			if (a.ignored !== b.ignored) {
+				return a.ignored ? 1 : -1;
+			}
+			return a.name.localeCompare(b.name);
+		}),
+	);
+
 	function startChanging(m: ImportMapping) {
 		changing = m;
 		searchQuery = m.name;
@@ -153,7 +169,9 @@
 </script>
 
 {#snippet matchLink(m: ImportMapping)}
-	{#if m.tmdbId && m.type === "movie"}
+	{#if m.ignored}
+		<span class="ignored">ignored</span>
+	{:else if m.tmdbId && m.type === "movie"}
 		<a href={resolve("/movie/{m.tmdbId}")}>tmdb {m.tmdbId}</a>
 	{:else if m.tmdbId}
 		<a href={resolve("/tv/{m.tmdbId}")}>tmdb {m.tmdbId}</a>
@@ -174,7 +192,9 @@
 		<span class="desc">
 			When an import can't work out which content a name refers to, it asks you
 			to pick. Your choice is saved here so re-importing the same file doesn't
-			ask again. Forget a match to be asked about it next time.
+			ask again, including names you chose to ignore. Change an ignored name to
+			start importing it again, or forget a match to be asked about it next
+			time.
 		</span>
 
 		{#if isLoading}
@@ -198,10 +218,10 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each mappings as m (m.id)}
+						{#each sortedMappings as m (m.id)}
 							<tr>
 								<td class="name">{m.name}</td>
-								<td>{m.type}</td>
+								<td>{m.type ? m.type : "any"}</td>
 								<td>
 									{@render matchLink(m)}
 								</td>
@@ -276,9 +296,10 @@
 			<button onclick={() => runSearch()}>Search</button>
 		</div>
 		<span class="current-match">
-			Currently matched to {@render matchLink(changing)}. This does not affect
-			your saved list, you must manually add or remove entries to modify your
-			saved list.
+			Currently {changing.ignored ? "" : "matched to "}{@render matchLink(
+				changing,
+			)}. This does not affect your saved list, you must manually add or remove
+			entries to modify your saved list.
 		</span>
 		{#if isSearching}
 			<Spinner />
@@ -353,7 +374,8 @@
 			word-break: break-word;
 		}
 
-		.unknown {
+		.unknown,
+		.ignored {
 			opacity: 0.6;
 		}
 	}

@@ -550,6 +550,7 @@ export interface ImportMapping {
 	type: string;
 	tmdbId: number;
 	igdbId: number;
+	ignored: boolean;
 }
 
 export enum ImportResponseType {
@@ -558,6 +559,7 @@ export enum ImportResponseType {
 	IMPORT_MULTI = "IMPORT_MULTI",
 	IMPORT_NOTFOUND = "IMPORT_NOTFOUND",
 	IMPORT_EXISTS = "IMPORT_EXISTS",
+	IMPORT_IGNORED = "IMPORT_IGNORED",
 }
 
 export interface ImportResponse {

@@ -17,7 +17,8 @@ func normalizeMappingName(name string) string {
 	return strings.ToLower(strings.TrimSpace(name))
 }
 
-// Look for a previously saved choice for this name and content type.
+// Look for a previously saved choice for this name and content type. The
+// choice can be a match to some content, or a decision to ignore the name.
 //
 // The content type is only a preference, not a requirement. Import files
 // don't always say what type an entry is (a MyAnimeList export gives OVA,
@@ -47,10 +48,12 @@ func (s *Service) findImportMapping(
 		return nil
 	}
 	// Mappings with nothing usable saved are treated as if they aren't there,
-	// including when deciding whether the name is ambiguous.
+	// including when deciding whether the name is ambiguous. An ignored
+	// mapping is usable despite having no ids, its answer is just that there
+	// is nothing to import.
 	usable := []entity.ImportMapping{}
 	for _, m := range mappings {
-		if m.TmdbID != 0 || m.IgdbID != 0 {
+		if m.Ignored || m.TmdbID != 0 || m.IgdbID != 0 {
 			usable = append(usable, m)
 		}
 	}
@@ -87,27 +90,62 @@ func (s *Service) saveImportMapping(
 	if ar.TmdbID == 0 && ar.IgdbID == 0 {
 		return
 	}
-	mapping := entity.ImportMapping{
+	s.upsertImportMapping(userId, entity.ImportMapping{
 		UserID: userId,
 		Name:   normalized,
 		Type:   string(ar.Type),
 		TmdbID: ar.TmdbID,
 		IgdbID: ar.IgdbID,
-	}
-	// The user can change their mind about what a name refers to, so an
-	// existing mapping is updated rather than left alone.
-	res := s.db.
-		Where("user_id = ? AND name = ? AND type = ?", userId, normalized, string(ar.Type)).
-		Assign(entity.ImportMapping{TmdbID: ar.TmdbID, IgdbID: ar.IgdbID}).
-		FirstOrCreate(&mapping)
-	if res.Error != nil {
-		slog.Error("saveImportMapping: Failed to save mapping",
-			"user_id", userId, "name", normalized, "error", res.Error)
+	})
+}
+
+// Remember that a name should be skipped, so later imports of the same name
+// do not ask about it again.
+//
+// Unlike a match, this is saved even when the import file gave no content
+// type, since the entries a user gives up on matching are often the ones we
+// have no type for.
+func (s *Service) saveIgnoredImportMapping(
+	userId uint,
+	ar *domain.ImportRequest,
+) {
+	normalized := normalizeMappingName(ar.Name)
+	if normalized == "" {
 		return
 	}
-	slog.Debug("saveImportMapping: Saved mapping",
-		"user_id", userId, "name", normalized, "type", ar.Type,
-		"tmdb_id", ar.TmdbID, "igdb_id", ar.IgdbID)
+	s.upsertImportMapping(userId, entity.ImportMapping{
+		UserID:  userId,
+		Name:    normalized,
+		Type:    string(ar.Type),
+		Ignored: true,
+	})
+}
+
+// Write a mapping, replacing whatever was saved for the same name and type.
+//
+// The user can change their mind about what a name refers to, so an existing
+// mapping is updated rather than left alone.
+func (s *Service) upsertImportMapping(userId uint, mapping entity.ImportMapping) {
+	res := s.db.
+		Where("user_id = ? AND name = ? AND type = ?", userId, mapping.Name, mapping.Type).
+		// Assigned as a map rather than a struct so that clearing a field
+		// back to its zero value sticks, which gorm skips for struct
+		// updates. Un-ignoring a name by matching it depends on it.
+		Assign(map[string]any{
+			"tmdb_id": mapping.TmdbID,
+			"igdb_id": mapping.IgdbID,
+			"ignored": mapping.Ignored,
+		}).
+		FirstOrCreate(&mapping)
+	if res.Error != nil {
+		slog.Error("upsertImportMapping: Failed to save mapping",
+			"user_id", userId, "name", mapping.Name, "error", res.Error)
+		return
+	}
+	slog.Debug("upsertImportMapping: Saved mapping",
+		"user_id", userId, "name", mapping.Name, "type", mapping.Type,
+		"tmdb_id", mapping.TmdbID, "igdb_id", mapping.IgdbID,
+		"ignored", mapping.Ignored)
 }
 
 // All of a users saved mappings, newest first.
@@ -150,6 +188,15 @@ func (s *Service) UpdateImportMapping(
 	}
 	mapping.TmdbID = ur.TmdbID
 	mapping.IgdbID = ur.IgdbID
+	// Pointing a mapping at real content is also how an ignored name is
+	// un-ignored.
+	mapping.Ignored = false
+	// An ignored name can have been saved with no type, which would leave the
+	// new id with nothing to say what it is an id of, so the picked type is
+	// taken when the mapping has none of its own.
+	if mapping.Type == "" && ur.Type != "" {
+		mapping.Type = string(ur.Type)
+	}
 	if res := s.db.Save(&mapping); res.Error != nil {
 		slog.Error("UpdateImportMapping: Failed to save mapping",
 			"user_id", userId, "mapping_id", mappingId, "error", res.Error)
@@ -164,7 +211,11 @@ func (s *Service) UpdateImportMapping(
 // Forget every saved mapping, so all names are searched for again on the next
 // import. Only ever touches the given users mappings.
 func (s *Service) DeleteAllImportMappings(userId uint) (int64, error) {
+	// Deleted outright rather than soft deleted. A soft deleted row still
+	// occupies its spot in the unique index, so saving the same name again
+	// afterwards would fail, and a forgotten choice is not worth keeping.
 	res := s.db.
+		Unscoped().
 		Where("user_id = ?", userId).
 		Delete(&entity.ImportMapping{})
 	if res.Error != nil {
@@ -179,7 +230,9 @@ func (s *Service) DeleteAllImportMappings(userId uint) (int64, error) {
 
 // Forget a mapping, so the name is searched for again on the next import.
 func (s *Service) DeleteImportMapping(userId uint, mappingId uint) error {
+	// Deleted outright, for the reason given in DeleteAllImportMappings.
 	res := s.db.
+		Unscoped().
 		Where("id = ? AND user_id = ?", mappingId, userId).
 		Delete(&entity.ImportMapping{})
 	if res.Error != nil {

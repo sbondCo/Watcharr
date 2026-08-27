@@ -78,6 +78,14 @@ func (s *Service) ImportContent(
 ) (domain.ImportResponse, error) {
 	slog.Debug("import: Processing request:", "request", ar)
 
+	if ar.IgnoreThisItem {
+		// The user has given up on matching this name, so nothing is imported
+		// and the decision is saved, ending the prompts for it.
+		slog.Debug("import: Ignoring content, as requested", "name", ar.Name)
+		s.saveIgnoredImportMapping(userId, &ar)
+		return domain.ImportResponse{Type: domain.IMPORT_IGNORED}, nil
+	}
+
 	// An id in the request means the caller already knows what this is,
 	// either from the import file or because the user has just picked it
 	// out of an IMPORT_MULTI response. Remember it so the same name does
@@ -87,6 +95,13 @@ func (s *Service) ImportContent(
 	} else if ar.IgnoreSavedMatches {
 		slog.Debug("import: Ignoring any saved mapping, as requested", "name", ar.Name)
 	} else if mapping := s.findImportMapping(userId, ar.Name, ar.Type); mapping != nil {
+		if mapping.Ignored {
+			// A previous import already settled that this name is to be
+			// skipped.
+			slog.Debug("import: Skipping content, ignored by a saved mapping",
+				"name", ar.Name)
+			return domain.ImportResponse{Type: domain.IMPORT_IGNORED}, nil
+		}
 		// A previous import already settled what this name refers to.
 		slog.Debug("import: Using a saved mapping for name",
 			"name", ar.Name, "type", mapping.Type,

@@ -131,6 +131,147 @@ func TestImportMappingWhenImportFileHasNoType(t *testing.T) {
 	})
 }
 
+// TestIgnoredImportMapping checks a name the user gave up on is remembered as
+// ignored, including when the import file never said what type it was, and
+// that matching it later takes the ignore back off.
+func TestIgnoredImportMapping(t *testing.T) {
+	testutil.SetupLogging()
+	s := &Service{db: testutil.SetupDB(t)}
+
+	const userId = 1
+	const otherUserId = 2
+
+	// The entries a user gives up on are often the ones we have no type for,
+	// so an ignore is saved without one.
+	s.saveIgnoredImportMapping(userId, &domain.ImportRequest{
+		Name: "Asagao to Kase-san.",
+	})
+
+	t.Run("ignored name is found", func(t *testing.T) {
+		m := s.findImportMapping(userId, "Asagao to Kase-san.", "")
+		if m == nil {
+			t.Fatal("ignored mapping was not found")
+		}
+		if !m.Ignored {
+			t.Error("mapping was not marked as ignored")
+		}
+	})
+
+	t.Run("ignored name is found for a typed import too", func(t *testing.T) {
+		m := s.findImportMapping(userId, "Asagao to Kase-san.", domain.ImportContentTypeMovie)
+		if m == nil || !m.Ignored {
+			t.Fatalf("ignored mapping = %v, want an ignored mapping", m)
+		}
+	})
+
+	t.Run("another users import is not ignored", func(t *testing.T) {
+		if m := s.findImportMapping(otherUserId, "Asagao to Kase-san.", ""); m != nil {
+			t.Fatal("found another users ignored mapping, mappings must be per user")
+		}
+	})
+
+	t.Run("ignoring twice does not create a second mapping", func(t *testing.T) {
+		s.saveIgnoredImportMapping(userId, &domain.ImportRequest{
+			Name: "asagao to kase-san.",
+		})
+		mappings, err := s.GetImportMappings(userId)
+		if err != nil {
+			t.Fatalf("failed to list mappings: %v", err)
+		}
+		if len(mappings) != 1 {
+			t.Fatalf("got %d mappings, want 1", len(mappings))
+		}
+	})
+
+	t.Run("matching an ignored name stops it being ignored", func(t *testing.T) {
+		mappings, err := s.GetImportMappings(userId)
+		if err != nil {
+			t.Fatalf("failed to list mappings: %v", err)
+		}
+		updated, err := s.UpdateImportMapping(userId, mappings[0].ID, domain.ImportMappingUpdateRequest{
+			TmdbID: 515295,
+			Type:   domain.ImportContentTypeMovie,
+		})
+		if err != nil {
+			t.Fatalf("failed to update mapping: %v", err)
+		}
+		if updated.Ignored {
+			t.Error("mapping is still ignored after being pointed at content")
+		}
+		// The type comes from the pick, since the ignore had none, otherwise
+		// the id would have nothing saying what it is an id of.
+		if updated.Type != string(domain.ImportContentTypeMovie) {
+			t.Errorf("type = %q, want %q", updated.Type, domain.ImportContentTypeMovie)
+		}
+		m := s.findImportMapping(userId, "Asagao to Kase-san.", "")
+		if m == nil || m.Ignored || m.TmdbID != 515295 {
+			t.Fatalf("mapping = %v, want an unignored mapping for tmdb 515295", m)
+		}
+	})
+}
+
+// TestImportContentIgnores checks the import itself skips content the user
+// has given up on, both when they ask for it and on every import after that.
+//
+// Both paths return before any content is searched for or added, so the
+// service needs nothing but a database here.
+func TestImportContentIgnores(t *testing.T) {
+	testutil.SetupLogging()
+	s := &Service{db: testutil.SetupDB(t)}
+
+	const userId = 1
+
+	resp, err := s.ImportContent(userId, domain.ImportRequest{
+		Name:           "Ame to Kimi to",
+		IgnoreThisItem: true,
+	})
+	if err != nil {
+		t.Fatalf("import failed: %v", err)
+	}
+	if resp.Type != domain.IMPORT_IGNORED {
+		t.Errorf("response type = %q, want %q", resp.Type, domain.IMPORT_IGNORED)
+	}
+
+	// The next import of the same name is skipped without asking again.
+	resp, err = s.ImportContent(userId, domain.ImportRequest{Name: "Ame to Kimi to"})
+	if err != nil {
+		t.Fatalf("second import failed: %v", err)
+	}
+	if resp.Type != domain.IMPORT_IGNORED {
+		t.Errorf("second response type = %q, want %q", resp.Type, domain.IMPORT_IGNORED)
+	}
+}
+
+// TestSaveImportMappingUnignores checks that importing a name for real, after
+// it was ignored, replaces the ignore rather than being blocked by it.
+func TestSaveImportMappingUnignores(t *testing.T) {
+	testutil.SetupLogging()
+	s := &Service{db: testutil.SetupDB(t)}
+
+	const userId = 1
+
+	s.saveIgnoredImportMapping(userId, &domain.ImportRequest{
+		Name: "Kanon",
+		Type: domain.ImportContentTypeShow,
+	})
+	s.saveImportMapping(userId, &domain.ImportRequest{
+		Name:   "Kanon",
+		Type:   domain.ImportContentTypeShow,
+		TmdbID: 72540,
+	})
+
+	m := s.findImportMapping(userId, "Kanon", domain.ImportContentTypeShow)
+	if m == nil {
+		t.Fatal("mapping was not found")
+	}
+	if m.Ignored {
+		t.Error("mapping is still ignored after the name was imported")
+	}
+	if m.TmdbID != 72540 {
+		t.Errorf("tmdb id = %d, want 72540", m.TmdbID)
+	}
+}
+
 // TestImportMappingIsUpdated checks that changing your mind about what a name
 // refers to replaces the old choice rather than leaving it in place or
 // creating a second row.

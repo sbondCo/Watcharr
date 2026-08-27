@@ -529,16 +529,29 @@
 			store.parsedImportedList = rList;
 			goto(resolve("/import/some-failed"));
 		} else {
+			const ignoredCount = rList.filter(
+				(i) => i.state === ImportResponseType.IMPORT_IGNORED,
+			).length;
 			notify({
 				type: "success",
-				text: "All content successfully imported!",
+				text:
+					ignoredCount > 0
+						? `All content imported, apart from ${ignoredCount} you chose to ignore.`
+						: "All content successfully imported!",
 				time: 15000,
 			});
 			goto(resolve("/"));
 		}
 	}
 
-	async function doImport(item: ImportedList) {
+	/**
+	 * Import one item.
+	 *
+	 * `ignoreThisItem` gives up on matching it instead, which imports nothing
+	 * and saves that decision, so this name isn't asked about again on any
+	 * future import.
+	 */
+	async function doImport(item: ImportedList, ignoreThisItem = false) {
 		if (!item.name?.trim()) {
 			item.state = ImportResponseType.IMPORT_NOTFOUND;
 			rList = rList;
@@ -547,6 +560,7 @@
 		const resp = await req.post<ImportResponse>("/import", {
 			...item,
 			ignoreSavedMatches,
+			ignoreThisItem,
 		});
 		return new Promise((res, rej) => {
 			if (resp.type === ImportResponseType.IMPORT_MULTI) {
@@ -699,6 +713,8 @@
 													<Icon i="close" wh={22} />
 												{:else if l.state === ImportResponseType.IMPORT_EXISTS}
 													<Icon i="check" wh={22} />
+												{:else if l.state === ImportResponseType.IMPORT_IGNORED}
+													<Icon i="eye-closed" wh={22} />
 												{/if}
 											</div>
 										</td>
@@ -896,6 +912,27 @@
 					/>
 				{/each}
 			</PosterList>
+			<div class="ignore-row">
+				<button
+					onclick={async () => {
+						const item = rList.find(
+							(i) => i.name === importMultiItem?.original.name,
+						);
+						if (!item) {
+							return;
+						}
+						try {
+							await doImport(item, true);
+							importMultiItem?.callback(undefined);
+						} catch (err) {
+							importMultiItem?.callback(String(err));
+						}
+						importMultiItem = undefined;
+					}}
+				>
+					None of these, stop asking about it
+				</button>
+			</div>
 		</Modal>
 	{/if}
 {:catch err}
@@ -903,6 +940,18 @@
 {/await}
 
 <style lang="scss">
+	// The give up button sits on its own row under the results, centered so
+	// it doesn't read as one of the choices above it.
+	.ignore-row {
+		display: flex;
+		justify-content: center;
+		margin-top: 15px;
+
+		button {
+			width: max-content;
+		}
+	}
+
 	.content {
 		display: flex;
 		width: 100%;

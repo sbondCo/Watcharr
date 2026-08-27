@@ -20,10 +20,17 @@ type ImportMapping struct {
 	// match on it.
 	Name string `json:"name" gorm:"not null;uniqueIndex:im_user_to_name_to_type"`
 	// Content type the name was imported as. Part of the key because the
-	// same name can legitimately be both a movie and a show.
+	// same name can legitimately be both a movie and a show. Empty when the
+	// import file didn't say and the user never picked, which only happens
+	// for ignored names.
 	Type string `json:"type" gorm:"not null;uniqueIndex:im_user_to_name_to_type"`
 	// The chosen tmdb id (movies and shows).
 	TmdbID int `json:"tmdbId"`
 	// The chosen igdb id (games).
 	IgdbID int `json:"igdbId"`
+	// Set when the user chose to skip this name rather than match it to
+	// anything. Kept as a mapping rather than thrown away so it shows up
+	// alongside the other saved choices and can be changed later, if the
+	// content turns up in tmdb after all.
+	Ignored bool `json:"ignored"`
 }
