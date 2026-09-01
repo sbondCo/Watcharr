@@ -104,6 +104,13 @@
 		border-radius: 5px;
 		width: 100%;
 	}
+
+	@media (max-width: 768px) and (pointer: coarse) {
+		input,
+		textarea {
+			font-size: 16px;
+		}
+	}
 }
 
 :global {
