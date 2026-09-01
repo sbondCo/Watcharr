@@ -23,7 +23,7 @@ type WatchedEpisodeAddRequest struct {
 	Status          entity.WatchedStatus `json:"status"`
 	Rating          int8                 `json:"rating" binding:"max=10"`
 	AddActivity     entity.ActivityType  `json:"-"`
-	AddActivityDate time.Time            `json:"-"`
+	AddActivityDate time.Time            `json:"addActivityDate,omitempty"`
 }
 
 type WatchedEpisodeAddResponse struct {
@@ -120,14 +120,21 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 	var addedActivity entity.Activity
 	if !found {
 		slog.Debug("Existing watched episode not found, adding as new entry")
-		w.WatchedEpisodes = append(w.WatchedEpisodes, entity.WatchedEpisode{
+		we := entity.WatchedEpisode{
 			UserID:        userId,
 			WatchedID:     ar.WatchedID,
 			SeasonNumber:  ar.SeasonNumber,
 			EpisodeNumber: ar.EpisodeNumber,
 			Status:        ar.Status,
 			Rating:        ar.Rating,
-		})
+		}
+		// If a custom watch date was provided, persist it as the episode's
+		// CreatedAt and UpdatedAt.
+		if !ar.AddActivityDate.IsZero() {
+			we.CreatedAt = ar.AddActivityDate
+			we.UpdatedAt = ar.AddActivityDate
+		}
+		w.WatchedEpisodes = append(w.WatchedEpisodes, we)
 	}
 	if resp := s.db.Save(&w.WatchedEpisodes); resp.Error != nil {
 		slog.Debug("Failed to save watched episode item in db", "error", resp.Error)
