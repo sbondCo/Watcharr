@@ -20,6 +20,7 @@ import (
 type WatchedProvider interface {
 	AddWatched(userId uint, ar domain.WatchedAddRequest, extraProps domain.WatchedAddExtraProps) (entity.Watched, error)
 	GetWatchedItemByTmdbId(userId uint, tmdbId uint, contentType entity.ContentType) (entity.Watched, error)
+	UpdateWatchedRating(userId uint, watchedId uint, rating float64) error
 }
 
 type WatchedSeasonProvider interface {
@@ -121,6 +122,62 @@ func (s *Service) ImportContent(
 	return s.importWithName(userId, &ar)
 }
 
+// Fill in a rating on content that is already on the users list.
+//
+// Content added by a Plex or Jellyfin sync often has no rating, so filling one
+// in from an import is safe in that case. When an import carries a rating for
+// content we already have, we can use it rather than throwing the import away.
+//
+// An existing rating is never overwritten, so re-running an import cannot
+// clobber a rating the user set themselves. Anything we cannot fill in is
+// still reported as IMPORT_EXISTS, exactly as before.
+func (s *Service) fillInMissingRating(
+	userId uint,
+	ar *domain.ImportRequest,
+	props domain.SuccessfulImportProps,
+) domain.ImportResponse {
+	if ar.Rating <= 0 {
+		return domain.ImportResponse{Type: domain.IMPORT_EXISTS}
+	}
+	// Only movies and shows can be looked up by tmdb id.
+	if props.ContentType != util.SupportedMediaMovie &&
+		props.ContentType != util.SupportedMediaShow {
+		return domain.ImportResponse{Type: domain.IMPORT_EXISTS}
+	}
+	existing, err := s.wp.GetWatchedItemByTmdbId(
+		userId,
+		uint(props.TmdbID),
+		entity.ContentType(props.ContentType),
+	)
+	if err != nil {
+		slog.Error("fillInMissingRating: Failed to get the existing watched item",
+			"tmdb_id", props.TmdbID, "error", err)
+		return domain.ImportResponse{Type: domain.IMPORT_EXISTS}
+	}
+	if existing.ID == 0 {
+		slog.Warn("fillInMissingRating: No existing watched item found",
+			"tmdb_id", props.TmdbID)
+		return domain.ImportResponse{Type: domain.IMPORT_EXISTS}
+	}
+	if existing.Rating != 0 {
+		slog.Debug("fillInMissingRating: Existing item is already rated, leaving it be",
+			"watched_id", existing.ID, "rating", existing.Rating)
+		return domain.ImportResponse{Type: domain.IMPORT_EXISTS}
+	}
+	if err := s.wp.UpdateWatchedRating(userId, existing.ID, ar.Rating); err != nil {
+		slog.Error("fillInMissingRating: Failed to update the rating",
+			"watched_id", existing.ID, "error", err)
+		return domain.ImportResponse{Type: domain.IMPORT_EXISTS}
+	}
+	slog.Info("fillInMissingRating: Filled in a missing rating",
+		"watched_id", existing.ID, "rating", ar.Rating)
+	existing.Rating = ar.Rating
+	return domain.ImportResponse{
+		Type:         domain.IMPORT_RATING_UPDATED,
+		WatchedEntry: existing,
+	}
+}
+
 func (s *Service) SuccessfulImport(
 	userId uint,
 	ar *domain.ImportRequest,
@@ -166,9 +223,9 @@ func (s *Service) SuccessfulImport(
 		})
 	if err != nil {
 		if errors.Is(err, domain.ErrWatchedExists) {
-			slog.Error("successfulImport: Must already be on watch list",
-				"error", err)
-			return domain.ImportResponse{Type: domain.IMPORT_EXISTS}
+			slog.Info("successfulImport: Already on watch list, seeing if a"+
+				" missing rating can be filled in", "error", err)
+			return s.fillInMissingRating(userId, ar, props)
 		}
 		slog.Error("successfulImport: Failed to add content as watched",
 			"error", err)
