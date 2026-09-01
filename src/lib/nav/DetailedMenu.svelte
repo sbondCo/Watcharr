@@ -17,7 +17,11 @@
 <Menu
 	conf={{
 		width: "200px",
-		right: "92px",
+		right:
+			page.url?.pathname.startsWith("/person") ||
+			page.url?.pathname.startsWith("/discover")
+				? "12px"
+				: "92px",
 		arrowLeft: page.url?.pathname.startsWith("/search") ? "84px" : "3px",
 	}}
 >
