@@ -3,6 +3,7 @@ package watched
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strconv"
 
@@ -26,10 +27,15 @@ type UserProvider interface {
 	UserGetSettings(userId uint) (entity.UserSettings, error)
 }
 
+type BookProvider interface {
+	GetOrCache(olid string) (entity.Book, error)
+}
+
 type Service struct {
 	db               *gorm.DB
 	cp               ContentProvider
 	gameProvider     GameProvider
+	bookProvider     BookProvider
 	activityProvider domain.ActivityAddProvider
 	userProvider     UserProvider
 }
@@ -38,6 +44,7 @@ func NewService(
 	db *gorm.DB,
 	cp ContentProvider,
 	gameProvider GameProvider,
+	bookProvider BookProvider,
 	activityProvider domain.ActivityAddProvider,
 	userProvider UserProvider,
 ) *Service {
@@ -45,6 +52,7 @@ func NewService(
 		db,
 		cp,
 		gameProvider,
+		bookProvider,
 		activityProvider,
 		userProvider,
 	}
@@ -57,6 +65,8 @@ func (s *Service) getWatched(userId uint) ([]entity.Watched, error) {
 		Preload("Content").
 		Preload("Game").
 		Preload("Game.Poster").
+		Preload("Book").
+		Preload("Book.Cover").
 		Preload("Activity").
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
@@ -104,14 +114,17 @@ func (s *Service) GetWatchedPage(
 		// Search query
 		if extraProps.Query != "" {
 			q := "%" + extraProps.Query + "%"
-			res = res.Where("Content.Title LIKE ? OR Game.Name LIKE ?", q, q)
+			res = res.Where("Content.Title LIKE ? OR Game.Name LIKE ? OR Book.Title LIKE ?", q, q, q)
 		}
 	}
 
 	res = res.
 		Joins("Content").
 		Joins("Game").
+		Joins("Book").
 		Preload("Game.Poster").
+		Preload("Book").
+		Preload("Book.Cover").
 		Preload("Tags").
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
@@ -175,6 +188,8 @@ func (s *Service) getPublicWatched(
 		Joins("Content").
 		Joins("Game").
 		Preload("Game.Poster").
+		Preload("Book").
+		Preload("Book.Cover").
 		Preload("Tags").
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
@@ -229,6 +244,29 @@ func (s *Service) GetWatchedItemByTmdbId(userId uint, tmdbId uint, contentType e
 		return entity.Watched{}, res.Error
 	}
 	slog.Debug("GetWatchedItemByTmdbId: Done.", "userId", userId, "tmdbId", tmdbId, "watched_item", watched)
+	return *watched, nil
+}
+
+// Get a watched list item by content (book) olid (must be for `userId`).
+func (s *Service) GetWatchedItemByOlid(userId uint, rawOlid uint) (entity.Watched, error) {
+	// reconstruct olid from int, i.e. "23919" -> "OL23919W" (ol = openlibrary, w = works)
+	olid := fmt.Sprintf("OL%dW", rawOlid)
+
+	slog.Debug("GetWatchedItemByOlid: Running.", "userId", userId, "olid", olid)
+	watched := new(entity.Watched)
+	res := s.db.Model(&entity.Watched{}).
+		Joins("Book").
+		Preload("Activity").
+		Preload("Book").
+		Preload("Book.Cover").
+		Preload("Tags").
+		Where("user_id = ? AND Book.ol_id = ?", userId, olid).
+		Take(&watched)
+	if res.Error != nil {
+		slog.Error("GetWatchedItemByOlid: Failed!", "error", res.Error)
+		return entity.Watched{}, res.Error
+	}
+	slog.Debug("GetWatchedItemByOlid: Done.", "userId", userId, "olid", olid, "watched_item", watched)
 	return *watched, nil
 }
 
@@ -314,6 +352,8 @@ func (s *Service) GetWatchedItemBySupportedMediaId(userId uint, id uint, t util.
 		return s.GetWatchedItemByTmdbId(userId, id, entity.MOVIE)
 	case util.SupportedMediaShow:
 		return s.GetWatchedItemByTmdbId(userId, id, entity.SHOW)
+	case util.SupportedMediaBook:
+		return s.GetWatchedItemByOlid(userId, id)
 	}
 	slog.Error("GetWatchedItemBySupportedMediaId: Unsupported supportedmedia type",
 		"type", t)
@@ -416,6 +456,19 @@ func (s *Service) AddWatched(
 			return entity.Watched{}, errors.New("failed to find game by id")
 		}
 		watched.GameID = &game.ID
+	case "book":
+		if ar.OLID == "" {
+			return entity.Watched{}, errors.New("missing openlibrary id")
+		}
+		book, err := s.bookProvider.GetOrCache(ar.OLID)
+		if err != nil {
+			return entity.Watched{}, err
+		}
+		// Error if content has no id
+		if book.ID == 0 {
+			return entity.Watched{}, errors.New("failed to find book by id")
+		}
+		watched.BookID = &book.ID
 	default:
 		return entity.Watched{}, errors.New("invalid content type provided")
 	}
@@ -423,7 +476,7 @@ func (s *Service) AddWatched(
 	// Set default status for when content is added by
 	// rating it instead of giving status first.
 	if ar.Status == "" {
-		if ar.ContentType == "movie" || ar.ContentType == "game" {
+		if ar.ContentType == "movie" || ar.ContentType == "game" || ar.ContentType == "book" {
 			ar.Status = entity.FINISHED
 		} else {
 			ar.Status = entity.WATCHING
@@ -530,6 +583,8 @@ func (s *Service) restoreWatchedAfterDuplicatedKeyErr(
 		whereStmt.ContentID = watchedOut.ContentID
 	} else if watchedOut.GameID != nil && *watchedOut.GameID != 0 {
 		whereStmt.GameID = watchedOut.GameID
+	} else if watchedOut.BookID != nil && *watchedOut.BookID != 0 {
+		whereStmt.BookID = watchedOut.BookID
 	} else {
 		return errors.New("no supported media ids in provided watched struct")
 	}

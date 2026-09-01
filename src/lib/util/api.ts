@@ -64,7 +64,7 @@ export interface UpdateWatchedOptions extends Omit<
 	/**
 	 * TMDB ID.
 	 */
-	contentId: number;
+	contentId: number | string;
 	contentType: SupportedMedia;
 }
 
@@ -168,9 +168,11 @@ export async function updateWatched(
 			rating: opts.rating,
 		};
 		if (opts.contentType === "movie" || opts.contentType === "tv") {
-			reqBody.tmdbId = opts.contentId;
+			reqBody.tmdbId = opts.contentId as number;
 		} else if (opts.contentType === "game") {
-			reqBody.igdbId = opts.contentId;
+			reqBody.igdbId = opts.contentId as number;
+		} else if (opts.contentType === "book") {
+			reqBody.olid = opts.contentId as string;
 		} else {
 			throw "invalid contentType";
 		}

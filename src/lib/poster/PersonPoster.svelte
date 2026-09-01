@@ -1,33 +1,46 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
-	import {
-		addClassToParent,
-		calculateTransformOrigin,
-	} from "@/lib/util/helpers";
+import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
+import { addClassToParent, calculateTransformOrigin } from "@/lib/util/helpers";
+import { MediaTypeE } from "@/types";
 
-	interface Props {
-		id: number | undefined;
-		name: string | undefined;
-		path: string | undefined;
-		role?: string | undefined;
-		zoomOnHover?: boolean;
+interface Props {
+	id: string | number | undefined;
+	name: string | undefined;
+	path: string | undefined;
+	role?: string | undefined;
+	zoomOnHover?: boolean;
+	mediaType?: MediaTypeE;
+}
+
+let {
+	id,
+	name,
+	path,
+	role = undefined,
+	zoomOnHover = true,
+	mediaType = MediaTypeE.tmdbPerson,
+}: Props = $props();
+
+const poster = $derived.by(() => {
+	if (!id) return undefined;
+
+	switch (mediaType) {
+		case MediaTypeE.tmdbPerson: return `https://image.tmdb.org/t/p/w300_and_h450_bestv2${path}`;
+		case MediaTypeE.olBookAuthor: return `https://covers.openlibrary.org/a/olid/${id}-M.jpg`;
+		default: return undefined;
 	}
+})
 
-	let {
-		id,
-		name,
-		path,
-		role = undefined,
-		zoomOnHover = true,
-	}: Props = $props();
+const link = $derived.by(() => {
+	if (!id) return undefined;
 
-	const poster = path
-		? `https://image.tmdb.org/t/p/w300_and_h450_bestv2${path}`
-		: undefined;
-	const link: `/person/${number}` | undefined = id
-		? `/person/${id}`
-		: undefined;
+	switch (mediaType) {
+		case MediaTypeE.tmdbPerson: return `/person/${id}`
+		case MediaTypeE.olBookAuthor: return `/book/author/${id}`
+		default: return undefined;
+	}
+})
 </script>
 
 <!-- Quick fix to ignore error, should be fixed -->

@@ -1,4 +1,4 @@
-// Types that we can use for all content types (movie, tv, game, everything).
+// Types that we can use for all content types (movie, tv, game, book, everything).
 // Data responses to the client can use these "uniform" types to make access
 // easier.
 
@@ -6,6 +6,8 @@ package domain
 
 import (
 	"log/slog"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sbondCo/Watcharr/database/entity"
@@ -20,6 +22,9 @@ const (
 	MediaTypeTMDBPerson MediaType = "tmdb_person"
 
 	MediaTypeIGDBGame MediaType = "igdb_game"
+
+	MediaTypeOLBook       MediaType = "ol_book"
+	MediaTypeOLBookAuthor MediaType = "ol_book_author"
 )
 
 type Media struct {
@@ -91,6 +96,13 @@ type Media struct {
 
 	// Game modes.
 	GameModes []MediaGenre `json:"gameModes,omitempty"`
+
+	//
+	// Properties only for Books
+	//
+
+	// Authors.
+	Authors []MediaPerson `json:"authors,omitempty"`
 }
 
 func (t Media) GetId() int {
@@ -100,6 +112,15 @@ func (t Media) GetId() int {
 		return t.IDs.TMDB
 	case MediaTypeIGDBGame:
 		return t.IDs.IGDB
+	case MediaTypeOLBook:
+		// OL12345W -> 12345 (for compatibility with existing APIs)
+		// in the future, if other book providers will be added, GetId likely
+		// has to be refactored to return a string instead
+		id, err := strconv.Atoi(t.IDs.OLID[2 : len(t.IDs.OLID)-1])
+		if err != nil {
+			return -99
+		}
+		return id
 	}
 	return -99
 }
@@ -113,6 +134,8 @@ func (t Media) GetMediaType() util.SupportedMedia {
 		return util.SupportedMediaShow
 	case MediaTypeIGDBGame:
 		return util.SupportedMediaGame
+	case MediaTypeOLBook:
+		return util.SupportedMediaBook
 	}
 	// Unsupported...
 	slog.Warn("GetMediaType: Requested, but unsupported type encountered.",
@@ -132,6 +155,10 @@ type MediaIDs struct {
 
 	// For igdb data
 	IGDB int `json:"igdb,omitempty"`
+
+	// For book data
+	OLID     string `json:"olid,omitempty"`
+	OLAuthor string `json:"olAuthor,omitempty"`
 }
 
 type MediaGenre struct {
@@ -152,6 +179,11 @@ type MediaSeason struct {
 	EpisodeCount int `json:"episodeCount"`
 }
 
+type MediaPerson struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
 // Create Media dto from Watched entity.
 func NewMediaFromWatched(w *entity.Watched, watchedDto *WatchedDto) Media {
 	var media Media
@@ -160,6 +192,8 @@ func NewMediaFromWatched(w *entity.Watched, watchedDto *WatchedDto) Media {
 		media = NewMediaFromContent(w.Content)
 	} else if w.Game != nil {
 		media = NewMediaFromGame(w.Game)
+	} else if w.Book != nil {
+		media = NewMediaFromBook(w.Book)
 	}
 
 	media.Watched = *watchedDto
@@ -194,6 +228,10 @@ func NewMediaFromContent(c *entity.Content) Media {
 
 // Converter for Game entity to Media
 func NewMediaFromGame(c *entity.Game) Media {
+	var genres []MediaGenre
+	for genre := range strings.SplitSeq(c.Genres, "|") {
+		genres = append(genres, MediaGenre{Name: genre})
+	}
 	m := Media{
 		IDs: MediaIDs{
 			IGDB: c.IgdbID,
@@ -205,9 +243,43 @@ func NewMediaFromGame(c *entity.Game) Media {
 		ExtPosterPath: c.CoverID,
 		Rating:        uint(c.Rating),
 		RatingCount:   uint(c.RatingCount),
+		Genres:        genres,
 	}
 	if c.ReleaseDate != nil {
 		m.ReleaseDate = *c.ReleaseDate
 	}
+	return m
+}
+
+// Converter for Book entity to Media
+func NewMediaFromBook(c *entity.Book) Media {
+	m := Media{
+		IDs: MediaIDs{
+			OLID: c.OLID,
+		},
+		Type:          MediaTypeOLBook,
+		Name:          c.Title,
+		Summary:       c.Storyline,
+		Poster:        c.Cover,
+		ExtPosterPath: c.OLID,
+		Rating:        uint(c.RatingAverage),
+		RatingCount:   uint(c.RatingCount),
+	}
+	if c.ReleaseDate != nil {
+		m.ReleaseDate = *c.ReleaseDate
+	}
+
+	if c.AuthorIDs != "" && c.AuthorNames != "" {
+		// append list of book authors
+		idsSplit := strings.Split(c.AuthorIDs, "|")
+		namesSplit := strings.Split(c.AuthorNames, "|")
+		for i := range idsSplit {
+			m.Authors = append(m.Authors, MediaPerson{
+				ID:   idsSplit[i],
+				Name: namesSplit[i],
+			})
+		}
+	}
+
 	return m
 }

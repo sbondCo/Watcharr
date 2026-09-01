@@ -84,8 +84,8 @@ func (r *Router) DeleteFollow(c *gin.Context) {
 // Get follows thoughts on content
 func (r *Router) GetFollowsThoughts(c *gin.Context) {
 	t := c.Param("type")
-	if t != "movie" && t != "tv" && t != "game" {
-		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: "only movie, tv or game types are supported"})
+	if t != "movie" && t != "tv" && t != "game" && t != "book" {
+		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: "only movie, tv, game or book types are supported"})
 		return
 	}
 	userId := c.MustGet("userId").(uint)
