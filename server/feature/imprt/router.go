@@ -28,6 +28,7 @@ func (r *Router) AddRoutes() {
 
 	imprt.POST("", r.ImportContent)
 	imprt.POST("/trakt", r.ImportTrakt)
+	imprt.POST("/trakt-zip", r.ImportTraktZip)
 }
 
 // Import content (the client handle processing data and sends it to us in a uniform way).
@@ -62,4 +63,26 @@ func (r *Router) ImportTrakt(c *gin.Context) {
 		return
 	}
 	c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
+}
+
+func (r *Router) ImportTraktZip(c *gin.Context) {
+	userId := c.MustGet("userId").(uint)
+	fh, err := c.FormFile("file")
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	file, err := fh.Open()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	err = r.traktService.TraktImportWatchedFromZip(userId, file, fh.Size)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, ":)")
 }
