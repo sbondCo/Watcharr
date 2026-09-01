@@ -23,7 +23,7 @@ type WatchedEpisodeAddRequest struct {
 	Status          entity.WatchedStatus `json:"status"`
 	Rating          int8                 `json:"rating" binding:"max=10"`
 	AddActivity     entity.ActivityType  `json:"-"`
-	AddActivityDate time.Time            `json:"addActivityDate,omitempty"`
+	AddActivityDate time.Time            `json:"watchedDate,omitempty"`
 }
 
 type WatchedEpisodeAddResponse struct {
