@@ -77,8 +77,13 @@
 		searchTimeout = window.setTimeout(
 			() => {
 				const target = ev.target as HTMLInputElement;
-				const query = target?.value.trim();
-				if (!query) return;
+				// Keep the value exactly as typed (do NOT trim here). The input is
+				// bound to store.searchQuery, which is reset from the URL query after
+				// each debounced navigation; trimming would drop a trailing space the
+				// user just typed, making "Mon voisin" collapse into "Monvoisin".
+				// We still skip whitespace-only queries below.
+				const query = target?.value ?? "";
+				if (!query.trim()) return;
 				const currentSearchType = page.url.searchParams.get("type");
 				const searchParams = new SvelteURLSearchParams({
 					query: encodeURIComponent(query),
