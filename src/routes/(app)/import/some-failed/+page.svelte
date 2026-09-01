@@ -13,12 +13,43 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
+	import Icon from "@/lib/Icon.svelte";
+	import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
+	import { req } from "@/lib/util/api";
+	import { notify } from "@/lib/util/notify";
 	import { store } from "@/store.svelte";
 	import { ImportResponseType, type ImportedList } from "@/types";
 	import { onMount } from "svelte";
 
 	let failed: ImportedList[] = $state([]);
 	let successCount = $state(0);
+	let ignoredCount = $state(0);
+	// Names with an ignore request in flight, so only that rows button is
+	// disabled rather than the whole list.
+	let ignoring: string[] = $state([]);
+
+	/**
+	 * Give up on an entry for good. Nothing is imported, the decision is
+	 * saved as an ignored match, and future imports skip the name instead of
+	 * failing on it again.
+	 */
+	async function ignore(item: ImportedList) {
+		const name = item.name;
+		if (!name) {
+			return;
+		}
+		ignoring = [...ignoring, name];
+		try {
+			await req.post("/import", { ...item, ignoreThisItem: true });
+			failed = failed.filter((f) => f !== item);
+			ignoredCount++;
+			notify({ type: "success", text: `Ignoring ${name} from now on` });
+		} catch (err) {
+			console.error("some-failed: failed to ignore", err);
+			notify({ type: "error", text: `Couldn't ignore ${name}` });
+		}
+		ignoring = ignoring.filter((n) => n !== name);
+	}
 
 	onMount(() => {
 		if (store.parsedImportedList) {
@@ -31,6 +62,8 @@
 				) {
 					failed.push(item);
 					failed = failed;
+				} else if (item.state === ImportResponseType.IMPORT_IGNORED) {
+					ignoredCount++;
 				} else {
 					successCount++;
 				}
@@ -48,7 +81,11 @@
 		<h5 class="norm">
 			You can search for the failed imports and manually add them.
 		</h5>
-		<h4 class="norm">{successCount} succeeded and {failed.length} failed.</h4>
+		<h4 class="norm">
+			{successCount} succeeded and {failed.length} failed{ignoredCount > 0
+				? `, ${ignoredCount} ignored`
+				: ""}.
+		</h4>
 
 		{#if failed}
 			<ul>
@@ -57,6 +94,18 @@
 				{#each failed as l}
 					<li>
 						<span>{l.name}</span>
+						<div class="ignore-wrap">
+							{#if ignoring.includes(l.name ?? "")}
+								<SpinnerTiny />
+							{:else}
+								<button
+									title="Never try to import this name again"
+									onclick={() => ignore(l)}
+								>
+									<Icon i="eye-closed" wh={18} />Ignore
+								</button>
+							{/if}
+						</div>
 					</li>
 				{/each}
 			</ul>
@@ -109,6 +158,17 @@
 				margin-left: auto;
 
 				button {
+					width: max-content;
+				}
+			}
+
+			.ignore-wrap {
+				margin-left: auto;
+
+				button {
+					display: flex;
+					align-items: center;
+					gap: 3px;
 					width: max-content;
 				}
 			}

@@ -544,12 +544,22 @@ export interface TMDBRegions {
 	}[];
 }
 
+export interface ImportMapping {
+	id: number;
+	name: string;
+	type: string;
+	tmdbId: number;
+	igdbId: number;
+	ignored: boolean;
+}
+
 export enum ImportResponseType {
 	IMPORT_SUCCESS = "IMPORT_SUCCESS",
 	IMPORT_FAILED = "IMPORT_FAILED",
 	IMPORT_MULTI = "IMPORT_MULTI",
 	IMPORT_NOTFOUND = "IMPORT_NOTFOUND",
 	IMPORT_EXISTS = "IMPORT_EXISTS",
+	IMPORT_IGNORED = "IMPORT_IGNORED",
 }
 
 export interface ImportResponse {
