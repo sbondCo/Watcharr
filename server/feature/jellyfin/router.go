@@ -43,7 +43,7 @@ func (r *Router) AddRoutes() {
 
 	// Authenticated and jellyfin access required.
 	jf.Use(
-		authmiddleware.AuthRequired(nil, r.br.Cfg),
+		authmiddleware.AuthRequired(r.br.Cfg),
 		usermiddleware.WithUser(r.br.DB),
 		usermiddleware.WithUserServiceByName(r.br.DB, entity.UserServiceNameJellyfin),
 		authmiddleware.JellyfinAccessRequired(r.br.Cfg),

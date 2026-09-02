@@ -23,6 +23,7 @@ type UserForMiddleware struct {
 	Username    string
 	Type        entity.UserType
 	Permissions int
+	entity.UserSettings
 }
 
 // Attach user to context.
@@ -47,6 +48,7 @@ func WithUser(db *gorm.DB) gin.HandlerFunc {
 }
 
 // Get user from request context.
+// Importantly: Uses MustGet so panics if the user doesn't exist on `c`.
 func UserFromContext(c *gin.Context) *UserForMiddleware {
 	return c.MustGet(reqContextKeyUser).(*UserForMiddleware)
 }
