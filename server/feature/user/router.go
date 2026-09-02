@@ -26,7 +26,7 @@ func NewRouter(br *router.BaseRouter, service *Service, manageService *ManageSer
 }
 
 func (r *Router) AddRoutes() {
-	u := r.br.Router.Group("/user").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg))
+	u := r.br.Router.Group("/user").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	// Get current user info
 	u.GET("", r.GetUserInfo)

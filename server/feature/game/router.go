@@ -8,6 +8,7 @@ import (
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/feature/watched/addedtocontent"
 	"github.com/sbondCo/Watcharr/media/igdb"
 	"github.com/sbondCo/Watcharr/router"
@@ -35,7 +36,7 @@ func NewRouter(br *router.BaseRouter, service *Service, watchedProvider WatchedP
 }
 
 func (r *Router) AddRoutes() {
-	gamer := r.br.Router.Group("/game").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	gamer := r.br.Router.Group("/game").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	// TODO This config init can be moved to NewRouter, then `gdb` can be accessible in Router for all service funcs.
 	r.br.Cfg.TWITCH.OnTokenRefreshed(func() {
@@ -55,7 +56,10 @@ func (r *Router) AddRoutes() {
 	gamer.GET("/:id", r.GetGameDetails)
 
 	// IMPORTANT: Routes below only for admins!
-	gamer.Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg), authmiddleware.AdminRequired())
+	gamer.Use(
+		usermiddleware.WithUser(r.br.DB),
+		authmiddleware.AdminRequired(),
+	)
 	{
 		gamer.POST("/config", r.UpdateConfig)
 	}

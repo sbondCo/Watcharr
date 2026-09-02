@@ -1,5 +1,3 @@
-// TODO move this to a middleware package.
-
 package router
 
 import (
@@ -9,10 +7,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sbondCo/Watcharr/config"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/util"
 )
 
-// Location middleware
+// Location middleware (usermiddleware.WithUser should be ran before this!)
 func WhereaboutsRequired(cfg *config.ServerConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Respect region query param over all.
@@ -25,17 +24,17 @@ func WhereaboutsRequired(cfg *config.ServerConfig) gin.HandlerFunc {
 			return
 		}
 
-		// Then respect existing userCountry that was filled out by our
-		// AuthRequired middleware if it found one.
-		if v, exists := c.Get("userCountry"); exists {
-			// If userCountry is already defined
+		// Then respect user setting (set by usermiddleware.WithUser).
+		user := usermiddleware.UserFromContext(c)
+		if user.Country != nil && *user.Country != "" {
 			slog.Debug("WhereaboutsRequired: Using user setting.",
-				"user_country", v)
+				"user_country", *user.Country)
+			c.Set("userCountry", *user.Country)
 			c.Next()
 			return
 		}
 
-		// Then use default value from config if set.
+		// Then use default value from server config if set.
 		if cfg.DEFAULT_COUNTRY != "" {
 			slog.Debug("WhereaboutsRequired: Using server default country.",
 				"default_country", cfg.DEFAULT_COUNTRY)

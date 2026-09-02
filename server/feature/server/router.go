@@ -12,6 +12,7 @@ import (
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
 	"github.com/sbondCo/Watcharr/feature/plex"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/router"
 )
 
@@ -45,7 +46,12 @@ func NewRouter(
 }
 
 func (r *Router) AddRoutes() {
-	server := r.br.Router.Group("/server").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg), authmiddleware.AdminRequired())
+	server := r.br.Router.Group("/server").
+		Use(
+			authmiddleware.AuthRequired(r.br.Cfg),
+			usermiddleware.WithUser(r.br.DB),
+			authmiddleware.AdminRequired(),
+		)
 
 	// Get server config (minus very sensitive fields, like JWT_SECRET)
 	server.GET("/config", r.GetConfig)

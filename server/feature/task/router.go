@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/router"
 	"github.com/sbondCo/Watcharr/task"
 )
@@ -18,7 +19,12 @@ func NewRouter(br *router.BaseRouter) *Router {
 }
 
 func (r *Router) AddRoutes() {
-	task := r.br.Router.Group("/task").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg), authmiddleware.AdminRequired())
+	task := r.br.Router.Group("/task").
+		Use(
+			authmiddleware.AuthRequired(r.br.Cfg),
+			usermiddleware.WithUser(r.br.DB),
+			authmiddleware.AdminRequired(),
+		)
 
 	task.GET("/", r.GetAllTasks)
 	task.PUT(":name", r.UpdateTaskSchedule)

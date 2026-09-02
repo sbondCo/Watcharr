@@ -25,7 +25,7 @@ func NewRouter(br *router.BaseRouter, service *Service) *Router {
 }
 
 func (r *Router) AddRoutes() {
-	watched := r.br.Router.Group("/watched").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	watched := r.br.Router.Group("/watched").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	watched.GET("", router.PaginatedRequest(false), r.GetWatchedList)
 	watched.GET(":id/:username", router.PaginatedRequest(true), r.GetPublicWatchedList)
