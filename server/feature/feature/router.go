@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/router"
 )
 
@@ -21,10 +22,12 @@ func NewRouter(br *router.BaseRouter, service *Service) *Router {
 }
 
 func (r *Router) AddRoutes() {
-	feature := r.Router.Group("/features").Use(authmiddleware.AuthRequired(r.DB, r.Cfg))
+	feature := r.Router.Group("/features").
+		Use(authmiddleware.AuthRequired(r.Cfg))
 
 	// Get enabled features (aka functionality)
-	feature.GET("", func(c *gin.Context) {
-		c.JSON(http.StatusOK, r.service.GetEnabledFeatures(c.GetInt("userPermissions")))
+	feature.GET("", usermiddleware.WithUser(r.DB), func(c *gin.Context) {
+		user := usermiddleware.UserFromContext(c)
+		c.JSON(http.StatusOK, r.service.GetEnabledFeatures(user.Permissions))
 	})
 }

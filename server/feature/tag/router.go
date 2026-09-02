@@ -25,7 +25,7 @@ func NewRouter(br *router.BaseRouter, service *Service) *Router {
 }
 
 func (r *Router) AddRoutes() {
-	tag := r.br.Router.Group("/tag").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	tag := r.br.Router.Group("/tag").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	tag.GET("", r.GetTags)
 	tag.GET(":id", r.GetTag)

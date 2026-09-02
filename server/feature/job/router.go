@@ -20,7 +20,7 @@ func NewRouter(br *router.BaseRouter) *Router {
 }
 
 func (r *Router) AddRoutes() {
-	job := r.br.Router.Group("/job").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	job := r.br.Router.Group("/job").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	// Uses wildcard so it still works in cases where the job id includes a /.
 	// (yes i changed this instead of not allowing a / when we generate a job id becuz easier)

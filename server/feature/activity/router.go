@@ -25,7 +25,7 @@ func NewRouter(br *router.BaseRouter) *Router {
 func (r *Router) AddRoutes() {
 	activity := r.br.Router.
 		Group("/activity").
-		Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+		Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	activity.GET(":watchedId", r.GetActivity)
 	activity.PUT(":id", r.UpdateActivity)

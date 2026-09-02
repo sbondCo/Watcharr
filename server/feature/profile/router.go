@@ -21,7 +21,7 @@ func NewRouter(br *router.BaseRouter, service *Service) *Router {
 }
 
 func (r *Router) AddRoutes() {
-	profile := r.br.Router.Group("/profile").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	profile := r.br.Router.Group("/profile").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	// Get user profile details
 	profile.GET("", r.GetProfile)

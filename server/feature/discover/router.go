@@ -9,6 +9,7 @@ import (
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/feature/watched/addedtocontent"
 	"github.com/sbondCo/Watcharr/router"
 	"github.com/sbondCo/Watcharr/util"
@@ -34,10 +35,11 @@ func NewRouter(br *router.BaseRouter, service *Service, watchedProvider WatchedP
 }
 
 func (r *Router) AddRoutes() {
-	discover := r.br.Router.Group("/discover").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg))
+	discover := r.br.Router.Group("/discover").
+		Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	// Master discovery
-	discover.GET("", router.WhereaboutsRequired(r.br.Cfg), router.PaginatedRequest(true), r.GetDiscover)
+	discover.GET("", usermiddleware.WithUser(r.br.DB), router.WhereaboutsRequired(r.br.Cfg), router.PaginatedRequest(true), r.GetDiscover)
 }
 
 // NOTE: The handler functions use `copier` to copy values from the response

@@ -34,7 +34,7 @@ func NewRouter(br *router.BaseRouter, service *Service, watchedProvider WatchedP
 }
 
 func (r *Router) AddRoutes() {
-	search := r.br.Router.Group("/search").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	search := r.br.Router.Group("/search").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	// Master search
 	search.GET("", router.PaginatedRequest(true), r.GetSearch)
