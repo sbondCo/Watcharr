@@ -3,6 +3,7 @@ package jellyfin
 import (
 	"log/slog"
 	"net/http"
+	"uuid"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sbondCo/Watcharr/database/entity"
@@ -100,17 +101,46 @@ func (r *Router) GetSync(c *gin.Context) {
 // (unauthenticated) Webhook endpoint.
 // Ingest service will use the `uuid` param as a "secret".
 func (r *Router) PostWebhook(c *gin.Context) {
+	if !r.br.Cfg.JELLYFIN_WEBHOOK_ENABLED {
+		slog.Warn("PostWebhook: Webhook support is disabled.")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
 
-	uuid := c.Param("uuid")
+	uuidParam := c.Param("uuid")
+	if uuidParam == "" {
+		slog.Warn("PostWebhook: No key given. Ensure the address is fully and correctly entered into Jellyfin!")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	uuidKey, err := uuid.Parse(uuidParam)
+	if err != nil {
+		slog.Warn("PostWebhook: Invalid key given.", "error", err)
+		// A user trying to debug why this is failing may appreciate this log.
+		// Only in Debug log, since it is a credential.
+		slog.Debug("PostWebhook: Invalid key given.", "key_given", uuidParam)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	if uuidKey != r.br.Cfg.JELLYFIN_WEBHOOK_KEY {
+		slog.Warn("PostWebhook: Wrong key given.")
+		// A user trying to debug why this is failing may appreciate this log.
+		// Only in Debug log, since it is a credential.
+		slog.Debug("PostWebhook: Wrong key given.", "key_given", uuidParam)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
 	var data WebhookData
-	err := c.ShouldBindJSON(&data)
+	err = c.ShouldBindJSON(&data)
 	if err != nil {
 		slog.Warn("PostWebhook: Bad request recieved.", "error", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest,
 			router.ErrorResponse{Error: err.Error()})
 		return
 	}
-	err = r.webhookService.Ingest(uuid, data)
+	err = r.webhookService.Ingest(data)
 	if err != nil {
 		// Since the error data might be sensitive (regarding auth/if a user
 		// exists), we just return a generic "failed" message.
