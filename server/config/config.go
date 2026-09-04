@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"time"
+	"uuid"
 
 	"github.com/sbondCo/Watcharr/config/cfgmodel"
 	"github.com/sbondCo/Watcharr/logging"
@@ -55,6 +56,13 @@ type ServerConfig struct {
 	// to enable it as an auth provider.
 	JELLYFIN_HOST string `json:",omitempty"`
 
+	// Optional: Enable jellyfin webhook endpoint.
+	JELLYFIN_WEBHOOK_ENABLED bool `json:",omitempty"`
+
+	// Optional: Jellyfin webhook endpoint auth key (UUID).
+	// Auto generated for the user when the webhook is enabled.
+	JELLYFIN_WEBHOOK_KEY uuid.UUID `json:",omitzero"`
+
 	// Optional: Use Emby instead of Jellyfin branding in the ui.
 	USE_EMBY bool
 
@@ -101,16 +109,18 @@ type ServerConfig struct {
 // not editable on frontend, so not needed).
 func (c *ServerConfig) GetSafe() ServerConfig {
 	return ServerConfig{
-		SIGNUP_ENABLED:  c.SIGNUP_ENABLED,
-		DEFAULT_COUNTRY: c.DEFAULT_COUNTRY,
-		JELLYFIN_HOST:   c.JELLYFIN_HOST,
-		USE_EMBY:        c.USE_EMBY,
-		TMDB_KEY:        c.TMDB_KEY,
-		PLEX_HOST:       c.PLEX_HOST,
-		PLEX_MACHINE_ID: c.PLEX_MACHINE_ID,
-		DEBUG:           c.DEBUG,
-		SONARR:          c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
-		RADARR:          c.RADARR, // Dont act safe, this contains radarr api key, needed for config
+		SIGNUP_ENABLED:           c.SIGNUP_ENABLED,
+		DEFAULT_COUNTRY:          c.DEFAULT_COUNTRY,
+		JELLYFIN_HOST:            c.JELLYFIN_HOST,
+		JELLYFIN_WEBHOOK_ENABLED: c.JELLYFIN_WEBHOOK_ENABLED,
+		JELLYFIN_WEBHOOK_KEY:     c.JELLYFIN_WEBHOOK_KEY,
+		USE_EMBY:                 c.USE_EMBY,
+		TMDB_KEY:                 c.TMDB_KEY,
+		PLEX_HOST:                c.PLEX_HOST,
+		PLEX_MACHINE_ID:          c.PLEX_MACHINE_ID,
+		DEBUG:                    c.DEBUG,
+		SONARR:                   c.SONARR, // Dont act safe, this contains sonarr api key, needed for config
+		RADARR:                   c.RADARR, // Dont act safe, this contains radarr api key, needed for config
 		TWITCH: igdb.IGDB{
 			ClientID:     c.TWITCH.ClientID,
 			ClientSecret: c.TWITCH.ClientSecret,
@@ -129,6 +139,10 @@ func (c *ServerConfig) Get(s string) (ServerConfigGetByName, error) {
 		return ServerConfigGetByName{Value: c.DEFAULT_COUNTRY}, nil
 	case "JELLYFIN_HOST":
 		return ServerConfigGetByName{Value: c.JELLYFIN_HOST}, nil
+	case "JELLYFIN_WEBHOOK_ENABLED":
+		return ServerConfigGetByName{Value: c.JELLYFIN_WEBHOOK_ENABLED}, nil
+	case "JELLYFIN_WEBHOOK_KEY":
+		return ServerConfigGetByName{Value: c.JELLYFIN_WEBHOOK_KEY}, nil
 	case "USE_EMBY":
 		return ServerConfigGetByName{Value: c.USE_EMBY}, nil
 	case "SIGNUP_ENABLED":
@@ -175,6 +189,36 @@ func (c *ServerConfig) UpdateConfig(k string, v any) error {
 		return errors.New("failed to write config")
 	}
 	return nil
+}
+
+type SetJellyfinWebhookEnabledResponse struct {
+	JELLYFIN_WEBHOOK_KEY uuid.UUID
+}
+
+// Update JELLYFIN_WEBHOOK_ENABLED.
+// Will set a JELLYFIN_WEBHOOK_KEY if one doesn't exist and returns it.
+func (c *ServerConfig) SetJellyfinWebhookEnabled(
+	v bool,
+) (SetJellyfinWebhookEnabledResponse, error) {
+	c.JELLYFIN_WEBHOOK_ENABLED = v
+	if c.JELLYFIN_WEBHOOK_ENABLED && c.JELLYFIN_WEBHOOK_KEY == uuid.Nil() {
+		// If we are enabling the webhook and we don't already have a key,
+		// create one. We don't re-gen the key everytime so users can freely
+		// enable/disable the webhook support without having to reconfigure
+		// jellyfin with the new key when they re-enable.
+		c.JELLYFIN_WEBHOOK_KEY = uuid.New()
+	}
+
+	if err := c.Write(); err != nil {
+		slog.Error("SetJellyfinWebhookEnabled: Failed to write config!",
+			"err", err)
+		return SetJellyfinWebhookEnabledResponse{},
+			errors.New("failed to write config")
+	}
+
+	return SetJellyfinWebhookEnabledResponse{
+		JELLYFIN_WEBHOOK_KEY: c.JELLYFIN_WEBHOOK_KEY,
+	}, nil
 }
 
 // Write current Config to file
