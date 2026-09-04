@@ -57,13 +57,10 @@ func NewWebhookService(
 }
 
 // Entrypoint for webhook data.
-func (w *WebhookService) Ingest(uuid string, data WebhookData) error {
-	slog.Debug("Ingest: Starting.", "uuid", uuid, "data", data)
-
-	if !w.validUUID(uuid) {
-		slog.Error("Ingest: Invalid UUID caught.", "uuid_tried", uuid)
-		return errors.New("dont be naughty")
-	}
+// Ensure validation of jellyfin webhook key and if support is enabled is done
+// before this is called!
+func (w *WebhookService) Ingest(data WebhookData) error {
+	slog.Debug("Ingest: Starting.", "data", data)
 
 	// Process supported events.
 	switch data.NotificationType {
@@ -74,6 +71,8 @@ func (w *WebhookService) Ingest(uuid string, data WebhookData) error {
 	case WebhookTypeUserDataSaved:
 		return w.processUserDataSaved(&data)
 	default:
+		slog.Error("Ingest: Unsupported notification type. Skipping.",
+			"type", data.NotificationType)
 		return errors.New("unsupported notification type")
 	}
 }
@@ -348,14 +347,4 @@ func (w *WebhookService) decideNewWatchedStatus(
 		}
 	}
 	return newStatus
-}
-
-// Check UUID (aka the secret that is given to jellyfins webhook plugin)
-// for the webhook is valid.
-func (w *WebhookService) validUUID(uuid string) bool {
-	// HACK, this should compare against a uuid in config
-	if uuid == "turd" {
-		return true
-	}
-	return false
 }

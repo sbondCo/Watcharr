@@ -38,10 +38,22 @@
 	let signupDisabled = $state(false);
 	let debugDisabled = $state(false);
 	let jfDisabled = $state(false);
+	let jfWebhookEnabledDisabled = $state(false);
 	let tmdbkDisabled = $state(false);
 	let plexHostDisabled = $state(false);
 	let countryDisabled = $state(false);
 	let useEmbyDisabled = $state(false);
+
+	let jellyfinWebhookEndpoint: string | undefined = $derived.by(() => {
+		if (
+			!serverConfig ||
+			!serverConfig.JELLYFIN_WEBHOOK_ENABLED ||
+			!serverConfig.JELLYFIN_WEBHOOK_KEY
+		) {
+			return "Error: Please try reloading the page OR re-toggling the webhook setting to get the address!";
+		}
+		return `${location.protocol}//${location.host}/api/jellyfin/webhook/${serverConfig.JELLYFIN_WEBHOOK_KEY}`;
+	});
 
 	async function getServerConfig() {
 		serverConfig = await req.get<ServerConfig>(`/server/config`);
@@ -63,6 +75,8 @@
 		let ep = "/server/config";
 		if (name === "PLEX_HOST") {
 			ep = "/server/config/plex_host";
+		} else if (name === "JELLYFIN_WEBHOOK_ENABLED") {
+			ep = "/server/config/JELLYFIN_WEBHOOK_ENABLED";
 		}
 		req
 			.postWhole<object>(ep, { key: name, value: value })
@@ -179,6 +193,42 @@
 						/>
 					</Setting>
 					<Setting
+						title="Jellyfin Webhook"
+						desc="Do you want to enable Jellyfin Webhook support?"
+						row
+					>
+						<Checkbox
+							name="JELLYFIN_WEBHOOK_ENABLED"
+							disabled={jfWebhookEnabledDisabled}
+							value={serverConfig.JELLYFIN_WEBHOOK_ENABLED}
+							toggled={(on) => {
+								jfWebhookEnabledDisabled = true;
+								updateServerConfig("JELLYFIN_WEBHOOK_ENABLED", on, (rData) => {
+									jfWebhookEnabledDisabled = false;
+									if (
+										serverConfig &&
+										rData &&
+										"JELLYFIN_WEBHOOK_KEY" in rData &&
+										typeof rData.JELLYFIN_WEBHOOK_KEY === "string"
+									) {
+										serverConfig.JELLYFIN_WEBHOOK_KEY =
+											rData.JELLYFIN_WEBHOOK_KEY;
+									}
+								});
+							}}
+						/>
+					</Setting>
+					{#if serverConfig.JELLYFIN_WEBHOOK_ENABLED}
+						<Setting
+							title="Jellyfin Webhook Endpoint"
+							desc="This is the address you should use when creating the webhook in Jellyfin. Depending on your setup, you may need to alter the hostname. This address contains a secret key, don't share it with others!"
+						>
+							<code>
+								{jellyfinWebhookEndpoint}
+							</code>
+						</Setting>
+					{/if}
+					<Setting
 						title="Use Emby"
 						desc="Do you want to pretend you're using Emby instead of Jellyfin?"
 						row
@@ -259,7 +309,11 @@
 							}}
 						/>
 					</Setting>
-					<Setting title="Debug" desc="Enable debug logging." row>
+					<Setting
+						title="Debug"
+						desc="Enable debug logging. Don't keep this on all the time, only use this when trying to resolve an issue."
+						row
+					>
 						<Checkbox
 							name="DEBUG"
 							disabled={debugDisabled}

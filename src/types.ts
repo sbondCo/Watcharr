@@ -624,6 +624,8 @@ export interface ManagedUser {
 export interface ServerConfig {
 	DEFAULT_COUNTRY?: string;
 	JELLYFIN_HOST?: string;
+	JELLYFIN_WEBHOOK_ENABLED?: boolean;
+	JELLYFIN_WEBHOOK_KEY?: string;
 	USE_EMBY: boolean;
 	SIGNUP_ENABLED: boolean;
 	TMDB_KEY?: string;

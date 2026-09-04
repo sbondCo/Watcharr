@@ -57,6 +57,8 @@ func (r *Router) AddRoutes() {
 	server.GET("/config", r.GetConfig)
 	// Update config
 	server.POST("/config", r.UpdateConfig)
+	// Update config: JELLYFIN_WEBHOOK_ENABLED
+	server.POST("/config/JELLYFIN_WEBHOOK_ENABLED", r.SetConfigJellyfinWebhookEnabled)
 	// Update plex host config
 	server.POST("/config/plex_host", r.UpdateConfigPlexHost)
 	// Get server stats
@@ -122,6 +124,21 @@ func (r *Router) UpdateConfig(c *gin.Context) {
 		return
 	}
 	c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
+}
+
+func (r *Router) SetConfigJellyfinWebhookEnabled(c *gin.Context) {
+	var ur router.ValueRequest
+	err := c.ShouldBindJSON(&ur)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
+		return
+	}
+	resp, err := r.br.Cfg.SetJellyfinWebhookEnabled(ur.Value.(bool))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, router.ErrorResponse{Error: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 // Update plex host config
