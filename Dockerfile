@@ -1,7 +1,7 @@
 #
 # Backend
 #
-FROM golang:1.26-alpine AS server
+FROM golang:1.27-alpine AS server
 
 WORKDIR /server
 

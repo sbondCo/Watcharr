@@ -38,7 +38,7 @@ These changes are awaiting release:
 - Logging: Refactored func/var names (eg SetLevel -> Level).
 - Database: Renamed `New()` to `Open()` as it will no longer run `Setup()`. That will be done from caller after running New(). This lets us setup our logging for the db after New(), but before migrations are run in Setup().
 - Middleware: Removed "extra info" from `AuthRequired`. User from db is now fetched with new `WithUser` middleware.
-- Updated to go 1.27.
+- Upgraded go: 1.26 -> 1.27.
 
 # [4.2.1] - 2026-08-04T00:40:00Z
 
