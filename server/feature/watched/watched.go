@@ -622,7 +622,6 @@ func (s *Service) UpdateWatched(
 	userId uint,
 	id uint,
 	ar domain.WatchedUpdateRequest,
-	extra domain.WatchedUpdateRequestExtraProps,
 ) (domain.WatchedUpdateResponse, error) {
 	slog.Debug("UpdateWatched", "request_data", ar)
 
@@ -645,22 +644,66 @@ func (s *Service) UpdateWatched(
 			errors.New("failed to get watched entry")
 	}
 
-	originalThoughts := upwat.Thoughts
-	if ar.Rating != 0 {
+	// If nothing changes, we won't save to db.
+	anythingChanged := false
+	// Activities are built and added to this list, then if saving the Watched
+	// changes succeeds, these activities are then saved too.
+	activitiesToAdd := []*activity.Creator{}
+
+	if ar.Rating != 0 && ar.Rating != upwat.Rating {
+		anythingChanged = true
 		upwat.Rating = ar.Rating
+
+		act := activity.
+			NewCreator(s.db, userId, id, entity.RATING_CHANGED, false, ar.ActivityCreatedBy).
+			SetData(strconv.Itoa(int(ar.Rating)))
+		activitiesToAdd = append(activitiesToAdd, act)
 	}
-	if ar.Status != "" {
+	if ar.Status != "" && ar.Status != upwat.Status {
+		anythingChanged = true
 		upwat.Status = ar.Status
+
+		countAsPlay := false
+		if ar.Status == entity.FINISHED &&
+			util.Deref(ar.LetCountAsPlay, true) != false {
+			countAsPlay = true
+		}
+		act := activity.
+			NewCreator(s.db, userId, id, entity.STATUS_CHANGED, countAsPlay, ar.ActivityCreatedBy).
+			SetData(string(ar.Status))
+		activitiesToAdd = append(activitiesToAdd, act)
 	}
-	if ar.Thoughts != "" {
+	if ar.Thoughts != "" && ar.Thoughts != upwat.Thoughts {
+		anythingChanged = true
 		upwat.Thoughts = ar.Thoughts
+
+		act := activity.
+			NewCreator(s.db, userId, id, entity.THOUGHTS_CHANGED, false, ar.ActivityCreatedBy)
+		activitiesToAdd = append(activitiesToAdd, act)
 	}
 	if ar.RemoveThoughts {
+		anythingChanged = true
+		originalThoughts := upwat.Thoughts
 		upwat.Thoughts = ""
+
+		act := activity.
+			NewCreator(s.db, userId, id, entity.THOUGHTS_REMOVED, false, ar.ActivityCreatedBy).
+			SetData(originalThoughts)
+		activitiesToAdd = append(activitiesToAdd, act)
 	}
 	if ar.Pinned != nil {
+		anythingChanged = true
 		upwat.Pinned = *ar.Pinned
 	}
+
+	if !anythingChanged {
+		slog.Info("UpdateWatched: Nothing changed.. skipping save.")
+		// NOTE: This is never an error (because idempotency but also it would
+		// likely break any existing callers around project, if a caller needs
+		// to know changed vs unchanged, make a bool in the Response struct).
+		return domain.WatchedUpdateResponse{}, nil
+	}
+
 	res := s.db.Save(upwat)
 	if res.Error != nil {
 		slog.Error("UpdateWatched: Update query failed!", "error", err)
@@ -670,37 +713,17 @@ func (s *Service) UpdateWatched(
 		return domain.WatchedUpdateResponse{}, errors.New("no watched entry found")
 	}
 
-	addedActivity := entity.Activity{}
-	if ar.Rating != 0 {
-		addedActivity, _ = activity.
-			NewCreator(s.db, userId, id, entity.RATING_CHANGED, false, 0).
-			SetData(strconv.Itoa(int(ar.Rating))).
-			Create()
-	}
-	if ar.Status != "" {
-		countAsPlay := false
-		if ar.Status == entity.FINISHED &&
-			util.Deref(ar.LetCountAsPlay, true) != false {
-			countAsPlay = true
+	newActivities := []entity.Activity{}
+	for _, v := range activitiesToAdd {
+		a, err := v.Create()
+		if err != nil {
+			slog.Error("UpdateWatched: Failed adding an activity.", "error", err)
+			continue
 		}
-		addedActivity, _ = activity.
-			NewCreator(s.db, userId, id, entity.STATUS_CHANGED, countAsPlay, 0).
-			SetData(string(ar.Status)).
-			Create()
-	}
-	if ar.Thoughts != "" {
-		addedActivity, _ = activity.
-			NewCreator(s.db, userId, id, entity.THOUGHTS_CHANGED, false, 0).
-			Create()
-	}
-	if ar.RemoveThoughts {
-		addedActivity, _ = activity.
-			NewCreator(s.db, userId, id, entity.THOUGHTS_REMOVED, false, 0).
-			SetData(originalThoughts).
-			Create()
+		newActivities = append(newActivities, a)
 	}
 
-	return domain.WatchedUpdateResponse{NewActivity: addedActivity}, nil
+	return domain.WatchedUpdateResponse{NewActivities: newActivities}, nil
 }
 
 func (s *Service) UpdateWatchedLastViewedSeason(
