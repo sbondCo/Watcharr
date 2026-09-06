@@ -175,9 +175,8 @@
 					status={we?.status}
 					btnTooltip={`Episode ${ep.episode_number} Status`}
 					handleStatusClick={(t) => handleStatusClick(t)}
+					minimal={true}
 					direction="bot"
-					width="100%"
-					small
 				/>
 			</div>
 		</div>

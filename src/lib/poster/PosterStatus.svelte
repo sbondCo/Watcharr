@@ -8,8 +8,7 @@
 		status?: WatchedStatus | undefined;
 		handleStatusClick: (status: WatchedStatus | "DELETE") => void;
 		direction?: "top" | "bot";
-		width?: string;
-		small?: boolean;
+		minimal?: boolean;
 		btnTooltip?: string;
 		disableInteraction?: boolean;
 		isForGame?: boolean;
@@ -19,8 +18,7 @@
 		status = undefined,
 		handleStatusClick,
 		direction = "top",
-		width = "40%",
-		small = false,
+		minimal = false,
 		btnTooltip = "",
 		disableInteraction = false,
 		isForGame = false,
@@ -31,7 +29,7 @@
 
 <button
 	class={["status", disableInteraction ? "interaction-disabled" : ""].join(" ")}
-	style={`width: ${width};`}
+	class:minimal
 	onclick={(ev) => {
 		ev.stopPropagation();
 		statusesShown = !statusesShown;
@@ -48,7 +46,7 @@
 	{#if status}
 		<Icon i={watchedStatuses[status]} />
 	{:else}
-		<span class={["no-icon", small ? "small" : ""].join(" ")}>+</span>
+		<span class={["no-icon", minimal ? "minimal" : ""].join(" ")}>+</span>
 	{/if}
 	<div
 		class={[
@@ -89,6 +87,16 @@
 		position: relative;
 		font-family: "Rampart One";
 		height: 100%;
+		width: 40%;
+
+		&.minimal {
+			width: 100%;
+
+			div {
+				height: unset;
+				overflow: unset;
+			}
+		}
 
 		&.interaction-disabled {
 			pointer-events: none;
@@ -108,7 +116,7 @@
 			font-size: 30px;
 			height: 52px;
 
-			&.small {
+			&.minimal {
 				height: 30px;
 				line-height: 22px;
 			}
