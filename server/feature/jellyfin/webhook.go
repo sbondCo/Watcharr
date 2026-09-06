@@ -26,7 +26,7 @@ type WebhookUserProvider interface {
 type WebhookWatchedProvider interface {
 	GetWatchedItemIDByTmdbID(userId uint, tmdbId uint, contentType entity.ContentType) (uint, error)
 	AddWatched(userId uint, ar domain.WatchedAddRequest, extraProps domain.WatchedAddExtraProps) (entity.Watched, error)
-	UpdateWatched(userId uint, id uint, ar domain.WatchedUpdateRequest, extra domain.WatchedUpdateRequestExtraProps) (domain.WatchedUpdateResponse, error)
+	UpdateWatched(userId uint, id uint, ar domain.WatchedUpdateRequest) (domain.WatchedUpdateResponse, error)
 }
 
 type WebhookService struct {
@@ -255,9 +255,7 @@ func (w *WebhookService) applyStatusToWatched(
 			user.ID,
 			wID,
 			domain.WatchedUpdateRequest{
-				Status: newTopLevelStatus,
-			},
-			domain.WatchedUpdateRequestExtraProps{
+				Status:            newTopLevelStatus,
 				ActivityCreatedBy: entity.ActivityCreatedByJellyfinWebhook,
 			},
 		)

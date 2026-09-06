@@ -203,6 +203,10 @@ type WatchedUpdateRequest struct {
 	// Allow the added activity count as play?
 	// If the activity was going to count, this can stop it.
 	LetCountAsPlay *bool `json:"letCountAsPlay"`
+
+	// Set the CreatedBy value on the created activity.
+	// Internal Only.
+	ActivityCreatedBy entity.ActivityCreatedBy `json:"-"`
 }
 
 // If the struct is valid for the Update Request.
@@ -226,14 +230,9 @@ func (w WatchedUpdateRequest) Valid() error {
 	return nil
 }
 
-type WatchedUpdateRequestExtraProps struct {
-	// Set the CreatedBy value on the created activity.
-	ActivityCreatedBy entity.ActivityCreatedBy
-}
-
 // Update response.
 type WatchedUpdateResponse struct {
-	NewActivity entity.Activity `json:"newActivity"`
+	NewActivities []entity.Activity `json:"newActivities"`
 }
 
 // Removal response.
