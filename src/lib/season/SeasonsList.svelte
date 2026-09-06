@@ -207,9 +207,8 @@
 								btnTooltip="Season Status"
 								handleStatusClick={(t) =>
 									handleStatusClick(t, season.season_number)}
+								minimal={true}
 								direction="bot"
-								width="100%"
-								small
 							/>
 						</div>
 					{/if}
