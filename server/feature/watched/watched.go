@@ -486,8 +486,11 @@ func (s *Service) AddWatched(
 		activityAddReq.Data = string(activityJson)
 	}
 	countAsPlay := false
-	if ar.Status == entity.FINISHED {
+	if ar.Status == entity.FINISHED && ar.ContentType != "tv" {
 		countAsPlay = true
+	}
+	if !ar.WatchedDate.IsZero() {
+		activityAddReq.CustomDate = &ar.WatchedDate
 	}
 	act, _ := s.activityProvider.AddActivity(
 		userId,
@@ -645,17 +648,18 @@ func (s *Service) updateWatched(
 	if ar.Status != "" {
 		countAsPlay := false
 		if ar.Status == entity.FINISHED &&
-			util.Deref(ar.LetCountAsPlay, true) != false {
+			(util.Deref(ar.LetCountAsPlay, true) != false || !ar.WatchedDate.IsZero()) {
 			countAsPlay = true
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(userId,
-			domain.ActivityAddProps{
-				WatchedID: id,
-				Type:      entity.STATUS_CHANGED,
-				Data:      string(ar.Status),
-			},
-			countAsPlay,
-		)
+		activityAddReq := domain.ActivityAddProps{
+			WatchedID: id,
+			Type:      entity.STATUS_CHANGED,
+			Data:      string(ar.Status),
+		}
+		if !ar.WatchedDate.IsZero() {
+			activityAddReq.CustomDate = &ar.WatchedDate
+		}
+		addedActivity, _ = s.activityProvider.AddActivity(userId, activityAddReq, countAsPlay)
 	}
 	if ar.Thoughts != "" {
 		addedActivity, _ = s.activityProvider.AddActivity(userId,

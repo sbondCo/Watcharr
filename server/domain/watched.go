@@ -202,7 +202,8 @@ type WatchedUpdateRequest struct {
 	Pinned         *bool                `json:"pinned" `
 	// Allow the added activity count as play?
 	// If the activity was going to count, this can stop it.
-	LetCountAsPlay *bool `json:"letCountAsPlay"`
+	LetCountAsPlay *bool     `json:"letCountAsPlay"`
+	WatchedDate    time.Time `json:"watchedDate,omitempty"`
 }
 
 // If the struct is valid for the Update Request.

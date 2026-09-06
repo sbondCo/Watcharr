@@ -22,6 +22,7 @@ type WatchedSeasonAddRequest struct {
 	// Data to add to activity if the season is created.
 	// Combined with data we already add.
 	AddActivityData map[string]interface{} `json:"-"`
+	WatchedDate     time.Time              `json:"watchedDate,omitempty"`
 }
 
 type WatchedSeasonAddResponse struct {
@@ -81,13 +82,21 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 	var addedActivity entity.Activity
 	if !found {
 		slog.Debug("Existing watched season not found, adding as new entry")
-		w.WatchedSeasons = append(w.WatchedSeasons, entity.WatchedSeason{
+		ws := entity.WatchedSeason{
 			UserID:       userId,
 			WatchedID:    ar.WatchedID,
 			SeasonNumber: ar.SeasonNumber,
 			Status:       ar.Status,
 			Rating:       ar.Rating,
-		})
+		}
+		if !ar.WatchedDate.IsZero() {
+			slog.Debug("Adding watched season item: The provided WatchedDate is valid.",
+				"userId", userId,
+				"request", ar)
+			ws.CreatedAt = ar.WatchedDate
+			ws.UpdatedAt = ar.WatchedDate
+		}
+		w.WatchedSeasons = append(w.WatchedSeasons, ws)
 	}
 	if resp := s.db.Save(&w.WatchedSeasons); resp.Error != nil {
 		slog.Debug("Failed to save watched season item in db", "error", resp.Error)
@@ -100,15 +109,15 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 		if updated {
 			if ar.Status != "" {
 				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "status": ar.Status})
-				addedActivity, _ = s.activityProvider.AddActivity(
-					userId,
-					domain.ActivityAddProps{
-						WatchedID: w.ID,
-						Type:      entity.SEASON_STATUS_CHANGED,
-						Data:      string(json),
-					},
-					false,
-				)
+				activityAddReq := domain.ActivityAddProps{
+					WatchedID: w.ID,
+					Type:      entity.SEASON_STATUS_CHANGED,
+					Data:      string(json),
+				}
+				if !ar.WatchedDate.IsZero() {
+					activityAddReq.CustomDate = &ar.WatchedDate
+				}
+				addedActivity, _ = s.activityProvider.AddActivity(userId, activityAddReq, false)
 			}
 			if ar.Rating != 0 {
 				json, _ := json.Marshal(map[string]interface{}{"season": ar.SeasonNumber, "rating": ar.Rating})
@@ -139,6 +148,8 @@ func (s *Service) AddWatchedSeason(userId uint, ar WatchedSeasonAddRequest) (Wat
 		}
 		if !ar.AddActivityDate.IsZero() {
 			act.CustomDate = &ar.AddActivityDate
+		} else if !ar.WatchedDate.IsZero() {
+			act.CustomDate = &ar.WatchedDate
 		}
 		addedActivity, _ = s.activityProvider.AddActivity(userId, act, false)
 	}
