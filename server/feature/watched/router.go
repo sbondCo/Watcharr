@@ -138,8 +138,7 @@ func (r *Router) UpdateWatched(c *gin.Context) {
 	var ur domain.WatchedUpdateRequest
 	err = c.ShouldBindJSON(&ur)
 	if err == nil {
-		response, err := r.s.UpdateWatched(
-			userId, uint(id), ur, domain.WatchedUpdateRequestExtraProps{})
+		response, err := r.s.UpdateWatched(userId, uint(id), ur)
 		if err != nil {
 			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 			return

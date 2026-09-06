@@ -108,18 +108,20 @@ async function _updateWatched(
 	if (rating) wEntry.rating = rating;
 	if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
 	if (typeof pinned !== "undefined") wEntry.pinned = pinned;
-	if (resp?.newActivity && resp?.newActivity?.id) {
-		if (wEntry.activity && wEntry.activity.length > 0) {
-			wEntry.activity.push(resp.newActivity);
-		} else {
-			wEntry.activity = [resp.newActivity];
+	if (resp?.newActivities && resp.newActivities.length > 0) {
+		if (!wEntry.activity) {
+			wEntry.activity = [];
 		}
-		// If new activity counts as play, increment plays for local state.
-		if (resp.newActivity.countAsPlay) {
-			if (wEntry.plays) {
-				wEntry.plays++;
-			} else {
-				wEntry.plays = 1;
+		for (let i = 0; i < resp.newActivities.length; i++) {
+			const newAct = resp.newActivities[i];
+			wEntry.activity.push(newAct);
+			// If new activity counts as play, increment plays for local state.
+			if (newAct.countAsPlay) {
+				if (wEntry.plays) {
+					wEntry.plays++;
+				} else {
+					wEntry.plays = 1;
+				}
 			}
 		}
 	}

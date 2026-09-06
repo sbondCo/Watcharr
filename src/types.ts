@@ -203,7 +203,7 @@ export interface WatchedUpdateRequest {
 }
 
 export interface WatchedUpdateResponse {
-	newActivity: Activity;
+	newActivities: Activity[];
 }
 
 export type WatchedSort =
