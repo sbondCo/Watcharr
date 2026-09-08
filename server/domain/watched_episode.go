@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	WatchedEpisodeAddRequest struct {
+	WatchedEpisodeSetRequest struct {
 		WatchedID     uint                 `json:"watchedId"`
 		SeasonNumber  int                  `json:"seasonNumber"`
 		EpisodeNumber int                  `json:"episodeNumber"`
@@ -19,11 +19,17 @@ type (
 		ActivityCreatedBy entity.ActivityCreatedBy `json:"-"`
 	}
 
-	WatchedEpisodeAddResponse struct {
-		WatchedEpisodes []entity.WatchedEpisode `json:"watchedEpisodes"`
-		AddedActivity   entity.Activity         `json:"addedActivity"`
+	WatchedEpisodeSetResponse struct {
+		// The watched episode.
+		WatchedEpisode entity.WatchedEpisode `json:"watchedEpisode"`
+		// If the returned WatchedEpisode was updated (update action).
+		// True = WatchedEpisode was updated (because it already existed).
+		// False = it was created (because it didn't already exist).
+		Update bool `json:"update"`
+		// Added activities.
+		AddedActivities []entity.Activity `json:"addedActivities,omitempty"`
 		// Response from hook
-		EpisodeStatusChangedHookResponse EpisodeStatusChangedHookResponse `json:"episodeStatusChangedHookResponse,omitempty"`
+		EpisodeStatusChangedHookResponse EpisodeStatusChangedHookResponse `json:"episodeStatusChangedHookResponse,omitzero"`
 	}
 
 	EpisodeStatusChangedHookResponse struct {
@@ -37,8 +43,8 @@ type (
 		Errors []string `json:"errors,omitempty"`
 	}
 
-	// Add Watched Episode provider.
-	AddWatchedEpisodeProvider interface {
-		AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (WatchedEpisodeAddResponse, error)
+	// Set Watched Episode provider.
+	SetWatchedEpisodeProvider interface {
+		SetWatchedEpisode(userId uint, ar WatchedEpisodeSetRequest) (WatchedEpisodeSetResponse, error)
 	}
 )

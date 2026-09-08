@@ -1,6 +1,7 @@
 package activity
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"time"
@@ -43,11 +44,43 @@ func NewCreator(
 	}
 }
 
+// Set Type.
 func (c *Creator) SetType(d entity.ActivityType) *Creator { c.typ = d; return c }
-func (c *Creator) SetData(d string) *Creator              { c.Data = d; return c }
-func (c *Creator) SetCustomDate(d *time.Time) *Creator    { c.CustomDate = d; return c }
-func (c *Creator) SetReason(d string) *Creator            { c.Reason = d; return c }
-func (c *Creator) SetCountAsPlay(d bool) *Creator         { c.countAsPlay = d; return c }
+
+// Set Data.
+func (c *Creator) SetData(d string) *Creator { c.Data = d; return c }
+
+// Set Data. Pass in map `d` which is marshalled into JSON string.
+func (c *Creator) SetDataJSON(d map[string]any) *Creator {
+	j, err := json.Marshal(d)
+	if err != nil {
+		slog.Error("SetDataJSON: Marshalling JSON failed!", "error", err)
+		// Not fatal, data will just have to be an empty string.
+	}
+	c.Data = string(j)
+	return c
+}
+
+// Set CustomDate. If `d` is zero value, it is set a `nil`.
+func (c *Creator) SetCustomDate(d *time.Time) *Creator {
+	if d != nil && d.IsZero() {
+		// If `d` IsZero, set to nil.
+		d = nil
+	}
+	c.CustomDate = d
+	return c
+}
+
+// Set Reason.
+func (c *Creator) SetReason(d string) *Creator { c.Reason = d; return c }
+
+// Set CountAsPlay.
+func (c *Creator) SetCountAsPlay(d bool) *Creator { c.countAsPlay = d; return c }
+
+// Add this Creator to a MultiCreator for later saving multiple activities.
+func (c *Creator) AddToMultiCreator(mc *MultiCreator) {
+	mc.AddCreator(c)
+}
 
 // Done building activity.. now create it.
 // NOTE: This func doesn't verify if `userId` owns the referenced watched ID.

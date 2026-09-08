@@ -6,7 +6,9 @@ These changes are awaiting release:
 
 - Jellyfin: Automatic tracking via [jellyfin webhook](https://github.com/jellyfin/jellyfin-plugin-webhook).
   - Enable support in your server settings!
-- Activity: Created `created_by` & `reason` properties.
+- Activity:
+  - Created `created_by` & `reason` properties.
+  - Added UI element to display a count of activities.
 - ActivityEditor: Added expandable section for viewing full raw activity.
 
 ## Changed
@@ -17,6 +19,10 @@ These changes are awaiting release:
 - Logging: When `debug` logging is enabled, all database queries will be logged to `stdout`.
 - Menu: Add border-radius to buttons on hover.
 - FaceMenu: Show $error color as bg when hovering over logout button.
+- Season & Episode: Add/Update Methods Refactored.
+  - The old logic and db queries were very gross, it now looks nicer and the queries have been optimized (rewritten to work with new logic and so that they don't include more data than necessary).
+  - Shared logic that was previously just duplicated between the methods has been moved to reusable funcs.
+  - (BREAKING FOR API USERS, probably no one!?) The Add/Update methods now only return the created/modified entry, rather than returning ALL entries (and a new `update` property is returned along with it to tell you if the item was created or updated). Also returns addedActivities (list, instead of old singular addedActivity).
 
 ## Fixed
 
@@ -41,6 +47,10 @@ These changes are awaiting release:
 - Database: Renamed `New()` to `Open()` as it will no longer run `Setup()`. That will be done from caller after running New(). This lets us setup our logging for the db after New(), but before migrations are run in Setup().
 - Middleware: Removed "extra info" from `AuthRequired`. User from db is now fetched with new `WithUser` middleware.
 - Upgraded go: 1.26 -> 1.27.
+- Create activity MultiCreator to make it a bit easier to add multiple activities in a method.
+- Watched Season & Episode:
+  - Renamed Add* methods to Set* (AddWatchedSeason -> SetWatchedSeason) to better reflect their Add & Update functionality.
+  - Use reusable Set*Provider interfaces for every service that needs to inject either Set method (cutting down on some duplication).
 
 # [4.2.1] - 2026-08-04T00:40:00Z
 

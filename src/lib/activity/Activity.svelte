@@ -19,6 +19,7 @@
 	let groupedActivities: { [index: string]: Activity[] } = $derived(
 		getGroupedActivity(activity),
 	);
+	let count = $derived(activity ? activity.length : 0);
 
 	function getMsg(a: Activity) {
 		switch (a?.type) {
@@ -193,7 +194,10 @@
 {/if}
 
 <div class="activity">
-	<h2>Activity</h2>
+	<div class="title">
+		<h2>Activity</h2>
+		<div class="act-count">{count}</div>
+	</div>
 	{#if groupedActivities && Object.keys(groupedActivities).length > 0}
 		<ul>
 			{#each Object.keys(groupedActivities) as k (k)}
@@ -237,6 +241,32 @@
 <style lang="scss">
 	.activity {
 		width: 100%;
+
+		div.title {
+			display: flex;
+			flex-flow: row;
+			align-items: center;
+			gap: 10px;
+
+			.act-count {
+				font-family:
+					"Shrikhand",
+					system-ui,
+					-apple-system,
+					BlinkMacSystemFont;
+				font-size: 13px;
+				color: black;
+				background-color: $gold;
+				padding: 3px 6px;
+				border-radius: 50px;
+				min-width: 25px;
+				min-height: 25px;
+				height: min-content;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+		}
 
 		ul {
 			display: flex;

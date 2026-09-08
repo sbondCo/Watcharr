@@ -172,7 +172,7 @@ func (s *Service) importWithIMDBID(
 					slog.Error("import: imdb match: Failed to add watched episode (failed to find watched item, it must exist!).", "rq", ar, "error", err)
 					return domain.ImportResponse{Type: domain.IMPORT_FAILED}, nil
 				}
-				ws, err := s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
+				_, err := s.wep.SetWatchedEpisode(userId, domain.WatchedEpisodeSetRequest{
 					WatchedID:       w.ID,
 					SeasonNumber:    onlyResult.SeasonNumber,
 					EpisodeNumber:   onlyResult.EpisodeNumber,
@@ -184,7 +184,6 @@ func (s *Service) importWithIMDBID(
 					slog.Error("import: imdb match: Failed to add watched episode.", "rq", ar, "error", err)
 					return domain.ImportResponse{Type: domain.IMPORT_FAILED}, nil
 				} else {
-					w.WatchedEpisodes = ws.WatchedEpisodes
 					return domain.ImportResponse{Type: domain.IMPORT_SUCCESS, WatchedEntry: w}, nil
 				}
 			} else {

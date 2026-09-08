@@ -23,28 +23,20 @@ type WatchedProvider interface {
 	AddWatched(userId uint, ar domain.WatchedAddRequest, extraProps domain.WatchedAddExtraProps) (entity.Watched, error)
 }
 
-type WatchedSeasonProvider interface {
-	AddWatchedSeason(userId uint, ar domain.WatchedSeasonAddRequest) (domain.WatchedSeasonAddResponse, error)
-}
-
-type WatchedEpisodeProvider interface {
-	AddWatchedEpisodes(userId uint, ar domain.WatchedEpisodeAddRequest) (domain.WatchedEpisodeAddResponse, error)
-}
-
 type SyncService struct {
 	db  *gorm.DB
 	s   *Service
 	wp  WatchedProvider
-	wsp WatchedSeasonProvider
-	wep WatchedEpisodeProvider
+	wsp domain.SetWatchedSeasonProvider
+	wep domain.SetWatchedEpisodeProvider
 }
 
 func NewSyncService(
 	db *gorm.DB,
 	s *Service,
 	wp WatchedProvider,
-	wsp WatchedSeasonProvider,
-	wep WatchedEpisodeProvider,
+	wsp domain.SetWatchedSeasonProvider,
+	wep domain.SetWatchedEpisodeProvider,
 ) *SyncService {
 	return &SyncService{
 		db,
@@ -279,13 +271,13 @@ func (s *SyncService) startPlexSync(
 						if vs.LastViewedAt != 0 {
 							seasonLastViewedAt = time.Unix(vs.LastViewedAt, 0)
 						}
-						_, err = s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
+						_, err = s.wsp.SetWatchedSeason(userId, domain.WatchedSeasonSetRequest{
 							WatchedID:    w.ID,
 							SeasonNumber: vs.Index,
 							Status:       entity.FINISHED,
 
-							AddActivityDate:      seasonLastViewedAt,
-							AddActivityCreatedBy: entity.ActivityCreatedByPlexImport,
+							AddActivityDate:   seasonLastViewedAt,
+							ActivityCreatedBy: entity.ActivityCreatedByPlexImport,
 						})
 						if err != nil {
 							slog.Error("plexSyncWatched: Failed to fetch series seasons.", "series_name", show.Title, "series_id", show.GUID, "user_id", userId, "error", err)
@@ -313,7 +305,7 @@ func (s *SyncService) startPlexSync(
 						if vs.LastViewedAt != 0 {
 							episodeLastViewedAt = time.Unix(vs.LastViewedAt, 0)
 						}
-						_, err = s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
+						_, err = s.wep.SetWatchedEpisode(userId, domain.WatchedEpisodeSetRequest{
 							WatchedID:     w.ID,
 							SeasonNumber:  vs.ParentIndex,
 							EpisodeNumber: vs.Index,

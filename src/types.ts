@@ -225,14 +225,16 @@ export interface ActivityUpdateRequest {
 	customDate: string;
 }
 
-export interface WatchedSeasonAddResponse {
-	watchedSeasons: WatchedSeason[];
-	addedActivity: Activity;
+export interface WatchedSeasonSetResponse {
+	watchedSeason: WatchedSeason;
+	update: boolean;
+	addedActivities?: Activity[];
 }
 
-export interface WatchedEpisodeAddResponse {
-	watchedEpisodes: WatchedEpisode[];
-	addedActivity: Activity;
+export interface WatchedEpisodeSetResponse {
+	watchedEpisode: WatchedEpisode;
+	update: boolean;
+	addedActivities?: Activity[];
 	episodeStatusChangedHookResponse?: EpisodeStatusChangedHookResponse;
 }
 

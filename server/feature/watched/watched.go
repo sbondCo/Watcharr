@@ -291,6 +291,33 @@ func (s *Service) GetWatchedItemsByTmdbIds(userId uint, c [][]any) ([]entity.Wat
 	return *watched, nil
 }
 
+// Checks if Watched entry is of `ct`.
+//
+// This method is useful when we don't already have/need the whole Watched
+// object fetched from the db and only need to validate it exists and is linked
+// to a `Content` with a certain type.
+//
+// Returns error if query failed or type doesn't match.
+func (s *Service) IsWatchedItemContentType(userId uint, id uint, ct entity.ContentType) error {
+	var wc int64
+	err := s.db.
+		Model(&entity.Watched{}).
+		Joins(`INNER JOIN contents ON contents.id = watcheds.content_id
+			AND contents.type = ?`, ct).
+		Where("watcheds.id = ? AND watcheds.user_id = ?", id, userId).
+		Count(&wc).
+		Error
+	if err != nil {
+		slog.Error("IsWatchedItemContentType: Query failed!", "error", err)
+		return errors.New("failed when retrieving watched item")
+	}
+	if wc <= 0 {
+		slog.Debug("IsWatchedItemContentType: NO.", "wc", wc)
+		return errors.New("no show watched entry exists")
+	}
+	return nil
+}
+
 // Get a watched list item by game (igdb) id (must be for `userId`).
 func (s *Service) GetWatchedItemByIgdbId(userId uint, igdbId uint) (entity.Watched, error) {
 	slog.Debug("getWatchedItemByIgdbId: Running.", "userId", userId, "igdbId", igdbId)
