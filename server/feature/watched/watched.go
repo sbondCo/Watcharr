@@ -675,16 +675,16 @@ func (s *Service) UpdateWatched(
 	anythingChanged := false
 	// Activities are built and added to this list, then if saving the Watched
 	// changes succeeds, these activities are then saved too.
-	activitiesToAdd := []*activity.Creator{}
+	activityMC := activity.NewMultiCreator()
 
 	if ar.Rating != 0 && ar.Rating != upwat.Rating {
 		anythingChanged = true
 		upwat.Rating = ar.Rating
 
-		act := activity.
+		activity.
 			NewCreator(s.db, userId, id, entity.RATING_CHANGED, false, ar.ActivityCreatedBy).
-			SetData(strconv.Itoa(int(ar.Rating)))
-		activitiesToAdd = append(activitiesToAdd, act)
+			SetData(strconv.Itoa(int(ar.Rating))).
+			AddToMultiCreator(activityMC)
 	}
 	if ar.Status != "" && ar.Status != upwat.Status {
 		anythingChanged = true
@@ -695,28 +695,28 @@ func (s *Service) UpdateWatched(
 			util.Deref(ar.LetCountAsPlay, true) != false {
 			countAsPlay = true
 		}
-		act := activity.
+		activity.
 			NewCreator(s.db, userId, id, entity.STATUS_CHANGED, countAsPlay, ar.ActivityCreatedBy).
-			SetData(string(ar.Status))
-		activitiesToAdd = append(activitiesToAdd, act)
+			SetData(string(ar.Status)).
+			AddToMultiCreator(activityMC)
 	}
 	if ar.Thoughts != "" && ar.Thoughts != upwat.Thoughts {
 		anythingChanged = true
 		upwat.Thoughts = ar.Thoughts
 
-		act := activity.
-			NewCreator(s.db, userId, id, entity.THOUGHTS_CHANGED, false, ar.ActivityCreatedBy)
-		activitiesToAdd = append(activitiesToAdd, act)
+		activity.
+			NewCreator(s.db, userId, id, entity.THOUGHTS_CHANGED, false, ar.ActivityCreatedBy).
+			AddToMultiCreator(activityMC)
 	}
 	if ar.RemoveThoughts {
 		anythingChanged = true
 		originalThoughts := upwat.Thoughts
 		upwat.Thoughts = ""
 
-		act := activity.
+		activity.
 			NewCreator(s.db, userId, id, entity.THOUGHTS_REMOVED, false, ar.ActivityCreatedBy).
-			SetData(originalThoughts)
-		activitiesToAdd = append(activitiesToAdd, act)
+			SetData(originalThoughts).
+			AddToMultiCreator(activityMC)
 	}
 	if ar.Pinned != nil {
 		anythingChanged = true
@@ -740,15 +740,7 @@ func (s *Service) UpdateWatched(
 		return domain.WatchedUpdateResponse{}, errors.New("no watched entry found")
 	}
 
-	newActivities := []entity.Activity{}
-	for _, v := range activitiesToAdd {
-		a, err := v.Create()
-		if err != nil {
-			slog.Error("UpdateWatched: Failed adding an activity.", "error", err)
-			continue
-		}
-		newActivities = append(newActivities, a)
-	}
+	newActivities := activityMC.CreateAll()
 
 	return domain.WatchedUpdateResponse{NewActivities: newActivities}, nil
 }
