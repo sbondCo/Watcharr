@@ -7,19 +7,30 @@ import (
 )
 
 type (
-	WatchedSeasonAddRequest struct {
+	WatchedSeasonSetRequest struct {
 		WatchedID    uint                 `json:"watchedId"`
 		SeasonNumber int                  `json:"seasonNumber"`
 		Status       entity.WatchedStatus `json:"status"`
 		Rating       int8                 `json:"rating" binding:"max=10"`
 
-		AddActivityDate      time.Time                `json:"-"`
-		AddActivityReason    string                   `json:"-"`
-		AddActivityCreatedBy entity.ActivityCreatedBy `json:"-"`
+		AddActivityDate   time.Time                `json:"-"`
+		AddActivityReason string                   `json:"-"`
+		ActivityCreatedBy entity.ActivityCreatedBy `json:"-"`
 	}
 
-	WatchedSeasonAddResponse struct {
-		WatchedSeasons []entity.WatchedSeason `json:"watchedSeasons"`
-		AddedActivity  entity.Activity        `json:"addedActivity"`
+	WatchedSeasonSetResponse struct {
+		// The watched season.
+		WatchedSeason entity.WatchedSeason `json:"watchedSeason"`
+		// If the returned WatchedSeason was updated (update action).
+		// True = WatchedSeason was updated (because it already existed).
+		// False = it was created (because it didn't already exist).
+		Update bool `json:"update"`
+		// Added activities.
+		AddedActivities []entity.Activity `json:"addedActivities"`
+	}
+
+	// Set Watched Season provider.
+	SetWatchedSeasonProvider interface {
+		SetWatchedSeason(userId uint, ar WatchedSeasonSetRequest) (WatchedSeasonSetResponse, error)
 	}
 )

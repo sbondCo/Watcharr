@@ -3,8 +3,8 @@ import { notify } from "../util/notify";
 import type {
 	Activity,
 	Watched,
-	WatchedEpisodeAddResponse,
-	WatchedSeasonAddResponse,
+	WatchedEpisodeSetResponse,
+	WatchedSeasonSetResponse,
 	WatchedStatus,
 } from "@/types";
 
@@ -29,18 +29,46 @@ export async function updateWatchedSeason(
 	}
 	const nid = notify({ text: `Saving`, type: "loading" });
 	try {
-		const r = await req.post<WatchedSeasonAddResponse>(`/watched/season`, {
+		const r = await req.post<WatchedSeasonSetResponse>(`/watched/season`, {
 			watchedId: watchedItem.id,
 			seasonNumber: seasonNumber,
 			status: opts.status,
 			rating: opts.rating,
 		});
-		watchedItem.watchedSeasons = r.watchedSeasons;
-		if (watchedItem.activity && watchedItem.activity?.length > 0) {
-			watchedItem.activity.push(r.addedActivity);
+
+		if (!watchedItem.watchedSeasons) {
+			watchedItem.watchedSeasons = [r.watchedSeason];
 		} else {
-			watchedItem.activity = [r.addedActivity];
+			if (r.update) {
+				const idx = watchedItem.watchedSeasons.findIndex(
+					(e) => e.id == r.watchedSeason.id,
+				);
+				if (idx !== -1) {
+					watchedItem.watchedSeasons[idx] = r.watchedSeason;
+				} else {
+					console.error(
+						"updateWatchedSeason: Failed to find index for season to update.",
+						"r.watchedSeason:",
+						r.watchedSeason,
+					);
+					notify({
+						id: nid,
+						text: "Updated but failed to reflect in UI, please reload the page.",
+						type: "error",
+					});
+				}
+			} else {
+				watchedItem.watchedSeasons.push(r.watchedSeason);
+			}
 		}
+
+		if (!watchedItem.activity) {
+			watchedItem.activity = [];
+		}
+		if (r.addedActivities && r.addedActivities.length > 0) {
+			watchedItem.activity.push(...r.addedActivities);
+		}
+
 		notify({ id: nid, text: `Saved!`, type: "success" });
 	} catch (err) {
 		console.error("updateWatchedSeason: Failed!", err);
@@ -81,19 +109,47 @@ export async function updateWatchedEpisode(
 	}
 	const nid = notify({ text: `Saving`, type: "loading" });
 	try {
-		const r = await req.post<WatchedEpisodeAddResponse>(`/watched/episode`, {
+		const r = await req.post<WatchedEpisodeSetResponse>(`/watched/episode`, {
 			watchedId: watchedItem.id,
 			seasonNumber,
 			episodeNumber,
 			status: opts.status,
 			rating: opts.rating,
 		});
-		watchedItem.watchedEpisodes = r.watchedEpisodes;
-		if (watchedItem.activity && watchedItem.activity?.length > 0) {
-			watchedItem.activity.push(r.addedActivity);
+
+		if (!watchedItem.watchedEpisodes) {
+			watchedItem.watchedEpisodes = [r.watchedEpisode];
 		} else {
-			watchedItem.activity = [r.addedActivity];
+			if (r.update) {
+				const idx = watchedItem.watchedEpisodes.findIndex(
+					(e) => e.id == r.watchedEpisode.id,
+				);
+				if (idx !== -1) {
+					watchedItem.watchedEpisodes[idx] = r.watchedEpisode;
+				} else {
+					console.error(
+						"updateWatchedEpisode: Failed to find index for episode to update.",
+						"r.watchedEpisode:",
+						r.watchedEpisode,
+					);
+					notify({
+						id: nid,
+						text: "Updated but failed to reflect in UI, please reload the page.",
+						type: "error",
+					});
+				}
+			} else {
+				watchedItem.watchedEpisodes.push(r.watchedEpisode);
+			}
 		}
+
+		if (!watchedItem.activity) {
+			watchedItem.activity = [];
+		}
+		if (r.addedActivities && r.addedActivities.length > 0) {
+			watchedItem.activity.push(...r.addedActivities);
+		}
+
 		try {
 			const epHookResp = r?.episodeStatusChangedHookResponse;
 			if (epHookResp && Object.keys(epHookResp).length > 0) {

@@ -44,21 +44,13 @@ type WatchedProvider interface {
 	AddWatched(userId uint, ar domain.WatchedAddRequest, extraProps domain.WatchedAddExtraProps) (entity.Watched, error)
 }
 
-type WatchedSeasonProvider interface {
-	AddWatchedSeason(userId uint, ar domain.WatchedSeasonAddRequest) (domain.WatchedSeasonAddResponse, error)
-}
-
-type WatchedEpisodeProvider interface {
-	AddWatchedEpisodes(userId uint, ar domain.WatchedEpisodeAddRequest) (domain.WatchedEpisodeAddResponse, error)
-}
-
 type SyncService struct {
 	db      *gorm.DB
 	cfg     *config.ServerConfig
 	service *Service
 	wp      WatchedProvider
-	wsp     WatchedSeasonProvider
-	wep     WatchedEpisodeProvider
+	wsp     domain.SetWatchedSeasonProvider
+	wep     domain.SetWatchedEpisodeProvider
 }
 
 func NewSyncService(
@@ -66,8 +58,8 @@ func NewSyncService(
 	cfg *config.ServerConfig,
 	service *Service,
 	wp WatchedProvider,
-	wsp WatchedSeasonProvider,
-	wep WatchedEpisodeProvider,
+	wsp domain.SetWatchedSeasonProvider,
+	wep domain.SetWatchedEpisodeProvider,
 ) *SyncService {
 	return &SyncService{
 		db,
@@ -340,13 +332,13 @@ func (s *SyncService) startJellyfinSync(
 							continue
 						}
 						job.UpdateJobCurrentTask(jobId, userId, "syncing "+v.Name+" season "+strconv.Itoa(vs.IndexNumber))
-						_, err = s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
+						_, err = s.wsp.SetWatchedSeason(userId, domain.WatchedSeasonSetRequest{
 							WatchedID:    w.ID,
 							SeasonNumber: vs.IndexNumber,
 							Status:       entity.FINISHED,
 
-							AddActivityDate:      vs.UserData.LastPlayedDate,
-							AddActivityCreatedBy: entity.ActivityCreatedByJellyfinImport,
+							AddActivityDate:   vs.UserData.LastPlayedDate,
+							ActivityCreatedBy: entity.ActivityCreatedByJellyfinImport,
 						})
 						if err != nil {
 							slog.Error("jellyfinSyncWatched: Failed to fetch series seasons.", "series_name", v.Name, "series_ids", v.ProviderIds, "user_id", userId, "error", err)
@@ -383,7 +375,7 @@ func (s *SyncService) startJellyfinSync(
 							continue
 						}
 						job.UpdateJobCurrentTask(jobId, userId, "syncing "+v.Name+" season "+strconv.Itoa(vs.ParentIndexNumber)+" episode "+strconv.Itoa(vs.IndexNumber))
-						_, err = s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
+						_, err = s.wep.SetWatchedEpisode(userId, domain.WatchedEpisodeSetRequest{
 							WatchedID:     w.ID,
 							SeasonNumber:  vs.ParentIndexNumber,
 							EpisodeNumber: vs.IndexNumber,
