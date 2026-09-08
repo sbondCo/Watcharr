@@ -21,14 +21,6 @@ type WatchedProvider interface {
 	GetWatchedItemByTmdbId(userId uint, tmdbId uint, contentType entity.ContentType) (entity.Watched, error)
 }
 
-type WatchedSeasonProvider interface {
-	AddWatchedSeason(userId uint, ar domain.WatchedSeasonAddRequest) (domain.WatchedSeasonAddResponse, error)
-}
-
-type WatchedEpisodeProvider interface {
-	AddWatchedEpisodes(userId uint, ar domain.WatchedEpisodeAddRequest) (domain.WatchedEpisodeAddResponse, error)
-}
-
 type TagProvider interface {
 	AddTag(userId uint, tr domain.TagAddRequest) (entity.Tag, error)
 	GetTagByNameAndColor(userId uint, tagName string, tagColor string, tagBgColor string) (entity.Tag, error)
@@ -41,8 +33,8 @@ type SearchProvider interface {
 type Service struct {
 	db             *gorm.DB
 	wp             WatchedProvider
-	wsp            WatchedSeasonProvider
-	wep            WatchedEpisodeProvider
+	wsp            domain.SetWatchedSeasonProvider
+	wep            domain.SetWatchedEpisodeProvider
 	tmdb           *tmdb.TMDB
 	tagProvider    TagProvider
 	searchProvider SearchProvider
@@ -51,8 +43,8 @@ type Service struct {
 func NewService(
 	db *gorm.DB,
 	wp WatchedProvider,
-	wsp WatchedSeasonProvider,
-	wep WatchedEpisodeProvider,
+	wsp domain.SetWatchedSeasonProvider,
+	wep domain.SetWatchedEpisodeProvider,
 	tmdb *tmdb.TMDB,
 	tagProvider TagProvider,
 	searchProvider SearchProvider,
@@ -266,7 +258,7 @@ func (s *Service) SuccessfulImport(
 	if len(ar.WatchedSeason) > 0 {
 		slog.Debug("successfulImport: Importing watched seasons")
 		for _, v := range ar.WatchedSeason {
-			ws, err := s.wsp.AddWatchedSeason(userId, domain.WatchedSeasonAddRequest{
+			_, err := s.wsp.SetWatchedSeason(userId, domain.WatchedSeasonSetRequest{
 				WatchedID:       w.ID,
 				SeasonNumber:    v.SeasonNumber,
 				Status:          v.Status,
@@ -278,14 +270,13 @@ func (s *Service) SuccessfulImport(
 					"error", err)
 				continue
 			}
-			w.WatchedSeasons = ws.WatchedSeasons
 		}
 	}
 	// Import watched episodes, if any
 	if len(ar.WatchedEpisodes) > 0 {
 		slog.Debug("successfulImport: Importing watched episodes")
 		for _, v := range ar.WatchedEpisodes {
-			ws, err := s.wep.AddWatchedEpisodes(userId, domain.WatchedEpisodeAddRequest{
+			_, err := s.wep.SetWatchedEpisode(userId, domain.WatchedEpisodeSetRequest{
 				WatchedID:       w.ID,
 				SeasonNumber:    v.SeasonNumber,
 				EpisodeNumber:   v.EpisodeNumber,
@@ -298,7 +289,6 @@ func (s *Service) SuccessfulImport(
 					"error", err)
 				continue
 			}
-			w.WatchedEpisodes = ws.WatchedEpisodes
 		}
 	}
 	// Import tags, if any

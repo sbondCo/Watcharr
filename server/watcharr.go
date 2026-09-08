@@ -229,7 +229,7 @@ func main() {
 	userManageService := user.NewManageService(db)
 	gameService := game.NewService(db, &br.Cfg.TWITCH)
 	watchedService := watched.NewService(db, contentService, gameService, userService)
-	watchedSeasonService := season.NewService(db)
+	watchedSeasonService := season.NewService(db, watchedService)
 	watchedEpisodeService := episode.NewService(
 		db,
 		watchedService,

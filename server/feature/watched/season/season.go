@@ -12,126 +12,173 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type Service struct {
-	db *gorm.DB
+type WatchedProvider interface {
+	IsWatchedItemContentType(userId uint, id uint, ct entity.ContentType) error
 }
 
-func NewService(db *gorm.DB) *Service {
+type Service struct {
+	db *gorm.DB
+	wp WatchedProvider
+}
+
+func NewService(db *gorm.DB, wp WatchedProvider) *Service {
 	return &Service{
 		db,
+		wp,
 	}
+}
+
+// Get WatchedSeason.
+// Returns nil for entity.WatchedSeason if it doesn't exist.
+func (s *Service) GetWatchedSeason(
+	userId uint,
+	watchedId uint,
+	seasonNumber int,
+) (*entity.WatchedSeason, error) {
+	var ws *entity.WatchedSeason
+	err := s.db.
+		Model(&entity.WatchedSeason{}).
+		Where("watched_id = ? AND user_id = ? AND season_number = ?",
+			watchedId, userId, seasonNumber).
+		Take(&ws).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			slog.Debug("GetWatchedSeason: Record not found.")
+			return nil, nil
+		}
+		slog.Error("GetWatchedSeason: Query failed!", "error", err)
+		return &entity.WatchedSeason{}, errors.New("failed to get watched season")
+	}
+	return ws, nil
 }
 
 // Add/edit a watched season.
-func (s *Service) AddWatchedSeason(
+func (s *Service) SetWatchedSeason(
 	userId uint,
-	ar domain.WatchedSeasonAddRequest,
-) (domain.WatchedSeasonAddResponse, error) {
-	slog.Debug("Adding watched season item", "userId", userId, "watchedID", ar.WatchedID, "season", ar.SeasonNumber)
-	// 1. Make sure watched item exists and it is the correct type (TV)
-	var w entity.Watched
-	if resp := s.db.
-		Where("id = ? AND user_id = ?", ar.WatchedID, userId).
-		Preload("Content").
-		Preload("WatchedSeasons").
-		Find(&w); resp.Error != nil {
-		slog.Error("Failed when adding a watched season", "error", "failed to get watched item from db")
-		return domain.WatchedSeasonAddResponse{}, errors.New("failed when retrieving watched item")
+	ar domain.WatchedSeasonSetRequest,
+) (domain.WatchedSeasonSetResponse, error) {
+	slog.Debug("SetWatchedSeason: Setting.",
+		"userId", userId, "watchedID", ar.WatchedID, "season", ar.SeasonNumber)
+
+	// Make sure watched item exists and is the correct type (TV)
+	err := s.wp.IsWatchedItemContentType(userId, ar.WatchedID, entity.SHOW)
+	if err != nil {
+		slog.Error("SetWatchedSeason: Failed!", "error", err)
+		return domain.WatchedSeasonSetResponse{},
+			errors.New("failed or invalid watched entry targetted")
 	}
-	if w.ID == 0 {
-		slog.Error("Failed when adding a watched season", "error", "watched item does not exist in db")
-		return domain.WatchedSeasonAddResponse{}, errors.New("can't add a watched season for a show that doesnt have a status itself")
+
+	// Try to lookup existing Watched Season.
+	wSeason, err := s.GetWatchedSeason(userId, ar.WatchedID, ar.SeasonNumber)
+	if err != nil {
+		slog.Error("SetWatchedSeason: WatchedSeason query failed!",
+			"error", err)
+		return domain.WatchedSeasonSetResponse{},
+			errors.New("couldn't get watched season")
 	}
-	if w.Content.Type != entity.SHOW {
-		return domain.WatchedSeasonAddResponse{}, errors.New("can't add watched season for non show content")
-	}
-	found := false
-	updated := false
-	for i, ws := range w.WatchedSeasons {
-		if ws.SeasonNumber == ar.SeasonNumber {
-			slog.Debug("Existing watched season item found, updating existing")
-			found = true
-			if ar.Status != "" && ar.Status != w.WatchedSeasons[i].Status {
-				w.WatchedSeasons[i].Status = ar.Status
-				updated = true
-			}
-			if ar.Rating != 0 && ar.Rating != w.WatchedSeasons[i].Rating {
-				w.WatchedSeasons[i].Rating = ar.Rating
-				updated = true
-			}
-			break
+
+	resp := domain.WatchedSeasonSetResponse{}
+	activityMC := activity.NewMultiCreator()
+
+	// Add or update Watched Season.
+	if wSeason != nil {
+		slog.Debug("SetWatchedSeason: Updating existing.")
+
+		if ar.Status != "" && ar.Status != wSeason.Status {
+			wSeason.Status = ar.Status
+			resp.Update = true
+			activity.
+				NewCreator(
+					s.db,
+					userId,
+					ar.WatchedID,
+					entity.SEASON_STATUS_CHANGED,
+					false,
+					ar.ActivityCreatedBy,
+				).
+				SetDataJSON(map[string]interface{}{
+					"season": ar.SeasonNumber,
+					"status": ar.Status,
+				}).
+				AddToMultiCreator(activityMC)
 		}
-	}
-	var addedActivity entity.Activity
-	if !found {
-		slog.Debug("Existing watched season not found, adding as new entry")
-		w.WatchedSeasons = append(w.WatchedSeasons, entity.WatchedSeason{
+
+		if ar.Rating != 0 && ar.Rating != wSeason.Rating {
+			wSeason.Rating = ar.Rating
+			resp.Update = true
+			activity.
+				NewCreator(
+					s.db,
+					userId,
+					ar.WatchedID,
+					entity.SEASON_RATING_CHANGED,
+					false,
+					ar.ActivityCreatedBy,
+				).
+				SetDataJSON(map[string]interface{}{
+					"season": ar.SeasonNumber,
+					"rating": ar.Rating,
+				}).
+				AddToMultiCreator(activityMC)
+		}
+
+		// If Update still = False, then no changes were made! Exit early.
+		if !resp.Update {
+			slog.Warn("SetWatchedSeason: No changes were necessary.")
+			// We don't return an error so we retain idempotency for this method.
+			// Update must be set to True before returning the response, otherwise
+			// we are indicating that the WatchedSeason was just Created, which
+			// could cause bugs in the client.
+			// Made a new Response object instead of returning `resp` to avoid
+			// bugs where we alter something above in it and it gets returned
+			// here mistakenly.
+			return domain.WatchedSeasonSetResponse{
+				Update:        true,
+				WatchedSeason: *wSeason,
+			}, nil
+		}
+	} else {
+		slog.Debug("SetWatchedSeason: Creating new.")
+
+		wSeason = &entity.WatchedSeason{
 			UserID:       userId,
 			WatchedID:    ar.WatchedID,
 			SeasonNumber: ar.SeasonNumber,
 			Status:       ar.Status,
 			Rating:       ar.Rating,
-		})
-	}
-	if resp := s.db.Save(&w.WatchedSeasons); resp.Error != nil {
-		slog.Debug("Failed to save watched season item in db", "error", resp.Error)
-		return domain.WatchedSeasonAddResponse{}, errors.New("failed to save")
-	}
-	// Add activity
-	if found {
-		// Only add change activity if we actually updated a value
-		// (changing value to same value doesn't count).
-		if updated {
-			if ar.Status != "" {
-				json, _ := json.Marshal(map[string]interface{}{
-					"season": ar.SeasonNumber,
-					"status": ar.Status,
-				})
-				addedActivity, _ = activity.
-					NewCreator(s.db, userId, w.ID, entity.SEASON_STATUS_CHANGED, false, 0).
-					SetData(string(json)).
-					Create()
-			}
-			if ar.Rating != 0 {
-				json, _ := json.Marshal(map[string]interface{}{
-					"season": ar.SeasonNumber,
-					"rating": ar.Rating,
-				})
-				addedActivity, _ = activity.
-					NewCreator(s.db, userId, w.ID, entity.SEASON_RATING_CHANGED, false, 0).
-					SetData(string(json)).
-					Create()
-			}
 		}
-	} else {
-		actData := map[string]interface{}{
-			"season": ar.SeasonNumber,
-			"status": ar.Status,
-			"rating": ar.Rating,
-		}
-		json, _ := json.Marshal(actData)
-		act := activity.
+
+		activity.
 			NewCreator(
 				s.db,
 				userId,
-				w.ID,
+				ar.WatchedID,
 				entity.SEASON_ADDED,
 				false,
-				ar.AddActivityCreatedBy,
+				ar.ActivityCreatedBy,
 			).
-			SetData(string(json))
-		if !ar.AddActivityDate.IsZero() {
-			act.SetCustomDate(&ar.AddActivityDate)
-		}
-		if ar.AddActivityReason != "" {
-			act.SetReason(ar.AddActivityReason)
-		}
-		addedActivity, _ = act.Create()
+			SetDataJSON(map[string]interface{}{
+				"season": ar.SeasonNumber,
+				"status": ar.Status,
+				"rating": ar.Rating,
+			}).
+			SetCustomDate(&ar.AddActivityDate).
+			SetReason(ar.AddActivityReason).
+			AddToMultiCreator(activityMC)
 	}
-	return domain.WatchedSeasonAddResponse{
-		WatchedSeasons: w.WatchedSeasons,
-		AddedActivity:  addedActivity,
-	}, nil
+
+	if err := s.db.Save(wSeason).Error; err != nil {
+		slog.Debug("SetWatchedSeason: Save query failed.", "error", err)
+		return domain.WatchedSeasonSetResponse{}, errors.New("failed to save")
+	}
+
+	addedActivities := activityMC.CreateAll()
+
+	resp.WatchedSeason = *wSeason
+	resp.AddedActivities = addedActivities
+
+	return resp, nil
 }
 
 // Remove a watched season
@@ -166,16 +213,4 @@ func (s *Service) RmWatchedSeason(userId uint, seasonId uint) (entity.Activity, 
 		return addedActivity, nil
 	}
 	return entity.Activity{}, errors.New("removed, but failed to add activity entry")
-}
-
-func (s *Service) GetWatchedSeason(userId uint, watchedId uint, seasonNumber int) (*entity.WatchedSeason, error) {
-	var ws *entity.WatchedSeason
-	if res := s.db.Model(&entity.WatchedSeason{}).Where("watched_id = ? AND season_number = ? AND user_id = ?", watchedId, seasonNumber, userId).Take(&ws); res.Error != nil {
-		slog.Error("getWatchedSeason: Failed to get:", "error", res.Error.Error())
-		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return &entity.WatchedSeason{}, errors.New("failed to get watched season")
-	}
-	return ws, nil
 }

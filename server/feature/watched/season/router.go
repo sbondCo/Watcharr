@@ -34,10 +34,10 @@ func (r *Router) AddRoutes() {
 
 func (r *Router) AddWatchedSeason(c *gin.Context) {
 	userId := c.MustGet("userId").(uint)
-	var ar domain.WatchedSeasonAddRequest
+	var ar domain.WatchedSeasonSetRequest
 	err := c.ShouldBindJSON(&ar)
 	if err == nil {
-		response, err := r.s.AddWatchedSeason(userId, ar)
+		response, err := r.s.SetWatchedSeason(userId, ar)
 		if err != nil {
 			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 			return

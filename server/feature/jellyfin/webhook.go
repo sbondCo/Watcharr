@@ -35,7 +35,7 @@ type WebhookService struct {
 	authProvider    WebhookAuthProvider
 	userProvider    WebhookUserProvider
 	watchedProvider WebhookWatchedProvider
-	episodeProvider domain.AddWatchedEpisodeProvider
+	episodeProvider domain.SetWatchedEpisodeProvider
 }
 
 func NewWebhookService(
@@ -44,7 +44,7 @@ func NewWebhookService(
 	authProvider WebhookAuthProvider,
 	userProvider WebhookUserProvider,
 	watchedProvider WebhookWatchedProvider,
-	episodeProvider domain.AddWatchedEpisodeProvider,
+	episodeProvider domain.SetWatchedEpisodeProvider,
 ) *WebhookService {
 	return &WebhookService{
 		cfg:             cfg,
@@ -308,9 +308,9 @@ func (w *WebhookService) applyStatusToSeriesEpisode(
 	if data.SeasonNumber == nil || data.EpisodeNumber == 0 {
 		return errors.New("no season and or episode number")
 	}
-	w.episodeProvider.AddWatchedEpisodes(
+	w.episodeProvider.SetWatchedEpisode(
 		user.ID,
-		domain.WatchedEpisodeAddRequest{
+		domain.WatchedEpisodeSetRequest{
 			WatchedID:         watchedID,
 			SeasonNumber:      *data.SeasonNumber,
 			EpisodeNumber:     data.EpisodeNumber,
