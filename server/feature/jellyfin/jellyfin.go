@@ -120,6 +120,8 @@ func (s *Service) JellyfinAPIRequest(method string, ep string, p map[string]stri
 	if userToken != "" {
 		authHeader += ", Token=\"" + userToken + "\""
 	}
+	// Jellyfin 12 requires Authorization, the legacy X-Emby-Authorization is kept for older versions
+	req.Header.Add("Authorization", authHeader)
 	req.Header.Add("X-Emby-Authorization", authHeader)
 	res, err := client.Do(req)
 	if err != nil {
