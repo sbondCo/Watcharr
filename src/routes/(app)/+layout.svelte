@@ -24,6 +24,8 @@
 	} from "@/types";
 	import { onMount } from "svelte";
 	import { SvelteURLSearchParams } from "svelte/reactivity";
+	import HandbookModal from "@/lib/handbook/HandbookModal.svelte";
+
 	interface Props {
 		children?: import("svelte").Snippet;
 	}
@@ -390,6 +392,10 @@
 		}}
 	/>
 {/await}
+
+{#if page.state.handbook}
+	<HandbookModal onClose={() => history.back()} />
+{/if}
 
 <style lang="scss">
 	nav {
