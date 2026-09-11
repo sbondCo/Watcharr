@@ -196,6 +196,7 @@
 						title="Jellyfin Webhook"
 						desc="Do you want to enable Jellyfin Webhook support?"
 						row
+						handbook="jellyfin-webhook-setup"
 					>
 						<Checkbox
 							name="JELLYFIN_WEBHOOK_ENABLED"

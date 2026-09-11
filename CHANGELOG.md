@@ -10,6 +10,9 @@ These changes are awaiting release:
   - Created `created_by` & `reason` properties.
   - Added UI element to display a count of activities.
 - ActivityEditor: Added expandable section for viewing full raw activity.
+- Handbook: A new way for Watcharr to help out when you aren't sure what to do. In beta stages, but the vision is all Watcharr documentation relating to usage/configuring will be directly accessible from where you are doing something that you may want further explanation on.
+  - The external documentation site will still exist, but be more for initial install guides.
+  - The new handbook will be accessible as a standalone page, or as small `?` buttons next to certain features that open up the related handbook entry in a popup modal.
 
 ## Changed
 
@@ -51,6 +54,7 @@ These changes are awaiting release:
 - Watched Season & Episode:
   - Renamed Add* methods to Set* (AddWatchedSeason -> SetWatchedSeason) to better reflect their Add & Update functionality.
   - Use reusable Set*Provider interfaces for every service that needs to inject either Set method (cutting down on some duplication).
+- Upgraded @sveltejs/kit: 2.69.3 -> 2.70.3.
 
 # [4.2.1] - 2026-08-04T00:40:00Z
 

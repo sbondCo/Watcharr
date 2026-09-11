@@ -1,10 +1,14 @@
 <script lang="ts">
+	import type { HandbookEntryId } from "../handbook/entries";
+	import HandbookLink from "../handbook/HandbookLink.svelte";
+
 	interface Props {
 		title?: string;
 		desc?: string;
 		row?: boolean;
 		tag?: string | undefined;
 		children?: import("svelte").Snippet;
+		handbook?: HandbookEntryId;
 	}
 
 	let {
@@ -13,6 +17,7 @@
 		row = false,
 		tag = undefined,
 		children,
+		handbook,
 	}: Props = $props();
 </script>
 
@@ -21,6 +26,9 @@
 		<div>
 			<h4 class="norm">
 				{title}
+				{#if handbook}
+					<HandbookLink {handbook} />
+				{/if}
 				{#if tag}
 					<span class="tag">{tag}</span>
 				{/if}
