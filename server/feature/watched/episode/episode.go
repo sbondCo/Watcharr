@@ -24,6 +24,7 @@ type WatchedEpisodeAddRequest struct {
 	Rating          int8                 `json:"rating" binding:"max=10"`
 	AddActivity     entity.ActivityType  `json:"-"`
 	AddActivityDate time.Time            `json:"-"`
+	WatchedDate     time.Time            `json:"watchedDate,omitempty"`
 }
 
 type WatchedEpisodeAddResponse struct {
@@ -120,14 +121,24 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 	var addedActivity entity.Activity
 	if !found {
 		slog.Debug("Existing watched episode not found, adding as new entry")
-		w.WatchedEpisodes = append(w.WatchedEpisodes, entity.WatchedEpisode{
+		we := entity.WatchedEpisode{
 			UserID:        userId,
 			WatchedID:     ar.WatchedID,
 			SeasonNumber:  ar.SeasonNumber,
 			EpisodeNumber: ar.EpisodeNumber,
 			Status:        ar.Status,
 			Rating:        ar.Rating,
-		})
+		}
+		// If a custom watch date was provided, persist it as the episode's
+		// CreatedAt and UpdatedAt.
+		if !ar.WatchedDate.IsZero() {
+			slog.Debug("Adding watched episode item: The provided WatchedDate is valid.",
+				"userId", userId,
+				"request", ar)
+			we.CreatedAt = ar.WatchedDate
+			we.UpdatedAt = ar.WatchedDate
+		}
+		w.WatchedEpisodes = append(w.WatchedEpisodes, we)
 	}
 	if resp := s.db.Save(&w.WatchedEpisodes); resp.Error != nil {
 		slog.Debug("Failed to save watched episode item in db", "error", resp.Error)
@@ -139,19 +150,23 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 		// (changing value to same value doesn't count).
 		if updated {
 			if ar.Status != "" {
+				cap := false
+				if ar.Status == entity.FINISHED {
+					cap = true
+				}
 				json, _ := json.Marshal(map[string]any{
 					"season":  ar.SeasonNumber,
 					"episode": ar.EpisodeNumber,
 					"status":  ar.Status})
-				addedActivity, _ = s.activityProvider.AddActivity(
-					userId,
-					domain.ActivityAddProps{
-						WatchedID: w.ID,
-						Type:      entity.EPISODE_STATUS_CHANGED,
-						Data:      string(json),
-					},
-					false,
-				)
+				activityAddReq := domain.ActivityAddProps{
+					WatchedID: w.ID,
+					Type:      entity.EPISODE_STATUS_CHANGED,
+					Data:      string(json),
+				}
+				if !ar.WatchedDate.IsZero() {
+					activityAddReq.CustomDate = &ar.WatchedDate
+				}
+				addedActivity, _ = s.activityProvider.AddActivity(userId, activityAddReq, cap)
 			}
 			if ar.Rating != 0 {
 				json, _ := json.Marshal(map[string]any{
@@ -168,6 +183,32 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 					false,
 				)
 			}
+		} else if !ar.WatchedDate.IsZero() {
+			// Nothing was updated, but a custom watched date was provided.
+			// Check if there is an existing FINISHED activity for this episode with the same watched date.
+			// This allows us to track all watched dates for an episode without changing the status.
+			var activities []entity.Activity
+			// I am not sure if the query cover all cases or if it is to broad
+			if resp := s.db.Where("watched_id = ? AND data LIKE ? AND custom_date = ?", w.ID, "%\"status\":\"FINISHED\"%", ar.WatchedDate).Find(&activities); resp.Error != nil {
+				slog.Error("Failed to fetch activities", "error", resp.Error)
+				return WatchedEpisodeAddResponse{}, errors.New("failed to fetch activities")
+			}
+			if len(activities) == 0 && ar.Status == entity.FINISHED {
+				json, _ := json.Marshal(map[string]any{
+					"season":  ar.SeasonNumber,
+					"episode": ar.EpisodeNumber,
+					"status":  ar.Status})
+				addedActivity, _ = s.activityProvider.AddActivity(
+					userId,
+					domain.ActivityAddProps{
+						WatchedID:  w.ID,
+						Type:       entity.EPISODE_ADDED,
+						Data:       string(json),
+						CustomDate: &ar.WatchedDate,
+					},
+					true,
+				)
+			}
 		}
 	} else {
 		json, _ := json.Marshal(map[string]any{
@@ -175,18 +216,24 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 			"episode": ar.EpisodeNumber,
 			"status":  ar.Status,
 			"rating":  ar.Rating})
-		act := domain.ActivityAddProps{
+		activityAddReq := domain.ActivityAddProps{
 			WatchedID: w.ID,
 			Type:      entity.EPISODE_ADDED,
 			Data:      string(json),
 		}
 		if ar.AddActivity != "" {
-			act.Type = ar.AddActivity
+			activityAddReq.Type = ar.AddActivity
 		}
 		if !ar.AddActivityDate.IsZero() {
-			act.CustomDate = &ar.AddActivityDate
+			activityAddReq.CustomDate = &ar.AddActivityDate
+		} else if !ar.WatchedDate.IsZero() {
+			activityAddReq.CustomDate = &ar.WatchedDate
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(userId, act, false)
+		cap := false
+		if ar.Status == entity.FINISHED {
+			cap = true
+		}
+		addedActivity, _ = s.activityProvider.AddActivity(userId, activityAddReq, cap)
 	}
 	episodeAddResp := WatchedEpisodeAddResponse{
 		WatchedEpisodes: w.WatchedEpisodes,
@@ -200,7 +247,8 @@ func (s *Service) AddWatchedEpisodes(userId uint, ar WatchedEpisodeAddRequest) (
 				ar.WatchedID,
 				ar.SeasonNumber,
 				ar.EpisodeNumber,
-				ar.Status)
+				ar.Status,
+				ar.WatchedDate)
 	}
 	return episodeAddResp, nil
 }
@@ -254,7 +302,7 @@ func (s *Service) getNumberOfWatchedEpisodesInSeason(userId uint, watchedId uint
 }
 
 // Called after an episode watched status has been set.
-func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNum int, episodeNum int, newEpisodeStatus entity.WatchedStatus) EpisodeStatusChangedHookResponse {
+func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNum int, episodeNum int, newEpisodeStatus entity.WatchedStatus, watchedDate time.Time) EpisodeStatusChangedHookResponse {
 	userSettings, err := s.userProvider.UserGetSettings(userId)
 	if err != nil {
 		slog.Error("hookEpisodeStatusChanged: Failed to get user settings! Hook will continue.", "error", err)
@@ -267,16 +315,16 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 
 	hookResponse := EpisodeStatusChangedHookResponse{}
 
-	addHookActivity := func(aType entity.ActivityType, data string) {
-		addedActivity, _ := s.activityProvider.AddActivity(
-			userId,
-			domain.ActivityAddProps{
-				WatchedID: watchedId,
-				Type:      aType,
-				Data:      (data),
-			},
-			false,
-		)
+	addHookActivity := func(aType entity.ActivityType, data string, watchedDate time.Time) {
+		activityAddReq := domain.ActivityAddProps{
+			WatchedID: watchedId,
+			Type:      aType,
+			Data:      (data),
+		}
+		if !watchedDate.IsZero() {
+			activityAddReq.CustomDate = &watchedDate
+		}
+		addedActivity, _ := s.activityProvider.AddActivity(userId, activityAddReq, false)
 		hookResponse.AddedActivities = append(hookResponse.AddedActivities, addedActivity)
 	}
 
@@ -299,6 +347,7 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 			WatchedID:       watchedId,
 			SeasonNumber:    seasonNum,
 			Status:          seasonStatus,
+			WatchedDate:     watchedDate,
 		})
 		if err != nil {
 			slog.Error("hookEpisodeStatusChanged: Failed to add watched season!", "error", err)
@@ -323,13 +372,16 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 			reasonStr += fmt.Sprintf("a status of %s.", watchedSeason.Status)
 		}
 		watchedSeason.Status = entity.WATCHING
+		if !watchedDate.IsZero() {
+			watchedSeason.UpdatedAt = watchedDate
+		}
 		if res := s.db.Save(watchedSeason); res.Error != nil {
 			slog.Error("hookEpisodeStatusChanged: Failed to update season status!", "error", res.Error)
 			hookResponse.Errors = append(hookResponse.Errors, "failed to update season status")
 		} else {
 			hookResponse.WatchedSeason = watchedSeason
 			json, _ := json.Marshal(map[string]interface{}{"season": seasonNum, "status": watchedSeason.Status, "reason": reasonStr})
-			addHookActivity(entity.SEASON_STATUS_CHANGED_AUTO, string(json))
+			addHookActivity(entity.SEASON_STATUS_CHANGED_AUTO, string(json), watchedDate)
 		}
 	}
 
@@ -343,12 +395,15 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 		// Show status shouldn't be empty, but watevs, handle it just incase
 		if watchedShow.Status == "" || watchedShow.Status == entity.PLANNED {
 			watchedShow.Status = entity.WATCHING
+			if !watchedDate.IsZero() {
+				watchedShow.UpdatedAt = watchedDate
+			}
 			if res := s.db.Save(watchedShow); res.Error != nil {
 				slog.Error("hookEpisodeStatusChanged: Failed to update show status!", "error", res.Error)
 			} else {
 				hookResponse.NewShowStatus = watchedShow.Status
 				json, _ := json.Marshal(map[string]interface{}{"status": watchedShow.Status, "reason": fmt.Sprintf("S%dE%d was set to %s.", seasonNum, episodeNum, newEpisodeStatus)})
-				addHookActivity(entity.STATUS_CHANGED_AUTO, string(json))
+				addHookActivity(entity.STATUS_CHANGED_AUTO, string(json), watchedDate)
 			}
 		}
 	}
@@ -386,13 +441,25 @@ func (s *Service) hookEpisodeStatusChanged(userId uint, watchedId uint, seasonNu
 			return hookResponse
 		} else {
 			if watchedSeason != nil {
+				// leads to undesirable behavior when added haphazardly.
+				// To fix this, you need to find the earliest time at which all
+				// episodes were watched.
+				if !watchedDate.IsZero() {
+					if res := s.db.Model(&entity.WatchedSeason{}).Where("watched_id = ? AND season_number = ? AND user_id = ?", watchedId, seasonNum, userId).Update("updated_at", watchedDate); res.Error != nil {
+						slog.Error("hookEpisodeStatusChanged: Failed to update season updated_at to watchedDate:", "error", res.Error.Error())
+						hookResponse.Errors = append(hookResponse.Errors, "failed to update season updated_at to watchedDate")
+						return hookResponse
+					} else {
+						watchedSeason.UpdatedAt = watchedDate
+					}
+				}
 				watchedSeason.Status = newStatus
 				hookResponse.WatchedSeason = watchedSeason
 			} else {
 				slog.Error("hookEpisodeStatusChanged: watchedSeason was nil HOW DID THIS HAPPEN? Anyways the client won't be able to update its state with the new season status until it is refreshed.")
 			}
 			json, _ := json.Marshal(map[string]interface{}{"season": seasonNum, "status": newStatus, "reason": fmt.Sprintf("The season was deemed completed when episode %d was set to %s.", episodeNum, newEpisodeStatus)})
-			addHookActivity(entity.SEASON_STATUS_CHANGED_AUTO, string(json))
+			addHookActivity(entity.SEASON_STATUS_CHANGED_AUTO, string(json), watchedDate)
 		}
 	}
 
