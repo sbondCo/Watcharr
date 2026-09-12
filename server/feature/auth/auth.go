@@ -205,7 +205,7 @@ func (s *Service) LoginJellyfin(userL *entity.User) (AuthResponse, error) {
 		return AuthResponse{}, errors.New("request failed")
 	}
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("X-Emby-Authorization", "MediaBrowser Client=\"Watcharr\", Device=\"HTTP\", DeviceId=\"WatcharrFor"+userL.Username+"\", Version=\"10.8.0\"")
+	req.Header.Add("Authorization", "MediaBrowser Client=\"Watcharr\", Device=\"HTTP\", DeviceId=\"WatcharrFor"+userL.Username+"\", Version=\"10.8.0\"")
 	res, err := client.Do(req)
 	if err != nil {
 		slog.Error("making request to jellyfin for auth failed", "error", err)
