@@ -2,7 +2,7 @@
 
 These changes are awaiting release:
 
-# [4.2.2] - 2026-09-12T21:00:00Z
+# [4.2.2] - 2026-09-12T21:00:01Z
 
 ## Fixed
 
