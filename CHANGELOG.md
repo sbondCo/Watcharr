@@ -2,6 +2,8 @@
 
 These changes are awaiting release:
 
+# [4.2.2] - 2026-09-12T21:00:00Z
+
 ## Fixed
 
 - Jellyfin 12 Authentication (`X-Emby-Authorization` -> `Authorization`).
@@ -1806,6 +1808,7 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 <!-- Version Changelog References (newest first) -->
 
 [Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...HEAD
+[4.2.2]: https://github.com/sbondCo/Watcharr/compare/v4.2.1...v4.2.2
 [4.2.1]: https://github.com/sbondCo/Watcharr/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/sbondCo/Watcharr/compare/v4.1.1...v4.2.0
 [4.1.1]: https://github.com/sbondCo/Watcharr/compare/v4.1.0...v4.1.1
