@@ -120,7 +120,7 @@ func (s *Service) JellyfinAPIRequest(method string, ep string, p map[string]stri
 	if userToken != "" {
 		authHeader += ", Token=\"" + userToken + "\""
 	}
-	req.Header.Add("X-Emby-Authorization", authHeader)
+	req.Header.Add("Authorization", authHeader)
 	res, err := client.Do(req)
 	if err != nil {
 		slog.Error("making request to jellyfin for auth failed", "error", err)

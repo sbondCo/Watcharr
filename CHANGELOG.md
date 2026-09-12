@@ -2,6 +2,11 @@
 
 These changes are awaiting release:
 
+## Fixed
+
+- Jellyfin 12 Authentication (`X-Emby-Authorization` -> `Authorization`).
+  - **IMPORTANT** Jellyfin servers older than 10.11 may no longer work, but 10.11+ will function. For support, your Jellyfin server should be on 10.11+.
+
 # [4.2.1] - 2026-08-04T00:40:00Z
 
 ## Fixed
