@@ -14,7 +14,7 @@ type (
 		Rating       int8                 `json:"rating" binding:"max=10"`
 
 		AddActivityDate   time.Time                `json:"-"`
-		AddActivityReason string                   `json:"-"`
+		ActivityReason    string                   `json:"-"`
 		ActivityCreatedBy entity.ActivityCreatedBy `json:"-"`
 	}
 

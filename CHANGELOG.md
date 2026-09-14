@@ -54,6 +54,9 @@ These changes are awaiting release:
 - Watched Season & Episode:
   - Renamed Add* methods to Set* (AddWatchedSeason -> SetWatchedSeason) to better reflect their Add & Update functionality.
   - Use reusable Set*Provider interfaces for every service that needs to inject either Set method (cutting down on some duplication).
+  - Refactored `hookStatusChanged` and move to its own file.
+    - Way less complicated logic and moved bits of logic that could be reused to its own function.
+    - Now uses `SetWatchedSeason` instead of updating it in db itself.
 - Upgraded @sveltejs/kit: 2.69.3 -> 2.70.3.
 
 # [4.2.2] - 2026-09-12T21:00:01Z
