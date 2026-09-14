@@ -101,6 +101,7 @@ func (s *Service) SetWatchedSeason(
 					"season": ar.SeasonNumber,
 					"status": ar.Status,
 				}).
+				SetReason(ar.ActivityReason).
 				AddToMultiCreator(activityMC)
 		}
 
@@ -120,6 +121,7 @@ func (s *Service) SetWatchedSeason(
 					"season": ar.SeasonNumber,
 					"rating": ar.Rating,
 				}).
+				SetReason(ar.ActivityReason).
 				AddToMultiCreator(activityMC)
 		}
 
@@ -164,7 +166,7 @@ func (s *Service) SetWatchedSeason(
 				"rating": ar.Rating,
 			}).
 			SetCustomDate(&ar.AddActivityDate).
-			SetReason(ar.AddActivityReason).
+			SetReason(ar.ActivityReason).
 			AddToMultiCreator(activityMC)
 	}
 

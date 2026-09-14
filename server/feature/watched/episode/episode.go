@@ -3,7 +3,6 @@ package episode
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"strconv"
 
@@ -214,12 +213,13 @@ func (s *Service) SetWatchedEpisode(
 	if ar.Status != "" {
 		slog.Debug("SetWatchedEpisode: Episode status was changed, calling hook.")
 		resp.EpisodeStatusChangedHookResponse =
-			s.hookEpisodeStatusChanged(
+			s.hookStatusChanged(
 				userId,
 				ar.WatchedID,
 				ar.SeasonNumber,
 				ar.EpisodeNumber,
-				ar.Status)
+				ar.Status,
+			)
 	}
 
 	return resp, nil
@@ -275,199 +275,38 @@ func (s *Service) getNumberOfWatchedEpisodesInSeason(userId uint, watchedId uint
 	return count, nil
 }
 
-// Called after an episode watched status has been set.
-func (s *Service) hookEpisodeStatusChanged(
+// Checks if all the Episodes in a given Season are marked finished, returns
+// true if so.
+func (s *Service) allEpisodesCompletedForSeason(
 	userId uint,
 	watchedId uint,
+	tmdbID int,
 	seasonNum int,
-	episodeNum int,
-	newEpisodeStatus entity.WatchedStatus,
-) domain.EpisodeStatusChangedHookResponse {
-	userSettings, err := s.userProvider.UserGetSettings(userId)
-	if err != nil {
-		slog.Error("hookEpisodeStatusChanged: Failed to get user settings! Hook will continue.", "error", err)
-	} else {
-		if !*userSettings.AutomateShowStatuses {
-			slog.Debug("hookEpisodeStatusChanged: User has AutomateShowStatuses disabled. Skipping hook.", "user_id", userId)
-			return domain.EpisodeStatusChangedHookResponse{}
-		}
-	}
-
-	hookResponse := domain.EpisodeStatusChangedHookResponse{}
-
-	addHookActivity := func(aType entity.ActivityType, data map[string]any, reason string) {
-		json, err := json.Marshal(data)
-		if err != nil {
-			slog.Error("hookEpisodeStatusChanged->addHookActivity: json marshal failed!",
-				"error", err)
-			// Continues..
-		}
-		addedActivity, _ := activity.
-			NewCreator(
-				s.db,
-				userId,
-				watchedId,
-				aType,
-				false,
-				entity.ActivityCreatedByWatcharr,
-			).
-			SetData(string(json)).
-			SetReason(reason).
-			Create()
-		hookResponse.AddedActivities = append(hookResponse.AddedActivities, addedActivity)
-	}
-
-	// 2. If the season (this episode is in) has no status or is planned, set season to watching.
-	watchedSeason, err := s.wsp.GetWatchedSeason(userId, watchedId, seasonNum)
-	if err != nil {
-		slog.Error("hookEpisodeStatusChanged: Cannot continue, failed to get watchedSeason!", "error", err)
-		return domain.EpisodeStatusChangedHookResponse{Errors: []string{("failed to query db for watched season")}}
-	}
-	// If season not found, create it.
-	if watchedSeason == nil {
-		slog.Debug("hookEpisodeStatusChanged: Watched season does not exist. Creating now.")
-		seasonStatus := newEpisodeStatus
-		if newEpisodeStatus == entity.FINISHED || newEpisodeStatus == entity.DROPPED {
-			seasonStatus = entity.WATCHING
-		}
-		resp, err := s.wsp.SetWatchedSeason(userId, domain.WatchedSeasonSetRequest{
-			WatchedID:    watchedId,
-			SeasonNumber: seasonNum,
-			Status:       seasonStatus,
-
-			AddActivityReason: fmt.Sprintf(
-				"Episode %d was set to %s while the season had no status.",
-				episodeNum,
-				newEpisodeStatus,
-			),
-			ActivityCreatedBy: entity.ActivityCreatedByWatcharr,
-		})
-		if err != nil {
-			slog.Error("hookEpisodeStatusChanged: Failed to add watched season!", "error", err)
-			hookResponse.Errors = append(hookResponse.Errors, "failed to add watched season")
-		} else {
-			// addWatchedSeason returns all watched seasons, get the one just added. (may be best to retrofit addWatchedSeason later to return id of season/row created)
-			justAddedWatchedSeason, err := s.wsp.GetWatchedSeason(userId, watchedId, seasonNum)
-			if err != nil {
-				hookResponse.Errors = append(hookResponse.Errors, "failed to get newly added watched season for response")
-			} else {
-				watchedSeason = justAddedWatchedSeason
-				hookResponse.WatchedSeason = watchedSeason
-			}
-			hookResponse.AddedActivities = append(hookResponse.AddedActivities, resp.AddedActivities...)
-		}
-	} else if watchedSeason.Status == "" || watchedSeason.Status == entity.PLANNED ||
-		((newEpisodeStatus == entity.FINISHED || newEpisodeStatus == entity.WATCHING) && (watchedSeason.Status == entity.HOLD || watchedSeason.Status == entity.DROPPED)) {
-		reasonStr := fmt.Sprintf(
-			"Episode %d was set to %s while the season had ",
-			episodeNum,
-			newEpisodeStatus,
-		)
-		if watchedSeason.Status == "" {
-			reasonStr += "no status."
-		} else {
-			reasonStr += fmt.Sprintf("a status of %s.", watchedSeason.Status)
-		}
-		watchedSeason.Status = entity.WATCHING
-		if res := s.db.Save(watchedSeason); res.Error != nil {
-			slog.Error("hookEpisodeStatusChanged: Failed to update season status!", "error", res.Error)
-			hookResponse.Errors = append(hookResponse.Errors, "failed to update season status")
-		} else {
-			hookResponse.WatchedSeason = watchedSeason
-			addHookActivity(
-				entity.SEASON_STATUS_CHANGED,
-				map[string]any{
-					"season": seasonNum,
-					"status": watchedSeason.Status,
-				},
-				reasonStr,
-			)
-		}
-	}
-
-	// 3. If the show has no status or is planned, set it to watching.
-	watchedShow, err := s.wp.GetWatchedItemById(userId, watchedId)
-	if err != nil {
-		slog.Error("hookEpisodeStatusChanged: Failed to get watched show, cant continue to update show status.", "error", err)
-		hookResponse.Errors = append(hookResponse.Errors, "failed to get watched item for show")
-		return hookResponse
-	} else {
-		// Show status shouldn't be empty, but watevs, handle it just incase
-		if watchedShow.Status == "" || watchedShow.Status == entity.PLANNED {
-			watchedShow.Status = entity.WATCHING
-			if res := s.db.Save(watchedShow); res.Error != nil {
-				slog.Error("hookEpisodeStatusChanged: Failed to update show status!", "error", res.Error)
-			} else {
-				hookResponse.NewShowStatus = watchedShow.Status
-				addHookActivity(
-					entity.STATUS_CHANGED,
-					map[string]any{
-						"status": watchedShow.Status,
-					},
-					fmt.Sprintf(
-						"S%dE%d was set to %s.",
-						seasonNum,
-						episodeNum,
-						newEpisodeStatus,
-					),
-				)
-			}
-		}
-	}
-
-	// 4. If all episodes are FINISHED or DROPPED, set the season to FINISHED
-	// BUG If a seasons status is removed and the last episode of the season is marked finished,
-	//     this will add activity for the season being marked finished, right after it is set
-	//     to Watching just above. I think this might never happen to anyone so um ye.
-	tmdbIdStr := strconv.Itoa(watchedShow.Content.TmdbID)
+) (bool, error) {
+	tmdbIdStr := strconv.Itoa(tmdbID)
 	seasonNumStr := strconv.Itoa(seasonNum)
+
 	seasonDetails, err := s.tmdb.SeasonDetails(tmdbIdStr, seasonNumStr)
 	if err != nil {
-		slog.Error("hookEpisodeStatusChanged: Failed to get season details!", "error", err)
-		hookResponse.Errors = append(hookResponse.Errors, "failed to get season details for show")
-		return hookResponse
+		slog.Error("allEpisodesCompletedForSeason: Failed to get season details!",
+			"error", err)
+		return false, err
 	}
 	allEpisodesCount := len(seasonDetails.Episodes)
+
 	finishedEpisodesCount, err := s.getNumberOfWatchedEpisodesInSeason(
 		userId, watchedId, seasonNum, []entity.WatchedStatus{entity.FINISHED, entity.DROPPED})
 	if err != nil {
-		slog.Error("hookEpisodeStatusChanged: Failed to get number of watched episodes in this season!", "error", err)
-		hookResponse.Errors = append(hookResponse.Errors, "failed to get number of watched episodes in this season")
-		return hookResponse
+		slog.Error("allEpisodesCompletedForSeason: Failed to get number of watched episodes in this season!",
+			"error", err)
+		return false, err
 	}
-	slog.Debug("hookEpisodeStatusChanged: Got episode counts.", "allEpisodesCount", allEpisodesCount, "finishedEpisodesCount", finishedEpisodesCount)
-	if finishedEpisodesCount >= int64(allEpisodesCount) {
-		slog.Debug("hookEpisodeStatusChanged: All episodes have been completed (finished or dropped). Marking season finished.")
-		newStatus := entity.FINISHED
-		if watchedSeason != nil && watchedSeason.Status == newStatus {
-			slog.Debug("hookEpisodeStatusChanged: WatchedSeason status is same as newStatus so not updating.")
-			return hookResponse
-		}
-		if res := s.db.Model(&entity.WatchedSeason{}).Where("watched_id = ? AND season_number = ? AND user_id = ?", watchedId, seasonNum, userId).Update("status", newStatus); res.Error != nil {
-			slog.Error("hookEpisodeStatusChanged: Failed to update season status to finished:", "error", res.Error.Error())
-			hookResponse.Errors = append(hookResponse.Errors, "failed to update season status to finished")
-			return hookResponse
-		} else {
-			if watchedSeason != nil {
-				watchedSeason.Status = newStatus
-				hookResponse.WatchedSeason = watchedSeason
-			} else {
-				slog.Error("hookEpisodeStatusChanged: watchedSeason was nil HOW DID THIS HAPPEN? Anyways the client won't be able to update its state with the new season status until it is refreshed.")
-			}
-			addHookActivity(
-				entity.SEASON_STATUS_CHANGED,
-				map[string]any{
-					"season": seasonNum,
-					"status": newStatus,
-				},
-				fmt.Sprintf(
-					"The season was deemed completed when episode %d was set to %s.",
-					episodeNum,
-					newEpisodeStatus,
-				),
-			)
-		}
-	}
+	slog.Debug("allEpisodesCompletedForSeason: Got episode counts.",
+		"allEpisodesCount", allEpisodesCount,
+		"finishedEpisodesCount", finishedEpisodesCount)
 
-	return hookResponse
+	if finishedEpisodesCount >= int64(allEpisodesCount) {
+		return true, nil
+	}
+	return false, nil
 }
