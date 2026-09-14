@@ -124,16 +124,21 @@ func (s *Service) hookStatusChangedSetSeasonStatus(
 		seasonNewStatus = entity.WATCHING
 	}
 
-	// If all episodes are FINISHED, override seasonNewStatus to FINISHED.
-	allEpsFinished, err := s.allEpisodesCompletedForSeason(
-		userID, watchedID, tmdbID, seasonNum)
-	if err != nil {
-		slog.Error("hookStatusChangedSetSeasonStatus: Episode completion check failed.",
-			"error", err)
-		return domain.WatchedSeasonSetResponse{}, err
-	}
-	if allEpsFinished {
-		seasonNewStatus = entity.FINISHED
+	if newEpStatus == entity.FINISHED {
+		// If all episodes are FINISHED, override seasonNewStatus to FINISHED.
+		// NOTE: We only need to do this check if newEpStatus is FINISHED, since
+		// if it was anything else, not all episodes can be FINISHED. This is a
+		// "big" call, so its worth only running it if necessary.
+		allEpsFinished, err := s.allEpisodesCompletedForSeason(
+			userID, watchedID, tmdbID, seasonNum)
+		if err != nil {
+			slog.Error("hookStatusChangedSetSeasonStatus: Episode completion check failed.",
+				"error", err)
+			return domain.WatchedSeasonSetResponse{}, err
+		}
+		if allEpsFinished {
+			seasonNewStatus = entity.FINISHED
+		}
 	}
 
 	return s.wsp.SetWatchedSeason(userID, domain.WatchedSeasonSetRequest{
