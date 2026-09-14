@@ -119,11 +119,12 @@ func (s *Service) hookStatusChangedSetSeasonStatus(
 	newEpStatus entity.WatchedStatus,
 ) (domain.WatchedSeasonSetResponse, error) {
 	seasonNewStatus := newEpStatus
+
 	if newEpStatus == entity.FINISHED || newEpStatus == entity.DROPPED {
 		seasonNewStatus = entity.WATCHING
 	}
 
-	// If all episodes are FINISHED, set season to FINISHED.
+	// If all episodes are FINISHED, override seasonNewStatus to FINISHED.
 	allEpsFinished, err := s.allEpisodesCompletedForSeason(
 		userID, watchedID, tmdbID, seasonNum)
 	if err != nil {
