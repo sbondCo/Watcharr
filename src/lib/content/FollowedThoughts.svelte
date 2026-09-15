@@ -16,9 +16,9 @@
 	}
 
 	interface Props {
-		mediaType: ContentType | "game";
-		// The tmdbId for movie/tv, igdbId for games.
-		mediaId: number;
+		mediaType: ContentType;
+		// The tmdbId for movie/tv, igdbId for games, olid for books.
+		mediaId: string | number;
 	}
 
 	let { mediaType, mediaId }: Props = $props();

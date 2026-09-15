@@ -64,6 +64,7 @@ func Setup(db *gorm.DB) error {
 		&entity.Follow{},
 		&entity.Image{},
 		&entity.Game{},
+		&entity.Book{},
 		&entity.ArrRequest{},
 		&entity.Tag{},
 	)

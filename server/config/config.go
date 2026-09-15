@@ -12,6 +12,7 @@ import (
 	"github.com/sbondCo/Watcharr/config/cfgmodel"
 	"github.com/sbondCo/Watcharr/logging"
 	"github.com/sbondCo/Watcharr/media/igdb"
+	"github.com/sbondCo/Watcharr/media/openlibrary"
 	"github.com/sbondCo/Watcharr/util"
 )
 
@@ -79,9 +80,10 @@ type ServerConfig struct {
 	// VERY DANGEROUS if access is not controlled correctly!
 	HEADER_AUTH TrustedHeaderAuthSetting `json:",omitempty"`
 
-	SONARR []cfgmodel.SonarrSettings `json:",omitempty"`
-	RADARR []cfgmodel.RadarrSettings `json:",omitempty"`
-	TWITCH igdb.IGDB                 `json:",omitzero"`
+	SONARR      []cfgmodel.SonarrSettings `json:",omitempty"`
+	RADARR      []cfgmodel.RadarrSettings `json:",omitempty"`
+	TWITCH      igdb.IGDB                 `json:",omitzero"`
+	OPENLIBRARY openlibrary.OpenLibrary   `json:",omitzero"`
 
 	// Optional: Schedule for tasks.
 	TASK_SCHEDULE map[string]int `json:",omitempty"`

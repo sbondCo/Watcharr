@@ -3,7 +3,7 @@ export type WatchedStatus =
 /**
  * Types of media supported by Watcharr in an overarching way.
  */
-export type SupportedMedia = "tv" | "movie" | "game";
+export type SupportedMedia = "tv" | "movie" | "game" | "book";
 export type ContentType = SupportedMedia | "tv_episode";
 export type MediaType = ContentType | "person";
 
@@ -61,7 +61,8 @@ export type Icon =
 	| "github"
 	| "website"
 	| "tmdb"
-	| "igdb";
+	| "igdb"
+	| "book";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -160,6 +161,7 @@ export interface Watched {
 export interface WatchedAddRequest {
 	tmdbId?: number;
 	igdbId?: number;
+	olid?: string;
 	contentType: SupportedMedia;
 	rating?: number;
 	status?: WatchedStatus;
@@ -314,6 +316,7 @@ export interface MediaIDs {
 	tvdb?: number;
 
 	igdb?: number;
+	olid?: number;
 }
 
 export enum MediaTypeE {
@@ -321,6 +324,8 @@ export enum MediaTypeE {
 	tmdbShow = "tmdb_tv",
 	tmdbPerson = "tmdb_person",
 	igdbGame = "igdb_game",
+	olBook = "ol_book",
+	olBookAuthor = "ol_book_author",
 }
 
 export interface Media {
@@ -347,6 +352,7 @@ export interface Media {
 	gameModes?: MediaGenre[];
 	seasons?: MediaSeason[];
 	isShowAnime?: boolean;
+	authors: MediaPerson[];
 }
 
 export function getContentTypeFromMedia(m: Media): ContentType | undefined {
@@ -398,6 +404,11 @@ export interface MediaSeason {
 	releaseDate?: string;
 }
 
+export interface MediaPerson {
+	id?: string;
+	name?: string;
+}
+
 interface PaginationParams {
 	limit?: number;
 	page?: number;
@@ -409,6 +420,7 @@ export enum SearchType {
 	show = "show",
 	person = "person",
 	game = "game",
+	book = "book",
 }
 
 export interface SearchRequest extends PaginationParams {

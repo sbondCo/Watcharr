@@ -105,7 +105,7 @@ func (s *Service) GetFollowsThoughts(userId uint, mediaType string, mediaId stri
 		}
 		followIds = append(followIds, v.FollowedUser.ID)
 	}
-	var contentOrGameId int
+	var contentGameOrBookId int
 	if mediaType == "game" {
 		// Get our content id from type and tmdbId
 		var content entity.Game
@@ -114,7 +114,16 @@ func (s *Service) GetFollowsThoughts(userId uint, mediaType string, mediaId stri
 			slog.Error("getFollows: Error finding content from db.", "error", res.Error)
 			return []FollowThoughts{}, errors.New("failed to find content")
 		}
-		contentOrGameId = content.ID
+		contentGameOrBookId = content.ID
+	} else if mediaType == "book" {
+		// Get our content id from type and tmdbId
+		var content entity.Book
+		res = s.db.Where("ol_id = ?", mediaId).Select("id").Find(&content)
+		if res.Error != nil {
+			slog.Error("getFollows: Error finding content from db.", "error", res.Error)
+			return []FollowThoughts{}, errors.New("failed to find content")
+		}
+		contentGameOrBookId = content.ID
 	} else if mediaType == "movie" || mediaType == "tv" {
 		// Get our content id from type and tmdbId
 		var content entity.Content
@@ -123,7 +132,7 @@ func (s *Service) GetFollowsThoughts(userId uint, mediaType string, mediaId stri
 			slog.Error("getFollows: Error finding content from db.", "error", res.Error)
 			return []FollowThoughts{}, errors.New("failed to find content")
 		}
-		contentOrGameId = content.ID
+		contentGameOrBookId = content.ID
 	} else {
 		slog.Error("getFollows: Unrecognized media type (movie, tv or game supported).", "media_type", mediaType)
 		return []FollowThoughts{}, errors.New("unrecognized media type")
@@ -131,9 +140,11 @@ func (s *Service) GetFollowsThoughts(userId uint, mediaType string, mediaId stri
 	// Get list of followeds watcheds for this content
 	var fw []entity.Watched
 	if mediaType == "game" {
-		res = s.db.Where("game_id = ? AND user_id IN ?", contentOrGameId, followIds).Find(&fw)
+		res = s.db.Where("game_id = ? AND user_id IN ?", contentGameOrBookId, followIds).Find(&fw)
+	} else if mediaType == "book" {
+		res = s.db.Where("book_id = ? AND user_id IN ?", contentGameOrBookId, followIds).Find(&fw)
 	} else {
-		res = s.db.Where("content_id = ? AND user_id IN ?", contentOrGameId, followIds).Find(&fw)
+		res = s.db.Where("content_id = ? AND user_id IN ?", contentGameOrBookId, followIds).Find(&fw)
 	}
 	if res.Error != nil {
 		slog.Error("getFollows: Error finding followed watcheds from db.", "error", res.Error)

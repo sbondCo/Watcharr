@@ -8,4 +8,5 @@ const (
 	SupportedMediaMovie SupportedMedia = "movie"
 	SupportedMediaShow  SupportedMedia = "tv"
 	SupportedMediaGame  SupportedMedia = "game"
+	SupportedMediaBook  SupportedMedia = "book"
 )

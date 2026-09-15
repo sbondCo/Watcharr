@@ -131,6 +131,10 @@ func (s *Service) Search(
 		if err := s.searchGame(greq, &resp); err != nil {
 			return resp, errors.New("game search failed")
 		}
+	case domain.SearchTypeBook:
+		if err := s.searchBook(r.Query, pp.Page, &resp); err != nil {
+			return resp, errors.New("book search failed")
+		}
 	}
 	return resp, nil
 }
@@ -350,6 +354,29 @@ func (s *Service) searchGameBySlug(
 	resp.Page = 1
 	resp.TotalPages = 1
 	resp.TotalResults = int64(len(igdbRes))
+	return nil
+}
+
+func (s *Service) searchBook(
+	query string,
+	page int,
+	resp *domain.SearchResponse,
+) error {
+	slog.Debug("searchBook: Running.", "query", query, "page", page)
+	openLibraryRes, err := s.cfg.OPENLIBRARY.Search(query, page)
+	if err != nil {
+		slog.Error("searchBook: Failed to search book!", "error", err)
+		return errors.New("content request failed")
+	}
+	for _, b := range openLibraryRes.Books {
+		resp.Results = append(
+			resp.Results,
+			domain.NewMediaFromBook(&b),
+		)
+	}
+	resp.Page = page
+	resp.TotalPages = openLibraryRes.NumPages
+	resp.TotalResults = int64(openLibraryRes.NumResults)
 	return nil
 }
 

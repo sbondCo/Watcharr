@@ -2,7 +2,7 @@
 	import Icon from "../Icon.svelte";
 	import { store } from "@/store.svelte";
 
-	type FilterType = "movie" | "show" | "game" | "person";
+	type FilterType = "movie" | "show" | "game" | "person" | "book";
 
 	interface Props {
 		active?: string;
@@ -27,6 +27,13 @@
 		onclick={() => onChange("show")}
 	>
 		<Icon i="tv" wh={20} /> TV Shows
+	</button>
+	<button
+		class="plain"
+		data-active={active === "book"}
+		onclick={() => onChange("book")}
+	>
+		<Icon i="book" wh={20} /> Books
 	</button>
 	{#if store.serverFeatures?.games}
 		<button
