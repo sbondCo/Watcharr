@@ -80,7 +80,7 @@ func refineFilterStatus(
 
 // Applies sorts to list.
 // Takes in userId of user who owns the list we are sorting, since some sorts
-// may require it for subqueries (eg LastFinished).
+// may require it for subqueries (eg LastFinished, LastChangedEpisode).
 func refineSort(
 	db *gorm.DB,
 	userId uint,
@@ -105,6 +105,23 @@ func refineSort(
 		db.Order(obc(clause.Column{Name: "watcheds.created_at"}))
 	case domain.WatchedSortLastChanged:
 		db.Order(obc(clause.Column{Name: "watcheds.updated_at"}))
+	case domain.WatchedSortLastChangedEpisode:
+		db.
+			// This join looks for the most recently changed watched episode
+			// of each watched entry. The date of these is used in the sort
+			// below.
+			// Note: Entries without any watched episodes (movies, games and
+			// shows with no episodes marked) have no row to join to, so they
+			// sort as NULL and end up at one end of the list.
+			Joins(`LEFT JOIN (
+					SELECT
+						watched_id AS e_watched_id,
+						MAX(updated_at) AS e_sort_by_date
+					FROM watched_episodes
+					WHERE user_id = ?
+					GROUP BY watched_id
+				) e ON e.e_watched_id = watcheds.id`, userId).
+			Order(obc(clause.Column{Name: "e.e_sort_by_date"}))
 	case domain.WatchedSortLastFinished:
 		db.
 			// This join looks for the latest activity that counts as a play
