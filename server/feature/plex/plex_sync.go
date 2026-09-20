@@ -175,11 +175,17 @@ func (s *SyncService) startPlexSync(
 				continue
 			}
 			for _, show := range shows.MediaContainer.Metadata {
-				if show.ViewedLeafCount != show.LeafCount {
-					// Not viewed, skip importing
-					// (could be improved to set status as watching when viewedLeafCount is higher than 0)
+				if show.ViewedLeafCount <= 0 {
+					// Nothing in this show has been watched, skip importing.
 					slog.Debug("plexSyncWatched: Skipping unwatched show:", "show_name", show.Title, "leaf_count", show.LeafCount, "viewed_leaf_count", show.ViewedLeafCount, "user_id", userId)
 					continue
+				}
+				// Plex counts only the episodes it currently holds, so a show
+				// is treated as finished when every held episode is watched,
+				// and as still being watched otherwise.
+				showStatus := entity.FINISHED
+				if show.ViewedLeafCount != show.LeafCount {
+					showStatus = entity.WATCHING
 				}
 				job.UpdateJobCurrentTask(jobId, userId, "importing show "+show.Title)
 				slog.Info("plexSyncWatched: Importing show.", "show_name", show.Title, "user_id", userId)
@@ -207,7 +213,7 @@ func (s *SyncService) startPlexSync(
 				w, err := s.wp.AddWatched(
 					userId,
 					domain.WatchedAddRequest{
-						Status:      entity.FINISHED,
+						Status:      showStatus,
 						ContentType: util.SupportedMediaShow,
 						TMDBID:      tmdbId,
 						Rating:      float64(show.UserRating),
@@ -266,9 +272,15 @@ func (s *SyncService) startPlexSync(
 				} else {
 					for _, vs := range seriesSeasons.MediaContainer.Metadata {
 						slog.Debug("plexSyncWatched: Processing a season.", "full_item", vs, "user_id", userId)
-						if vs.ViewedLeafCount != vs.LeafCount {
+						if vs.ViewedLeafCount <= 0 {
 							slog.Debug("plexSyncWatched: Skipping import of unplayed season.", "series_name", show.Title, "season_num", vs.Index, "user_id", userId)
 							continue
+						}
+						// Same as the show above, a season with unwatched
+						// episodes still held by Plex is only being watched.
+						seasonStatus := entity.FINISHED
+						if vs.ViewedLeafCount != vs.LeafCount {
+							seasonStatus = entity.WATCHING
 						}
 						job.UpdateJobCurrentTask(jobId, userId, "syncing "+show.Title+" season "+strconv.Itoa(vs.Index))
 						var seasonLastViewedAt time.Time
@@ -278,7 +290,7 @@ func (s *SyncService) startPlexSync(
 						_, err = s.wsp.AddWatchedSeason(userId, season.WatchedSeasonAddRequest{
 							WatchedID:       w.ID,
 							SeasonNumber:    vs.Index,
-							Status:          entity.FINISHED,
+							Status:          seasonStatus,
 							AddActivity:     entity.SEASON_ADDED_PLEX,
 							AddActivityDate: seasonLastViewedAt,
 						})
