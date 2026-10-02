@@ -77,15 +77,18 @@
 		ev.preventDefault();
 		const fd = new FormData(ev.target! as HTMLFormElement);
 		const user = fd.get("username");
-		const pass = fd.get("password");
+		const pass = fd.get("password") ?? "";
+		const isJellyfin = (ev.submitter as HTMLButtonElement)?.name === "jellyfin";
 
-		if (!user || !pass) {
-			error = "Username and Password fields are required";
+		if (!user || (!isJellyfin && !pass)) {
+			error = isJellyfin
+				? "Username is required"
+				: "Username and Password fields are required";
 			return;
 		}
 
 		let customAuthEP = "";
-		if ((ev.submitter as HTMLButtonElement)?.name === "jellyfin") {
+		if (isJellyfin) {
 			customAuthEP = "jellyfin";
 		}
 
