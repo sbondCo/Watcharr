@@ -45,3 +45,6 @@ data/
 # Build artifacts
 server/ui
 server/watcharr
+
+# IntelliJ
+.idea/

@@ -34,6 +34,8 @@
 	const scroll = infScroll({ callback: onScrollToBottom });
 	const dataLoader = paginatedLoader<Media, undefined>(load);
 
+	const isGuestMode = !localStorage.getItem("token");
+
 	let nextLoadParams: {
 		page: number;
 		[x: string]: unknown;
@@ -151,14 +153,16 @@
 				<h2 title={user?.username}>
 					{meta.username}
 				</h2>
-				<button
-					class="plain"
-					disabled={followBtnDisabled}
-					onclick={follow}
-					use:tooltip={{ text: isFollowing ? "Unfollow" : "Follow" }}
-				>
-					<Icon i={isFollowing ? "person-minus" : "person-add"} />
-				</button>
+				{#if !isGuestMode}
+					<button
+						class="plain"
+						disabled={followBtnDisabled}
+						onclick={follow}
+						use:tooltip={{ text: isFollowing ? "Unfollow" : "Follow" }}
+					>
+						<Icon i={isFollowing ? "person-minus" : "person-add"} />
+					</button>
+				{/if}
 			</div>
 			{#if user?.bio}
 				<span title={user?.bio}>{user?.bio}</span>
@@ -176,6 +180,7 @@
 					media={w}
 					fluidSize={true}
 					disableInteraction={true}
+					disablePosterLink={isGuestMode}
 				/>
 			{/if}
 		{/each}

@@ -32,6 +32,7 @@
 		watched?: Watched;
 		small?: boolean;
 		disableInteraction?: boolean;
+		disablePosterLink?: boolean;
 		hideButtons?: boolean;
 		fluidSize?: boolean;
 		/**
@@ -60,6 +61,7 @@
 		watched = $bindable(undefined),
 		small = false,
 		disableInteraction = false,
+		disablePosterLink = false,
 		hideButtons = false,
 		fluidSize = false,
 		hideIfNotOnList = false,
@@ -141,7 +143,7 @@
 		}
 	});
 	const link = $derived<`${`/${SupportedMedia}/${string}`}` | undefined>(
-		meta?.id ? `/${meta.type}/${meta.id}` : undefined,
+		meta?.id && !disablePosterLink ? `/${meta.type}/${meta.id}` : undefined,
 	);
 	const year = $derived(
 		media.releaseDate ? new Date(media.releaseDate).getFullYear() : undefined,
