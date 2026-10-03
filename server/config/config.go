@@ -58,6 +58,9 @@ type ServerConfig struct {
 	// Optional: Use Emby instead of Jellyfin branding in the ui.
 	USE_EMBY bool
 
+	// Optional: Allows unauthorized visitors to see public shared lists and movies pages
+	ALLOW_GUESTS bool
+
 	// Enable/disable signup functionality.
 	// Set to `false` to disable registering an account.
 	SIGNUP_ENABLED bool
@@ -104,6 +107,7 @@ func (c *ServerConfig) GetSafe() ServerConfig {
 		SIGNUP_ENABLED:  c.SIGNUP_ENABLED,
 		DEFAULT_COUNTRY: c.DEFAULT_COUNTRY,
 		JELLYFIN_HOST:   c.JELLYFIN_HOST,
+		ALLOW_GUESTS:    c.ALLOW_GUESTS,
 		USE_EMBY:        c.USE_EMBY,
 		TMDB_KEY:        c.TMDB_KEY,
 		PLEX_HOST:       c.PLEX_HOST,
@@ -131,6 +135,8 @@ func (c *ServerConfig) Get(s string) (ServerConfigGetByName, error) {
 		return ServerConfigGetByName{Value: c.JELLYFIN_HOST}, nil
 	case "USE_EMBY":
 		return ServerConfigGetByName{Value: c.USE_EMBY}, nil
+	case "ALLOW_GUESTS":
+		return ServerConfigGetByName{Value: c.ALLOW_GUESTS}, nil
 	case "SIGNUP_ENABLED":
 		return ServerConfigGetByName{Value: c.SIGNUP_ENABLED}, nil
 	case "TMDB_KEY":
@@ -157,6 +163,8 @@ func (c *ServerConfig) UpdateConfig(k string, v any) error {
 		c.JELLYFIN_HOST = v.(string)
 	} else if k == "USE_EMBY" {
 		c.USE_EMBY = v.(bool)
+	} else if k == "ALLOW_GUESTS" {
+		c.ALLOW_GUESTS = v.(bool)
 	} else if k == "SIGNUP_ENABLED" {
 		c.SIGNUP_ENABLED = v.(bool)
 	} else if k == "TMDB_KEY" {
@@ -264,6 +272,7 @@ func generateConfig() (*ServerConfig, error) {
 		// Other defaults..
 		DEFAULT_COUNTRY: "US",
 		SIGNUP_ENABLED:  true,
+		ALLOW_GUESTS:    false,
 	}
 	barej, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {

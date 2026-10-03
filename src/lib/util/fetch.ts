@@ -223,12 +223,7 @@ export class Reqer {
 
 			if (this.watcharrAuthed) {
 				const token = localStorage.getItem("token");
-				if (!token) {
-					console.error("No token, going to login.");
-					goto(resolve("/login?again=1"));
-					throw new ReqerError("No auth token found");
-				}
-				headers.append("Authorization", token);
+				headers.append("Authorization", token ?? "");
 			}
 
 			const reqBody = this.prepareRequestBody(cfg?.body, headers);

@@ -26,22 +26,26 @@ func NewRouter(br *router.BaseRouter, service *Service, manageService *ManageSer
 }
 
 func (r *Router) AddRoutes() {
-	u := r.br.Router.Group("/user").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg))
+	user := r.br.Router.Group("/user")
+
+	// Get user public info
+	user.GET("/public/:pubUserId/:pubUsername", authmiddleware.AuthOptional(nil, r.br.Cfg), r.GetUserPublicInfo)
+
+	authUser := user.Group("")
+	authUser.Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
 
 	// Get current user info
-	u.GET("", r.GetUserInfo)
+	authUser.GET("", r.GetUserInfo)
 	// Update current user settings
-	u.POST("/update", r.UpdateSettings)
+	authUser.POST("/update", r.UpdateSettings)
 	// Get current user setting
-	u.GET("/settings", r.GetSettings)
+	authUser.GET("/settings", r.GetSettings)
 	// Search users
-	u.GET("/search", r.GetSearchUsers)
-	// Get user public info
-	u.GET("/public/:pubUserId/:pubUsername", r.GetUserPublicInfo)
+	authUser.GET("/search", r.GetSearchUsers)
 	// Update bio
-	u.POST("/bio", r.UpdateBio)
+	authUser.POST("/bio", r.UpdateBio)
 	// Upload avatar
-	u.POST("/avatar", r.UpdateAvatar)
+	authUser.POST("/avatar", r.UpdateAvatar)
 }
 
 // Get current user info

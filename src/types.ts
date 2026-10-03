@@ -596,6 +596,7 @@ export interface ManagedUser {
 export interface ServerConfig {
 	DEFAULT_COUNTRY?: string;
 	JELLYFIN_HOST?: string;
+	ALLOW_GUESTS: boolean;
 	USE_EMBY: boolean;
 	SIGNUP_ENABLED: boolean;
 	TMDB_KEY?: string;

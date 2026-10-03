@@ -26,16 +26,19 @@ func NewRouter(br *router.BaseRouter, service *Service) *Router {
 }
 
 func (r *Router) AddRoutes() {
-	watched := r.br.Router.Group("/watched").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	watched := r.br.Router.Group("/watched")
 
-	watched.GET("", router.PaginatedRequest(false), r.GetWatchedList)
-	watched.GET(":id/:username", router.PaginatedRequest(true), r.GetPublicWatchedList)
-	watched.POST("", r.AddWatched)
-	watched.PUT(":id", r.UpdateWatched)
-	watched.DELETE(":id", r.DeleteWatched)
-	// TODO Move add/delete watched from tag to the `tag` package (the service code is there so the route may as well be under there, also avoids a circular dep).
-	watched.POST(":id/tag/:tagId", r.AddWatchedToTag)
-	watched.DELETE(":id/tag/:tagId", r.DeleteWatchedFromTag)
+	watched.GET(":id/:username", router.PaginatedRequest(true), authmiddleware.AuthOptional(nil, r.br.Cfg), r.GetPublicWatchedList)
+
+	authWatched := watched.Group("")
+	authWatched.Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+
+	authWatched.GET("", router.PaginatedRequest(false), r.GetWatchedList)
+	authWatched.POST("", r.AddWatched)
+	authWatched.PUT(":id", r.UpdateWatched)
+	authWatched.DELETE(":id", r.DeleteWatched)
+	authWatched.POST(":id/tag/:tagId", r.AddWatchedToTag)
+	authWatched.DELETE(":id/tag/:tagId", r.DeleteWatchedFromTag)
 }
 
 // Get our (logged in user) watched list.

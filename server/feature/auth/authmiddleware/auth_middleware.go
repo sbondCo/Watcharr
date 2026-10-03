@@ -1,7 +1,9 @@
 package authmiddleware
 
 import (
+	"errors"
 	"log/slog"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,62 +23,91 @@ import (
 func AuthRequired(db *gorm.DB, cfg *config.ServerConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		slog.Debug("AuthRequired middleware hit")
-		atoken := c.GetHeader("Authorization")
-		// Make sure auth header isn't empty
-		if atoken == "" {
-			slog.Warn("Returning 401, Authorization header not provided")
-			c.AbortWithStatus(401)
+
+		if err := Authenticate(c, db, cfg); err != nil {
+			slog.Warn("Authentication failed", "error", err)
+			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		// Parse token
-		token, err := jwt.ParseWithClaims(atoken, &entity.TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(cfg.JWT_SECRET), nil
-		})
+
+		c.Next()
+	}
+}
+
+// used for a few routes which can be accessed by guests if ALLOW_GUESTS server setting is enabled
+func AuthOptional(db *gorm.DB, cfg *config.ServerConfig) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := Authenticate(c, db, cfg)
+
+		slog.Info("headers",
+			"authorization", c.GetHeader("Authorization"),
+		)
+
 		if err != nil {
-			slog.Error("AuthRequired failed to parse token", "error", err)
-			c.AbortWithStatus(401)
-			return
-		}
-		// If token is valid, go to next handler
-		if claims, ok := token.Claims.(*entity.TokenClaims); ok && token.Valid {
-			// Check if token issuedAt is from before `timeOfNewLoginRequired`.
-			// Basically just so we can logout old tokens and force relogin...
-			// since new changes require the user login again.
-			timeOfNewLoginRequired, _ := time.Parse(time.RFC822, "18 Aug 23 20:30 UTC")
-			if claims.IssuedAt.Before(timeOfNewLoginRequired) {
-				slog.Info("Token is from before timeOfNewLoginRequired.. returning 401", "token_issued_at", claims.IssuedAt, "time_of_new_login_required", timeOfNewLoginRequired)
-				c.AbortWithStatus(401)
+			if cfg.ALLOW_GUESTS {
+				c.Next()
 				return
 			}
-			slog.Debug("Token is valid", "claims", claims)
-			c.Set("userId", claims.UserID)
-			c.Set("userType", claims.Type)
-			// If db passed, get extra user info and set as variables in req context
-			if db != nil {
-				slog.Debug("AuthRequired: db passed.. getting extra user info")
-				dbUser := new(entity.User)
-				res := db.Where("id = ?", claims.UserID).Take(&dbUser)
-				if res.Error != nil {
-					slog.Error("AuthRequired: Failed to select user from database", "error", res.Error)
-					c.AbortWithStatus(401)
-					return
-				}
-				slog.Debug("AuthRequired: fetched extra user info. Setting vars.", "userThirdPartyId", dbUser.ThirdPartyID, "userThirdPartyAuth", "lol this is censored dude")
-				c.Set("userThirdPartyId", dbUser.ThirdPartyID)
-				c.Set("userThirdPartyAuth", dbUser.ThirdPartyAuth)
-				c.Set("username", dbUser.Username)
-				c.Set("userPermissions", dbUser.Permissions)
-				if dbUser.Country != nil {
-					c.Set("userCountry", *dbUser.Country)
-				}
-			}
-			c.Next()
-		} else {
-			slog.Error("Token is **not** valid")
-			c.AbortWithStatus(401)
+
+			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+
+		c.Next()
 	}
+}
+
+
+func Authenticate(c *gin.Context, db *gorm.DB, cfg *config.ServerConfig) error {
+	atoken := c.GetHeader("Authorization")
+	if atoken == "" {
+		return errors.New("authorization header not provided")
+	}
+
+	token, err := jwt.ParseWithClaims(
+		atoken,
+		&entity.TokenClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			return []byte(cfg.JWT_SECRET), nil
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	claims, ok := token.Claims.(*entity.TokenClaims)
+	if !ok || !token.Valid {
+		return errors.New("invalid token")
+	}
+
+	timeOfNewLoginRequired, _ :=
+		time.Parse(time.RFC822, "18 Aug 23 20:30 UTC")
+
+	if claims.IssuedAt.Before(timeOfNewLoginRequired) {
+		return errors.New("token is too old")
+	}
+
+	c.Set("userId", claims.UserID)
+	c.Set("userType", claims.Type)
+
+	if db != nil {
+		dbUser := new(entity.User)
+		res := db.Where("id = ?", claims.UserID).Take(dbUser)
+		if res.Error != nil {
+			return res.Error
+		}
+
+		c.Set("userThirdPartyId", dbUser.ThirdPartyID)
+		c.Set("userThirdPartyAuth", dbUser.ThirdPartyAuth)
+		c.Set("username", dbUser.Username)
+		c.Set("userPermissions", dbUser.Permissions)
+
+		if dbUser.Country != nil {
+			c.Set("userCountry", *dbUser.Country)
+		}
+	}
+
+	return nil
 }
 
 // Admin only middleware (use after AuthRequired with extra info!)

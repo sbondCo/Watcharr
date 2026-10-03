@@ -42,6 +42,7 @@
 	let plexHostDisabled = $state(false);
 	let countryDisabled = $state(false);
 	let useEmbyDisabled = $state(false);
+	let allowGuestsDisabled = $state(false);
 
 	async function getServerConfig() {
 		serverConfig = await req.get<ServerConfig>(`/server/config`);
@@ -255,6 +256,23 @@
 								signupDisabled = true;
 								updateServerConfig("SIGNUP_ENABLED", on, () => {
 									signupDisabled = false;
+								});
+							}}
+						/>
+					</Setting>
+					<Setting
+						title="Allow guests"
+						desc="Do you want to allow unauthorized users to see public shared lists and movies pages?"
+						row
+					>
+						<Checkbox
+							name="ALLOW_GUESTS"
+							disabled={allowGuestsDisabled}
+							value={serverConfig.ALLOW_GUESTS}
+							toggled={(on) => {
+								allowGuestsDisabled = true;
+								updateServerConfig("ALLOW_GUESTS", on, () => {
+									allowGuestsDisabled = false;
 								});
 							}}
 						/>

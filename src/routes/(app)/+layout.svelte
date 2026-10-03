@@ -111,31 +111,30 @@
 
 	async function getInitialData() {
 		if (!localStorage.getItem("token")) {
-			console.warn("getInitialData: No token found, redirecting to login!");
-			goto(resolve("/login?again=1"));
-			return;
-		}
-		const [u, s, f, fo, ts] = await Promise.all([
-			req.get<PrivateUser>("/user"),
-			req.get<UserSettings>("/user/settings"),
-			req.get<ServerFeatures>("/features"),
-			req.get<Follow[]>("/follow"),
-			req.get<Tag[]>("/tag"),
-		]);
-		if (u) {
-			store.userInfo = u;
-		}
-		if (s) {
-			store.userSettings = s;
-		}
-		if (f) {
-			store.serverFeatures = f;
-		}
-		if (fo) {
-			store.follows = fo;
-		}
-		if (ts) {
-			store.tags = ts;
+			console.log("getInitialData: No token found, probably a guest!");
+		} else {
+			const [u, s, f, fo, ts] = await Promise.all([
+				req.get<PrivateUser>("/user"),
+				req.get<UserSettings>("/user/settings"),
+				req.get<ServerFeatures>("/features"),
+				req.get<Follow[]>("/follow"),
+				req.get<Tag[]>("/tag"),
+			]);
+			if (u) {
+				store.userInfo = u;
+			}
+			if (s) {
+				store.userSettings = s;
+			}
+			if (f) {
+				store.serverFeatures = f;
+			}
+			if (fo) {
+				store.follows = fo;
+			}
+			if (ts) {
+				store.tags = ts;
+			}
 		}
 	}
 
@@ -246,14 +245,16 @@
 			</a>
 		</div>
 		<div class="search">
-			<input
-				bind:this={mainSearchEl}
-				type="text"
-				placeholder="Search"
-				bind:value={store.searchQuery}
-				onkeydown={handleSearch}
-			/>
-			<Icon i="search" wh={19} />
+			{#if localStorage.getItem("token")}
+				<input
+					bind:this={mainSearchEl}
+					type="text"
+					placeholder="Search"
+					bind:value={store.searchQuery}
+					onkeydown={handleSearch}
+				/>
+				<Icon i="search" wh={19} />
+			{/if}
 		</div>
 		<div class="btns">
 			<!-- Detailed posters only supported on own watched list currently -->
@@ -319,52 +320,54 @@
 					<FilterMenu />
 				{/if}
 			{/if}
-			<button
-				class="plain other tag"
-				onclick={() => {
-					closeAllSubMenus("tag");
-					tagMenuShown = !tagMenuShown;
-				}}
-				use:tooltip={{ text: "Tags", pos: "bot", condition: !tagMenuShown }}
-			>
-				<Icon i="tag" />
-			</button>
-			{#if tagMenuShown}
-				<TagMenu
-					onTagClick={(tag) => {
-						goto(resolve(`/tag/${tag.id}`));
-						tagMenuShown = false;
+			{#if localStorage.getItem("token")}
+				<button
+					class="plain other tag"
+					onclick={() => {
+						closeAllSubMenus("tag");
+						tagMenuShown = !tagMenuShown;
 					}}
-					showManageBtn={true}
-				/>
-			{/if}
-			<button
-				class="plain other discover"
-				onclick={() => goto(resolve("/discover"))}
-				use:tooltip={{ text: "Discover", pos: "bot" }}
-			>
-				<Icon i="compass" wh={26} />
-			</button>
-			<button
-				class="plain other following"
-				onclick={() => {
-					closeAllSubMenus("following");
-					followingMenuShown = !followingMenuShown;
-				}}
-				use:tooltip={{
-					text: "Following",
-					pos: "bot",
-					condition: !followingMenuShown,
-				}}
-			>
-				<Icon i="people" wh={26} />
-			</button>
-			{#if followingMenuShown}
-				<FollowingMenu close={() => (followingMenuShown = false)} />
-			{/if}
-			<button class="plain face" onclick={handleProfileClick}>:)</button>
-			{#if subMenuShown}
-				<FaceMenu />
+					use:tooltip={{ text: "Tags", pos: "bot", condition: !tagMenuShown }}
+				>
+					<Icon i="tag" />
+				</button>
+				{#if tagMenuShown}
+					<TagMenu
+						onTagClick={(tag) => {
+							goto(resolve(`/tag/${tag.id}`));
+							tagMenuShown = false;
+						}}
+						showManageBtn={true}
+					/>
+				{/if}
+				<button
+					class="plain other discover"
+					onclick={() => goto(resolve("/discover"))}
+					use:tooltip={{ text: "Discover", pos: "bot" }}
+				>
+					<Icon i="compass" wh={26} />
+				</button>
+				<button
+					class="plain other following"
+					onclick={() => {
+						closeAllSubMenus("following");
+						followingMenuShown = !followingMenuShown;
+					}}
+					use:tooltip={{
+						text: "Following",
+						pos: "bot",
+						condition: !followingMenuShown,
+					}}
+				>
+					<Icon i="people" wh={26} />
+				</button>
+				{#if followingMenuShown}
+					<FollowingMenu close={() => (followingMenuShown = false)} />
+				{/if}
+				<button class="plain face" onclick={handleProfileClick}>:)</button>
+				{#if subMenuShown}
+					<FaceMenu />
+				{/if}
 			{/if}
 		</div>
 	</div>
