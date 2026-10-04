@@ -212,7 +212,7 @@ func (s *Service) SetWatchedEpisode(
 
 	if ar.Status != "" {
 		slog.Debug("SetWatchedEpisode: Episode status was changed, calling hook.")
-		resp.EpisodeStatusChangedHookResponse =
+		resp.StatusChangedHookResponse =
 			s.hookStatusChanged(
 				userId,
 				ar.WatchedID,
@@ -267,10 +267,21 @@ func (s *Service) rmWatchedEpisode(userId uint, id uint) (entity.Activity, error
 	return entity.Activity{}, errors.New("removed, but failed to add activity entry")
 }
 
-func (s *Service) getNumberOfWatchedEpisodesInSeason(userId uint, watchedId uint, seasonNumber int, acceptableStatus []entity.WatchedStatus) (int64, error) {
+func (s *Service) getNumberOfWatchedEpisodesInSeason(
+	userId uint,
+	watchedId uint,
+	seasonNumber int,
+	acceptableStatus []entity.WatchedStatus,
+) (int64, error) {
 	var count int64
-	if res := s.db.Model(&entity.WatchedEpisode{}).Where("user_id = ? AND watched_id = ? AND season_number = ? AND status IN ?", userId, watchedId, seasonNumber, acceptableStatus).Count(&count); res.Error != nil {
-		return 0, res.Error
+	err := s.db.
+		Model(&entity.WatchedEpisode{}).
+		Where("user_id = ? AND watched_id = ? AND season_number = ? AND status IN ?",
+			userId, watchedId, seasonNumber, acceptableStatus).
+		Count(&count).
+		Error
+	if err != nil {
+		return 0, err
 	}
 	return count, nil
 }

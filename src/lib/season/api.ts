@@ -69,6 +69,34 @@ export async function updateWatchedSeason(
 			watchedItem.activity.push(...r.addedActivities);
 		}
 
+		try {
+			const hookResp = r?.statusChangedHookResponse;
+			if (hookResp && Object.keys(hookResp).length > 0) {
+				if (hookResp.errors && hookResp.errors.length > 0) {
+					console.error(
+						"statusChangedHookResponse contained errors! All possible automations may not have been completed.",
+						hookResp.errors,
+					);
+					notify({
+						type: "error",
+						text: "Some automations have failed, check console for more info.",
+					});
+				}
+				if (hookResp.addedActivities && hookResp.addedActivities.length > 0) {
+					watchedItem.activity.push(...hookResp.addedActivities);
+				}
+				if (hookResp.newShowStatus) {
+					watchedItem.status = hookResp.newShowStatus;
+				}
+			}
+		} catch (err) {
+			console.error("Failed to process statusChangedHookResponse", err);
+			notify({
+				type: "error",
+				text: "Failed to process automation response, check console for more info.",
+			});
+		}
+
 		notify({ id: nid, text: `Saved!`, type: "success" });
 	} catch (err) {
 		console.error("updateWatchedSeason: Failed!", err);
@@ -151,50 +179,48 @@ export async function updateWatchedEpisode(
 		}
 
 		try {
-			const epHookResp = r?.episodeStatusChangedHookResponse;
-			if (epHookResp && Object.keys(epHookResp).length > 0) {
-				if (epHookResp.errors && epHookResp.errors.length > 0) {
+			const hookResp = r?.statusChangedHookResponse;
+			if (hookResp && Object.keys(hookResp).length > 0) {
+				if (hookResp.errors && hookResp.errors.length > 0) {
 					console.error(
-						"episodeStatusChangedHookResponse contained errors! All possible automations may not have been completed.",
-						epHookResp.errors,
+						"episode: StatusChangedHookResponse contained errors! All possible automations may not have been completed.",
+						hookResp.errors,
 					);
 					notify({
 						type: "error",
 						text: "Some automations have failed, check console for more info.",
 					});
 				}
-				if (
-					epHookResp.addedActivities &&
-					epHookResp.addedActivities.length > 0
-				) {
-					watchedItem.activity.push(...epHookResp.addedActivities);
+				if (hookResp.addedActivities && hookResp.addedActivities.length > 0) {
+					watchedItem.activity.push(...hookResp.addedActivities);
 				}
-				if (epHookResp.watchedSeason) {
+				if (hookResp.watchedSeason) {
 					if (!watchedItem.watchedSeasons) {
-						watchedItem.watchedSeasons = [epHookResp.watchedSeason];
+						watchedItem.watchedSeasons = [hookResp.watchedSeason];
 					} else {
 						const watchedSeasonIdx = watchedItem.watchedSeasons.findIndex(
-							(s) => s.id === epHookResp.watchedSeason?.id,
+							(s) => s.id === hookResp.watchedSeason?.id,
 						);
 						if (watchedSeasonIdx === -1) {
-							watchedItem.watchedSeasons.push(epHookResp.watchedSeason);
+							watchedItem.watchedSeasons.push(hookResp.watchedSeason);
 						} else {
 							watchedItem.watchedSeasons[watchedSeasonIdx] =
-								epHookResp.watchedSeason;
+								hookResp.watchedSeason;
 						}
 					}
 				}
-				if (epHookResp.newShowStatus) {
-					watchedItem.status = epHookResp.newShowStatus;
+				if (hookResp.newShowStatus) {
+					watchedItem.status = hookResp.newShowStatus;
 				}
 			}
 		} catch (err) {
-			console.error("Failed to process episodeStatusChangedHookResponse", err);
+			console.error("Failed to process episode StatusChangedHookResponse", err);
 			notify({
 				type: "error",
 				text: "Failed to process automation response, check console for more info.",
 			});
 		}
+
 		notify({ id: nid, text: `Saved!`, type: "success" });
 	} catch (err) {
 		console.error("updateWatchedEpisode: Failed!", err);

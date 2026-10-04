@@ -27,6 +27,17 @@ type (
 		Update bool `json:"update"`
 		// Added activities.
 		AddedActivities []entity.Activity `json:"addedActivities"`
+		// Response from hook
+		StatusChangedHookResponse SeasonStatusChangedHookResponse `json:"statusChangedHookResponse,omitzero"`
+	}
+
+	SeasonStatusChangedHookResponse struct {
+		// The watched shows status if we modified it.
+		NewShowStatus entity.WatchedStatus `json:"newShowStatus,omitempty"`
+		// All activies we have added.
+		AddedActivities []entity.Activity `json:"addedActivities,omitempty"`
+		// All errors (fatal and non-fatal) that were encountered.
+		Errors []string `json:"errors,omitempty"`
 	}
 
 	// Set Watched Season provider.

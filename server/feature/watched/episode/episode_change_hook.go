@@ -63,6 +63,7 @@ func (s *Service) hookStatusChanged(
 	// Set the episodes *season* status.
 	// SetWatchedSeason is idempotent so we don't need to worry if nothing will
 	// change.
+	seasonSetRespSetNewShowStatus := false
 	seasonSetResp, err := s.hookStatusChangedSetSeasonStatus(
 		userID,
 		watchedID,
@@ -76,14 +77,40 @@ func (s *Service) hookStatusChanged(
 			"error", err)
 		hookResponse.Errors = append(hookResponse.Errors, "failed to update season")
 	} else {
+		slog.Debug("hookStatusChanged: hookStatusChangedSetSeasonStatus done.",
+			"seasonSetResp", seasonSetResp)
+
+		// Set stuff from SetSeason
 		hookResponse.WatchedSeason = &seasonSetResp.WatchedSeason
-		hookResponse.AddedActivities = append(
-			hookResponse.AddedActivities, seasonSetResp.AddedActivities...)
+		if len(seasonSetResp.AddedActivities) > 0 {
+			hookResponse.AddedActivities = append(hookResponse.AddedActivities,
+				seasonSetResp.AddedActivities...)
+		}
+
+		// Set stuff from SetSeason status change hook
+		h := seasonSetResp.StatusChangedHookResponse
+		if len(h.AddedActivities) > 0 {
+			hookResponse.AddedActivities = append(hookResponse.AddedActivities,
+				h.AddedActivities...)
+		}
+		if h.NewShowStatus != "" {
+			seasonSetRespSetNewShowStatus = true
+			hookResponse.NewShowStatus = h.NewShowStatus
+			// Updating status on watchedEntry so the logic below that checks
+			// it has an updated value.
+			watchedEntry.Status = hookResponse.NewShowStatus
+		}
 	}
 
-	// Update main show watched entry status.
-	// Show status shouldn't be empty, but watevs, handle it just incase
-	if watchedEntry.Status == "" || watchedEntry.Status == entity.PLANNED {
+	// Update main show watched entry status to WATCHING if it is currently
+	// PLANNED and the new episode status is WATCHING or FINISHED.
+	// Show status shouldn't be empty, but watevs, handle it just incase.
+	// We don't do anything if the set season call has set a new show status,
+	// to avoid conflicts (eg: SetStatus sets show to PLANNED, then we set it
+	// back to WATCHING here right after..).
+	if !seasonSetRespSetNewShowStatus &&
+		(newEpStatus == entity.WATCHING || newEpStatus == entity.FINISHED) &&
+		(watchedEntry.Status == "" || watchedEntry.Status == entity.PLANNED) {
 		watchedEntry.Status = entity.WATCHING
 		if res := s.db.Save(watchedEntry); res.Error != nil {
 			slog.Error("hookStatusChanged: Failed to update show status!",
@@ -121,6 +148,18 @@ func (s *Service) hookStatusChangedSetSeasonStatus(
 	seasonNewStatus := newEpStatus
 
 	if newEpStatus == entity.FINISHED || newEpStatus == entity.DROPPED {
+		seasonNewStatus = entity.WATCHING
+	}
+
+	if newEpStatus == entity.PLANNED && episodeNum != 1 {
+		// Only setting the first episode to PLANNED should set the season to
+		// PLANNED too.. all other episodes, PLANNED = season set to WATCHING.
+		// I think this flows better and makes more sense. Doesn't work if you
+		// like watching your tv shows backwards, but I don't do that (cuz sadly
+		// im just human).
+		// NOTE: I think this change is good for PLANNED, but I'm leaving HELD
+		// status alone, since thats a different use case I think makes sense
+		// for the season to take that status too?
 		seasonNewStatus = entity.WATCHING
 	}
 

@@ -214,7 +214,7 @@
 							<ActivityIcon
 								icon="sparkles"
 								tooltipText={a.reason
-									? `Automated because ${a.reason}`
+									? `(Automated) ${a.reason}`
 									: "Completed by an automation."}
 							/>
 						{:else if a.createdBy == ActivityCreatedBy.GenericImport}

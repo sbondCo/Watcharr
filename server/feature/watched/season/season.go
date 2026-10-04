@@ -4,27 +4,43 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"strconv"
 
 	"github.com/sbondCo/Watcharr/activity"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
+	"github.com/sbondCo/Watcharr/media/tmdb"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 type WatchedProvider interface {
+	GetWatchedItemById(userId uint, id uint) (entity.Watched, error)
 	IsWatchedItemContentType(userId uint, id uint, ct entity.ContentType) error
 }
 
-type Service struct {
-	db *gorm.DB
-	wp WatchedProvider
+type UserProvider interface {
+	UserGetSettings(userId uint) (entity.UserSettings, error)
 }
 
-func NewService(db *gorm.DB, wp WatchedProvider) *Service {
+type Service struct {
+	db           *gorm.DB
+	wp           WatchedProvider
+	userProvider UserProvider
+	tmdb         *tmdb.TMDB
+}
+
+func NewService(
+	db *gorm.DB,
+	wp WatchedProvider,
+	userProvider UserProvider,
+	tmdb *tmdb.TMDB,
+) *Service {
 	return &Service{
 		db,
 		wp,
+		userProvider,
+		tmdb,
 	}
 }
 
@@ -180,6 +196,17 @@ func (s *Service) SetWatchedSeason(
 	resp.WatchedSeason = *wSeason
 	resp.AddedActivities = addedActivities
 
+	if ar.Status != "" {
+		slog.Debug("SetWatchedSeason: Season status was changed, calling hook.")
+		resp.StatusChangedHookResponse =
+			s.hookStatusChanged(
+				userId,
+				ar.WatchedID,
+				ar.SeasonNumber,
+				ar.Status,
+			)
+	}
+
 	return resp, nil
 }
 
@@ -215,4 +242,63 @@ func (s *Service) RmWatchedSeason(userId uint, seasonId uint) (entity.Activity, 
 		return addedActivity, nil
 	}
 	return entity.Activity{}, errors.New("removed, but failed to add activity entry")
+}
+
+func (s *Service) getNumberOfWatchedSeasonsInShow(
+	userID uint,
+	watchedID uint,
+	acceptableStatus []entity.WatchedStatus,
+) (int64, error) {
+	var count int64
+	err := s.db.
+		Model(&entity.WatchedSeason{}).
+		Where("user_id = ? AND watched_id = ? AND status IN ?",
+			userID, watchedID, acceptableStatus).
+		Count(&count).
+		Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// Checks if all the Seasons for the given show are completed.
+func (s *Service) allSeasonsCompletedForShow(
+	userID uint,
+	watchedID uint,
+	tmdbID int,
+) (bool, error) {
+	// Get total amount of seasons for this show.
+	content, err := s.tmdb.ShowDetails(tmdb.ShowDetailsOptions{
+		ID: strconv.Itoa(tmdbID),
+	})
+	if err != nil {
+		slog.Error("allSeasonsCompletedForShow: Couldn't get ShowDetails",
+			"error", err)
+		return false, err
+	}
+
+	// Get total amount of FINISHED/DROPPED watched seasons
+	completedSeasonsCount, err := s.getNumberOfWatchedSeasonsInShow(
+		userID,
+		watchedID,
+		[]entity.WatchedStatus{entity.FINISHED, entity.DROPPED},
+	)
+	if err != nil {
+		slog.Error("allSeasonsCompletedForShow: Failed to get number of completed seasons!",
+			"error", err)
+		return false, err
+	}
+	slog.Debug("allSeasonsCompletedForShow: Got counts.",
+		"allSeasonsCount", content.NumberOfSeasons,
+		"completedSeasonsCount", completedSeasonsCount)
+
+	// Counts check
+	if completedSeasonsCount >= int64(content.NumberOfSeasons) {
+		slog.Debug("allSeasonsCompletedForShow: YES.")
+		return true, nil
+	}
+
+	slog.Debug("allSeasonsCompletedForShow: NO.")
+	return false, nil
 }
