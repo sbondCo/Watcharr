@@ -58,6 +58,7 @@ These changes are awaiting release:
     - Way less complicated logic and moved bits of logic that could be reused to its own function.
     - Now uses `SetWatchedSeason` instead of updating it in db itself.
 - Upgraded @sveltejs/kit: 2.69.3 -> 2.70.3.
+- Tooltip: Improve action show() logic readability & add new styleNoCapitalize option for disabling text capitalization style.
 
 # [4.2.2] - 2026-09-12T21:00:01Z
 
