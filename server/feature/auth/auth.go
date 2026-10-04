@@ -444,12 +444,13 @@ func (s *Service) GetUserIDFromServiceClientId(
 		Model(&entity.UserServices{}).
 		Select("user_id").
 		Where("name = ? AND client_id = ?", name, cid).
-		Scan(&userId).
+		Take(&userId).
 		Error
 	if err != nil {
 		slog.Error("GetUserIDFromServiceClientId: Lookup failed.", "error", err)
 		// This importantly should always return `err` from gorm as dependants
-		// check for type of error.
+		// check for type of error (eg login caller needing to check
+		// gorm.ErrRecordNotFound to create a user in that case).
 		return 0, err
 	}
 	if userId == 0 {
