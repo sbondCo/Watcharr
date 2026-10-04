@@ -29,7 +29,7 @@ type (
 		// Added activities.
 		AddedActivities []entity.Activity `json:"addedActivities,omitempty"`
 		// Response from hook
-		EpisodeStatusChangedHookResponse EpisodeStatusChangedHookResponse `json:"episodeStatusChangedHookResponse,omitzero"`
+		StatusChangedHookResponse EpisodeStatusChangedHookResponse `json:"statusChangedHookResponse,omitzero"`
 	}
 
 	EpisodeStatusChangedHookResponse struct {

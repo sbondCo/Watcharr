@@ -229,18 +229,25 @@ export interface WatchedSeasonSetResponse {
 	watchedSeason: WatchedSeason;
 	update: boolean;
 	addedActivities?: Activity[];
+	statusChangedHookResponse?: SeasonStatusChangedHookResponse;
 }
 
 export interface WatchedEpisodeSetResponse {
 	watchedEpisode: WatchedEpisode;
 	update: boolean;
 	addedActivities?: Activity[];
-	episodeStatusChangedHookResponse?: EpisodeStatusChangedHookResponse;
+	statusChangedHookResponse?: EpisodeStatusChangedHookResponse;
 }
 
 export interface EpisodeStatusChangedHookResponse {
 	newShowStatus?: WatchedStatus;
 	watchedSeason?: WatchedSeason;
+	addedActivities?: Activity[];
+	errors?: string[];
+}
+
+export interface SeasonStatusChangedHookResponse {
+	newShowStatus?: WatchedStatus;
 	addedActivities?: Activity[];
 	errors?: string[];
 }

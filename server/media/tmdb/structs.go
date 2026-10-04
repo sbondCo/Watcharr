@@ -276,7 +276,6 @@ type ContentDetails struct {
 		Iso31661 string `json:"iso_3166_1"`
 		Name     string `json:"name"`
 	} `json:"production_countries"`
-	Status          string  `json:"status"`
 	Tagline         string  `json:"tagline"`
 	VoteAverage     float32 `json:"vote_average"`
 	VoteCount       uint32  `json:"vote_count"`
@@ -307,7 +306,6 @@ func (t *ContentDetails) AsMedia() domain.Media {
 		Rating:          uint(t.VoteAverage * 10),
 		RatingCount:     uint(t.VoteCount),
 		Homepage:        t.Homepage,
-		Status:          t.Status,
 	}
 	// Genres
 	for _, g := range t.Genres {
@@ -369,6 +367,8 @@ type MovieDetails struct {
 	Runtime             uint32 `json:"runtime"`
 	Title               string `json:"title"`
 	Video               bool   `json:"video"`
+
+	Status MovieStatus `json:"status"`
 
 	// Extra items because we use `append_to_response` on the request
 	ExternalIds ExternalIdsMovie `json:"external_ids"`
@@ -491,6 +491,8 @@ type ShowDetails struct {
 		SeasonNumber int    `json:"season_number"`
 	} `json:"seasons"`
 	Type string `json:"type"`
+
+	Status ShowStatus `json:"status"`
 
 	// Extra items because we use `append_to_response` on the request
 	ExternalIds ExternalIdsShow `json:"external_ids"`
@@ -985,6 +987,28 @@ func (t *PopularPeopleResult) AsMedia() domain.Media {
 //
 //
 //
+
+type MovieStatus string
+
+const (
+	MovieStatusRumored        MovieStatus = "Rumored"
+	MovieStatusPlanned        MovieStatus = "Planned"
+	MovieStatusInProduction   MovieStatus = "In Production"
+	MovieStatusPostProduction MovieStatus = "Post Production"
+	MovieStatusReleased       MovieStatus = "Released"
+	MovieStatusCanceled       MovieStatus = "Canceled"
+)
+
+type ShowStatus string
+
+const (
+	ShowStatusReturningSeries ShowStatus = "Returning Series"
+	ShowStatusPlanned         ShowStatus = "Planned"
+	ShowStatusInProduction    ShowStatus = "In Production"
+	ShowStatusEnded           ShowStatus = "Ended"
+	ShowStatusCanceled        ShowStatus = "Canceled"
+	ShowStatusPilot           ShowStatus = "Pilot"
+)
 
 // Watch providers in one country
 type WatchProviders struct {

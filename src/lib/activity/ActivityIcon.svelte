@@ -15,6 +15,7 @@
 	use:tooltip={{
 		text: tooltipText,
 		pos: "top",
+		styleNoCapitalize: true,
 	}}
 	style="width: 20px; height: 20px;"
 >

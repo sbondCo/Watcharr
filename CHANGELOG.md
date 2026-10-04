@@ -13,6 +13,9 @@ These changes are awaiting release:
 - Handbook: A new way for Watcharr to help out when you aren't sure what to do. In beta stages, but the vision is all Watcharr documentation relating to usage/configuring will be directly accessible from where you are doing something that you may want further explanation on.
   - The external documentation site will still exist, but be more for initial install guides.
   - The new handbook will be accessible as a standalone page, or as small `?` buttons next to certain features that open up the related handbook entry in a popup modal.
+- Automation: Added season status change hook, which currently supports updating the series top-level status automatically depending on all season statuses.
+  - Series is PLANNED & new season set to WATCHING/FINISHED -> Series updated to WATCHING.
+  - All seasons in series are completed -> (if show ended: Series updated to FINISHED), (if show is continuing: Series updated to PLANNED).
 
 ## Changed
 
@@ -26,6 +29,7 @@ These changes are awaiting release:
   - The old logic and db queries were very gross, it now looks nicer and the queries have been optimized (rewritten to work with new logic and so that they don't include more data than necessary).
   - Shared logic that was previously just duplicated between the methods has been moved to reusable funcs.
   - (BREAKING FOR API USERS, probably no one!?) The Add/Update methods now only return the created/modified entry, rather than returning ALL entries (and a new `update` property is returned along with it to tell you if the item was created or updated). Also returns addedActivities (list, instead of old singular addedActivity).
+- Activities: Improve automated tooltip text readability by changing format and not capitalizing every word.
 
 ## Fixed
 
