@@ -6,32 +6,53 @@ export interface ToolTipOptions {
 	 * Only show tooltip if this condition is true.
 	 */
 	condition?: boolean;
+
+	/**
+	 * Disable the text capitalization style that is on by default.
+	 */
+	styleNoCapitalize?: boolean;
 }
 
 export default function tooltip(node: HTMLElement, opts: ToolTipOptions) {
-	let { text, pos = "left", condition = true } = opts;
+	let { text, pos = "left", condition = true, styleNoCapitalize } = opts;
 	const tooltip = document.getElementById("tooltip");
 
 	const show = () => {
-		const trimmedText = text?.trim();
-		if (!condition || !trimmedText) return;
-		if (tooltip) {
-			tooltip.innerHTML = trimmedText;
-			const nrect = node.getBoundingClientRect();
-			const trect = tooltip.getBoundingClientRect();
-			nrect.y += window.scrollY; // Add scrollY to node dom rect so tooltip shows correcting when page is scrolled down
-			if (pos === "left") {
-				tooltip.style.left = `${nrect.x - trect.width - 10}px`;
-				tooltip.style.top = `${nrect.y + trect.height / 2 - 19.5}px`;
-			} else if (pos === "top") {
-				tooltip.style.left = `${nrect.x - trect.width / 2 + nrect.width / 2}px`;
-				tooltip.style.top = `${nrect.y - trect.height - 5}px`;
-			} else if (pos === "bot") {
-				tooltip.style.left = `${nrect.x - trect.width / 2 + nrect.width / 2}px`;
-				tooltip.style.top = `${nrect.y + trect.height + 5}px`;
-			}
-			tooltip.style.visibility = "visible";
+		if (!tooltip) {
+			console.error("tooltip element wasn't found!");
+			return;
 		}
+		if (!condition) {
+			return;
+		}
+
+		const trimmedText = text?.trim();
+		if (!trimmedText) {
+			return;
+		}
+		tooltip.innerHTML = trimmedText;
+
+		const nrect = node.getBoundingClientRect();
+		const trect = tooltip.getBoundingClientRect();
+		nrect.y += window.scrollY; // Add scrollY to node dom rect so tooltip shows correcting when page is scrolled down
+		if (pos === "left") {
+			tooltip.style.left = `${nrect.x - trect.width - 10}px`;
+			tooltip.style.top = `${nrect.y + trect.height / 2 - 19.5}px`;
+		} else if (pos === "top") {
+			tooltip.style.left = `${nrect.x - trect.width / 2 + nrect.width / 2}px`;
+			tooltip.style.top = `${nrect.y - trect.height - 5}px`;
+		} else if (pos === "bot") {
+			tooltip.style.left = `${nrect.x - trect.width / 2 + nrect.width / 2}px`;
+			tooltip.style.top = `${nrect.y + trect.height + 5}px`;
+		}
+
+		if (styleNoCapitalize) {
+			tooltip.classList.add("no-capitalize");
+		} else {
+			tooltip.classList.remove("no-capitalize");
+		}
+
+		tooltip.style.visibility = "visible";
 	};
 
 	const hide = () => {
@@ -51,6 +72,7 @@ export default function tooltip(node: HTMLElement, opts: ToolTipOptions) {
 			text = opts.text;
 			pos = opts.pos || "left";
 			condition = opts.condition ?? true;
+			styleNoCapitalize = opts.styleNoCapitalize;
 		},
 		destroy() {
 			node.removeEventListener("mouseover", show);

@@ -231,6 +231,10 @@
 			top 100ms ease,
 			left 100ms ease;
 		pointer-events: none;
+
+		&.no-capitalize {
+			text-transform: unset;
+		}
 	}
 }
 
