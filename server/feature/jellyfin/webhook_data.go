@@ -44,6 +44,10 @@ type WebhookData struct {
 	//
 
 	EpisodeNumber int
+	// For multi episode files, this will have the final episode number (IndexNumberEnd).
+	// Will be unset (0) when the episode file is just one episode, so we can
+	// ignore this when it is zero.
+	EpisodeNumberEnd int
 
 	// Only for `NotificationType == PlaybackStop`.
 	// Tells us if this Playback resulted in a completed play.
