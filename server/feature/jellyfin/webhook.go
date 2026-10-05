@@ -77,13 +77,6 @@ func (w *WebhookService) Ingest(data WebhookData) error {
 	}
 }
 
-// TODO Check user settings (Do they have auto jf sync enabled?,
-// probs default that setting to true)
-
-// TODO We should exit to avoid spamming exact same updates (user plays, stops, plays more, then finished)?
-// ALTHOUGH how'd we ensure we aren't skipping valid events, like
-// user playing it again later where we failed to save their finished event before?
-
 // Process PlaybackStart event.
 func (w *WebhookService) processPlaybackStart(data *WebhookData) error {
 	return w.track(data)
@@ -298,7 +291,7 @@ func (w *WebhookService) applyStatusToWatched(
 	return nil
 }
 
-// Apply status to series episode.
+// Apply status to series episode(s).
 func (w *WebhookService) applyStatusToSeriesEpisode(
 	data *WebhookData,
 	user *entity.User,
@@ -308,16 +301,49 @@ func (w *WebhookService) applyStatusToSeriesEpisode(
 	if data.SeasonNumber == nil || data.EpisodeNumber == 0 {
 		return errors.New("no season and or episode number")
 	}
-	w.episodeProvider.SetWatchedEpisode(
-		user.ID,
-		domain.WatchedEpisodeSetRequest{
-			WatchedID:         watchedID,
-			SeasonNumber:      *data.SeasonNumber,
-			EpisodeNumber:     data.EpisodeNumber,
-			Status:            newStatus,
-			ActivityCreatedBy: entity.ActivityCreatedByJellyfinWebhook,
-		},
-	)
+
+	slog.Debug("applyStatusToSeriesEpisode: Applying for episode(s).",
+		"episodeNumber", data.EpisodeNumber,
+		"episodeNumberEnd", data.EpisodeNumberEnd,
+		"seasonNumber", data.SeasonNumber)
+
+	// We handle multi episode files by checking the difference between
+	// EpisodeNumber and EpisodeNumberEnd and setting that many episodes.
+	diff := 0
+
+	// If EpisodeNumberEnd is 0, then we ignore it as it isn't set.
+	// Also a sanity check that the End number is bigger, so a bug in jellyfin
+	// can't break our math (nothing bad would happen, but its good to be sure).
+	if data.EpisodeNumberEnd != 0 && data.EpisodeNumberEnd > data.EpisodeNumber {
+		diff = data.EpisodeNumberEnd - data.EpisodeNumber
+		slog.Debug("applyStatusToSeriesEpisode: Set difference.", "diff", diff)
+	}
+
+	for i := 0; i < diff+1; i++ {
+		epNum := data.EpisodeNumber + i
+		slog.Debug("applyStatusToSeriesEpisode: SetWatchedEpisode loop.",
+			"episode_num", epNum, "i", i)
+		r, err := w.episodeProvider.SetWatchedEpisode(
+			user.ID,
+			domain.WatchedEpisodeSetRequest{
+				WatchedID:         watchedID,
+				SeasonNumber:      *data.SeasonNumber,
+				EpisodeNumber:     epNum,
+				Status:            newStatus,
+				ActivityCreatedBy: entity.ActivityCreatedByJellyfinWebhook,
+			},
+		)
+		if err != nil {
+			slog.Error("applyStatusToSeriesEpisode: SetWatchedEpisode errored!",
+				"error", err)
+			// No point in returning err, just let any other episodes attempt
+			// to be updated next.
+		} else {
+			slog.Debug("applyStatusToSeriesEpisode: SetWatchedEpisode succeeded.",
+				"response", r)
+		}
+	}
+
 	return nil
 }
 
@@ -341,6 +367,8 @@ func (w *WebhookService) decideNewWatchedStatus(
 		if data.Played {
 			newStatus = entity.FINISHED
 		} else {
+			// If the user toggles an item back to unplayed, it's most likely
+			// because they are planning to watch it again now or later.
 			newStatus = entity.PLANNED
 		}
 	}
