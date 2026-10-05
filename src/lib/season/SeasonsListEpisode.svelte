@@ -112,8 +112,9 @@
 <li class={isHidden ? "dont-spoil" : ""}>
 	{#if ep.still_path}
 		<img
-			src={`https://www.themoviedb.org/t/p/w227_and_h127_bestv2/${ep.still_path}`}
+			src={`https://www.themoviedb.org/t/p/w500/${ep.still_path}`}
 			alt=""
+			loading="lazy"
 		/>
 	{:else}
 		<div class="no-still"></div>

@@ -36,6 +36,7 @@ These changes are awaiting release:
 - Auth: UserChangePassword: Added `User.Type` check.
 - Watched: UpdateWatched now only saves actual changes (ignores same values) & now returns all created activities (if multiple are added). Activities are returned in a list now, so this may be a breaking change for you if you rely on manual api access and you look at this value.
 - PosterStatus: Icons being very small in minimal mode (Season/Episode Status Buttons).
+- SeasonListEpisode: Increase episode image resolution (so they aren't blurry) & use lazy loading. https://github.com/sbondCo/Watcharr/issues/1100
 
 ## Maintenance
 
