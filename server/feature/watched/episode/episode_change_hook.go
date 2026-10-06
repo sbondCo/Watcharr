@@ -161,6 +161,15 @@ func (s *Service) hookStatusChangedSetSeasonStatus(
 		// status alone, since thats a different use case I think makes sense
 		// for the season to take that status too?
 		seasonNewStatus = entity.WATCHING
+		// UNLESS We have a WatchedSeason and its status is on PLANNED right
+		// now. In that case, we will keep it at PLANNED!
+		ws, err := s.wsp.GetWatchedSeason(userID, watchedID, seasonNum)
+		if err != nil {
+			slog.Error("hookStatusChangedSetSeasonStatus: Failed to GetWatchedSeason. Default behavior will continue.",
+				"error", err)
+		} else if ws != nil && ws.Status == entity.PLANNED {
+			seasonNewStatus = entity.PLANNED
+		}
 	}
 
 	if newEpStatus == entity.FINISHED {
