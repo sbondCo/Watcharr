@@ -587,6 +587,8 @@ export enum ImportResponseType {
 	IMPORT_MULTI = "IMPORT_MULTI",
 	IMPORT_NOTFOUND = "IMPORT_NOTFOUND",
 	IMPORT_EXISTS = "IMPORT_EXISTS",
+	IMPORT_RATING_UPDATED = "IMPORT_RATING_UPDATED",
+	IMPORT_EPISODES_UPDATED = "IMPORT_EPISODES_UPDATED",
 }
 
 export interface ImportResponse {
@@ -614,6 +616,13 @@ export interface ImportedList {
 	watchedEpisodes?: WatchedEpisode[];
 	watchedSeasons?: WatchedSeason[];
 	tags?: TagAddRequest[];
+	/**
+	 * How many episodes have been watched, for sources that only give a total
+	 * rather than saying which episodes they were (a MyAnimeList export is the
+	 * case we have). The server fills it into the matched shows first season,
+	 * clamped to that season.
+	 */
+	watchedEpisodesCount?: number;
 }
 
 export interface Filters {
