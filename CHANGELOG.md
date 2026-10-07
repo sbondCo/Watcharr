@@ -1994,3 +1994,4 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@tonghuaroot]: https://github.com/tonghuaroot
 [@KarpachMarko]: https://github.com/KarpachMarko
 [@LeonNamowitz]: https://github.com/LeonNamowitz
+[@fjacques-2025]: https://github.com/fjacques-2025
