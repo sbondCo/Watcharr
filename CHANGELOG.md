@@ -37,6 +37,7 @@ These changes are awaiting release:
 - Watched: UpdateWatched now only saves actual changes (ignores same values) & now returns all created activities (if multiple are added). Activities are returned in a list now, so this may be a breaking change for you if you rely on manual api access and you look at this value.
 - PosterStatus: Icons being very small in minimal mode (Season/Episode Status Buttons).
 - SeasonListEpisode: Increase episode image resolution (so they aren't blurry) & use lazy loading. https://github.com/sbondCo/Watcharr/issues/1100
+- Allow View Trailer to be fullscreened (thanks to [@LeonNamowitz] in https://github.com/sbondCo/Watcharr/pull/1106)
 
 ## Maintenance
 
@@ -1990,3 +1991,4 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@goestav]: https://github.com/goestav
 [@tonghuaroot]: https://github.com/tonghuaroot
 [@KarpachMarko]: https://github.com/KarpachMarko
+[@LeonNamowitz]: https://github.com/LeonNamowitz
