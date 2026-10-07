@@ -43,6 +43,9 @@ var (
 	IMPORT_NOTFOUND ImportResponseType = "IMPORT_NOTFOUND"
 	// Item already exists so couldn't import (unique constraint hit when adding)
 	IMPORT_EXISTS ImportResponseType = "IMPORT_EXISTS"
+	// Item already existed, but it had no rating, so the rating from the
+	// import was filled in on the existing entry.
+	IMPORT_RATING_UPDATED ImportResponseType = "IMPORT_RATING_UPDATED"
 )
 
 type ImportRequest struct {
