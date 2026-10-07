@@ -43,6 +43,8 @@ var (
 	IMPORT_NOTFOUND ImportResponseType = "IMPORT_NOTFOUND"
 	// Item already exists so couldn't import (unique constraint hit when adding)
 	IMPORT_EXISTS ImportResponseType = "IMPORT_EXISTS"
+	// User has chosen to skip this name, now and on any future import
+	IMPORT_IGNORED ImportResponseType = "IMPORT_IGNORED"
 )
 
 type ImportRequest struct {
@@ -62,6 +64,16 @@ type ImportRequest struct {
 	WatchedEpisodes  []entity.WatchedEpisode `json:"watchedEpisodes"`
 	WatchedSeason    []entity.WatchedSeason  `json:"watchedSeasons"`
 	Tags             []TagAddRequest         `json:"tags"`
+
+	// Skip any previously saved mapping for this name, so the user is asked
+	// to pick again. Lets a wrong saved choice be corrected, and allows
+	// re-picking everything when that is what the user wants.
+	IgnoreSavedMatches bool `json:"ignoreSavedMatches"`
+
+	// Don't import this name, now or on any future import. Set when the user
+	// gives up on matching an entry, which saves an ignored mapping instead
+	// of a match.
+	IgnoreThisItem bool `json:"ignoreThisItem"`
 }
 
 // Internal struct given to the SuccessfulImport function.
@@ -82,6 +94,17 @@ func NewSuccessfulImportPropsFromMedia(m *Media) (SuccessfulImportProps, error) 
 		return p, errors.New("unsupported content type on media")
 	}
 	return p, nil
+}
+
+// Change which content a saved mapping points at.
+type ImportMappingUpdateRequest struct {
+	TmdbID int `json:"tmdbId"`
+	IgdbID int `json:"igdbId"`
+	// Content type of the newly picked content. Only needed for mappings
+	// saved without one (an ignored name the import file gave no type to),
+	// which would otherwise hold an id with nothing to say what it is an id
+	// of. Ignored when empty, so an existing type is never lost.
+	Type ImportContentType `json:"type"`
 }
 
 type ImportResponse struct {
