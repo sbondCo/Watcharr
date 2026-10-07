@@ -23,9 +23,11 @@
 		TagAddRequest,
 		TodoMoviesCustomList,
 		TodoMoviesMovie,
+		JobCreatedResponse,
 	} from "@/types";
 	import Icon from "@/lib/Icon.svelte";
 	import { resolve } from "$app/paths";
+	import { req } from "@/lib/util/api";
 
 	let isLoading = $state(false);
 
@@ -350,6 +352,48 @@
 				type: "watcharr",
 			};
 			goto(resolve("/import/process"));
+		} catch (err) {
+			isLoading = false;
+			notify({ type: "error", text: "Failed to read file!" });
+			console.error("import: Failed to read file!", err);
+		}
+	}
+
+	async function processTraktFile(files?: FileList | null) {
+		try {
+			console.log("processWatcharrFile", files);
+			if (!files || files?.length <= 0) {
+				console.error("processTraktFile", "No files to process!");
+				notify({
+					type: "error",
+					text: "File not found in dropped items. Please try again or refresh.",
+					time: 6000,
+				});
+				return;
+			}
+			isLoading = true;
+			if (files.length > 1) {
+				notify({
+					type: "error",
+					text: "Only one file is supported. Please try again or refresh.",
+					time: 6000,
+				});
+				return;
+			}
+			// Currently only support for importing one file.
+			const file = files[0];
+			if (file.type !== "application/zip") {
+				notify({
+					type: "error",
+					text: "Must be a Trakt ZIP export file",
+				});
+				isLoading = false;
+				return;
+			}
+			var data = new FormData();
+			data.append('file', file);
+			const r = await req.post<JobCreatedResponse>("/import/trakt-zip", data);
+			//goto(resolve("/import/process"));
 		} catch (err) {
 			isLoading = false;
 			notify({ type: "error", text: "Failed to read file!" });
@@ -717,8 +761,14 @@
 
 				<button class="plain" onclick={() => goto(resolve("/import/trakt"))}>
 					<Icon i="trakt" wh="100%" />
-					<h4 class="norm">Trakt Import</h4>
+					<h4 class="norm">Trakt API Import</h4>
 				</button>
+
+				<DropFileButton
+					icon="trakt"
+					text="Trakt File Export"
+					filesSelected={(f) => processTraktFile(f)}
+				/>
 
 				<DropFileButton
 					icon="imdb"
