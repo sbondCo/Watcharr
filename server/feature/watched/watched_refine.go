@@ -80,7 +80,7 @@ func refineFilterStatus(
 
 // Applies sorts to list.
 // Takes in userId of user who owns the list we are sorting, since some sorts
-// may require it for subqueries (eg LastFinished).
+// may require it for subqueries (eg LastFinished, LastChangedEpisode).
 func refineSort(
 	db *gorm.DB,
 	userId uint,
@@ -105,6 +105,40 @@ func refineSort(
 		db.Order(obc(clause.Column{Name: "watcheds.created_at"}))
 	case domain.WatchedSortLastChanged:
 		db.Order(obc(clause.Column{Name: "watcheds.updated_at"}))
+	case domain.WatchedSortLastChangedEpisode:
+		db.
+			// This join looks for the latest episode activity of each watched
+			// entry. The date of these is used in the sort below.
+			// Note: We cannot sort on watched_episodes.updated_at, because
+			// adding one episode re-saves every episode row of that show, so
+			// a sync rewrites the column for the whole list and it ends up
+			// recording when the sync ran instead of when anything was
+			// watched. Activity rows are written once and keep the real date
+			// (importers set custom_date to the date from the source), so
+			// they are what we sort on.
+			// Note: Entries without any episode activity (movies, games and
+			// shows with no episodes marked) have no row to join to, so they
+			// sort as NULL and end up at one end of the list.
+			Joins(`LEFT JOIN (
+					SELECT
+						watched_id AS e_watched_id,
+						MAX(COALESCE(custom_date, created_at)) AS e_sort_by_date
+					FROM activities
+					WHERE
+						deleted_at IS NULL
+						AND user_id = ?
+						AND type IN ?
+					GROUP BY watched_id
+				) e ON e.e_watched_id = watcheds.id`,
+				userId,
+				[]entity.ActivityType{
+					entity.EPISODE_ADDED,
+					entity.EPISODE_ADDED_JF,
+					entity.EPISODE_ADDED_PLEX,
+					entity.EPISODE_RATING_CHANGED,
+					entity.EPISODE_STATUS_CHANGED,
+				}).
+			Order(obc(clause.Column{Name: "e.e_sort_by_date"}))
 	case domain.WatchedSortLastFinished:
 		db.
 			// This join looks for the latest activity that counts as a play
