@@ -30,6 +30,7 @@ These changes are awaiting release:
   - Shared logic that was previously just duplicated between the methods has been moved to reusable funcs.
   - (BREAKING FOR API USERS, probably no one!?) The Add/Update methods now only return the created/modified entry, rather than returning ALL entries (and a new `update` property is returned along with it to tell you if the item was created or updated). Also returns addedActivities (list, instead of old singular addedActivity).
 - Activities: Improve automated tooltip text readability by changing format and not capitalizing every word.
+- Search: Start the search instantly if "Enter" is pressed (skip the debounce).
 
 ## Fixed
 
@@ -38,6 +39,7 @@ These changes are awaiting release:
 - PosterStatus: Icons being very small in minimal mode (Season/Episode Status Buttons).
 - SeasonListEpisode: Increase episode image resolution (so they aren't blurry) & use lazy loading. https://github.com/sbondCo/Watcharr/issues/1100
 - Allow View Trailer to be fullscreened (thanks to [@LeonNamowitz] in https://github.com/sbondCo/Watcharr/pull/1106)
+- Search: Don't trim the ending whitespace from query on debounced search (thanks to [@fjacques-2025] in https://github.com/sbondCo/Watcharr/pull/1078).
 
 ## Maintenance
 
