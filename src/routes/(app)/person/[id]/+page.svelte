@@ -23,6 +23,11 @@
 	let sortOption = $state("Vote count");
 	let credits: PersonCreditsResponse | undefined = $state();
 	let onMyListFilter = $state(false);
+	// Credits per department, "Acting" plus the crew's (a director's films
+	// are under "Directing"). `credits.credits` holds the one shown.
+	let departments: Record<string, Media[]> = {};
+	let departmentNames: string[] = $state([]);
+	let department = $state("");
 
 	$effect(() => {
 		if (data.personId) {
@@ -35,6 +40,12 @@
 			sortCredits(sortOption);
 		}
 	});
+
+	function showDepartment(d: string) {
+		department = d;
+		credits = { credits: departments[d] ?? [] };
+		sortCredits(sortOption);
+	}
 
 	async function fetchPersonData() {
 		try {
@@ -57,12 +68,34 @@
 	}
 
 	async function updatePersonCredits() {
-		credits = await req.get<PersonCreditsResponse>(
+		const r = await req.get<PersonCreditsResponse>(
 			`/content/person/${data.personId}/credits`,
 		);
-		credits.credits = credits.credits?.filter(
-			(v, i, a) => a.findIndex((t) => t.ids.tmdb === v.ids.tmdb) === i,
-		); // remove duplicate entries. If an actor has multiple roles in a single movie, it would otherwise show up multiple times
+		// remove duplicate entries. If an actor has multiple roles in a single movie, it would otherwise show up multiple times
+		const dedupe = (l?: Media[]) =>
+			(l ?? []).filter(
+				(v, i, a) =>
+					a.findIndex((t) => t.ids.tmdb === v.ids.tmdb && t.type === v.type) ===
+					i,
+			);
+		departments = {};
+		const acting = dedupe(r.credits);
+		if (acting.length) departments["Acting"] = acting;
+		for (const [d, l] of Object.entries(r.crew ?? {})) {
+			const titles = dedupe(l);
+			if (titles.length) departments[d] = titles;
+		}
+		// The department TMDB says they're known for comes first and is shown
+		// (Christopher Nolan: Directing), then the others by size. Size alone
+		// would lead with "Crew" for some directors: it holds their thanks
+		// credits.
+		const known = person?.knownForDepartment;
+		const main = known && departments[known] ? known : undefined;
+		departmentNames = Object.keys(departments)
+			.filter((d) => d !== main)
+			.sort((a, b) => departments[b].length - departments[a].length);
+		if (main) departmentNames.unshift(main);
+		showDepartment(departmentNames[0] ?? "Acting");
 	}
 
 	function newestOldestSort(
@@ -199,6 +232,16 @@
 							<span>On my list</span>
 							<Checkbox name="On my list" bind:value={onMyListFilter} />
 						</div>
+						{#if departmentNames.length > 1}
+							<DropDown
+								bind:active={department}
+								placeholder="Department"
+								options={departmentNames}
+								isDropDownItem={false}
+								showActiveElementsInOptions={true}
+								onChange={() => showDepartment(department)}
+							/>
+						{/if}
 						<DropDown
 							bind:active={sortOption}
 							placeholder="Vote count"

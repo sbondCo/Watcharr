@@ -254,20 +254,28 @@ func (r *Router) GetPersonCredits(c *gin.Context) {
 	for i := range content.Cast {
 		resp.Credits = append(resp.Credits, content.Cast[i].AsMedia())
 	}
-	if err := addedtocontent.AddList(
-		r.wp,
-		userId,
-		resp.Credits,
-		func(i int, w *entity.Watched) {
-			resp.Credits[i].Watched = domain.NewWatchedDtoForLists(w)
-		},
-	); err != nil {
-		slog.Error("GetPersonCredits: Failed to add watched to content!", "error", err)
-		c.JSON(
-			http.StatusInternalServerError,
-			router.ErrorResponse{Error: "failed to add watched data to response"},
-		)
-		return
+	resp.Crew = content.CrewByDepartment()
+	// Each list (acting, then every department) gets the user's watched data.
+	lists := [][]domain.Media{resp.Credits}
+	for _, l := range resp.Crew {
+		lists = append(lists, l)
+	}
+	for _, l := range lists {
+		if err := addedtocontent.AddList(
+			r.wp,
+			userId,
+			l,
+			func(i int, w *entity.Watched) {
+				l[i].Watched = domain.NewWatchedDtoForLists(w)
+			},
+		); err != nil {
+			slog.Error("GetPersonCredits: Failed to add watched to content!", "error", err)
+			c.JSON(
+				http.StatusInternalServerError,
+				router.ErrorResponse{Error: "failed to add watched data to response"},
+			)
+			return
+		}
 	}
 	c.JSON(http.StatusOK, resp)
 }

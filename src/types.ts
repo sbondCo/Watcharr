@@ -485,7 +485,10 @@ export interface PersonDetailsResponse {
 }
 
 export interface PersonCreditsResponse {
+	/** Acting credits. */
 	credits?: Media[];
+	/** Credits behind the camera, by TMDB department ("Directing", "Writing"…). */
+	crew?: Record<string, Media[]>;
 }
 
 export interface TMDBSeasonDetails {

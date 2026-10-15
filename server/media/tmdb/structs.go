@@ -2,6 +2,7 @@ package tmdb
 
 import (
 	"log/slog"
+	"strconv"
 	"strings"
 	"time"
 
@@ -695,7 +696,36 @@ func (t *PersonDetails) AsPersonDetailsResponse() domain.PersonDetailsResponse {
 type PersonCombinedCredits struct {
 	ID   int                               `json:"id"`
 	Cast []PersonCombinedCreditsCastResult `json:"cast"`
-	// crew PersonCombinedCreditsCrew
+	Crew []PersonCombinedCreditsCrewResult `json:"crew"`
+}
+
+// A crew credit has the same fields as a cast one (bar the character), plus
+// the job behind the camera.
+type PersonCombinedCreditsCrewResult struct {
+	PersonCombinedCreditsCastResult
+	Department string `json:"department"`
+	Job        string `json:"job"`
+}
+
+// CrewByDepartment groups crew credits by TMDB department ("Directing",
+// "Writing"…), one entry per title: TMDB lists a title once per job, so a
+// producer and executive producer of the same film would appear twice.
+func (c *PersonCombinedCredits) CrewByDepartment() map[string][]domain.Media {
+	out := map[string][]domain.Media{}
+	seen := map[string]bool{}
+	for i := range c.Crew {
+		cr := &c.Crew[i]
+		if cr.Department == "" || (cr.MediaType != "movie" && cr.MediaType != "tv") {
+			continue
+		}
+		key := cr.Department + "|" + cr.MediaType + "|" + strconv.Itoa(cr.ID)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out[cr.Department] = append(out[cr.Department], cr.AsMedia())
+	}
+	return out
 }
 
 type PersonCombinedCreditsCastResult struct {

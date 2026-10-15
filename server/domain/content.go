@@ -7,7 +7,11 @@ type ContentDetailsResponse struct {
 }
 
 type PersonCreditsResponse struct {
+	// Acting credits.
 	Credits []Media `json:"credits,omitempty"`
+	// Credits behind the camera by TMDB department ("Directing", "Writing"…),
+	// one entry per title. Without these a director's page was near empty.
+	Crew map[string][]Media `json:"crew,omitempty"`
 }
 
 type PersonDetailsResponse struct {
