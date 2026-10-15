@@ -28,6 +28,7 @@
 	let departments: Record<string, Media[]> = {};
 	let departmentNames: string[] = $state([]);
 	let department = $state("");
+	const ALL = "All";
 
 	$effect(() => {
 		if (data.personId) {
@@ -71,31 +72,46 @@
 		const r = await req.get<PersonCreditsResponse>(
 			`/content/person/${data.personId}/credits`,
 		);
-		// remove duplicate entries. If an actor has multiple roles in a single movie, it would otherwise show up multiple times
-		const dedupe = (l?: Media[]) =>
-			(l ?? []).filter(
-				(v, i, a) =>
-					a.findIndex((t) => t.ids.tmdb === v.ids.tmdb && t.type === v.type) ===
-					i,
-			);
+		// One object per title across every list: marking a film watched under
+		// "Directing" must show under "Writing" and "All" too. Also removes
+		// duplicate entries (an actor with several roles in one film, a
+		// director with several jobs on it).
+		const byTitle: Record<string, Media> = {};
+		const titles = (l?: Media[]) => {
+			const out: Media[] = [];
+			for (const m of l ?? []) {
+				const key = `${m.type}-${m.ids.tmdb}`;
+				if (byTitle[key] && out.includes(byTitle[key])) continue;
+				byTitle[key] ??= m;
+				out.push(byTitle[key]);
+			}
+			return out;
+		};
 		departments = {};
-		const acting = dedupe(r.credits);
+		const acting = titles(r.credits);
 		if (acting.length) departments["Acting"] = acting;
 		for (const [d, l] of Object.entries(r.crew ?? {})) {
-			const titles = dedupe(l);
-			if (titles.length) departments[d] = titles;
+			const list = titles(l);
+			if (list.length) departments[d] = list;
 		}
-		// The department TMDB says they're known for comes first and is shown
-		// (Christopher Nolan: Directing), then the others by size. Size alone
-		// would lead with "Crew" for some directors: it holds their thanks
-		// credits.
+		// The department TMDB says they're known for is shown first (Christopher
+		// Nolan: Directing), then the others by size. Size alone would lead with
+		// "Crew" for some directors: it holds their thanks credits.
 		const known = person?.knownForDepartment;
 		const main = known && departments[known] ? known : undefined;
-		departmentNames = Object.keys(departments)
+		const names = Object.keys(departments)
 			.filter((d) => d !== main)
 			.sort((a, b) => departments[b].length - departments[a].length);
-		if (main) departmentNames.unshift(main);
-		showDepartment(departmentNames[0] ?? "Acting");
+		if (main) names.unshift(main);
+		const first = names[0] ?? "Acting";
+		// "All": every title once, whatever the role. Only worth offering when
+		// there is more than one department.
+		if (names.length > 1) {
+			departments[ALL] = titles(Object.values(byTitle));
+			names.unshift(ALL);
+		}
+		departmentNames = names;
+		showDepartment(first);
 	}
 
 	function newestOldestSort(
