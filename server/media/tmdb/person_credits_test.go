@@ -48,4 +48,11 @@ func TestCrewByDepartment(t *testing.T) {
 	if got["Writing"][0].Name != "Inception" {
 		t.Errorf("writing: %+v", got["Writing"][0])
 	}
+	// One entry per title, but every job kept, in TMDB's order.
+	if j := got["Production"][0].Jobs; len(j) != 2 || j[0] != "Producer" || j[1] != "Executive Producer" {
+		t.Errorf("production jobs = %v", j)
+	}
+	if j := got["Directing"][0].Jobs; len(j) != 1 || j[0] != "Director" {
+		t.Errorf("directing jobs = %v", j)
+	}
 }

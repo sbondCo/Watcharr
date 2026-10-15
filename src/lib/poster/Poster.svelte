@@ -43,6 +43,8 @@
 		 * Notably 'On my list' feature (eg on person page).
 		 */
 		hideIfNotOnList?: boolean;
+		/** Small labels over the poster, e.g. a person's jobs on this title. */
+		badges?: string[];
 		// When provided, default click handlers will instead run this callback.
 		onClick?: (() => void) | undefined;
 		/**
@@ -63,6 +65,7 @@
 		hideButtons = false,
 		fluidSize = false,
 		hideIfNotOnList = false,
+		badges = [],
 		onClick = undefined,
 		onUpdated = undefined,
 	}: Props = $props();
@@ -326,6 +329,16 @@
 		class={`container${!poster || posterImgLoaded == -1 ? " details-shown" : ""}`}
 		bind:this={containerEl}
 	>
+		{#if badges.length}
+			<div class="badges">
+				{#each badges.slice(0, 3) as b (b)}
+					<span>{b}</span>
+				{/each}
+				{#if badges.length > 3}
+					<span>+{badges.length - 3}</span>
+				{/if}
+			</div>
+		{/if}
 		{#if poster}
 			{#if posterImgLoaded == 0}
 				<!-- We only show the loader (or blurhash) while the image
@@ -445,6 +458,38 @@
 				pointer-events: none !important;
 			}
 		}
+	}
+
+	// Badges sit over the poster's foot and step aside on hover, where the
+	// details and buttons take over.
+	.badges {
+		position: absolute;
+		left: 6px;
+		right: 6px;
+		bottom: 6px;
+		z-index: 1;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 3px;
+		pointer-events: none;
+		transition: opacity 150ms ease;
+
+		span {
+			max-width: 100%;
+			padding: 1px 6px;
+			border-radius: 8px;
+			background-color: rgba(0, 0, 0, 0.75);
+			color: white;
+			font-size: 10px;
+			line-height: 1.5;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	}
+
+	li.active .badges {
+		opacity: 0;
 	}
 
 	li.just-deleted:not(.active) {

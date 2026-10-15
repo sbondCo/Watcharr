@@ -2,6 +2,7 @@ package tmdb
 
 import (
 	"log/slog"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -708,22 +709,31 @@ type PersonCombinedCreditsCrewResult struct {
 }
 
 // CrewByDepartment groups crew credits by TMDB department ("Directing",
-// "Writing"…), one entry per title: TMDB lists a title once per job, so a
-// producer and executive producer of the same film would appear twice.
+// "Writing"…), one entry per title carrying all the person's jobs on it:
+// TMDB lists a title once per job (producer and executive producer of the
+// same film are two entries).
 func (c *PersonCombinedCredits) CrewByDepartment() map[string][]domain.Media {
 	out := map[string][]domain.Media{}
-	seen := map[string]bool{}
+	at := map[string]int{} // department|type|id -> index in out[department]
 	for i := range c.Crew {
 		cr := &c.Crew[i]
 		if cr.Department == "" || (cr.MediaType != "movie" && cr.MediaType != "tv") {
 			continue
 		}
 		key := cr.Department + "|" + cr.MediaType + "|" + strconv.Itoa(cr.ID)
-		if seen[key] {
+		if j, ok := at[key]; ok {
+			m := &out[cr.Department][j]
+			if cr.Job != "" && !slices.Contains(m.Jobs, cr.Job) {
+				m.Jobs = append(m.Jobs, cr.Job)
+			}
 			continue
 		}
-		seen[key] = true
-		out[cr.Department] = append(out[cr.Department], cr.AsMedia())
+		m := cr.AsMedia()
+		if cr.Job != "" {
+			m.Jobs = []string{cr.Job}
+		}
+		at[key] = len(out[cr.Department])
+		out[cr.Department] = append(out[cr.Department], m)
 	}
 	return out
 }

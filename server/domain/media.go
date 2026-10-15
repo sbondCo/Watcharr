@@ -45,6 +45,9 @@ type Media struct {
 	Similar []Media `json:"similar,omitempty"`
 	// Release date / first air date.
 	ReleaseDate time.Time `json:"releaseDate,omitzero"`
+	// Person credits only: the person's jobs on this title ("Director",
+	// "Screenplay"…; "Actor" for acting credits).
+	Jobs []string `json:"jobs,omitempty"`
 	// Videos (trailers, etc)
 	Videos []MediaVideo `json:"videos,omitempty"`
 

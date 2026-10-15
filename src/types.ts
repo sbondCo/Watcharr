@@ -373,6 +373,8 @@ export interface Media {
 	similar?: Media[];
 	releaseDate?: string;
 	releaseDateLast?: string;
+	/** Person credits only: the person's jobs on this title ("Director", "Actor"…). */
+	jobs?: string[];
 	status?: string;
 	extBackdropPath?: string;
 	genres?: MediaGenre[];

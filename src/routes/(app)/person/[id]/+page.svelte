@@ -29,6 +29,40 @@
 	let departmentNames: string[] = $state([]);
 	let department = $state("");
 	const ALL = "All";
+	// title -> department -> the person's jobs there (see updatePersonCredits).
+	let jobs: Record<string, Record<string, string[]>> = {};
+	let mixedJobs: string[] = [];
+
+	const creditOrder = ["Directing", "Writing", "Production", "Acting"];
+	function creditRank(d: string) {
+		const i = creditOrder.indexOf(d);
+		return i < 0 ? creditOrder.length : i;
+	}
+
+	function titleKey(m: Media) {
+		return `${m.type}-${m.ids.tmdb}`;
+	}
+
+	// Under "All", every job on the title. In a department, its own jobs only
+	// when it mixes several ("Producer" / "Executive Producer": "Director" on
+	// every Directing poster would say nothing), then the person's other jobs
+	// on the title ("Writer · Producer" on a film they directed).
+	function badgesFor(m: Media): string[] {
+		const held = jobs[titleKey(m)] ?? {};
+		const out: string[] = [];
+		const add = (l?: string[]) => {
+			for (const j of l ?? []) if (!out.includes(j)) out.push(j);
+		};
+		if (department !== ALL && mixedJobs.includes(department))
+			add(held[department]);
+		// Credits order ("Director · Writer · Producer"), not the menu's,
+		// which is by size.
+		const others = departmentNames
+			.filter((d) => d !== ALL && (department === ALL || d !== department))
+			.sort((a, b) => creditRank(a) - creditRank(b));
+		for (const d of others) add(held[d]);
+		return out;
+	}
 
 	$effect(() => {
 		if (data.personId) {
@@ -77,10 +111,15 @@
 		// duplicate entries (an actor with several roles in one film, a
 		// director with several jobs on it).
 		const byTitle: Record<string, Media> = {};
-		const titles = (l?: Media[]) => {
+		// The shared objects can't hold per-department jobs, so they're kept
+		// aside: title -> department -> jobs.
+		jobs = {};
+		const titles = (l: Media[] | undefined, dept: string) => {
 			const out: Media[] = [];
 			for (const m of l ?? []) {
-				const key = `${m.type}-${m.ids.tmdb}`;
+				const key = titleKey(m);
+				const held = ((jobs[key] ??= {})[dept] ??= []);
+				for (const j of m.jobs ?? []) if (!held.includes(j)) held.push(j);
 				if (byTitle[key] && out.includes(byTitle[key])) continue;
 				byTitle[key] ??= m;
 				out.push(byTitle[key]);
@@ -88,12 +127,20 @@
 			return out;
 		};
 		departments = {};
-		const acting = titles(r.credits);
+		const acting = titles(r.credits, "Acting");
 		if (acting.length) departments["Acting"] = acting;
 		for (const [d, l] of Object.entries(r.crew ?? {})) {
-			const list = titles(l);
+			const list = titles(l, d);
 			if (list.length) departments[d] = list;
 		}
+		// Only label a department's posters when its titles differ in job
+		// ("Producer" / "Executive Producer"): "Actor" on every acting credit
+		// would say nothing.
+		mixedJobs = Object.keys(departments).filter(
+			(d) =>
+				new Set(departments[d].flatMap((m) => jobs[titleKey(m)]?.[d] ?? []))
+					.size > 1,
+		);
 		// The department TMDB says they're known for is shown first (Christopher
 		// Nolan: Directing), then the others by size. Size alone would lead with
 		// "Crew" for some directors: it holds their thanks credits.
@@ -107,7 +154,7 @@
 		// "All": every title once, whatever the role. Only worth offering when
 		// there is more than one department.
 		if (names.length > 1) {
-			departments[ALL] = titles(Object.values(byTitle));
+			departments[ALL] = Object.values(byTitle);
 			names.unshift(ALL);
 		}
 		departmentNames = names;
@@ -274,6 +321,7 @@
 									bind:watched={credits.credits[i].watched}
 									fluidSize
 									hideIfNotOnList={onMyListFilter}
+									badges={badgesFor(c)}
 								/>
 							{/each}
 						</PosterList>
