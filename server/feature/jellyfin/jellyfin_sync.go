@@ -425,7 +425,7 @@ func (s *SyncService) jellyfinSyncWatched(
 // Sync Task.
 // Gets all jellyfin users and starts a sync job for them.
 func (s *SyncService) TaskSync() error {
-	slog.Info("SyncTask: Starting.")
+	slog.Info("TaskSync: Starting.")
 
 	users := []entity.User{}
 	err := s.db.
@@ -436,23 +436,23 @@ func (s *SyncService) TaskSync() error {
 		Find(&users).
 		Error
 	if err != nil {
-		slog.Error("SyncTask: Failed to get users", "error", err)
+		slog.Error("TaskSync: Failed to get users", "error", err)
 		return errors.New("failed to get users")
 	}
 
-	slog.Debug("SyncTask: Got jellyfin users.", "count", len(users))
+	slog.Debug("TaskSync: Got jellyfin users.", "count", len(users))
 
 	for i := range users {
 		jfUser := &users[i]
-		slog.Debug("SyncTask: Processing user.", "name", jfUser.Username)
+		slog.Debug("TaskSync: Processing user.", "name", jfUser.Username)
 
 		for _, v := range jfUser.UserServices {
-			slog.Debug("SyncTask: Processing UserService.", "id", v.ID)
+			slog.Debug("TaskSync: Processing UserService.", "id", v.ID)
 
 			if v.Name != entity.UserServiceNameJellyfin || !v.AutoSync {
 				// our sql query shouldn't allow this, but this defence is nice
 				// anyways.
-				slog.Warn("SyncTask: Encountered wrong UserService.", "id", v.ID)
+				slog.Warn("TaskSync: Encountered wrong UserService.", "id", v.ID)
 				continue
 			}
 
@@ -463,15 +463,15 @@ func (s *SyncService) TaskSync() error {
 				v.AuthToken,
 			)
 			if err != nil {
-				slog.Error("SyncTask: Starting sync failed!",
+				slog.Error("TaskSync: Starting sync failed!",
 					"user_id", v.UserID, "service_id", v.ID, "error", err)
 				continue
 			}
-			slog.Info("SyncTask: Job started successfully.", "job_id", resp.JobId)
+			slog.Info("TaskSync: Job started successfully.", "job_id", resp.JobId)
 		}
 	}
 
-	slog.Info("SyncTask: Done.")
+	slog.Info("TaskSync: Done.")
 
 	return nil
 }
