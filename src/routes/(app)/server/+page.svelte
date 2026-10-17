@@ -279,7 +279,11 @@
 							>
 						{/if}
 					</Setting>
-					<Setting title="TMDB Key" desc="Provide your own TMDB API Key">
+					<Setting
+						title="TMDB Key"
+						desc="Provide your own TMDB API Key"
+						handbook="your-own-tmdb-api-key"
+					>
 						<input
 							type="password"
 							placeholder="TMDB Key"

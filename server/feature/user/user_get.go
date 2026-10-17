@@ -9,6 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// NOTE: I don't think this builder is useful. I can see it ending up with just
+// GORM's api being wrapped in my api, so this won't be used for future code,
+// and may just be dropped completely for services to always make their own
+// queries. Possibly just create a simple UserRepository, but only for simple
+// methods like GetUserByID, but not sure if that's worth the hassle rn.
+
 // Get user by id.
 // Returns a builder for easily adding preloads.
 func (s *Service) GetUserByID(id uint) domain.GetUserQueryBuilder {

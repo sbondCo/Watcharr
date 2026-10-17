@@ -621,6 +621,18 @@ export interface Filters {
 	status: string[];
 }
 
+export interface UserService extends UserServiceSettings {
+	id: number;
+	name: string;
+	createdAt: string;
+}
+
+export interface UserServiceSettings {
+	autoSync?: boolean;
+}
+
+export type AllUserServicesResponse = UserService[];
+
 export interface ManagedUser {
 	id: number;
 	createdAt: Date;

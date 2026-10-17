@@ -21,31 +21,23 @@
 	}: Props = $props();
 </script>
 
-<div class={[row ? "row" : "", "setting-ctr"].join(" ")}>
-	{#if row}
-		<div>
-			<h4 class="norm">
-				{title}
-				{#if handbook}
-					<HandbookLink {handbook} />
-				{/if}
-				{#if tag}
-					<span class="tag">{tag}</span>
-				{/if}
-			</h4>
-			<h5 class="norm">{desc}</h5>
-		</div>
-	{:else}
+<div class="setting-ctr" class:row>
+	<div>
 		<h4 class="norm">
 			{title}
+			{#if handbook}
+				<HandbookLink {handbook} />
+			{/if}
 			{#if tag}
 				<span class="tag">{tag}</span>
 			{/if}
 		</h4>
 		<h5 class="norm">{desc}</h5>
-	{/if}
+	</div>
 
-	{@render children?.()}
+	<div class="childs">
+		{@render children?.()}
+	</div>
 </div>
 
 <style lang="scss">
@@ -85,6 +77,12 @@
 			h5 {
 				margin-bottom: 5px;
 			}
+		}
+
+		& > .childs {
+			display: flex;
+			flex-flow: column;
+			gap: 10px;
 		}
 	}
 </style>

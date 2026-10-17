@@ -28,6 +28,9 @@ type UserServices struct {
 	// Ex: We require a second auth token for use with our local server for Plex.
 	AuthToken2 string `json:"-"`
 	UserID     uint   `gorm:"not null;" json:"-"`
+
+	// Setting - Allow the routine auto sync task.
+	AutoSync bool `gorm:"default:true"`
 }
 
 type UserServiceName string

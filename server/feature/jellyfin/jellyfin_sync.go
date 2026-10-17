@@ -421,3 +421,57 @@ func (s *SyncService) jellyfinSyncWatched(
 
 	return JellyfinSyncResponse{JobId: jobId}, nil
 }
+
+// Sync Task.
+// Gets all jellyfin users and starts a sync job for them.
+func (s *SyncService) TaskSync() error {
+	slog.Info("SyncTask: Starting.")
+
+	users := []entity.User{}
+	err := s.db.
+		Model(&entity.User{}).
+		Where("type = ?", entity.JELLYFIN_USER).
+		Preload("UserServices",
+			"name = ? AND auto_sync = ?", entity.UserServiceNameJellyfin, true).
+		Find(&users).
+		Error
+	if err != nil {
+		slog.Error("SyncTask: Failed to get users", "error", err)
+		return errors.New("failed to get users")
+	}
+
+	slog.Debug("SyncTask: Got jellyfin users.", "count", len(users))
+
+	for i := range users {
+		jfUser := &users[i]
+		slog.Debug("SyncTask: Processing user.", "name", jfUser.Username)
+
+		for _, v := range jfUser.UserServices {
+			slog.Debug("SyncTask: Processing UserService.", "id", v.ID)
+
+			if v.Name != entity.UserServiceNameJellyfin || !v.AutoSync {
+				// our sql query shouldn't allow this, but this defence is nice
+				// anyways.
+				slog.Warn("SyncTask: Encountered wrong UserService.", "id", v.ID)
+				continue
+			}
+
+			resp, err := s.jellyfinSyncWatched(
+				v.UserID,
+				jfUser.Username,
+				v.ClientID,
+				v.AuthToken,
+			)
+			if err != nil {
+				slog.Error("SyncTask: Starting sync failed!",
+					"user_id", v.UserID, "service_id", v.ID, "error", err)
+				continue
+			}
+			slog.Info("SyncTask: Job started successfully.", "job_id", resp.JobId)
+		}
+	}
+
+	slog.Info("SyncTask: Done.")
+
+	return nil
+}

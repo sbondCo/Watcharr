@@ -6,6 +6,8 @@ These changes are awaiting release:
 
 - Jellyfin: Automatic tracking via [jellyfin webhook](https://github.com/jellyfin/jellyfin-plugin-webhook).
   - Enable support in your server settings!
+- Jellyfin: Server task for doing sync with Jellyfin.
+  - Enabled by default, new setting in your user settings to control it.
 - Activity:
   - Created `created_by` & `reason` properties.
   - Added UI element to display a count of activities.
@@ -16,6 +18,11 @@ These changes are awaiting release:
 - Automation: Added season status change hook, which currently supports updating the series top-level status automatically depending on all season statuses.
   - Series is PLANNED & new season set to WATCHING/FINISHED -> Series updated to WATCHING.
   - All seasons in series are completed -> (if show ended: Series updated to FINISHED), (if show is continuing: Series updated to PLANNED).
+- UserService: New endpoints for listing connected accounts and updating settings.
+- User Settings: Display users' connected services (and allow configuring new Auto Sync setting).
+- TaskSchedule: Manually run task button.
+- Reqer: Add `signal` option and add a default `10s` request timeout.
+- Reqer: Add PATCH methods.
 
 ## Changed
 
@@ -31,6 +38,9 @@ These changes are awaiting release:
   - (BREAKING FOR API USERS, probably no one!?) The Add/Update methods now only return the created/modified entry, rather than returning ALL entries (and a new `update` property is returned along with it to tell you if the item was created or updated). Also returns addedActivities (list, instead of old singular addedActivity).
 - Activities: Improve automated tooltip text readability by changing format and not capitalizing every word.
 - Search: Start the search instantly if "Enter" is pressed (skip the debounce).
+- Profile: Moved user settings to a new "Settings" page (accessible from same face menu). There's a temporary link on the Profile page to indicate that settings have moved.
+  - I moved it so in the future the profile page can be about your Profile, not settings.
+- Server Settings: Renamed face menu option from "Settings" to "Server" (since "Settings" is now for user settings page).
 
 ## Fixed
 
@@ -67,6 +77,8 @@ These changes are awaiting release:
     - Now uses `SetWatchedSeason` instead of updating it in db itself.
 - Upgraded @sveltejs/kit: 2.69.3 -> 2.70.3.
 - Tooltip: Improve action show() logic readability & add new styleNoCapitalize option for disabling text capitalization style.
+- Task: Moved tasks definition to `watcharr.go` main func so we can use all our services easily.
+- Setting.svelte: Refactor to make markup simpler.
 
 # [4.2.2] - 2026-09-12T21:00:01Z
 

@@ -28,6 +28,10 @@
 		goto(resolve("/profile"));
 	}
 
+	function settings() {
+		goto(resolve("/settings"));
+	}
+
 	function serverSettings() {
 		goto(resolve("/server"));
 	}
@@ -78,8 +82,9 @@
 	{#if !store.userSettings?.private}
 		<button class="plain" onclick={() => shareWatchedList()}>Share List</button>
 	{/if}
+	<button class="plain" onclick={() => settings()}>Settings</button>
 	{#if user && userHasPermission(user.permissions, UserPermission.PERM_ADMIN)}
-		<button class="plain" onclick={() => serverSettings()}>Settings</button>
+		<button class="plain" onclick={() => serverSettings()}>Server</button>
 		<button class="plain" onclick={() => userManagement()}>Users</button>
 		{#if store.serverFeatures?.sonarr || store.serverFeatures?.radarr}
 			<!-- At least one (sonarr/radarr) should be enabled for requests menu item to display. -->

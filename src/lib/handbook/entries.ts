@@ -31,6 +31,11 @@ export const entries = [
 				title: "Jellyfin Webhook Setup",
 				comp: () => import("./entries/admin/JellyfinWebhookSetup.svelte"),
 			},
+			{
+				id: "your-own-tmdb-api-key",
+				title: "Providing Your Own TMDB API Key",
+				comp: () => import("./entries/admin/YourOwnTMDBAPIKey.svelte"),
+			},
 		],
 	},
 ] as const satisfies HandbookGroup[];
