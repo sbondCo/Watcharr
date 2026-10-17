@@ -65,13 +65,18 @@ func CleanupImages(db *gorm.DB) {
 	slog.Info("cleanupImages running")
 	var unusedImgs []entity.Image
 	// Select images that are not referenced by at least one other row.
-	// Currently only used for user avatars, add new tables when used.
+	// Currently used for user avatars and game posters; add new tables when used.
 	db.Raw(`SELECT *
 FROM images
 WHERE NOT EXISTS (
 	SELECT 1
 	FROM users
 	WHERE users.avatar_id = images.id
+)
+AND NOT EXISTS (
+	SELECT 1
+	FROM games
+	WHERE games.poster_id = images.id
 );`).Scan(&unusedImgs)
 	slog.Info("cleanupImages: scanned for unused images", "amount", len(unusedImgs))
 	if len(unusedImgs) > 0 {
