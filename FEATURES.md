@@ -52,7 +52,10 @@ When the word `watched` is used, assume it can be `played` for games too.
 - Jellyfin Integration
   - Auth
   - 'Play On Jellyfin' buttons
+  - Sync (Full & Webhook)
 - Plex Integration
+  - Auth
+  - Sync (Full)
 - Trusted Header Authentication (for auth via proxy)
 - Basic Sonarr & Radarr integration
   - Let users Request content (users can be given an auto approve permission)
