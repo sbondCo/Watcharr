@@ -369,6 +369,7 @@ func main() {
 			Desc: "Full sync users with their linked 3rd party profiles.",
 			F: func() {
 				jellyfinSyncService.TaskSync()
+				plexSyncService.TaskSync()
 			},
 			DefDur: 24 * time.Hour * 3,
 		},

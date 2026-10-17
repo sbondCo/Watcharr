@@ -346,3 +346,54 @@ func (s *SyncService) PlexSyncWatched(
 
 	return PlexSyncResponse{JobId: jobId}, nil
 }
+
+// Sync Task.
+func (s *SyncService) TaskSync() error {
+	slog.Info("TaskSync: Starting.")
+
+	users := []entity.User{}
+	err := s.db.
+		Model(&entity.User{}).
+		Where("type = ?", entity.PLEX_USER).
+		Preload("UserServices",
+			"name = ? AND auto_sync = ?", entity.UserServiceNamePlex, true).
+		Find(&users).
+		Error
+	if err != nil {
+		slog.Error("TaskSync: Failed to get users", "error", err)
+		return errors.New("failed to get users")
+	}
+
+	slog.Debug("TaskSync: Got plex users.", "count", len(users))
+
+	for i := range users {
+		plexUser := &users[i]
+		slog.Debug("TaskSync: Processing user.", "name", plexUser.Username)
+
+		for _, v := range plexUser.UserServices {
+			slog.Debug("TaskSync: Processing UserService.", "id", v.ID)
+
+			if v.Name != entity.UserServiceNamePlex || !v.AutoSync {
+				// our sql query shouldn't allow this, but this defence is nice
+				// anyways.
+				slog.Warn("TaskSync: Encountered wrong UserService.", "id", v.ID)
+				continue
+			}
+
+			resp, err := s.PlexSyncWatched(
+				v.UserID,
+				v.AuthToken2,
+			)
+			if err != nil {
+				slog.Error("TaskSync: Starting sync failed!",
+					"user_id", v.UserID, "service_id", v.ID, "error", err)
+				continue
+			}
+			slog.Info("TaskSync: Job started successfully.", "job_id", resp.JobId)
+		}
+	}
+
+	slog.Info("TaskSync: Done.")
+
+	return nil
+}

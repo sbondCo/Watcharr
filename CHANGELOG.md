@@ -6,7 +6,7 @@ These changes are awaiting release:
 
 - Jellyfin: Automatic tracking via [jellyfin webhook](https://github.com/jellyfin/jellyfin-plugin-webhook).
   - Enable support in your server settings!
-- Jellyfin: Server task for doing sync with Jellyfin.
+- Server Tasks: Task for doing sync with UserServices (Jellyfin & Plex).
   - Enabled by default, new setting in your user settings to control it.
 - Activity:
   - Created `created_by` & `reason` properties.
