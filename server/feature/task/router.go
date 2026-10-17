@@ -28,6 +28,7 @@ func (r *Router) AddRoutes() {
 
 	task.GET("/", r.GetAllTasks)
 	task.PUT(":name", r.UpdateTaskSchedule)
+	task.POST(":name/run", r.RunTaskNow)
 }
 
 func (r *Router) GetAllTasks(c *gin.Context) {
@@ -52,4 +53,18 @@ func (r *Router) UpdateTaskSchedule(c *gin.Context) {
 		return
 	}
 	c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
+}
+
+func (r *Router) RunTaskNow(c *gin.Context) {
+	name := c.Param("name")
+	if name == "" {
+		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: "no task name provided"})
+		return
+	}
+	err := task.Run(name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, router.ErrorResponse{Error: err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
 }

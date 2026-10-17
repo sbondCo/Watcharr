@@ -40,7 +40,6 @@
 		border-radius: 10px;
 		padding: 15px;
 		transition: all 200ms ease;
-		margin-top: 10px;
 
 		& > div {
 			margin-right: auto;

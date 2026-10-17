@@ -72,10 +72,11 @@ func (s *Service) userAPIRequest(
 	resp any,
 ) error {
 	if s.cfg.JELLYFIN_HOST == "" {
-		slog.Error("jellyfinAPIRequest: JELLYFIN_HOST not configured.")
+		slog.Error("userAPIRequest: JELLYFIN_HOST not configured.")
 		return errors.New("jellyfin not enabled")
 	}
-	slog.Debug("jellyfinAPIRequest", "endpoint", ep, "params", p)
+	slog.Debug("userAPIRequest",
+		"for_user", username, "endpoint", ep, "params", p)
 	base, err := url.Parse(s.cfg.JELLYFIN_HOST)
 	if err != nil {
 		return errors.New("failed to parse api uri")
@@ -97,7 +98,7 @@ func (s *Service) userAPIRequest(
 	client := &http.Client{}
 	req, err := http.NewRequest(method, base.String(), bytes.NewBuffer([]byte{}))
 	if err != nil {
-		slog.Error("Creating request to jellyfin failed", "error", err)
+		slog.Error("userAPIRequest: Creating request failed!", "error", err)
 		return errors.New("request failed")
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -108,17 +109,18 @@ func (s *Service) userAPIRequest(
 	req.Header.Add("Authorization", authHeader)
 	res, err := client.Do(req)
 	if err != nil {
-		slog.Error("making request to jellyfin for auth failed", "error", err)
+		slog.Error("userAPIRequest: Request failed!", "error", err)
 		return errors.New("request failed")
 	}
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		slog.Error("Error reading jellyfin auth response", "error", err)
+		slog.Error("userAPIRequest: Error reading response!", "error", err)
 		return err
 	}
 	if res.StatusCode != 200 {
-		slog.Error("Jellyfin non 200 status code",
+		slog.Error("userAPIRequest: Jellyfin non 200 status code",
+			"for_user", username,
 			"status_code", res.StatusCode,
 			"error", string(body))
 		return errors.New("non 200")

@@ -21,6 +21,12 @@ export interface ReqerConfig extends Omit<RequestInit, "body"> {
 	 * Example: `{ page: 1 }` will become &page=1 on the requests final url.
 	 */
 	params?: ReqerParams;
+	/**
+	 * AbortSignal.
+	 *
+	 * If not provided, a default AbortSignal is used.
+	 */
+	signal?: AbortSignal;
 }
 
 type ReqerConfigWithoutMethod = Omit<ReqerConfig, "method">;
@@ -217,6 +223,13 @@ export class Reqer {
 		throw new ReqerError("response includes an unsupported content-type", res);
 	}
 
+	private getAbortSignal(signal?: AbortSignal): AbortSignal {
+		if (signal) {
+			return signal;
+		}
+		return AbortSignal.timeout(10000);
+	}
+
 	async do<T>(p: string, cfg?: ReqerConfig): Promise<ReqerResponse<T>> {
 		try {
 			const headers = new Headers(cfg?.headers);
@@ -235,6 +248,7 @@ export class Reqer {
 
 			const res = await fetch(this.buildUrl(p, cfg?.params), {
 				...cfg,
+				signal: this.getAbortSignal(cfg?.signal),
 				body: reqBody,
 				headers,
 			});
@@ -330,6 +344,28 @@ export class Reqer {
 		cfg?: ReqerConfigWithoutMethod,
 	): Promise<ReqerResponse<T>> {
 		return await this.do<T>(p, { ...cfg, method: "PUT", body: data });
+	}
+
+	/**
+	 * PATCH request, returning parsed response body.
+	 */
+	async patch<T>(
+		p: string,
+		data?: unknown,
+		cfg?: ReqerConfigWithoutMethod,
+	): Promise<T> {
+		return (await this.do<T>(p, { ...cfg, method: "PATCH", body: data })).body;
+	}
+
+	/**
+	 * Same as `patch()`, except the whole ReqerResponse object is returned.
+	 */
+	async patchWhole<T>(
+		p: string,
+		data?: unknown,
+		cfg?: ReqerConfigWithoutMethod,
+	): Promise<ReqerResponse<T>> {
+		return await this.do<T>(p, { ...cfg, method: "PATCH", body: data });
 	}
 
 	/**

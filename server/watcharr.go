@@ -45,13 +45,16 @@ import (
 	"github.com/sbondCo/Watcharr/feature/tag"
 	"github.com/sbondCo/Watcharr/feature/task"
 	"github.com/sbondCo/Watcharr/feature/user"
+	"github.com/sbondCo/Watcharr/feature/user/services"
 	"github.com/sbondCo/Watcharr/feature/watched"
 	"github.com/sbondCo/Watcharr/feature/watched/episode"
 	"github.com/sbondCo/Watcharr/feature/watched/season"
+	"github.com/sbondCo/Watcharr/image"
 	"github.com/sbondCo/Watcharr/logging"
 	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/router"
 	taskl "github.com/sbondCo/Watcharr/task"
+	"github.com/sbondCo/Watcharr/token"
 	"gorm.io/gorm/logger"
 )
 
@@ -185,7 +188,14 @@ func main() {
 
 	gine.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods: []string{
+			"GET",
+			"POST",
+			"PATCH",
+			"PUT",
+			"DELETE",
+			"OPTIONS",
+		},
 		AllowHeaders: []string{
 			"Content-Type",
 			"Content-Length",
@@ -226,6 +236,7 @@ func main() {
 	authService := auth.NewService(db, cfg, plexService)
 	authTrustedHeaderService := auth.NewTrustedHeaderService(db, cfg, authService)
 	userService := user.NewService(db)
+	userServicesService := services.NewService(db)
 	userManageService := user.NewManageService(db)
 	gameService := game.NewService(db, &br.Cfg.TWITCH)
 	watchedService := watched.NewService(db, contentService, gameService, userService)
@@ -300,6 +311,7 @@ func main() {
 		AddRoutes()
 	plex.NewRouter(br, plexSyncService).AddRoutes()
 	user.NewRouter(br, userService, userManageService).AddRoutes()
+	services.NewRouter(br, userServicesService).AddRoutes()
 	follow.NewRouter(br, followService).AddRoutes()
 	imprt.NewRouter(br, importService, importTraktService).AddRoutes()
 	server.NewRouter(br, plexService, authTrustedHeaderService, userManageService).AddRoutes()
@@ -327,7 +339,42 @@ func main() {
 			"error", uresp.Error)
 	}
 
-	go taskl.SetupTasks(cfg, db)
+	// Define tasks.
+	taskl.Set(taskl.TaskFuncMap{
+		"Cleanup Tokens": {
+			F: func() {
+				token.CleanupTokens(db)
+			},
+			DefDur: 60 * time.Second,
+		},
+		"Refresh Arr Queues": {
+			F: func() {
+				arr.RefreshArrQueues(cfg)
+			},
+			DefDur: 60 * time.Second,
+		},
+		"Cleanup Images": {
+			F: func() {
+				image.CleanupImages(db)
+			},
+			DefDur: 24 * time.Hour,
+		},
+		"Optimize Database": {
+			F: func() {
+				database.TaskOptimize(db)
+			},
+			DefDur: 24 * time.Hour,
+		},
+		"3rd Party Profile Sync": {
+			Desc: "Full sync users with their linked 3rd party profiles.",
+			F: func() {
+				jellyfinSyncService.TaskSync()
+			},
+			DefDur: 24 * time.Hour * 3,
+		},
+	})
+	// Start task scheduler.
+	go taskl.Start(cfg, db)
 
 	gine.Run("0.0.0.0:3080")
 }
