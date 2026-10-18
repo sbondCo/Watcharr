@@ -4,11 +4,15 @@ package main
 
 import (
 	"bufio"
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -60,6 +64,8 @@ import (
 
 //go:embed VERSION
 var version string
+
+const socketPathUI string = "/tmp/watcharrui"
 
 func main() {
 	err := godotenv.Load()
@@ -216,14 +222,7 @@ func main() {
 	}))
 	if isProd {
 		// Proxy NoRoute requests to UI server
-		gine.NoRoute(func(c *gin.Context) {
-			director := func(req *http.Request) {
-				req.URL.Scheme = "http"
-				req.URL.Host = "127.0.0.1:3000"
-			}
-			proxy := &httputil.ReverseProxy{Director: director}
-			proxy.ServeHTTP(c.Writer, c.Request)
-		})
+		gine.NoRoute(socketReverseProxy(socketPathUI))
 	}
 	api := gine.Group("/api")
 	br := router.NewBaseRouter(db, api, cfg)
@@ -377,27 +376,94 @@ func main() {
 	// Start task scheduler.
 	go taskl.Start(cfg, db)
 
-	gine.Run("0.0.0.0:3080")
+	// Watcharr doesn't currently need to get ClientIP for requests, so
+	// disabling this feature for getting ClientIP through proxies to protect
+	// ourselves from accidentally using ClientIP, forgetting this. If we ever
+	// need true ClientIPs (why?) then we should configure this to local subnets
+	// by default (?) and let server admins manually adjust it from env var.
+	gine.SetTrustedProxies(nil)
+
+	err = run(gine)
+	if !errors.Is(err, http.ErrServerClosed) {
+		slog.Error("listenAndServe", "error", err)
+	}
+}
+
+// Create and run the server.
+// We don't use ListenAndServe from http.Server simply because I want to log the
+// actual listening address from net.Listen.
+func run(h *gin.Engine) error {
+	s := &http.Server{
+		Addr:    "0.0.0.0:" + port(),
+		Handler: h,
+	}
+	ln, err := net.Listen("tcp", s.Addr)
+	if err != nil {
+		return err
+	}
+	slog.Info("Watcharr is listening.", "address", ln.Addr())
+	return s.Serve(ln)
+}
+
+// Gets port that Watcharr should use.
+// We don't do any validation here, instead we let http.Server handle that.
+func port() string {
+	if p := os.Getenv("PORT"); p != "" {
+		slog.Debug("port: Using PORT env var", "PORT", p)
+		return p
+	}
+	slog.Debug("port: Using default port.")
+	return "3080"
 }
 
 // Run UI server
 func runUI() {
 	cmd := exec.Command("node", "ui/index.js")
+	cmd.Env = append(cmd.Env, "SOCKET_PATH="+socketPathUI)
+
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatal("UI ERR @ get stdout read pipe: ", err)
+		slog.Error("UI ERR @ StdoutPipe!", "error", err)
+		os.Exit(1)
 	}
-	scanner := bufio.NewScanner(cmdReader)
-	go func() {
-		for scanner.Scan() {
-			fmt.Println(scanner.Text())
-		}
-	}()
+
 	if err := cmd.Start(); err != nil {
-		log.Fatal("UI ERR @ command start: ", err)
+		slog.Error("UI ERR @ Start!", "error", err)
+		os.Exit(1)
 	}
+
+	scanner := bufio.NewScanner(cmdReader)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		slog.Error("UI ERR @ Scan!", "error", err)
+		os.Exit(1)
+	}
+
 	if err := cmd.Wait(); err != nil {
-		log.Fatal("UI ERR @ command wait: ", err)
+		slog.Error("UI ERR @ Wait!", "error", err)
+		os.Exit(1)
+	}
+}
+
+// Reverse proxy to socket.
+func socketReverseProxy(p string) gin.HandlerFunc {
+	target := &url.URL{Scheme: "http", Host: "whatever"}
+
+	proxy := &httputil.ReverseProxy{
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			pr.SetURL(target)
+		},
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+				return (&net.Dialer{}).DialContext(ctx, "unix", p)
+			},
+		},
+	}
+
+	return func(c *gin.Context) {
+		proxy.ServeHTTP(c.Writer, c.Request)
 	}
 }
 

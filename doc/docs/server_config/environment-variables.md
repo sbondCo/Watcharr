@@ -5,10 +5,18 @@ description: All environment variables you can use to start your server in a spe
 
 # Environment Variables
 
-Currently there is only one, and maybe it will stay that way forever (because the admin interface can handle most settings). A very lonely page right now ;(.
+Configuration for provisioning Watcharr.
+
+If you are looking for server settings, look instead at your server settings page directly in Watcharr.
 
 ## `WATCHARR_DATA`
 
 Make Watcharr use a custom directory for all of its data.
 
 Defaults to `./data`.
+
+## `PORT`
+
+Start the server on a specific port.
+
+Defaults to `3080`.

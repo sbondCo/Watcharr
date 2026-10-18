@@ -23,6 +23,7 @@ These changes are awaiting release:
 - TaskSchedule: Manually run task button.
 - Reqer: Add `signal` option and add a default `10s` request timeout.
 - Reqer: Add PATCH methods.
+- `PORT` environment variable.
 
 ## Changed
 
@@ -41,6 +42,8 @@ These changes are awaiting release:
 - Profile: Moved user settings to a new "Settings" page (accessible from same face menu). There's a temporary link on the Profile page to indicate that settings have moved.
   - I moved it so in the future the profile page can be about your Profile, not settings.
 - Server Settings: Renamed face menu option from "Settings" to "Server" (since "Settings" is now for user settings page).
+- Gin: Disabled TrustedProxies feature.
+- runUI: Moved the UI server to listen on a unix socket (this adds better separation since the ui server should not be accidentally accessible directly; it's only meant for internal communication).
 
 ## Fixed
 
@@ -50,6 +53,7 @@ These changes are awaiting release:
 - SeasonListEpisode: Increase episode image resolution (so they aren't blurry) & use lazy loading. https://github.com/sbondCo/Watcharr/issues/1100
 - Allow View Trailer to be fullscreened (thanks to [@LeonNamowitz] in https://github.com/sbondCo/Watcharr/pull/1106)
 - Search: Don't trim the ending whitespace from query on debounced search (thanks to [@fjacques-2025] in https://github.com/sbondCo/Watcharr/pull/1078).
+- runUI: Fix flow and add scanner.Err check.
 
 ## Maintenance
 
@@ -79,6 +83,11 @@ These changes are awaiting release:
 - Tooltip: Improve action show() logic readability & add new styleNoCapitalize option for disabling text capitalization style.
 - Task: Moved tasks definition to `watcharr.go` main func so we can use all our services easily.
 - Setting.svelte: Refactor to make markup simpler.
+
+## Docs
+
+- `server_config/environment-variables`: Add `PORT`.
+- `installation/docker-compose`: Added a tip pointing to supported environment variables.
 
 # [4.2.2] - 2026-09-12T21:00:01Z
 
