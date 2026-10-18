@@ -135,14 +135,14 @@
 						<Stat
 							name="Most Watched Movie"
 							value={stats.mostWatchedMovie.title}
-							href={resolve("/movie/{stats.mostWatchedMovie.tmdbId}")}
+							href={resolve(`/movie/${stats.mostWatchedMovie.tmdbId}`)}
 						/>
 					{/if}
 					{#if stats.mostWatchedShow?.title}
 						<Stat
 							name="Most Watched Show"
 							value={stats.mostWatchedShow.title}
-							href={resolve("/tv/{stats.mostWatchedShow.tmdbId}")}
+							href={resolve(`/tv/${stats.mostWatchedShow.tmdbId}`)}
 						/>
 					{/if}
 				{:catch err}
