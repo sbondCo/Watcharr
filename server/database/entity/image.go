@@ -2,7 +2,8 @@ package entity
 
 import "time"
 
-// For user uploaded images
+// NOTE: When making a new reference to an Image, ensure the CleanupImages task
+// still works correctly!
 type Image struct {
 	ID        uint      `gorm:"primarykey" json:"-"`
 	CreatedAt time.Time `json:"createdAt"`

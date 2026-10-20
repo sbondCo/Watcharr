@@ -54,6 +54,7 @@ These changes are awaiting release:
 - Allow View Trailer to be fullscreened (thanks to [@LeonNamowitz] in https://github.com/sbondCo/Watcharr/pull/1106)
 - Search: Don't trim the ending whitespace from query on debounced search (thanks to [@fjacques-2025] in https://github.com/sbondCo/Watcharr/pull/1078).
 - runUI: Fix flow and add scanner.Err check.
+- CleanupImages: Don't delete game images that are still in use (reported by [@fjacques-2025]).
 
 ## Maintenance
 
@@ -83,6 +84,7 @@ These changes are awaiting release:
 - Tooltip: Improve action show() logic readability & add new styleNoCapitalize option for disabling text capitalization style.
 - Task: Moved tasks definition to `watcharr.go` main func so we can use all our services easily.
 - Setting.svelte: Refactor to make markup simpler.
+- CleanupImages: Refactored function. Now uses a new helper function that gets references from sqlite schema table directly so we don't have to manually keep track of the query.
 
 ## Docs
 
