@@ -750,12 +750,28 @@
 					text="TodoMovies"
 					filesSelected={(f) => processTodoMoviesFile(f)}
 				/>
+
+				<div class="mappings-btn">
+					<button onclick={() => goto(resolve("/import/mappings"))}>
+						View saved import matches
+					</button>
+				</div>
 			{/if}
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
+	.mappings-btn {
+		display: flex;
+		justify-content: center;
+		margin-top: 15px;
+
+		button {
+			width: max-content;
+		}
+	}
+
 	.content {
 		display: flex;
 		width: 100%;
