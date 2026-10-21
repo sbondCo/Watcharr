@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cache"
@@ -252,22 +253,32 @@ func (r *Router) GetPersonCredits(c *gin.Context) {
 	// Add content into response struct then add watched entries
 	resp := domain.PersonCreditsResponse{}
 	for i := range content.Cast {
-		resp.Credits = append(resp.Credits, content.Cast[i].AsMedia())
+		m := content.Cast[i].AsMedia()
+		m.Jobs = []string{actingJob(content.Cast[i].Character)}
+		resp.Credits = append(resp.Credits, m)
 	}
-	if err := addedtocontent.AddList(
-		r.wp,
-		userId,
-		resp.Credits,
-		func(i int, w *entity.Watched) {
-			resp.Credits[i].Watched = domain.NewWatchedDtoForLists(w)
-		},
-	); err != nil {
-		slog.Error("GetPersonCredits: Failed to add watched to content!", "error", err)
-		c.JSON(
-			http.StatusInternalServerError,
-			router.ErrorResponse{Error: "failed to add watched data to response"},
-		)
-		return
+	resp.Crew = content.CrewByDepartment()
+	// Each list (acting, then every department) gets the user's watched data.
+	lists := [][]domain.Media{resp.Credits}
+	for _, l := range resp.Crew {
+		lists = append(lists, l)
+	}
+	for _, l := range lists {
+		if err := addedtocontent.AddList(
+			r.wp,
+			userId,
+			l,
+			func(i int, w *entity.Watched) {
+				l[i].Watched = domain.NewWatchedDtoForLists(w)
+			},
+		); err != nil {
+			slog.Error("GetPersonCredits: Failed to add watched to content!", "error", err)
+			c.JSON(
+				http.StatusInternalServerError,
+				router.ErrorResponse{Error: "failed to add watched data to response"},
+			)
+			return
+		}
 	}
 	c.JSON(http.StatusOK, resp)
 }
@@ -279,4 +290,16 @@ func (r *Router) GetRegions(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, re)
+}
+
+// actingJob labels an acting credit. Directors' acting credits are mostly
+// documentaries where TMDB's character is "Himself": "Actor" would mislead.
+func actingJob(character string) string {
+	c := strings.ToLower(strings.TrimSpace(character))
+	for _, self := range []string{"self", "himself", "herself", "themselves", "themself"} {
+		if c == self || strings.HasPrefix(c, self+" ") || strings.HasPrefix(c, self+"(") {
+			return "Self"
+		}
+	}
+	return "Actor"
 }

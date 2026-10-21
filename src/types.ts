@@ -373,6 +373,8 @@ export interface Media {
 	similar?: Media[];
 	releaseDate?: string;
 	releaseDateLast?: string;
+	/** Person credits only: the person's jobs on this title ("Director", "Actor"…). */
+	jobs?: string[];
 	status?: string;
 	extBackdropPath?: string;
 	genres?: MediaGenre[];
@@ -485,7 +487,10 @@ export interface PersonDetailsResponse {
 }
 
 export interface PersonCreditsResponse {
+	/** Acting credits. */
 	credits?: Media[];
+	/** Credits behind the camera, by TMDB department ("Directing", "Writing"…). */
+	crew?: Record<string, Media[]>;
 }
 
 export interface TMDBSeasonDetails {

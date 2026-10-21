@@ -2,6 +2,8 @@ package tmdb
 
 import (
 	"log/slog"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -695,7 +697,45 @@ func (t *PersonDetails) AsPersonDetailsResponse() domain.PersonDetailsResponse {
 type PersonCombinedCredits struct {
 	ID   int                               `json:"id"`
 	Cast []PersonCombinedCreditsCastResult `json:"cast"`
-	// crew PersonCombinedCreditsCrew
+	Crew []PersonCombinedCreditsCrewResult `json:"crew"`
+}
+
+// A crew credit has the same fields as a cast one (bar the character), plus
+// the job behind the camera.
+type PersonCombinedCreditsCrewResult struct {
+	PersonCombinedCreditsCastResult
+	Department string `json:"department"`
+	Job        string `json:"job"`
+}
+
+// CrewByDepartment groups crew credits by TMDB department ("Directing",
+// "Writing"…), one entry per title carrying all the person's jobs on it:
+// TMDB lists a title once per job (producer and executive producer of the
+// same film are two entries).
+func (c *PersonCombinedCredits) CrewByDepartment() map[string][]domain.Media {
+	out := map[string][]domain.Media{}
+	at := map[string]int{} // department|type|id -> index in out[department]
+	for i := range c.Crew {
+		cr := &c.Crew[i]
+		if cr.Department == "" || (cr.MediaType != "movie" && cr.MediaType != "tv") {
+			continue
+		}
+		key := cr.Department + "|" + cr.MediaType + "|" + strconv.Itoa(cr.ID)
+		if j, ok := at[key]; ok {
+			m := &out[cr.Department][j]
+			if cr.Job != "" && !slices.Contains(m.Jobs, cr.Job) {
+				m.Jobs = append(m.Jobs, cr.Job)
+			}
+			continue
+		}
+		m := cr.AsMedia()
+		if cr.Job != "" {
+			m.Jobs = []string{cr.Job}
+		}
+		at[key] = len(out[cr.Department])
+		out[cr.Department] = append(out[cr.Department], m)
+	}
+	return out
 }
 
 type PersonCombinedCreditsCastResult struct {
