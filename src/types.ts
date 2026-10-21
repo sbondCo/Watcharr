@@ -587,6 +587,7 @@ export enum ImportResponseType {
 	IMPORT_MULTI = "IMPORT_MULTI",
 	IMPORT_NOTFOUND = "IMPORT_NOTFOUND",
 	IMPORT_EXISTS = "IMPORT_EXISTS",
+	IMPORT_RATING_UPDATED = "IMPORT_RATING_UPDATED",
 }
 
 export interface ImportResponse {
