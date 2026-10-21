@@ -3,6 +3,7 @@
 package imprt
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sbondCo/Watcharr/database/dbmodel"
@@ -44,7 +46,7 @@ type TraktHistory struct {
 	Movie     TraktListMovie   `json:"movie,omitempty"`
 }
 
-type TraktWatchlist []struct {
+type TraktWatchlist struct {
 	Rank     int              `json:"rank"`
 	ID       int              `json:"id"`
 	ListedAt time.Time        `json:"listed_at"`
@@ -55,7 +57,7 @@ type TraktWatchlist []struct {
 	Movie    TraktListMovie   `json:"movie,omitempty"`
 }
 
-type TraktRatings []struct {
+type TraktRating struct {
 	Rating  int              `json:"rating"`
 	Type    string           `json:"type"`
 	Show    TraktListShow    `json:"show,omitempty"`
@@ -108,8 +110,178 @@ func NewTraktService(s *Service) *TraktService {
 	}
 }
 
+type trackImporter struct {
+	toImport     map[string]domain.ImportRequest
+	reportError  func(err string) error
+	reportUpdate func(update string) error
+}
+
+func (i *trackImporter) addHistory(t *TraktService, v TraktHistory) error {
+	var collectingText string
+	switch v.Type {
+	case "episode":
+		collectingText = fmt.Sprintf("%s S%dE%d", v.Show.Title, v.Episode.Season, v.Episode.Number)
+	case "show":
+		collectingText = v.Show.Title
+	case "movie":
+		collectingText = v.Movie.Title
+	}
+	if collectingText != "" {
+		i.reportUpdate("collecting " + collectingText)
+	}
+	return t.processTraktHistoryItem(v, i.toImport)
+}
+
+func (i *trackImporter) addWatchlist(t *TraktService, v TraktWatchlist) {
+	var (
+		title       string
+		contentType domain.ImportContentType
+		tmdbId      int
+	)
+	switch v.Type {
+	case "show", "episode":
+		title = v.Show.Title
+		tmdbId = v.Show.Ids.Tmdb
+		contentType = domain.ImportContentTypeShow
+		if v.Type == "episode" {
+			title = v.Episode.Title
+		}
+	case "movie":
+		title = v.Movie.Title
+		tmdbId = v.Movie.Ids.Tmdb
+		contentType = domain.ImportContentTypeMovie
+	}
+	i.reportUpdate("setting status for " + title)
+	mapKey := t.makeTraktMapKey(contentType, tmdbId)
+	if mv, ok := i.toImport[mapKey]; ok {
+		// If item already exists in toImport, set its status to planned.
+		if v.Type == "episode" {
+			// For episode entries, we have to find the WatchedEpisode to set its status to planned.
+			weFound := false
+			for i, we := range mv.WatchedEpisodes {
+				if we.SeasonNumber == v.Episode.Season && we.EpisodeNumber == v.Episode.Number {
+					we.Status = entity.PLANNED
+					mv.WatchedEpisodes[i] = we
+					weFound = true
+					break
+				}
+			}
+			if !weFound {
+				mv.WatchedEpisodes = append(mv.WatchedEpisodes, entity.WatchedEpisode{
+					SeasonNumber:  v.Episode.Season,
+					EpisodeNumber: v.Episode.Number,
+					Status:        entity.PLANNED,
+					GormModelNoDel: dbmodel.GormModelNoDel{
+						CreatedAt: v.ListedAt,
+					},
+				})
+			}
+			i.toImport[mapKey] = mv
+		} else {
+			mv.Status = entity.PLANNED
+			if v.Notes != "" {
+				// episodes dont support notes in watcharr
+				mv.Thoughts = v.Notes
+			}
+			i.toImport[mapKey] = mv
+		}
+	} else {
+		// If the item does not exist in toImport, create it and set it to planned.
+		ti := domain.ImportRequest{
+			Type:   contentType,
+			TmdbID: tmdbId,
+			Status: entity.PLANNED,
+		}
+		if v.Type == "episode" {
+			ti.WatchedEpisodes = []entity.WatchedEpisode{{
+				SeasonNumber:  v.Episode.Season,
+				EpisodeNumber: v.Episode.Number,
+				Status:        entity.PLANNED,
+				GormModelNoDel: dbmodel.GormModelNoDel{
+					CreatedAt: v.ListedAt,
+				},
+			}}
+		} else {
+			// episodes dont support notes in watcharr
+			ti.Thoughts = v.Notes
+		}
+		i.toImport[mapKey] = ti
+	}
+}
+
+func (i *trackImporter) addRating(t *TraktService, v TraktRating) {
+	var (
+		title       string
+		contentType domain.ImportContentType
+		tmdbId      int
+		traktSlug   string
+	)
+	switch v.Type {
+	case "show", "episode":
+		title = v.Show.Title
+		tmdbId = v.Show.Ids.Tmdb
+		traktSlug = v.Show.Ids.Slug
+		contentType = domain.ImportContentTypeShow
+		if v.Type == "episode" {
+			title = v.Episode.Title
+			traktSlug = v.Episode.Ids.Slug
+		}
+	case "movie":
+		title = v.Movie.Title
+		tmdbId = v.Movie.Ids.Tmdb
+		contentType = domain.ImportContentTypeMovie
+		traktSlug = v.Movie.Ids.Slug
+	}
+	i.reportUpdate(fmt.Sprintf("setting rating of %d for %s", v.Rating, title))
+	mapKey := t.makeTraktMapKey(contentType, tmdbId)
+	if mv, ok := i.toImport[mapKey]; ok {
+		if v.Type == "episode" {
+			// For episode entries, we have to find the WatchedEpisode to set its rating.
+			epFound := false
+			for i, we := range mv.WatchedEpisodes {
+				if we.SeasonNumber == v.Episode.Season && we.EpisodeNumber == v.Episode.Number {
+					we.Rating = int8(v.Rating)
+					mv.WatchedEpisodes[i] = we
+					epFound = true
+					break
+				}
+			}
+			i.toImport[mapKey] = mv
+			if !epFound {
+				i.reportError(fmt.Sprintf("episode rating of %d for %s not imported. The episode does not exist in your history or watchlist.", v.Rating, title))
+			}
+		} else {
+			mv.Rating = float64(v.Rating)
+			i.toImport[mapKey] = mv
+		}
+	} else {
+		// Item should be in toImport by now (from history or watchlist) if it has a rating, otherwise we won't import it
+		i.reportError(fmt.Sprintf("cannot import rating of %d for %s. The main content does not exist in your history or watchlist. type: %s traktSlug: %s", v.Rating, title, v.Type, traktSlug))
+	}
+}
+
+func (i *trackImporter) persist(t *TraktService, userId uint) {
+	for _, v := range i.toImport {
+		_, err := t.s.ImportContent(userId, v)
+		if err != nil {
+			slog.Error("startTraktImport: Failed to do import on content!", "error", err, "import_obj", v)
+			i.reportError(fmt.Sprintf("Failed to import %s as %s. tmdbId: %d", v.Type, v.Status, v.TmdbID))
+		}
+	}
+}
+
 // TODO we could support trakt list imports when we support a similar feature (tags will function as custom lists when done #199)
 func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImportRequest) {
+	importer := trackImporter{
+		toImport: map[string]domain.ImportRequest{},
+		reportError: func(err string) error {
+			return job.AddJobError(jobId, userId, err)
+		},
+		reportUpdate: func(update string) error {
+			return job.UpdateJobCurrentTask(jobId, userId, update)
+		},
+	}
+
 	// Get trakt user. We want to get their profile `slug` for use in
 	// next requests and we can check their profile isn't private while here.
 	var traktUser TraktUser
@@ -133,8 +305,6 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 		return
 	}
 	userSlug := traktUser.IDs.Slug
-	// Everything will be added to this map for importing at the end.
-	toImport := map[string]domain.ImportRequest{}
 	// Process all history for this user (in chunks of 1000).
 	var history []TraktHistory
 	slog.Debug("startTraktImport: Getting first history page")
@@ -164,20 +334,7 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 			return
 		}
 		rProc := func(v TraktHistory) {
-			var collectingText string
-			switch v.Type {
-			case "episode":
-				collectingText = fmt.Sprintf("%s S%dE%d", v.Show.Title, v.Episode.Season, v.Episode.Number)
-			case "show":
-				collectingText = v.Show.Title
-			case "movie":
-				collectingText = v.Movie.Title
-			}
-			if collectingText != "" {
-				job.UpdateJobCurrentTask(jobId, userId, "collecting "+collectingText)
-			}
-			err = t.processTraktHistoryItem(v, toImport)
-			if err != nil {
+			if err := importer.addHistory(t, v); err != nil {
 				job.AddJobError(jobId, userId, err.Error())
 			}
 		}
@@ -206,7 +363,7 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 	}
 	// Get watchlist for PLANNED items
 	slog.Info("startTraktImport: Getting whole watchlist")
-	var watchlist TraktWatchlist
+	var watchlist []TraktWatchlist
 	_, err = t.traktAPIRequest(
 		"users/"+userSlug+"/watchlist",
 		map[string]string{},
@@ -219,85 +376,12 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 		slog.Debug("startTraktImport: Successfully got whole watchlist")
 		for _, v := range watchlist {
 			slog.Debug("startTraktImport: Processing watchlist item", "item", v)
-			var (
-				title       string
-				contentType domain.ImportContentType
-				tmdbId      int
-			)
-			switch v.Type {
-			case "show", "episode":
-				title = v.Show.Title
-				tmdbId = v.Show.Ids.Tmdb
-				contentType = domain.ImportContentTypeShow
-				if v.Type == "episode" {
-					title = v.Episode.Title
-				}
-			case "movie":
-				title = v.Movie.Title
-				tmdbId = v.Movie.Ids.Tmdb
-				contentType = domain.ImportContentTypeMovie
-			}
-			job.UpdateJobCurrentTask(jobId, userId, "setting status for "+title)
-			mapKey := t.makeTraktMapKey(contentType, tmdbId)
-			if mv, ok := toImport[mapKey]; ok {
-				// If item already exists in toImport, set its status to planned.
-				if v.Type == "episode" {
-					// For episode entries, we have to find the WatchedEpisode to set its status to planned.
-					weFound := false
-					for i, we := range mv.WatchedEpisodes {
-						if we.SeasonNumber == v.Episode.Season && we.EpisodeNumber == v.Episode.Number {
-							we.Status = entity.PLANNED
-							mv.WatchedEpisodes[i] = we
-							weFound = true
-							break
-						}
-					}
-					if !weFound {
-						mv.WatchedEpisodes = append(mv.WatchedEpisodes, entity.WatchedEpisode{
-							SeasonNumber:  v.Episode.Season,
-							EpisodeNumber: v.Episode.Number,
-							Status:        entity.PLANNED,
-							GormModelNoDel: dbmodel.GormModelNoDel{
-								CreatedAt: v.ListedAt,
-							},
-						})
-					}
-					toImport[mapKey] = mv
-				} else {
-					mv.Status = entity.PLANNED
-					if v.Notes != "" {
-						// episodes dont support notes in watcharr
-						mv.Thoughts = v.Notes
-					}
-					toImport[mapKey] = mv
-				}
-			} else {
-				// If the item does not exist in toImport, create it and set it to planned.
-				ti := domain.ImportRequest{
-					Type:   contentType,
-					TmdbID: tmdbId,
-					Status: entity.PLANNED,
-				}
-				if v.Type == "episode" {
-					ti.WatchedEpisodes = []entity.WatchedEpisode{{
-						SeasonNumber:  v.Episode.Season,
-						EpisodeNumber: v.Episode.Number,
-						Status:        entity.PLANNED,
-						GormModelNoDel: dbmodel.GormModelNoDel{
-							CreatedAt: v.ListedAt,
-						},
-					}}
-				} else {
-					// episodes dont support notes in watcharr
-					ti.Thoughts = v.Notes
-				}
-				toImport[mapKey] = ti
-			}
+			importer.addWatchlist(t, v)
 		}
 	}
 	// Process ratings
 	slog.Info("startTraktImport: Getting all ratings")
-	var ratings TraktRatings
+	var ratings []TraktRating
 	_, err = t.traktAPIRequest(
 		"users/"+userSlug+"/ratings",
 		map[string]string{},
@@ -310,64 +394,12 @@ func (t *TraktService) startTraktImport(jobId string, userId uint, req TraktImpo
 		slog.Debug("startTraktImport: Successfully got all ratings")
 		for _, v := range ratings {
 			slog.Debug("startTraktImport: Processing rating item", "item", v)
-			var (
-				title       string
-				contentType domain.ImportContentType
-				tmdbId      int
-				traktSlug   string
-			)
-			switch v.Type {
-			case "show", "episode":
-				title = v.Show.Title
-				tmdbId = v.Show.Ids.Tmdb
-				traktSlug = v.Show.Ids.Slug
-				contentType = domain.ImportContentTypeShow
-				if v.Type == "episode" {
-					title = v.Episode.Title
-					traktSlug = v.Episode.Ids.Slug
-				}
-			case "movie":
-				title = v.Movie.Title
-				tmdbId = v.Movie.Ids.Tmdb
-				contentType = domain.ImportContentTypeMovie
-				traktSlug = v.Movie.Ids.Slug
-			}
-			job.UpdateJobCurrentTask(jobId, userId, fmt.Sprintf("setting rating of %d for %s", v.Rating, title))
-			mapKey := t.makeTraktMapKey(contentType, tmdbId)
-			if mv, ok := toImport[mapKey]; ok {
-				if v.Type == "episode" {
-					// For episode entries, we have to find the WatchedEpisode to set its rating.
-					epFound := false
-					for i, we := range mv.WatchedEpisodes {
-						if we.SeasonNumber == v.Episode.Season && we.EpisodeNumber == v.Episode.Number {
-							we.Rating = int8(v.Rating)
-							mv.WatchedEpisodes[i] = we
-							epFound = true
-							break
-						}
-					}
-					toImport[mapKey] = mv
-					if !epFound {
-						job.AddJobError(jobId, userId, fmt.Sprintf("episode rating of %d for %s not imported. The episode does not exist in your history or watchlist.", v.Rating, title))
-					}
-				} else {
-					mv.Rating = float64(v.Rating)
-					toImport[mapKey] = mv
-				}
-			} else {
-				// Item should be in toImport by now (from history or watchlist) if it has a rating, otherwise we won't import it
-				job.AddJobError(jobId, userId, fmt.Sprintf("cannot import rating of %d for %s. The main content does not exist in your history or watchlist. type: %s traktSlug: %s", v.Rating, title, v.Type, traktSlug))
-			}
+			importer.addRating(t, v)
 		}
 	}
-	// Loop over `toImport` and finally import everything.
-	for _, v := range toImport {
-		_, err := t.s.ImportContent(userId, v)
-		if err != nil {
-			slog.Error("startTraktImport: Failed to do import on content!", "error", err, "import_obj", v)
-			job.AddJobError(jobId, userId, fmt.Sprintf("Failed to import %s as %s. tmdbId: %d", v.Type, v.Status, v.TmdbID))
-		}
-	}
+
+	importer.persist(t, userId)
+
 	// We are donezo
 	job.UpdateJobStatus(jobId, userId, job.JOB_DONE)
 }
@@ -509,4 +541,112 @@ func (t *TraktService) TraktImportWatched(
 	)
 
 	return TraktImportResponse{JobId: jobId}, nil
+}
+
+func (t *TraktService) TraktImportWatchedFromZip(
+	userId uint,
+	file io.ReaderAt,
+	size int64,
+) error {
+	errors := make([]string, 0)
+
+	importer := trackImporter{
+		toImport: map[string]domain.ImportRequest{},
+		reportError: func(err string) error {
+			slog.Error("error while importing trakt data", slog.String("error", err), slog.Uint64("userId", uint64(userId)))
+			errors = append(errors, err)
+			return nil
+		},
+		reportUpdate: func(update string) error {
+			slog.Info("trakt data import update", slog.String("update", update), slog.Uint64("userId", uint64(userId)))
+			return nil
+		},
+	}
+
+	reader, err := zip.NewReader(file, size)
+	if err != nil {
+		return fmt.Errorf("failed opening ZIP file: %w", err)
+	}
+
+	var watchedHistoryItems []TraktHistory
+	var watchlistItems []TraktWatchlist
+	var ratingItems []TraktRating
+
+	for _, file := range reader.File {
+		if strings.HasPrefix(file.Name, "watched-history-") {
+			f, err := reader.Open(file.Name)
+			if err != nil {
+				return fmt.Errorf("failed opening '%s': %w", file.Name, err)
+			}
+			data, err := io.ReadAll(f)
+			if err != nil {
+				return fmt.Errorf("failed reading '%s': %w", file.Name, err)
+			}
+
+			var items []TraktHistory
+			if err := json.Unmarshal(data, &items); err != nil {
+				return fmt.Errorf("failed parsing JSON for '%s': %w", file.Name, err)
+			}
+
+			for _, item := range items {
+				watchedHistoryItems = append(watchedHistoryItems, item)
+			}
+		}
+
+		if file.Name == "lists-watchlist.json" {
+			f, err := reader.Open(file.Name)
+			if err != nil {
+				return fmt.Errorf("failed opening '%s': %w", f, err)
+			}
+			data, err := io.ReadAll(f)
+			if err != nil {
+				return fmt.Errorf("failed reading '%s': %w", f, err)
+			}
+
+			var items []TraktWatchlist
+			if err := json.Unmarshal(data, &items); err != nil {
+				return fmt.Errorf("failed parsing JSON for '%s': %w", f, err)
+			}
+
+			for _, item := range items {
+				watchlistItems = append(watchlistItems, item)
+			}
+		}
+
+		if strings.HasPrefix(file.Name, "ratings-") {
+			f, err := reader.Open(file.Name)
+			if err != nil {
+				return fmt.Errorf("failed opening '%s': %w", f, err)
+			}
+			data, err := io.ReadAll(f)
+			if err != nil {
+				return fmt.Errorf("failed reading '%s': %w", f, err)
+			}
+
+			var items []TraktRating
+			if err := json.Unmarshal(data, &items); err != nil {
+				return fmt.Errorf("failed parsing JSON for '%s': %w", f, err)
+			}
+
+			for _, item := range items {
+				ratingItems = append(ratingItems, item)
+			}
+		}
+	}
+
+	for _, item := range watchedHistoryItems {
+		importer.addHistory(t, item)
+	}
+
+	for _, item := range watchlistItems {
+		importer.addWatchlist(t, item)
+	}
+
+	for _, item := range ratingItems {
+		importer.addRating(t, item)
+	}
+
+	importer.persist(t, userId)
+
+	return nil
 }
