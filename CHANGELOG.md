@@ -85,6 +85,11 @@ These changes are awaiting release:
 - Task: Moved tasks definition to `watcharr.go` main func so we can use all our services easily.
 - Setting.svelte: Refactor to make markup simpler.
 - CleanupImages: Refactored function. Now uses a new helper function that gets references from sqlite schema table directly so we don't have to manually keep track of the query.
+- workflow: container-release:
+  - Deleted container-dev.yml, its behavior has been incorporated into container-release (instead of `dev` tag, we will now use `beta` tag because it makes more sense).
+  - Improved on tag push filter to only let through valid git tags.
+  - Add `beta` tag to beta versions.
+  - Add `major.minor` tags to stable versions.
 
 ## Docs
 
