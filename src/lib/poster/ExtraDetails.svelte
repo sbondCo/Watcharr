@@ -25,6 +25,16 @@
 			store.userSettings.ratingSystem === RatingSystem.Thumbs,
 	);
 
+	let statusColorMap = {
+		FINISHED: "var(--status-finished-color)",
+		PLANNED: "var(--status-planned-color)",
+		WATCHING: "var(--status-watching-color)",
+		HOLD: "var(--status-hold-color)",
+		DROPPED: "var(--status-dropped-color)",
+	};
+
+	let backgroundColor = status !== undefined ? statusColorMap[status] : "";
+
 	function formatDate(e: number) {
 		if (!e) {
 			return "Unknown";
@@ -36,8 +46,8 @@
 	}
 </script>
 
-{#if (page.url?.pathname === "/" || page.url?.pathname.startsWith("/search")) && store.wlDetailedView && store.wlDetailedView.length > 0}
-	<div class="extra-details">
+{#if (page.url?.pathname === "/" || page.url?.pathname.startsWith("/search") || page.url?.pathname.startsWith("/person") || page.url?.pathname.startsWith("/discover")) && details && store.wlDetailedView && store.wlDetailedView.length > 0}
+	<div class="extra-details" style="background-color: {backgroundColor}">
 		<!--
       The `if` statements can't be on their own line to look pretty
       because that will cause whitespace in the generated markup,
@@ -99,8 +109,9 @@
 
 <style lang="scss">
 	.extra-details {
+		$bot: 6px;
+		bottom: $bot;
 		position: absolute;
-		bottom: 5px;
 		left: 50%;
 		transform: translateX(-50%);
 		display: flex;
@@ -108,7 +119,7 @@
 		justify-content: center;
 		align-items: center;
 		font-size: 14px;
-		width: 160px;
+		width: calc(100% - $bot * 2);
 		color: white;
 		background-color: $poster-extra-detail-bg-color;
 		border-radius: 10px;
