@@ -55,6 +55,7 @@ These changes are awaiting release:
 - Search: Don't trim the ending whitespace from query on debounced search (thanks to [@fjacques-2025] in https://github.com/sbondCo/Watcharr/pull/1078).
 - runUI: Fix flow and add scanner.Err check.
 - CleanupImages: Don't delete game images that are still in use (reported by [@fjacques-2025]).
+- GHSA-5g2m-mjff-5hjj (thanks to [@kats1123] for reporting!)
 
 ## Maintenance
 
@@ -2023,3 +2024,4 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@KarpachMarko]: https://github.com/KarpachMarko
 [@LeonNamowitz]: https://github.com/LeonNamowitz
 [@fjacques-2025]: https://github.com/fjacques-2025
+[@kats1123]: https://github.com/kats1123
