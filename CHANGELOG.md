@@ -44,6 +44,7 @@ These changes are awaiting release:
 - Server Settings: Renamed face menu option from "Settings" to "Server" (since "Settings" is now for user settings page).
 - Gin: Disabled TrustedProxies feature.
 - runUI: Moved the UI server to listen on a unix socket (this adds better separation since the ui server should not be accidentally accessible directly; it's only meant for internal communication).
+- FaceMenu: Increase width by 10px to 150px, so the longer version strings (betas) fit on one line.
 
 ## Fixed
 
