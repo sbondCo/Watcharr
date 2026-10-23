@@ -215,6 +215,22 @@ func (a *Arr) AddContent(b map[string]interface{}) (map[string]interface{}, erro
 	return resp, nil
 }
 
+var httpClient = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		if len(via) == 0 {
+			return nil
+		}
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
+		// Refuse redirects to another host to protect our `apikey` query param.
+		if req.URL.Host != via[0].URL.Host {
+			return errors.New("arr: cross-host redirect refused for arr request")
+		}
+		return nil
+	},
+}
+
 func request(host string, ep string, p map[string]string, resp interface{}) (int, error) {
 	slog.Debug("arrAPIRequest", "endpoint", ep, "params", p)
 	base, err := url.Parse(host)
@@ -235,7 +251,7 @@ func request(host string, ep string, p map[string]string, resp interface{}) (int
 	base.RawQuery = params.Encode()
 
 	// Run get request
-	res, err := http.Get(base.String())
+	res, err := httpClient.Get(base.String())
 	if err != nil {
 		if res != nil {
 			return res.StatusCode, err
@@ -281,7 +297,7 @@ func requestPost(host string, ep string, key string, p map[string]interface{}, r
 	if err != nil {
 		return err
 	}
-	res, err = http.Post(base.String(), "application/json", bytes.NewBuffer(jsonp))
+	res, err = httpClient.Post(base.String(), "application/json", bytes.NewBuffer(jsonp))
 	if err != nil {
 		return err
 	}
