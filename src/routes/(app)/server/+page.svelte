@@ -111,6 +111,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Server</title>
+</svelte:head>
+
 <div class="content">
 	<div class="inner">
 		<SettingsList>
