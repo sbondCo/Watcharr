@@ -33,6 +33,10 @@
 			<b>(JELLYFIN)</b> Once the Webhook plugin is installed, you should see a
 			<code>settings</code> button. Click it to enter the Webhook plugin settings.
 		</p>
+		<p>
+			If you were prompted to restart the Jellyfin server, you should do that.
+			Then you'll see the Settings button in the Webhook plugin page.
+		</p>
 	</li>
 	<li>
 		<p>
