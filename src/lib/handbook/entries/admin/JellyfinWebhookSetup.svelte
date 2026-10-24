@@ -101,6 +101,11 @@
 	</li>
 	<li>
 		<p>
+			<b>(JELLYFIN)</b> Enable <code>Send All Properties</code>.
+		</p>
+	</li>
+	<li>
+		<p>
 			<b>(JELLYFIN)</b> Scroll to the bottom and click <code>Save</code>.
 		</p>
 	</li>
