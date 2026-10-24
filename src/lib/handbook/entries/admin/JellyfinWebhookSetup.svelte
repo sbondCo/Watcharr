@@ -96,6 +96,11 @@
 	</li>
 	<li>
 		<p>
+			<b>(JELLYFIN)</b> Enable the users you want webhook events to be sent for.
+		</p>
+	</li>
+	<li>
+		<p>
 			<b>(JELLYFIN)</b> Scroll to the bottom and click <code>Save</code>.
 		</p>
 	</li>
