@@ -14,7 +14,7 @@ These changes are awaiting release:
 - ActivityEditor: Added expandable section for viewing full raw activity.
 - Handbook: A new way for Watcharr to help out when you aren't sure what to do. In beta stages, but the vision is all Watcharr documentation relating to usage/configuring will be directly accessible from where you are doing something that you may want further explanation on.
   - The external documentation site will still exist, but be more for initial install guides.
-  - The new handbook will be accessible as a standalone page, or as small `?` buttons next to certain features that open up the related handbook entry in a popup modal.
+  - The new handbook will be accessible as a standalone page, or as small `help` buttons next to certain features that open up the related handbook entry in a popup modal.
 - Automation: Added season status change hook, which currently supports updating the series top-level status automatically depending on all season statuses.
   - Series is PLANNED & new season set to WATCHING/FINISHED -> Series updated to WATCHING.
   - All seasons in series are completed -> (if show ended: Series updated to FINISHED), (if show is continuing: Series updated to PLANNED).
@@ -57,6 +57,7 @@ These changes are awaiting release:
 - runUI: Fix flow and add scanner.Err check.
 - CleanupImages: Don't delete game images that are still in use (reported by [@fjacques-2025]).
 - GHSA-5g2m-mjff-5hjj (thanks to [@kats1123] for reporting!)
+- LoginJellyfin/LoginPlex: Update auth_token query now only updates auth_token(+2) instead of sending everything up again (also fixes logging in again resetting auto_sync setting to default value).
 
 ## Maintenance
 

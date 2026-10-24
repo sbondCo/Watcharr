@@ -271,14 +271,23 @@ func (s *Service) LoginJellyfin(userL *entity.User) (AuthResponse, error) {
 		} else if resp.AccessToken != "" {
 			// We got the user.. update their access token in db
 			slog.Debug("LoginJellyfin: Updating user with new access token")
-			for i, v := range dbUser.UserServices {
-				if v.Name == entity.UserServiceNameJellyfin {
-					slog.Info("LoginJellyfin: Found jellyfin user service.. attemping to update")
-					dbUser.UserServices[i].AuthToken = resp.AccessToken
-					break
+			for _, v := range dbUser.UserServices {
+				if v.Name != entity.UserServiceNameJellyfin ||
+					v.ClientID != resp.User.ID {
+					continue
 				}
+				slog.Info("LoginJellyfin: Found user service.. updating token.",
+					"user_service_id", v.ID, "client_id", resp.User.ID)
+				err := s.db.
+					Model(&entity.UserServices{}).
+					Where("id = ?", v.ID).
+					Update("auth_token", resp.AccessToken).
+					Error
+				if err != nil {
+					slog.Error("LoginJellyfin: Failed to update auth_token.", "error", err)
+				}
+				break
 			}
-			s.db.Save(&dbUser.UserServices)
 		}
 	}
 
@@ -333,6 +342,7 @@ func (s *Service) LoginPlex(lr *plex.PlexLoginRequest) (AuthResponse, error) {
 		slog.Error("loginPlex: Username or id missing from account response:", "username", account.Username, "id", account.Id)
 		return AuthResponse{}, errors.New("data is missing from the plex account response")
 	}
+	clientID := strconv.FormatUint(account.Id, 10)
 	// Get users auth token against our home plex server.
 	// If no auth token, assume they don't have access to our plex server.
 	homeAuthToken, err := s.plexProvider.GetPlexHomeServerAuthToken(lr.AuthToken, lr.ClientIdentifier)
@@ -350,7 +360,7 @@ func (s *Service) LoginPlex(lr *plex.PlexLoginRequest) (AuthResponse, error) {
 			dbUser.Type = entity.PLEX_USER
 			dbUser.UserServices = append(dbUser.UserServices, entity.UserServices{
 				Name:       "plex",
-				ClientID:   strconv.FormatUint(account.Id, 10),
+				ClientID:   clientID,
 				AuthToken:  lr.AuthToken,
 				AuthToken2: homeAuthToken,
 			})
@@ -366,17 +376,26 @@ func (s *Service) LoginPlex(lr *plex.PlexLoginRequest) (AuthResponse, error) {
 		}
 	} else {
 		// If user exists.. update their access tokens in db
-		for i, v := range dbUser.UserServices {
-			if v.Name == "plex" {
-				slog.Info("loginPlex: Found plex user service.. attemping to update")
-				dbUser.UserServices[i].AuthToken = lr.AuthToken
-				if homeAuthToken != "" {
-					dbUser.UserServices[i].AuthToken2 = homeAuthToken
-				}
-				break
+		for _, v := range dbUser.UserServices {
+			if v.Name != entity.UserServiceNamePlex ||
+				v.ClientID != clientID {
+				continue
 			}
+			slog.Info("loginPlex: Found user service.. updating tokens.",
+				"user_service_id", v.ID, "client_id", clientID)
+			err := s.db.
+				Model(&entity.UserServices{}).
+				Where("id = ?", v.ID).
+				Updates(entity.UserServices{
+					AuthToken:  lr.AuthToken,
+					AuthToken2: homeAuthToken,
+				}).
+				Error
+			if err != nil {
+				slog.Error("LoginJellyfin: Failed to update auth_token.", "error", err)
+			}
+			break
 		}
-		s.db.Save(&dbUser.UserServices)
 	}
 	token, err := s.signJWT(dbUser.ID, dbUser.Username, entity.PLEX_USER)
 	if err != nil {
