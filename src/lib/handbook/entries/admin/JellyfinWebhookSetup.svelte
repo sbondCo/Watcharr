@@ -20,7 +20,12 @@
 		<p><b>(JELLYFIN)</b> Install the Official Webhook plugin in Jellyfin.</p>
 		<p>
 			Simply go to your server dashboard, find the plugins store and look for
-			one called <code>Webhook</code>. Install it.
+			one called <code>Webhook</code> and install it.
+		</p>
+		<p>
+			If you see more than one Webhook plugin and don't know which to pick: Get
+			the one from the <code>Jellyfin Stable</code> repository by the developer
+			<code>jellyfin</code>.
 		</p>
 	</li>
 	<li>
