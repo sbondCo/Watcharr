@@ -2,6 +2,8 @@
 
 These changes are awaiting release:
 
+# [4.3.0] - 2026-10-24T21:51:00Z
+
 ## Added
 
 - Jellyfin: Automatic tracking via [jellyfin webhook](https://github.com/jellyfin/jellyfin-plugin-webhook).
@@ -98,6 +100,10 @@ These changes are awaiting release:
 
 - `server_config/environment-variables`: Add `PORT`.
 - `installation/docker-compose`: Added a tip pointing to supported environment variables.
+
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/orgs/sbondCo/packages/container/watcharr/1441074763?tag=v4.3.0) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.3.0/images/sha256-2541a57fa8991ab0081ceac3cdf889e80a4c4f7f50551db68d8b016fc5f54131).
 
 # [4.2.2] - 2026-09-12T21:00:01Z
 
@@ -1913,7 +1919,8 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 
 <!-- Version Changelog References (newest first) -->
 
-[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.3.0...HEAD
+[4.3.0]: https://github.com/sbondCo/Watcharr/compare/v4.2.2...v4.3.0
 [4.2.2]: https://github.com/sbondCo/Watcharr/compare/v4.2.1...v4.2.2
 [4.2.1]: https://github.com/sbondCo/Watcharr/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/sbondCo/Watcharr/compare/v4.1.1...v4.2.0
