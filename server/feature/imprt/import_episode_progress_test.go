@@ -7,7 +7,6 @@ import (
 	"github.com/sbondCo/Watcharr/database/dbmodel"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
-	"github.com/sbondCo/Watcharr/feature/watched/episode"
 	"github.com/sbondCo/Watcharr/util"
 )
 
@@ -185,28 +184,26 @@ func TestHasWatchedEpisode(t *testing.T) {
 }
 
 // Stands in for the watched episode service, recording what it was asked to
-// add and handing back the episode list it would have saved.
+// set and handing back the episode it would have saved.
 type fakeWatchedEpisodeProvider struct {
-	calls []episode.WatchedEpisodeAddRequest
-	saved []entity.WatchedEpisode
+	calls []domain.WatchedEpisodeSetRequest
 	err   error
 }
 
-func (f *fakeWatchedEpisodeProvider) AddWatchedEpisodes(
+func (f *fakeWatchedEpisodeProvider) SetWatchedEpisode(
 	userId uint,
-	ar episode.WatchedEpisodeAddRequest,
-) (episode.WatchedEpisodeAddResponse, error) {
+	ar domain.WatchedEpisodeSetRequest,
+) (domain.WatchedEpisodeSetResponse, error) {
 	f.calls = append(f.calls, ar)
 	if f.err != nil {
-		return episode.WatchedEpisodeAddResponse{}, f.err
+		return domain.WatchedEpisodeSetResponse{}, f.err
 	}
-	f.saved = append(f.saved, entity.WatchedEpisode{
+	return domain.WatchedEpisodeSetResponse{WatchedEpisode: entity.WatchedEpisode{
 		WatchedID:     ar.WatchedID,
 		SeasonNumber:  ar.SeasonNumber,
 		EpisodeNumber: ar.EpisodeNumber,
 		Status:        ar.Status,
-	})
-	return episode.WatchedEpisodeAddResponse{WatchedEpisodes: f.saved}, nil
+	}}, nil
 }
 
 // TestAddEpisodes covers marking episodes as watched on an entry: episodes
@@ -271,7 +268,7 @@ func TestAddEpisodes(t *testing.T) {
 				t.Errorf("added = %d, want %d", added, tt.wantAdded)
 			}
 			if len(fake.calls) != len(tt.wantCalls) {
-				t.Fatalf("AddWatchedEpisodes calls = %d, want %d",
+				t.Fatalf("SetWatchedEpisode calls = %d, want %d",
 					len(fake.calls), len(tt.wantCalls))
 			}
 			for i, c := range fake.calls {
@@ -307,7 +304,7 @@ func TestAddEpisodesTwiceAddsNothingTheSecondTime(t *testing.T) {
 		t.Errorf("second run added = %d, want 0", added)
 	}
 	if len(fake.calls) != 3 {
-		t.Errorf("AddWatchedEpisodes calls = %d, want 3 (the second run must"+
+		t.Errorf("SetWatchedEpisode calls = %d, want 3 (the second run must"+
 			" not ask for anything)", len(fake.calls))
 	}
 }
@@ -376,7 +373,7 @@ func TestFillInMissingEpisodes_NothingToDo(t *testing.T) {
 				t.Errorf("response type = %q, want %q", resp.Type, domain.IMPORT_EXISTS)
 			}
 			if len(fakeEps.calls) != 0 {
-				t.Errorf("AddWatchedEpisodes called %d times, want 0",
+				t.Errorf("SetWatchedEpisode called %d times, want 0",
 					len(fakeEps.calls))
 			}
 		})

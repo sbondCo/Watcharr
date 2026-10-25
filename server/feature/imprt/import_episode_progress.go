@@ -6,7 +6,6 @@ import (
 
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
-	"github.com/sbondCo/Watcharr/feature/watched/episode"
 	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/util"
 )
@@ -139,11 +138,12 @@ func (s *Service) addEpisodes(
 		if hasWatchedEpisode(w.WatchedEpisodes, e) {
 			continue
 		}
-		resp, err := s.wep.AddWatchedEpisodes(userId, episode.WatchedEpisodeAddRequest{
-			WatchedID:     w.ID,
-			SeasonNumber:  e.SeasonNumber,
-			EpisodeNumber: e.EpisodeNumber,
-			Status:        entity.FINISHED,
+		resp, err := s.wep.SetWatchedEpisode(userId, domain.WatchedEpisodeSetRequest{
+			WatchedID:         w.ID,
+			SeasonNumber:      e.SeasonNumber,
+			EpisodeNumber:     e.EpisodeNumber,
+			Status:            entity.FINISHED,
+			ActivityCreatedBy: entity.ActivityCreatedByGenericImport,
 		})
 		if err != nil {
 			slog.Error("addEpisodes: Failed to add a watched episode.",
@@ -151,9 +151,9 @@ func (s *Service) addEpisodes(
 				"episode", e.EpisodeNumber, "error", err)
 			continue
 		}
-		// The response carries the full episode list, so keeping it means the
-		// already watched check above stays correct as we go.
-		w.WatchedEpisodes = resp.WatchedEpisodes
+		// Keep the saved episode on w, so the already watched check above
+		// stays correct as we go.
+		w.WatchedEpisodes = append(w.WatchedEpisodes, resp.WatchedEpisode)
 		added++
 	}
 	slog.Info("addEpisodes: Added watched episodes.",
