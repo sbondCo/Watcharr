@@ -133,8 +133,6 @@ func refineSort(
 				userId,
 				[]entity.ActivityType{
 					entity.EPISODE_ADDED,
-					entity.EPISODE_ADDED_JF,
-					entity.EPISODE_ADDED_PLEX,
 					entity.EPISODE_RATING_CHANGED,
 					entity.EPISODE_STATUS_CHANGED,
 				}).
