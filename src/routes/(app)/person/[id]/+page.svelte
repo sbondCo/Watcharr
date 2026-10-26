@@ -16,6 +16,7 @@
 	import PosterImage from "@/lib/content/PosterImage.svelte";
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
 	import CountBadge from "@/lib/generic/CountBadge.svelte";
+	import tooltip from "@/lib/actions/tooltip.js";
 
 	let { data } = $props();
 
@@ -213,7 +214,12 @@
 								{/if}
 								{#if person.firstKnownCredit}
 									{@const fkc = person.firstKnownCredit}
-									<div>
+									<div
+										use:tooltip={{
+											text: `When they were ${fkc.age}!`,
+											condition: Boolean(fkc.age),
+										}}
+									>
 										<span>First Credit</span>
 										<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 										<a href={`/${fkc.type}/${fkc.id}`}>

@@ -10,7 +10,7 @@ These changes are awaiting release:
   - New filter for department of credit (fixes person pages for non-actors: https://github.com/sbondCo/Watcharr/issues/951).
   - "Credits" title with a badge displaying total count of credits loaded.
   - "Known Credits" detail showing count of all credits.
-  - "First Credit" detail showing date of earliest known credit (with link to visit it).
+  - "First Credit" detail showing date of earliest known credit (with link to visit it and tooltip showing the persons age at the time).
 
 ## Changed
 

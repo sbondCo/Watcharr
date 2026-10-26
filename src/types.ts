@@ -488,9 +488,10 @@ export interface PersonDetailsResponse {
 }
 
 export interface PersonDetailsFirstKnownCredit {
-	id: number;
-	type: string;
+	id?: number;
+	type?: string;
 	date: string;
+	age?: number;
 }
 
 export interface PersonCreditsResponse {
