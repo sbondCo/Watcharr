@@ -15,14 +15,18 @@
 	import PageBackdrop from "@/lib/generic/PageBackdrop.svelte";
 	import PosterImage from "@/lib/content/PosterImage.svelte";
 	import ExpandableText from "@/lib/content/ExpandableText.svelte";
+	import CountBadge from "@/lib/generic/CountBadge.svelte";
 
 	let { data } = $props();
 
 	let person: PersonDetailsResponse | undefined = $state();
 	let pageError: unknown | undefined = $state();
 	let sortOption = $state("Vote count");
-	let credits: PersonCreditsResponse | undefined = $state();
 	let onMyListFilter = $state(false);
+	let activeCreditType: string | undefined = $state();
+
+	let credits: PersonCreditsResponse | undefined = $state();
+	let creditsError: unknown | undefined = $state();
 
 	$effect(() => {
 		if (data.personId) {
@@ -44,8 +48,8 @@
 				return;
 			}
 			person = await getPerson(data.personId);
-			await updatePersonCredits();
-			sortCredits(sortOption);
+			activeCreditType = person.knownForDepartment;
+			getCredits(activeCreditType);
 		} catch (err) {
 			person = undefined;
 			pageError = err;
@@ -56,13 +60,27 @@
 		return await req.get<PersonDetailsResponse>(`/content/person/${id}`);
 	}
 
-	async function updatePersonCredits() {
-		credits = await req.get<PersonCreditsResponse>(
-			`/content/person/${data.personId}/credits`,
-		);
-		credits.credits = credits.credits?.filter(
-			(v, i, a) => a.findIndex((t) => t.ids.tmdb === v.ids.tmdb) === i,
-		); // remove duplicate entries. If an actor has multiple roles in a single movie, it would otherwise show up multiple times
+	async function getCredits(type?: string) {
+		try {
+			console.log("getCredits: type:", type);
+			credits = undefined;
+			creditsError = undefined;
+			credits = await req.get<PersonCreditsResponse>(
+				`/content/person/${data.personId}/credits`,
+				{
+					params: {
+						type: type,
+					},
+				},
+			);
+			credits.credits = credits.credits?.filter(
+				(v, i, a) => a.findIndex((t) => t.ids.tmdb === v.ids.tmdb) === i,
+			); // remove duplicate entries. If an actor has multiple roles in a single movie, it would otherwise show up multiple times
+			sortCredits(sortOption);
+		} catch (err) {
+			credits = undefined;
+			creditsError = err;
+		}
 	}
 
 	function newestOldestSort(
@@ -187,18 +205,68 @@
 										<span>{person.age} Years</span>
 									</div>
 								{/if}
+								{#if person.knownCredits}
+									<div>
+										<span>Known Credits</span>
+										<span>{person.knownCredits}</span>
+									</div>
+								{/if}
+								{#if person.firstKnownCredit}
+									{@const fkc = person.firstKnownCredit}
+									<div>
+										<span>First Credit</span>
+										<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+										<a href={`/${fkc.type}/${fkc.id}`}>
+											{new Date(Date.parse(fkc.date)).toLocaleDateString()}
+										</a>
+									</div>
+								{/if}
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			{#if credits}
+			{#if creditsError}
+				<Error
+					pretty="Failed to load credits!"
+					error={creditsError}
+					onRetry={() => {
+						getCredits(activeCreditType);
+					}}
+				/>
+			{:else if !credits}
+				<Spinner />
+			{:else if credits}
 				{#if credits?.credits && credits?.credits?.length > 0}
-					<div class="filters">
+					<div class="control-bar">
+						<div class="title">
+							<h2>Credits</h2>
+							<CountBadge count={credits.credits.length} />
+						</div>
 						<div class="listFilter">
 							<span>On my list</span>
 							<Checkbox name="On my list" bind:value={onMyListFilter} />
 						</div>
+						{#if person.creditTypes && person.creditTypes.length > 0}
+							<DropDown
+								bind:active={
+									() => activeCreditType,
+									(t) => {
+										activeCreditType = t;
+										getCredits(t);
+									}
+								}
+								placeholder="Credit Type"
+								options={person.creditTypes}
+								isDropDownItem={false}
+								showActiveElementsInOptions={true}
+								// min-width so when a small entry like "Art" is
+								// selected, the dropdown box doesn't become too
+								// small for other options text and cause
+								// overflowing.
+								minWidth="100px"
+							/>
+						{/if}
 						<DropDown
 							bind:active={sortOption}
 							placeholder="Vote count"
@@ -226,8 +294,6 @@
 						<h4 class="norm">It seems that this person has no credits.</h4>
 					</div>
 				{/if}
-			{:else}
-				<Spinner />
 			{/if}
 		{:else}
 			person not found
@@ -240,17 +306,25 @@
 <style lang="scss">
 	@use "../../../../lib/content/page.scss";
 
-	.filters {
+	.control-bar {
 		align-items: center;
 		display: flex;
-		justify-content: flex-end;
-		gap: 30px;
+		flex-wrap: wrap;
+		gap: 20px;
 		margin: 0 auto;
 		padding-left: 20px;
 		padding-right: 20px;
 		width: 100%;
 		/* Same as in PosterList */
 		max-width: 1200px;
+
+		.title {
+			display: flex;
+			flex-flow: row;
+			gap: 10px;
+			align-items: center;
+			margin-right: auto;
+		}
 
 		.listFilter {
 			display: flex;
@@ -293,6 +367,11 @@
 
 					span:first-child {
 						font-weight: bold;
+					}
+
+					a {
+						color: white;
+						text-decoration: underline;
 					}
 				}
 			}

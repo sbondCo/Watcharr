@@ -482,6 +482,15 @@ export interface PersonDetailsResponse {
 	biography?: string;
 	homepage?: string;
 	extPosterPath?: string;
+	knownCredits?: number;
+	firstKnownCredit?: PersonDetailsFirstKnownCredit;
+	creditTypes?: string[];
+}
+
+export interface PersonDetailsFirstKnownCredit {
+	id: number;
+	type: string;
+	date: string;
 }
 
 export interface PersonCreditsResponse {

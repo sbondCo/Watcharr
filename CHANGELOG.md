@@ -2,6 +2,25 @@
 
 These changes are awaiting release:
 
+<img width="500" alt="example of Christopher Nolan's page correctly displaying the movies they have directed." src="./changelog/4.4.0/0.png" />
+
+## Added
+
+- Person:
+  - New filter for department of credit (fixes person pages for non-actors: https://github.com/sbondCo/Watcharr/issues/951).
+  - "Credits" title with a badge displaying total count of credits loaded.
+  - "Known Credits" detail showing count of all credits.
+  - "First Credit" detail showing date of earliest known credit (with link to visit it).
+
+## Changed
+
+- Person: Load credits that match the persons main department first.
+- Activity: Moved count to component `CountBadge` (so it could be used on person page too).
+
+## Fixed
+
+- Person: Show error when loading credits fails instead of infinite loading.
+
 # [4.3.0] - 2026-10-24T21:51:00Z
 
 ## Added
