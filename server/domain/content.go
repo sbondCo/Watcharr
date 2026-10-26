@@ -37,6 +37,8 @@ type PersonDetailsFirstKnownCredit struct {
 	ID   int       `json:"id,omitempty"`
 	Type string    `json:"type,omitempty"`
 	Date time.Time `json:"date,omitzero"`
+	// Age of person when credited.
+	Age int `json:"age,omitzero"`
 }
 
 const CreditTypeActing = "Acting"

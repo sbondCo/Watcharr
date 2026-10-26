@@ -754,6 +754,9 @@ func (t *PersonDetails) asPersonDetailsResponse_MakeRespFuller(
 			c.ID, c.MediaType, cmp.Or(c.ReleaseDate, c.FirstCreditAirDate))
 	}
 
+	if m.FirstKnownCredit.ID != 0 {
+		m.FirstKnownCredit.Age = util.GetAge(m.Birthday, m.FirstKnownCredit.Date)
+	}
 }
 
 //
