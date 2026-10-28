@@ -20,6 +20,7 @@ These changes are awaiting release:
 ## Fixed
 
 - Person: Show error when loading credits fails instead of infinite loading.
+- Jellyfin: Login for password-less accounts (thanks [@Terence-D] for the patch!).
 
 # [4.3.0] - 2026-10-24T21:51:00Z
 
@@ -2053,3 +2054,4 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@LeonNamowitz]: https://github.com/LeonNamowitz
 [@fjacques-2025]: https://github.com/fjacques-2025
 [@kats1123]: https://github.com/kats1123
+[@Terence-D]: https://github.com/Terence-D
