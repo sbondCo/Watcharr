@@ -37,8 +37,9 @@ type UseAdminTokenRequest struct {
 	Token string `json:"token" binding:"required"`
 }
 
-type JellyfinLoginRequest struct {
+type UserLoginRequestJellyfin struct {
 	Username string `json:"username" binding:"required"`
+	// NOTE: Password is optional.
 	Password string `json:"password"`
 }
 
@@ -194,7 +195,7 @@ func (s *Service) Login(userL *entity.User) (AuthResponse, error) {
 	return AuthResponse{Token: token}, nil
 }
 
-func (s *Service) LoginJellyfin(userL *JellyfinLoginRequest) (AuthResponse, error) {
+func (s *Service) LoginJellyfin(userL *UserLoginRequestJellyfin) (AuthResponse, error) {
 	if s.cfg.JELLYFIN_HOST == "" {
 		slog.Error("Request made to login via Jellyfin, but JELLYFIN_HOST has not been configured.")
 		return AuthResponse{}, errors.New("jellyfin login not enabled")

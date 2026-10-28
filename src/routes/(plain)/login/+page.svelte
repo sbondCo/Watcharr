@@ -80,11 +80,16 @@
 		const pass = fd.get("password") ?? "";
 		const isJellyfin = (ev.submitter as HTMLButtonElement)?.name === "jellyfin";
 
-		if (!user || (!isJellyfin && !pass)) {
-			error = isJellyfin
-				? "Username is required"
-				: "Username and Password fields are required";
-			return;
+		if (isJellyfin) {
+			if (!user) {
+				error = "Username is required";
+				return;
+			}
+		} else {
+			if (!user || !pass) {
+				error = "Username and Password fields are required";
+				return;
+			}
 		}
 
 		let customAuthEP = "";
