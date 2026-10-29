@@ -20,6 +20,8 @@ type Activity struct {
 	Data string `json:"data" gorm:"not null"`
 	// Custom date for the activity, that the user can define.
 	CustomDate *time.Time `json:"customDate,omitempty"`
+	// A user defined Note on the activity.
+	Note string `json:"note,omitempty"`
 	// Count this Activity as a Play?
 	// Currently this was the best way I could see forward for implementing
 	// counting plays of media that doesn't involve inefficient querying of

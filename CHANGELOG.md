@@ -11,6 +11,7 @@ These changes are awaiting release:
   - "Credits" title with a badge displaying total count of credits loaded.
   - "Known Credits" detail showing count of all credits.
   - "First Credit" detail showing date of earliest known credit (with link to visit it and tooltip showing the persons age at the time).
+- Activity: Support adding a `note` to activities.
 
 ## Changed
 
@@ -21,6 +22,11 @@ These changes are awaiting release:
 
 - Person: Show error when loading credits fails instead of infinite loading.
 - Jellyfin: Login for password-less accounts (thanks [@Terence-D] for the patch!).
+
+## Maintenance
+
+- ActivityEditor: Refactor date/time options (simplified logic and moved to new DateInput and TimeInput components).
+- Error: Support `string` errors being passed in and new `margin` prop for overriding default style.
 
 # [4.3.0] - 2026-10-24T21:51:00Z
 
