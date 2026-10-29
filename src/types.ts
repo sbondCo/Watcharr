@@ -208,7 +208,13 @@ export interface WatchedUpdateResponse {
 }
 
 export type WatchedSort =
-	"DATEADDED" | "LASTCHANGED" | "LASTFIN" | "RATING" | "ALPHA" | "DATERELEASED";
+	| "DATEADDED"
+	| "LASTCHANGED"
+	| "LASTCHANGEDEP"
+	| "LASTFIN"
+	| "RATING"
+	| "ALPHA"
+	| "DATERELEASED";
 
 export type SortDirection = "asc" | "desc";
 

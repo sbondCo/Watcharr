@@ -19,12 +19,13 @@ var (
 type WatchedSort string
 
 const (
-	WatchedSortDateAdded    WatchedSort = "DATEADDED"
-	WatchedSortLastChanged  WatchedSort = "LASTCHANGED"
-	WatchedSortLastFinished WatchedSort = "LASTFIN"
-	WatchedSortRating       WatchedSort = "RATING"
-	WatchedSortAlphabetical WatchedSort = "ALPHA"
-	WatchedSortDateReleased WatchedSort = "DATERELEASED"
+	WatchedSortDateAdded          WatchedSort = "DATEADDED"
+	WatchedSortLastChanged        WatchedSort = "LASTCHANGED"
+	WatchedSortLastChangedEpisode WatchedSort = "LASTCHANGEDEP"
+	WatchedSortLastFinished       WatchedSort = "LASTFIN"
+	WatchedSortRating             WatchedSort = "RATING"
+	WatchedSortAlphabetical       WatchedSort = "ALPHA"
+	WatchedSortDateReleased       WatchedSort = "DATERELEASED"
 )
 
 type SortDirection string
