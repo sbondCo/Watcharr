@@ -209,18 +209,17 @@ export async function removeWatched(id: number): Promise<boolean> {
 
 export async function updateActivity(
 	activity: Activity,
-	date: Date,
+	ureq: ActivityUpdateRequest,
 ): Promise<Activity | undefined> {
 	const nid = notify({ text: "Updating", type: "loading" });
-	console.debug("updateActivity:", activity, date);
+	console.debug("updateActivity:", activity, ureq);
 	try {
-		const resp = await req.putWhole(`/activity/${activity.id}`, {
-			customDate: date.toISOString(),
-		} as ActivityUpdateRequest);
-		console.log("updateActivity: Response status:", resp.status);
-		if (activity) {
-			activity.customDate = date.toISOString();
-		}
+		const resp = await req.put(`/activity/${activity.id}`, ureq);
+		console.log("updateActivity: Response:", resp);
+
+		activity.customDate = ureq.customDate?.toISOString();
+		activity.note = ureq.note;
+
 		notify({ id: nid, text: "Updated!", type: "success" });
 		return activity;
 	} catch (err) {

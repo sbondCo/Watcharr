@@ -25,28 +25,39 @@ func Get(
 	return *activity, nil
 }
 
-// Update activity. Currently only allows updating custom_date (needs refactoring if other edits are allowed).
+// Update activity.
 func Update(
 	db *gorm.DB,
 	userId uint,
 	id uint,
-	activityUpdateRequest domain.ActivityUpdateRequest,
+	req domain.ActivityUpdateRequest,
 ) error {
 	if id == 0 {
 		return errors.New("id must be set to update an activity")
 	}
-	if activityUpdateRequest.CustomDate.IsZero() {
-		return errors.New("customDate must be set to update an activity")
+
+	updm := map[string]any{}
+	if req.CustomDate != nil && !req.CustomDate.IsZero() {
+		updm["custom_date"] = req.CustomDate
 	}
+	if req.Note != nil {
+		updm["note"] = req.Note
+	}
+
+	if len(updm) == 0 {
+		slog.Warn("Update: Nothing provided to update.")
+		return errors.New("provided nothing to update")
+	}
+
 	res := db.
 		Model(&entity.Activity{}).
 		Where("user_id = ? AND id = ?", userId, id).
-		Update("custom_date", activityUpdateRequest.CustomDate)
+		Updates(updm)
 	if res.Error != nil {
 		slog.Error("Update: Query failed!", "error", res.Error)
 		return errors.New("query failed")
 	}
-	if res.RowsAffected < 1 {
+	if res.RowsAffected == 0 {
 		slog.Error("Update: No activities were updated.")
 		return errors.New("no rows affected")
 	}

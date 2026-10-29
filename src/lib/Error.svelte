@@ -5,13 +5,16 @@
 		pretty: string;
 		error: unknown;
 		onRetry?: () => void | undefined;
+
+		/** Override default margin. */
+		margin?: string;
 	}
 
-	let { pretty, error, onRetry = undefined }: Props = $props();
+	let { pretty, error, onRetry = undefined, margin }: Props = $props();
 </script>
 
 <div class="error-wrap">
-	<div>
+	<div style:margin>
 		<div class="error-text">
 			<strong>{pretty}</strong>
 			{#if error instanceof Error && error.message}
@@ -19,6 +22,8 @@
 				{#if error instanceof ReqerError && error?.body?.error}
 					<p>{error.body.error}</p>
 				{/if}
+			{:else if typeof error == "string"}
+				<p>{error}</p>
 			{:else}
 				<p>{JSON.stringify(error)}</p>
 			{/if}
