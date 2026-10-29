@@ -43,6 +43,12 @@ var (
 	IMPORT_NOTFOUND ImportResponseType = "IMPORT_NOTFOUND"
 	// Item already exists so couldn't import (unique constraint hit when adding)
 	IMPORT_EXISTS ImportResponseType = "IMPORT_EXISTS"
+	// Item already existed, but it had no rating, so the rating from the
+	// import was filled in on the existing entry.
+	IMPORT_RATING_UPDATED ImportResponseType = "IMPORT_RATING_UPDATED"
+	// Item already existed, but it was missing episodes the import knew had
+	// been watched, so they were filled in on the existing entry.
+	IMPORT_EPISODES_UPDATED ImportResponseType = "IMPORT_EPISODES_UPDATED"
 )
 
 type ImportRequest struct {
@@ -62,6 +68,11 @@ type ImportRequest struct {
 	WatchedEpisodes  []entity.WatchedEpisode `json:"watchedEpisodes"`
 	WatchedSeason    []entity.WatchedSeason  `json:"watchedSeasons"`
 	Tags             []TagAddRequest         `json:"tags"`
+	// How many episodes have been watched, for sources that only give a
+	// total rather than saying which episodes they were (a MyAnimeList
+	// export is the case we have). Filled into the first season of the
+	// matched show, clamped to that season, when WatchedEpisodes is empty.
+	WatchedEpisodesCount int `json:"watchedEpisodesCount"`
 }
 
 // Internal struct given to the SuccessfulImport function.

@@ -340,6 +340,19 @@
 							);
 						}
 					}
+					// MyAnimeList only tells us how many episodes have been
+					// watched, not which ones. A MyAnimeList entry is a single
+					// season, so the server fills the count into the matched
+					// shows first season and clamps it there.
+					const watchedEpisodesNode = animeNode.querySelector(
+						"my_watched_episodes",
+					);
+					if (watchedEpisodesNode?.textContent) {
+						const watchedEpisodes = Number(watchedEpisodesNode.textContent);
+						if (Number.isFinite(watchedEpisodes) && watchedEpisodes > 0) {
+							l.watchedEpisodesCount = watchedEpisodes;
+						}
+					}
 					const typeNode = animeNode.querySelector("series_type");
 					if (typeNode?.textContent) {
 						const malSeriesType = typeNode.textContent?.toLowerCase();
@@ -691,6 +704,10 @@
 													<Icon i="close" wh={22} />
 												{:else if l.state === ImportResponseType.IMPORT_EXISTS}
 													<Icon i="check" wh={22} />
+												{:else if l.state === ImportResponseType.IMPORT_RATING_UPDATED}
+													<Icon i="star" wh={22} />
+												{:else if l.state === ImportResponseType.IMPORT_EPISODES_UPDATED}
+													<Icon i="tv" wh={22} />
 												{/if}
 											</div>
 										</td>
