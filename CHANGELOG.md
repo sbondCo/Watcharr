@@ -22,11 +22,17 @@ These changes are awaiting release:
 
 - Person: Show error when loading credits fails instead of infinite loading.
 - Jellyfin: Login for password-less accounts (thanks [@Terence-D] for the patch!).
+- Browser UI: Set `color-scheme` to the theme being used.
+  - As a result, the browser renders the correct theme scroll bars.
+  - As a side effect, we have improved input stylings for dark theme (by making them dark too).
+- Setup/Login: Fix nav logo styling for dark theme.
+- Nav: Fix nav logo text-stroke for chromium (made it smaller so it still looks good on firefox/chrome, chromium text-stroke always seems to be bigger for some reason, so just set it to a middle ground).
 
 ## Maintenance
 
 - ActivityEditor: Refactor date/time options (simplified logic and moved to new DateInput and TimeInput components).
 - Error: Support `string` errors being passed in and new `margin` prop for overriding default style.
+- `.small-scrollbar` style: Remove -webkit-scrollbar styling and just keep the scrollbar-width property since it is supported in chromium now (a long time ago).
 
 # [4.3.0] - 2026-10-24T21:51:00Z
 
