@@ -505,7 +505,7 @@
 				&:hover,
 				&:focus-visible {
 					color: $bg-color;
-					-webkit-text-stroke: 3px $text-color;
+					-webkit-text-stroke: 1.5px $text-color;
 					font-weight: bold;
 				}
 
@@ -594,7 +594,10 @@
 			width: 100%;
 			font-weight: bold;
 			text-align: center;
+			color: black;
+			background-color: white;
 			box-shadow: 4px 4px 0px 0px $text-color;
+			border: 2px solid black;
 			text-overflow: ellipsis;
 			transition:
 				width 150ms ease,
