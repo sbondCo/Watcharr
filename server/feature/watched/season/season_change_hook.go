@@ -133,6 +133,9 @@ func (s *Service) hookStatusChangedSetShowStatus(
 	if newShowStatus == "" || reason == "" {
 		slog.Info("hookStatusChangedSetShowStatus: No new status or reason set. Not saving.")
 		return "", entity.Activity{}, nil
+	} else if newShowStatus == showWatchedStatus {
+		slog.Info("hookStatusChangedSetShowStatus: New status is same as current. Not saving.")
+		return "", entity.Activity{}, nil
 	}
 
 	res := s.db.
@@ -140,22 +143,44 @@ func (s *Service) hookStatusChangedSetShowStatus(
 		Where("user_id = ? AND id = ?", userID, watchedID).
 		Update("status", newShowStatus)
 	if res.Error != nil {
-		slog.Error("hookStatusChanged: Failed to update show status!",
+		slog.Error("hookStatusChangedSetShowStatus: Failed to update show status!",
 			"error", res.Error)
 		return "", entity.Activity{}, errors.New("failed to update db")
 	}
 	if res.RowsAffected == 0 {
-		slog.Error("hookStatusChanged: Nothing matched to update.")
+		slog.Error("hookStatusChangedSetShowStatus: Nothing matched to update.")
 		return "", entity.Activity{}, errors.New("watched entry does not exist")
 	}
 
+	countAsPlay := false
+	if newShowStatus == entity.FINISHED {
+		countAsPlay = true
+
+		nextWSeason, err := s.GetWatchedSeason(userID, watchedID, seasonNum+1)
+		if err != nil {
+			slog.Error("hookStatusChangedSetShowStatus: Get next watched season failed, assuming doesn't exist.",
+				"error", err)
+		} else if nextWSeason != nil {
+			// If the show has a next season and we a watched entry for it, then
+			// countAsPlay must be false, because it should only be true for
+			// when the last season is set to finished.
+			// This is a protection for second complete watch of a series
+			// where the user could start and finish S1, meanwhile all other
+			// seasons are already/still FINISHED from a previous complete watch.
+			// Without this check, we'd count another play, but in reality, we
+			// should only count the play when all the rest of the seasons are
+			// re-watched too.
+			countAsPlay = false
+			slog.Debug("hookStatusChangedSetShowStatus: Overrid count_as_play to false. We found a next watched season entry.")
+		}
+	}
 	addedActivity, _ := activity.
 		NewCreator(
 			s.db,
 			userID,
 			watchedID,
 			entity.STATUS_CHANGED,
-			false,
+			countAsPlay,
 			entity.ActivityCreatedByWatcharr,
 		).
 		SetDataJSON(map[string]any{

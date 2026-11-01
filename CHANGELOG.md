@@ -28,6 +28,8 @@ These changes are awaiting release:
 - Setup/Login: Fix nav logo styling for dark theme.
 - Nav: Fix nav logo text-stroke for chromium (made it smaller so it still looks good on firefox/chrome, chromium text-stroke always seems to be bigger for some reason, so just set it to a middle ground).
 - JellyfinWebhook: Don't set show to WATCHING, when it should keep PLANNED from decideNewWatchedStatus.
+- SeasonChangeHook: Fix not setting count_as_play when show is set to FINISHED.
+- SeasonChangeHook: Don't re-set an existing show status.
 
 ## Maintenance
 
