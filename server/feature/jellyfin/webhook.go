@@ -236,7 +236,7 @@ func (w *WebhookService) applyStatusToWatched(
 	// Episode data can use `newStatus` directly, but updating Watched entries
 	// should use this.
 	newTopLevelStatus := newStatus
-	if contentType == entity.SHOW {
+	if contentType == entity.SHOW && newTopLevelStatus != entity.PLANNED {
 		newTopLevelStatus = entity.WATCHING
 	}
 
@@ -372,5 +372,6 @@ func (w *WebhookService) decideNewWatchedStatus(
 			newStatus = entity.PLANNED
 		}
 	}
+	slog.Debug("decideNewWatchedStatus.", "new_status", newStatus)
 	return newStatus
 }
