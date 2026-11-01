@@ -504,7 +504,7 @@
 
 				&:hover,
 				&:focus-visible {
-					color: $bg-color;
+					color: transparent;
 					-webkit-text-stroke: 1.5px $text-color;
 					font-weight: bold;
 				}
