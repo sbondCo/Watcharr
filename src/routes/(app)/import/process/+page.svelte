@@ -6,6 +6,7 @@
 
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import Checkbox from "@/lib/Checkbox.svelte";
 	import DropDown from "@/lib/DropDown.svelte";
 	import Error from "@/lib/Error.svelte";
 	import Icon from "@/lib/Icon.svelte";
@@ -38,6 +39,10 @@
 	}
 
 	let rList: ImportedList[] = $state([]);
+	// When on, previously saved matches are ignored, so every ambiguous name
+	// is asked about again. Deliberately not remembered between imports, it
+	// is a choice for this run rather than a preference.
+	let ignoreSavedMatches = $state(false);
 	let isImporting = $state(false);
 	let importText = $state("");
 	let cancelled = $state(false);
@@ -524,22 +529,39 @@
 			store.parsedImportedList = rList;
 			goto(resolve("/import/some-failed"));
 		} else {
+			const ignoredCount = rList.filter(
+				(i) => i.state === ImportResponseType.IMPORT_IGNORED,
+			).length;
 			notify({
 				type: "success",
-				text: "All content successfully imported!",
+				text:
+					ignoredCount > 0
+						? `All content imported, apart from ${ignoredCount} you chose to ignore.`
+						: "All content successfully imported!",
 				time: 15000,
 			});
 			goto(resolve("/"));
 		}
 	}
 
-	async function doImport(item: ImportedList) {
+	/**
+	 * Import one item.
+	 *
+	 * `ignoreThisItem` gives up on matching it instead, which imports nothing
+	 * and saves that decision, so this name isn't asked about again on any
+	 * future import.
+	 */
+	async function doImport(item: ImportedList, ignoreThisItem = false) {
 		if (!item.name?.trim()) {
 			item.state = ImportResponseType.IMPORT_NOTFOUND;
 			rList = rList;
 			return;
 		}
-		const resp = await req.post<ImportResponse>("/import", item);
+		const resp = await req.post<ImportResponse>("/import", {
+			...item,
+			ignoreSavedMatches,
+			ignoreThisItem,
+		});
 		return new Promise((res, rej) => {
 			if (resp.type === ImportResponseType.IMPORT_MULTI) {
 				console.log("Import found multiple responses for content", resp);
@@ -691,6 +713,8 @@
 													<Icon i="close" wh={22} />
 												{:else if l.state === ImportResponseType.IMPORT_EXISTS}
 													<Icon i="check" wh={22} />
+												{:else if l.state === ImportResponseType.IMPORT_IGNORED}
+													<Icon i="eye-closed" wh={22} />
 												{/if}
 											</div>
 										</td>
@@ -788,6 +812,17 @@
 						</tbody>
 					</table>
 				</div>
+				<div class="import-opts">
+					<Checkbox
+						name="Ask about every match again"
+						bind:value={ignoreSavedMatches}
+						disabled={isImporting}
+					/>
+					<span class="opt-desc">
+						Ignore matches saved from previous imports, so you can pick again
+						for names that were matched incorrectly.
+					</span>
+				</div>
 				<div class="btns">
 					<button onclick={() => goto(resolve("/import"))}>
 						<Icon i="arrow" />Back
@@ -877,6 +912,27 @@
 					/>
 				{/each}
 			</PosterList>
+			<div class="ignore-row">
+				<button
+					onclick={async () => {
+						const item = rList.find(
+							(i) => i.name === importMultiItem?.original.name,
+						);
+						if (!item) {
+							return;
+						}
+						try {
+							await doImport(item, true);
+							importMultiItem?.callback(undefined);
+						} catch (err) {
+							importMultiItem?.callback(String(err));
+						}
+						importMultiItem = undefined;
+					}}
+				>
+					None of these
+				</button>
+			</div>
 		</Modal>
 	{/if}
 {:catch err}
@@ -884,6 +940,18 @@
 {/await}
 
 <style lang="scss">
+	// The give up button sits on its own row under the results, centered so
+	// it doesn't read as one of the choices above it.
+	.ignore-row {
+		display: flex;
+		justify-content: center;
+		margin-top: 15px;
+
+		button {
+			width: max-content;
+		}
+	}
+
 	.content {
 		display: flex;
 		width: 100%;
@@ -944,6 +1012,20 @@
 					padding-left: 3px;
 				}
 			}
+		}
+	}
+
+	.import-opts {
+		display: flex;
+		flex-flow: row;
+		align-items: center;
+		flex-wrap: wrap;
+		margin-top: 20px;
+		gap: 8px;
+
+		.opt-desc {
+			font-size: 14px;
+			opacity: 0.7;
 		}
 	}
 
