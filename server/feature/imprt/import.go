@@ -22,7 +22,7 @@ type WatchedProvider interface {
 }
 
 type TagProvider interface {
-	AddTag(userId uint, tr domain.TagAddRequest) (entity.Tag, error)
+	Add(userId uint, tr domain.TagAddRequest) (entity.Tag, error)
 	GetTagByNameAndColor(userId uint, tagName string, tagColor string, tagBgColor string) (entity.Tag, error)
 }
 
@@ -305,7 +305,7 @@ func (s *Service) SuccessfulImport(
 				continue
 			}
 			if t.ID == 0 {
-				tag, err := s.tagProvider.AddTag(userId, domain.TagAddRequest{
+				tag, err := s.tagProvider.Add(userId, domain.TagAddRequest{
 					Name:    v.Name,
 					Color:   v.Color,
 					BgColor: v.BgColor,
