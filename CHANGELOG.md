@@ -27,6 +27,7 @@ These changes are awaiting release:
   - As a side effect, we have improved input stylings for dark theme (by making them dark too).
 - Setup/Login: Fix nav logo styling for dark theme.
 - Nav: Fix nav logo text-stroke for chromium (made it smaller so it still looks good on firefox/chrome, chromium text-stroke always seems to be bigger for some reason, so just set it to a middle ground).
+- GHSA-h3h6-g7fm-2v4x (thanks to [@kats1123] for reporting!)
 
 ## Maintenance
 
