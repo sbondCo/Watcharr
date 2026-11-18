@@ -2,6 +2,8 @@
 
 These changes are awaiting release:
 
+# [4.4.0] - 2026-11-18T17:07:00Z
+
 <img width="500" alt="example of Christopher Nolan's page correctly displaying the movies they have directed." src="./changelog/4.4.0/0.png" />
 
 ## Added
@@ -1952,7 +1954,8 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 
 <!-- Version Changelog References (newest first) -->
 
-[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.3.0...HEAD
+[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.4.0...HEAD
+[4.4.0]: https://github.com/sbondCo/Watcharr/compare/v4.3.0...v4.4.0
 [4.3.0]: https://github.com/sbondCo/Watcharr/compare/v4.2.2...v4.3.0
 [4.2.2]: https://github.com/sbondCo/Watcharr/compare/v4.2.1...v4.2.2
 [4.2.1]: https://github.com/sbondCo/Watcharr/compare/v4.2.0...v4.2.1
