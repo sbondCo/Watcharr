@@ -37,6 +37,10 @@ These changes are awaiting release:
 - Error: Support `string` errors being passed in and new `margin` prop for overriding default style.
 - `.small-scrollbar` style: Remove -webkit-scrollbar styling and just keep the scrollbar-width property since it is supported in chromium now (a long time ago).
 
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/orgs/sbondCo/packages/container/watcharr/1591225516?tag=v4.4.0) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.4.0/images/sha256-c8a26b6c62c1df08a3ec2b51c3e68b561ba6185c0fb3e733957c7dfae7f6f3da).
+
 # [4.3.0] - 2026-10-24T21:51:00Z
 
 ## Added
