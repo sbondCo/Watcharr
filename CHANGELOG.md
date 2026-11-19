@@ -2,6 +2,10 @@
 
 These changes are awaiting release:
 
+## Fixed
+
+- HorizontalList: Align items to left instead of adding space between. Ex: Fixes awkward space between when there are only 2 cast members. (thanks to [@Kiddo4993] for patching!)
+
 # [4.4.0] - 2026-11-18T17:07:00Z
 
 <img width="500" alt="example of Christopher Nolan's page correctly displaying the movies they have directed." src="./changelog/4.4.0/0.png" />
@@ -2075,3 +2079,4 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@fjacques-2025]: https://github.com/fjacques-2025
 [@kats1123]: https://github.com/kats1123
 [@Terence-D]: https://github.com/Terence-D
+[@Kiddo4993]: https://github.com/Kiddo4993
