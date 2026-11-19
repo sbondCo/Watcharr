@@ -662,6 +662,7 @@ export interface ServerConfig {
 	USE_EMBY: boolean;
 	SIGNUP_ENABLED: boolean;
 	TMDB_KEY?: string;
+	TMDB_READ_ACCESS_TOKEN?: string;
 	PLEX_HOST?: string;
 	PLEX_MACHINE_ID?: string;
 	SONARR?: SonarrSettings[];
