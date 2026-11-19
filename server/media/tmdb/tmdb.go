@@ -22,12 +22,14 @@ type ContentProvider interface {
 
 type TMDB struct {
 	Key             string
+	ReadAccessToken string
 	contentProvider ContentProvider
 }
 
-func NewTMDB(key string) *TMDB {
+func NewTMDB(key string, readAccessToken string) *TMDB {
 	return &TMDB{
-		Key: key,
+		Key:             key,
+		ReadAccessToken: readAccessToken,
 	}
 }
 
@@ -54,7 +56,9 @@ func (t *TMDB) apiRequest(ep string, p map[string]string) ([]byte, error) {
 
 	// Query params
 	params := url.Values{}
-	params.Add("api_key", t.GetKey())
+	if t.ReadAccessToken == "" {
+		params.Add("api_key", t.GetKey())
+	}
 	params.Add("language", "en-US")
 	for k, v := range p {
 		params.Add(k, v)
@@ -64,7 +68,16 @@ func (t *TMDB) apiRequest(ep string, p map[string]string) ([]byte, error) {
 	base.RawQuery = params.Encode()
 
 	// Run get request
-	res, err := http.Get(base.String())
+	req, err := http.NewRequest("GET", base.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if t.ReadAccessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+t.ReadAccessToken)
+	}
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

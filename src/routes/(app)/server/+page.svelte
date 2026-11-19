@@ -302,6 +302,23 @@
 						/>
 					</Setting>
 					<Setting
+						title="TMDB Read Access Token"
+						desc="Provide your own TMDB Read Access Token (v4 Bearer Token). This will be used instead of the API Key if provided."
+					>
+						<input
+							type="password"
+							placeholder="TMDB Read Access Token"
+							bind:value={serverConfig.TMDB_READ_ACCESS_TOKEN}
+							onblur={() => {
+								tmdbkDisabled = true;
+								updateServerConfig("TMDB_READ_ACCESS_TOKEN", serverConfig!.TMDB_READ_ACCESS_TOKEN, () => {
+									tmdbkDisabled = false;
+								});
+							}}
+							disabled={tmdbkDisabled}
+						/>
+					</Setting>
+					<Setting
 						title="Signup"
 						desc="Allow signing up with Watcharr credentials."
 						row

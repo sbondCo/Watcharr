@@ -227,7 +227,7 @@ func main() {
 	api := gine.Group("/api")
 	br := router.NewBaseRouter(db, api, cfg)
 
-	tmdbService := tmdb.NewTMDB(cfg.TMDB_KEY)
+	tmdbService := tmdb.NewTMDB(cfg.TMDB_KEY, cfg.TMDB_READ_ACCESS_TOKEN)
 
 	contentService := content.NewService(db, tmdbService)
 	tmdbService.AddContentProvider(contentService)
