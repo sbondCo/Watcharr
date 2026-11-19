@@ -33,7 +33,7 @@
 	}
 </script>
 
-<Menu conf={{ width: "180px", right: "90px", arrowLeft: "21px" }}>
+<Menu conf={{ width: "200px", right: "90px", arrowLeft: "21px" }}>
 	<button
 		class={`plain ${getDirectionClass("DATEADDED")}`}
 		onclick={() => sortClicked("DATEADDED")}
@@ -45,6 +45,12 @@
 		onclick={() => sortClicked("LASTCHANGED")}
 	>
 		Last Changed
+	</button>
+	<button
+		class={`plain ${getDirectionClass("LASTCHANGEDEP")}`}
+		onclick={() => sortClicked("LASTCHANGEDEP")}
+	>
+		Last Changed Episode
 	</button>
 	<button
 		class={`plain ${getDirectionClass("LASTFIN")}`}
