@@ -691,6 +691,8 @@
 													<Icon i="close" wh={22} />
 												{:else if l.state === ImportResponseType.IMPORT_EXISTS}
 													<Icon i="check" wh={22} />
+												{:else if l.state === ImportResponseType.IMPORT_RATING_UPDATED}
+													<Icon i="star" wh={22} />
 												{/if}
 											</div>
 										</td>
