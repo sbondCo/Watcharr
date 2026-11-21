@@ -1,6 +1,7 @@
 <!-- Uses Native Color Input -->
 
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	interface Props {
 		value?: string;
 		style?: string;
@@ -10,7 +11,7 @@
 </script>
 
 <button
-	aria-label="Open color picker"
+	aria-label={t("common.openColorPicker")}
 	class="plain"
 	style={`background-color: ${value};${style}`}
 >

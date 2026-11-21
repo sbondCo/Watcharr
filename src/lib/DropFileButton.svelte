@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { onMount } from "svelte";
 	import type { Icon as IconT } from "@/types";
 	import Icon from "./Icon.svelte";
@@ -67,7 +68,7 @@
 		<div>
 			<h4 class="norm">
 				{#if isDragOver}
-					Import {text}
+					{t("import.importItem", { item: text })}
 				{:else}
 					{text}
 				{/if}

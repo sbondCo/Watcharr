@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { MediaVideoType, type MediaVideo } from "@/types";
 	import VideoEmbedModal from "./VideoEmbedModal.svelte";
 
@@ -10,14 +11,14 @@
 
 	let trailer: string | undefined = $derived.by(() => {
 		if (videos && videos?.length > 0) {
-			const t = videos
+			const trailers = videos
 				.filter((v) => v.type === MediaVideoType.trailer)
 				.sort((a, b) => {
 					if (a.best === b.best) return 0;
 					return a.best ? -1 : 1;
 				});
-			if (t[0]?.id) {
-				return `https://www.youtube-nocookie.com/embed/${t[0]?.id}`;
+			if (trailers[0]?.id) {
+				return `https://www.youtube-nocookie.com/embed/${trailers[0]?.id}`;
 			}
 		}
 	});
@@ -25,7 +26,9 @@
 </script>
 
 {#if trailer}
-	<button onclick={() => (trailerShown = !trailerShown)}>View Trailer</button>
+	<button onclick={() => (trailerShown = !trailerShown)}
+		>{t("content.viewTrailer")}</button
+	>
 	{#if trailerShown}
 		<VideoEmbedModal embed={trailer} closed={() => (trailerShown = false)} />
 	{/if}

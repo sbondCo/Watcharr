@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { ReqerError } from "./util/fetch";
 
 	interface Props {
@@ -30,7 +31,7 @@
 		</div>
 		<div>
 			{#if onRetry}
-				<button onclick={onRetry}>Try Again</button>
+				<button onclick={onRetry}>{t("common.tryAgain")}</button>
 			{/if}
 		</div>
 	</div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { store } from "@/store.svelte";
 	import Menu from "../Menu.svelte";
 	import { resolve } from "$app/paths";
@@ -12,7 +13,7 @@
 
 <Menu conf={{ width: "180px", arrowRight: "53px" }}>
 	{#if store.follows?.length > 0}
-		<h4 class="norm sm-caps">following</h4>
+		<h4 class="norm sm-caps">{t("nav.following.title")}</h4>
 		<div class="list">
 			{#each store.follows as f (f.followedUser.id)}
 				<a
@@ -26,7 +27,7 @@
 			{/each}
 		</div>
 	{:else}
-		<span style="margin-top: 0;">You are not following anyone.</span>
+		<span style="margin-top: 0;">{t("nav.following.notFollowingAnyone")}</span>
 	{/if}
 </Menu>
 

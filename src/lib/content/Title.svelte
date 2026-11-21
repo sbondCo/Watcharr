@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { dateValid } from "../util/date";
+	import { t } from "@/lib/i18n/index.svelte";
+	import { dateValid, formatDate } from "../util/date";
 
 	interface Props {
 		homepage?: string;
@@ -19,7 +20,7 @@
 			? Math.round(voteAverage > 10 ? voteAverage : voteAverage * 10) / 10
 			: 0,
 	);
-	const titleSafe = $derived(title ? title : "Unknown Title");
+	const titleSafe = $derived(title ? title : t("content.unknownTitle"));
 	const releaseYear = $derived(
 		dateValid(releaseDate) ? releaseDate.getFullYear() : undefined,
 	);
@@ -38,16 +39,19 @@
 		{#if releaseYear}
 			<span class="year">
 				<!--First span ends on the line with the #if so there's no whitespace-->
-				<span title={releaseDate?.toLocaleDateString()}>{releaseYear}</span
+				<span title={releaseDate ? formatDate(releaseDate) : undefined}
+					>{releaseYear}</span
 				>{#if endYear && endYear != releaseYear}
-					<span title={endDate?.toLocaleDateString()}>-{endYear}</span>
+					<span title={endDate ? formatDate(endDate) : undefined}
+						>-{endYear}</span
+					>
 				{/if}
 			</span>
 		{/if}
 	</span>
 	<span
 		class="rating"
-		title={`Rating: ${vote} out of 10 (based on ${voteCount ?? 0} votes)`}
+		title={t("content.ratingTooltip", { vote, count: voteCount ?? 0 })}
 	>
 		<span>*</span>
 		{vote}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { store } from "@/store.svelte";
 	import tooltip from "../actions/tooltip";
 	import { RatingSystem } from "@/types";
@@ -91,9 +92,9 @@
 			<!-- eslint-disable-next-line svelte/no-useless-mustaches -->
 			{""}
 		{:else if disableInteraction}
-			Unrated
+			{t("rating.unrated")}
 		{:else}
-			Rate
+			{t("rating.rate")}
 		{/if}
 	</span>
 

@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { onMount } from "svelte";
 	import Modal from "../Modal.svelte";
+	import Trans from "../i18n/Trans.svelte";
 	import type { TrustedHeaderAuthLogoutDetailsResponse } from "@/types";
 	import Spinner from "../Spinner.svelte";
 	import { clearWatcharrData } from ".";
@@ -50,35 +52,25 @@
 	}
 </script>
 
-<Modal
-	title="Logout"
-	desc="You logged in via single sign-on. Did you click log out by mistake?"
-	{onClose}
->
+<Modal title={t("logout.title")} desc={t("logout.proxyDesc")} {onClose}>
 	{#if loadingBtns}
 		<Spinner />
 	{:else}
 		<div>
 			<p>
 				{#if logoutUrl}
-					This is likely what you want: <b
-						>Fully logout of your single sign-on service and Watcharr</b
-					>.
+					<Trans key="logout.likelyWhatYouWant" />
 				{:else}
-					Single sign-on logout has not been configured on this server. If you
-					are not the server operator, let them know!
+					{t("logout.ssoLogoutNotConfigured")}
 				{/if}
 			</p>
 			<button disabled={!logoutUrl} onclick={proxyLogout}
-				>Log out of Single Sign-On Service</button
+				>{t("logout.logOutOfSso")}</button
 			>
 			<p>
-				Logging out of Watcharr will clear your local credentials and data, but <b
-					>you will still be logged in to your single sign-on service</b
-				>! Do <b>not</b> do this on a public machine and assume you are logged out,
-				this account could still be accessible.
+				<Trans key="logout.watcharrOnlyWarning" />
 			</p>
-			<button onclick={logout}>Log out of Watcharr</button>
+			<button onclick={logout}>{t("logout.logOutOfWatcharr")}</button>
 		</div>
 	{/if}
 </Modal>

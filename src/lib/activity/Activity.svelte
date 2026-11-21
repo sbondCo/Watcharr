@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { type Activity, ActivityCreatedBy } from "@/types";
 	import {
-		getOrdinalSuffix,
-		months,
-		seasonAndEpToReadable,
-	} from "../util/helpers";
+		type Activity,
+		ActivityCreatedBy,
+		type WatchedStatus,
+	} from "@/types";
+	import { seasonAndEpToReadable, statusLabel } from "../util/helpers";
+	import { formatDate, formatTime, ordinalDay } from "../util/date";
+	import { getLanguage, t } from "../i18n/index.svelte";
 	import ActivityEditor from "./ActivityEditor.svelte";
 	import ActivityIcon from "./ActivityIcon.svelte";
 	import CountBadge from "../generic/CountBadge.svelte";
@@ -27,18 +29,28 @@
 			case "ADDED_WATCHED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
-					return `Added to Watched List${data?.status ? ` as ${toFullTitleCase(data.status)}` : ""}${
-						data?.rating ? ` with ${data.rating} Stars` : ""
-					}`;
+					const status = data?.status ? statusLabel(data.status) : undefined;
+					if (status && data?.rating) {
+						return t("activity.msg.addedToWatchedListAsWithRating", {
+							status,
+							rating: data.rating,
+						});
+					} else if (status) {
+						return t("activity.msg.addedToWatchedListAs", { status });
+					} else if (data?.rating) {
+						return t("activity.msg.addedToWatchedListWithRating", {
+							rating: data.rating,
+						});
+					}
 				}
-				return "Added to Watched List";
+				return t("activity.msg.addedToWatchedList");
 			case "REMOVED_WATCHED":
-				return "Removed from Watched List";
+				return t("activity.msg.removedFromWatchedList");
 			case "RATING_CHANGED":
 				if (a.data) {
-					return `Rating Changed to ${a.data}`;
+					return t("activity.msg.ratingChangedTo", { rating: a.data });
 				}
-				return "Rating Changed";
+				return t("activity.msg.ratingChanged");
 			case "STATUS_CHANGED":
 				if (a.data) {
 					let status = a.data;
@@ -46,90 +58,116 @@
 						const data = JSON.parse(a.data);
 						status = data.status;
 					}
-					return `Status Changed to ${toFullTitleCase(status)}`;
+					return t("activity.msg.statusChangedTo", {
+						status: statusLabel(status as WatchedStatus),
+					});
 				}
-				return "Status Changed";
+				return t("activity.msg.statusChanged");
 			case "THOUGHTS_CHANGED":
-				return "Thoughts Changed";
+				return t("activity.msg.thoughtsChanged");
 			case "THOUGHTS_REMOVED":
-				return "Thoughts Removed";
+				return t("activity.msg.thoughtsRemoved");
 			case "IMPORTED_RATING":
 				if (a.data) {
 					const data = JSON.parse(a.data);
 					if (data.rating) {
-						return `Rating Changed to ${data.rating}`;
+						return t("activity.msg.ratingChangedTo", { rating: data.rating });
 					} else {
-						return "Added to Watchlist with No Rating";
+						return t("activity.msg.addedToWatchlistNoRating");
 					}
 				}
-				return "Imported Rating";
+				return t("activity.msg.importedRating");
 			case "IMPORTED_ADDED_WATCHED":
-				return "Imported Watch Date";
+				return t("activity.msg.importedWatchDate");
 			case "SEASON_ADDED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
-					return `Season ${data.season} Added as ${toFullTitleCase(data.status)}`;
+					return t("activity.msg.seasonAddedAs", {
+						season: data.season,
+						status: statusLabel(data.status),
+					});
 				}
-				return "Season Added";
+				return t("activity.msg.seasonAdded");
 			case "SEASON_RATING_CHANGED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
-					return `Changed Season ${data.season} Rating to ${data.rating}`;
+					return t("activity.msg.seasonRatingChangedTo", {
+						season: data.season,
+						rating: data.rating,
+					});
 				}
-				return "Season Rating Changed";
+				return t("activity.msg.seasonRatingChanged");
 			case "SEASON_STATUS_CHANGED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
-					return `Changed Season ${data.season} Status to ${toFullTitleCase(data.status)}`;
+					return t("activity.msg.seasonStatusChangedTo", {
+						season: data.season,
+						status: statusLabel(data.status),
+					});
 				}
-				return "Season Status Changed";
+				return t("activity.msg.seasonStatusChanged");
 			case "SEASON_REMOVED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
-					return `Season ${data.season} Status Removed`;
+					return t("activity.msg.seasonStatusRemoved", {
+						season: data.season,
+					});
 				}
-				return "Season Removed";
+				return t("activity.msg.seasonRemoved");
 			case "EPISODE_ADDED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
-					return `${seasonAndEpToReadable(data.season, data.episode)} Added ${data.status ? `as ${toFullTitleCase(data.status)}` : data.rating ? `with Rating ${data.rating}` : ""}`;
+					const episode = seasonAndEpToReadable(data.season, data.episode);
+					if (data.status) {
+						return t("activity.msg.episodeAddedAs", {
+							episode,
+							status: statusLabel(data.status),
+						});
+					} else if (data.rating) {
+						return t("activity.msg.episodeAddedWithRating", {
+							episode,
+							rating: data.rating,
+						});
+					}
+					return t("activity.msg.episodeAddedNamed", { episode });
 				}
-				return "Episode Added";
+				return t("activity.msg.episodeAdded");
 			case "EPISODE_RATING_CHANGED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
-					return `${seasonAndEpToReadable(data.season, data.episode)} Rating Changed to ${data.rating}`;
+					return t("activity.msg.episodeRatingChangedTo", {
+						episode: seasonAndEpToReadable(data.season, data.episode),
+						rating: data.rating,
+					});
 				}
-				return "Episode Rating Changed";
+				return t("activity.msg.episodeRatingChanged");
 			case "EPISODE_STATUS_CHANGED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
-					return `${seasonAndEpToReadable(data.season, data.episode)} Status Changed to ${toFullTitleCase(data.status)}`;
+					return t("activity.msg.episodeStatusChangedTo", {
+						episode: seasonAndEpToReadable(data.season, data.episode),
+						status: statusLabel(data.status),
+					});
 				}
-				return "Episode Status Changed";
+				return t("activity.msg.episodeStatusChanged");
 			case "EPISODE_REMOVED":
 				if (a.data) {
 					const data = JSON.parse(a.data);
-					return `${seasonAndEpToReadable(data.season, data.episode)} Removed`;
+					return t("activity.msg.episodeRemovedNamed", {
+						episode: seasonAndEpToReadable(data.season, data.episode),
+					});
 				}
-				return "Episode Removed";
+				return t("activity.msg.episodeRemoved");
 			default:
 				return a.type;
 		}
 	}
 
-	function toFullTitleCase(text: string | undefined) {
-		if (text) {
-			return text
-				.split(" ")
-				.map((l) => l[0].toUpperCase() + l.substring(1).toLowerCase())
-				.join(" ");
-		}
-		return "Unknown";
-	}
-
 	function toDayTime(d: Date) {
-		return `${d.getDate()}${getOrdinalSuffix(d.getDate())} at ${d.toLocaleTimeString()}`;
+		return t("activity.dayAtTime", {
+			day: ordinalDay(d),
+			time: formatTime(d),
+		});
 	}
 
 	/**
@@ -150,7 +188,9 @@
 			for (let i = 0; i < a.length; i++) {
 				const activity = a[i];
 				const date = new Date(getCreatedAtVis(activity));
-				const key = `${months[date.getMonth()]} ${date.getFullYear()}`;
+				const month = formatDate(date, { month: "long", year: "numeric" });
+				const key =
+					month.charAt(0).toLocaleUpperCase(getLanguage()) + month.slice(1);
 				if (grouped[key]) {
 					grouped[key].push(activity);
 				} else {
@@ -196,7 +236,7 @@
 
 <div class="activity">
 	<div class="title">
-		<h2>Activity</h2>
+		<h2>{t("activity.title")}</h2>
 		<CountBadge {count} />
 	</div>
 	{#if groupedActivities && Object.keys(groupedActivities).length > 0}
@@ -208,34 +248,51 @@
 					{@const d = new Date(getCreatedAtVis(a))}
 					<li>
 						<button class="plain" onclick={() => openEditor(a)}>
-							<span title={d.toDateString()}>{toDayTime(d)}</span>
+							<span title={formatDate(d, { dateStyle: "full" })}
+								>{toDayTime(d)}</span
+							>
 							<span>{getMsg(a)}</span>
 						</button>
 						{#if a.createdBy == ActivityCreatedBy.Watcharr}
 							<ActivityIcon
 								icon="sparkles"
 								tooltipText={a.reason
-									? `(Automated) ${a.reason}`
-									: "Completed by an automation."}
+									? t("activity.automatedReason", { reason: a.reason })
+									: t("activity.completedByAutomation")}
 							/>
 						{:else if a.createdBy == ActivityCreatedBy.GenericImport}
-							<ActivityIcon icon="calendar" tooltipText="Imported" />
+							<ActivityIcon
+								icon="calendar"
+								tooltipText={t("activity.imported")}
+							/>
 						{:else if a.createdBy == ActivityCreatedBy.JellyfinImport}
-							<ActivityIcon icon="jellyfin" tooltipText="Jellyfin Import" />
+							<ActivityIcon
+								icon="jellyfin"
+								tooltipText={t("activity.importFrom", { service: "Jellyfin" })}
+							/>
 						{:else if a.createdBy == ActivityCreatedBy.JellyfinWebhook}
-							<ActivityIcon icon="jellyfin" tooltipText="Jellyfin Webhook" />
+							<ActivityIcon
+								icon="jellyfin"
+								tooltipText={t("activity.jellyfinWebhook")}
+							/>
 						{:else if a.createdBy == ActivityCreatedBy.PlexImport}
-							<ActivityIcon icon="plex" tooltipText="Plex Import" />
+							<ActivityIcon
+								icon="plex"
+								tooltipText={t("activity.importFrom", { service: "Plex" })}
+							/>
 						{/if}
 						{#if a.countAsPlay}
-							<ActivityIcon icon="play" tooltipText="Counts as a Play." />
+							<ActivityIcon
+								icon="play"
+								tooltipText={t("activity.countsAsPlay")}
+							/>
 						{/if}
 					</li>
 				{/each}
 			{/each}
 		</ul>
 	{:else}
-		<span>You Have No Activity!</span>
+		<span>{t("activity.noActivity")}</span>
 	{/if}
 </div>
 

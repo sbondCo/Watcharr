@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import type { Watched, WatchedStatus } from "@/types";
 	import Rating from "../rating/Rating.svelte";
 	import Status from "../Status.svelte";
@@ -32,8 +33,7 @@
 		/>
 		{#if typeof watched.plays == "number" && watched.plays > 0}
 			<div>
-				{watched.plays}
-				{watched.plays > 1 ? "Plays" : "Play"}
+				{t("content.plays", { count: watched.plays })}
 			</div>
 		{/if}
 	{/if}

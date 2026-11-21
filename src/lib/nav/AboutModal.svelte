@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Icon from "../Icon.svelte";
 	import Modal from "../Modal.svelte";
 
@@ -9,12 +10,11 @@
 	let { onClose }: Props = $props();
 </script>
 
-<Modal title="About" {onClose} maxWidth="400px">
+<Modal title={t("about.title")} {onClose} maxWidth="400px">
 	<div class="content">
 		<div class="inner">
 			<p>
-				An open source project that helps you keep the content you are watching
-				or playing organized and places you in control.
+				{t("about.desc")}
 			</p>
 			<div class="horizontal-icon-list">
 				<a
@@ -23,20 +23,18 @@
 					title="Github"
 				>
 					<Icon i="github" wh={60} />
-					Source<br />
-					Code
+					{t("about.sourceCode")}
 				</a>
 				<a
 					href="https://watcharr.app/"
 					target="_blank"
-					title="Watcharr Website & Documentation"
+					title={t("about.websiteAndDocsTitle")}
 				>
 					<Icon i="website" wh={60} />
-					Website<br />
-					& Docs
+					{t("about.websiteAndDocs")}
 				</a>
 			</div>
-			<h5 class="norm">Watcharr uses the following media databases:</h5>
+			<h5 class="norm">{t("about.mediaDatabases")}</h5>
 			<div class="horizontal-icon-list">
 				<a href="https://www.themoviedb.org/" target="_blank" title="TMDB">
 					<Icon i="tmdb" wh={60} />
@@ -54,7 +52,7 @@
 					href="https://github.com/sbondCo/Watcharr/blob/v{__WATCHARR_VERSION__}/ATTRIBUTION.md"
 					target="_blank"
 				>
-					See our attribution file.
+					{t("about.attribution")}
 				</a>
 			</h5>
 		</div>

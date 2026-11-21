@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import DropDown from "./DropDown.svelte";
 	import type { DropDownItem, TMDBRegions } from "@/types";
 	import Error from "./Error.svelte";
@@ -33,7 +34,7 @@
 
 {#await getCountries() then}
 	<DropDown
-		placeholder="Select a country"
+		placeholder={t("settings.country.select")}
 		bind:active={selectedCountry}
 		options={mappedCountries}
 		onChange={() => onChange(selectedCountry)}
@@ -41,5 +42,5 @@
 		{disabled}
 	/>
 {:catch err}
-	<Error error={err} pretty="Failed to load countries!" />
+	<Error error={err} pretty={t("settings.country.failedToLoad")} />
 {/await}

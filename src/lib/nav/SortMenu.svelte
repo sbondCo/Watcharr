@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { store } from "@/store.svelte";
 	import Menu from "../Menu.svelte";
 
@@ -38,37 +39,37 @@
 		class={`plain ${getDirectionClass("DATEADDED")}`}
 		onclick={() => sortClicked("DATEADDED")}
 	>
-		Date Added
+		{t("nav.sort.dateAdded")}
 	</button>
 	<button
 		class={`plain ${getDirectionClass("LASTCHANGED")}`}
 		onclick={() => sortClicked("LASTCHANGED")}
 	>
-		Last Changed
+		{t("nav.sort.lastChanged")}
 	</button>
 	<button
 		class={`plain ${getDirectionClass("LASTFIN")}`}
 		onclick={() => sortClicked("LASTFIN")}
 	>
-		Last Finished
+		{t("nav.sort.lastFinished")}
 	</button>
 	<button
 		class={`plain ${getDirectionClass("RATING")}`}
 		onclick={() => sortClicked("RATING")}
 	>
-		Rating
+		{t("nav.sort.rating")}
 	</button>
 	<button
 		class={`plain ${getDirectionClass("ALPHA")}`}
 		onclick={() => sortClicked("ALPHA")}
 	>
-		Alphabetical
+		{t("nav.sort.alphabetical")}
 	</button>
 	<button
 		class={`plain ${getDirectionClass("DATERELEASED")}`}
 		onclick={() => sortClicked("DATERELEASED")}
 	>
-		Release Date
+		{t("nav.sort.releaseDate")}
 	</button>
 </Menu>
 

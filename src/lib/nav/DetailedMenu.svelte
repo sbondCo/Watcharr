@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { store } from "@/store.svelte";
 	import type { WLDetailedViewOption } from "@/types";
 	import { page } from "$app/state";
@@ -21,30 +22,30 @@
 		arrowLeft: page.url?.pathname.startsWith("/search") ? "84px" : "3px",
 	}}
 >
-	<h4 class="norm sm-caps">Shown Details</h4>
+	<h4 class="norm sm-caps">{t("nav.detailed.shownDetails")}</h4>
 	<button
 		class={`plain ${store.wlDetailedView?.includes("statusRating") ? "on" : ""}`}
 		onclick={() => detailClicked("statusRating")}
 	>
-		Status & Rating
+		{t("nav.detailed.statusAndRating")}
 	</button>
 	<button
 		class={`plain ${store.wlDetailedView?.includes("lastWatched") ? "on" : ""}`}
 		onclick={() => detailClicked("lastWatched")}
 	>
-		Watching Season
+		{t("nav.detailed.watchingSeason")}
 	</button>
 	<button
 		class={`plain ${store.wlDetailedView?.includes("dateAdded") ? "on" : ""}`}
 		onclick={() => detailClicked("dateAdded")}
 	>
-		Date Added
+		{t("nav.detailed.dateAdded")}
 	</button>
 	<button
 		class={`plain ${store.wlDetailedView?.includes("dateModified") ? "on" : ""}`}
 		onclick={() => detailClicked("dateModified")}
 	>
-		Date Modified
+		{t("nav.detailed.dateModified")}
 	</button>
 </Menu>
 

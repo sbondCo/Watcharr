@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import type { MediaGenre } from "@/types";
 
 	interface Props {
@@ -18,7 +19,7 @@
 	{:else}
 		<!-- Generic "unknown" text, since this component
 		 	 is also used for displaying Game Modes. -->
-		<span>Unknown</span>
+		<span>{t("common.unknown")}</span>
 	{/if}
 </div>
 

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/index.svelte";
 import { req } from "../util/api";
 import { notify } from "../util/notify";
 import type {
@@ -27,7 +28,7 @@ export async function updateWatchedSeason(
 		console.error("updateWatchedSeason: No watched item.");
 		return;
 	}
-	const nid = notify({ text: `Saving`, type: "loading" });
+	const nid = notify({ text: t("common.saving"), type: "loading" });
 	try {
 		const r = await req.post<WatchedSeasonSetResponse>(`/watched/season`, {
 			watchedId: watchedItem.id,
@@ -53,7 +54,7 @@ export async function updateWatchedSeason(
 					);
 					notify({
 						id: nid,
-						text: "Updated but failed to reflect in UI, please reload the page.",
+						text: t("season.failedToReflectInUi"),
 						type: "error",
 					});
 				}
@@ -79,7 +80,7 @@ export async function updateWatchedSeason(
 					);
 					notify({
 						type: "error",
-						text: "Some automations have failed, check console for more info.",
+						text: t("season.automationsFailed"),
 					});
 				}
 				if (hookResp.addedActivities && hookResp.addedActivities.length > 0) {
@@ -93,19 +94,19 @@ export async function updateWatchedSeason(
 			console.error("Failed to process statusChangedHookResponse", err);
 			notify({
 				type: "error",
-				text: "Failed to process automation response, check console for more info.",
+				text: t("season.automationResponseFailed"),
 			});
 		}
 
-		notify({ id: nid, text: `Saved!`, type: "success" });
+		notify({ id: nid, text: t("common.saved"), type: "success" });
 	} catch (err) {
 		console.error("updateWatchedSeason: Failed!", err);
-		notify({ id: nid, text: "Failed To Update!", type: "error" });
+		notify({ id: nid, text: t("common.failedToUpdate"), type: "error" });
 	}
 }
 
 export async function removeWatchedSeason(watchedItem: Watched, id: number) {
-	const nid = notify({ text: `Removing`, type: "loading" });
+	const nid = notify({ text: t("common.removing"), type: "loading" });
 	try {
 		const r = await req.delete<Activity>(`/watched/season/${id}`);
 		watchedItem.watchedSeasons = watchedItem.watchedSeasons?.filter(
@@ -118,10 +119,10 @@ export async function removeWatchedSeason(watchedItem: Watched, id: number) {
 				watchedItem.activity = [r];
 			}
 		}
-		notify({ id: nid, text: `Removed!`, type: "success" });
+		notify({ id: nid, text: t("common.removed"), type: "success" });
 	} catch (err) {
 		console.error("removeWatchedSeason: Failed!", err);
-		notify({ id: nid, text: "Failed To Remove!", type: "error" });
+		notify({ id: nid, text: t("common.failedToRemove"), type: "error" });
 	}
 }
 
@@ -135,7 +136,7 @@ export async function updateWatchedEpisode(
 		console.error("SeasonListEpisode: updateWatchedEpisode: No watched item.");
 		return;
 	}
-	const nid = notify({ text: `Saving`, type: "loading" });
+	const nid = notify({ text: t("common.saving"), type: "loading" });
 	try {
 		const r = await req.post<WatchedEpisodeSetResponse>(`/watched/episode`, {
 			watchedId: watchedItem.id,
@@ -162,7 +163,7 @@ export async function updateWatchedEpisode(
 					);
 					notify({
 						id: nid,
-						text: "Updated but failed to reflect in UI, please reload the page.",
+						text: t("season.failedToReflectInUi"),
 						type: "error",
 					});
 				}
@@ -188,7 +189,7 @@ export async function updateWatchedEpisode(
 					);
 					notify({
 						type: "error",
-						text: "Some automations have failed, check console for more info.",
+						text: t("season.automationsFailed"),
 					});
 				}
 				if (hookResp.addedActivities && hookResp.addedActivities.length > 0) {
@@ -217,19 +218,19 @@ export async function updateWatchedEpisode(
 			console.error("Failed to process episode StatusChangedHookResponse", err);
 			notify({
 				type: "error",
-				text: "Failed to process automation response, check console for more info.",
+				text: t("season.automationResponseFailed"),
 			});
 		}
 
-		notify({ id: nid, text: `Saved!`, type: "success" });
+		notify({ id: nid, text: t("common.saved"), type: "success" });
 	} catch (err) {
 		console.error("updateWatchedEpisode: Failed!", err);
-		notify({ id: nid, text: "Failed To Update!", type: "error" });
+		notify({ id: nid, text: t("common.failedToUpdate"), type: "error" });
 	}
 }
 
 export async function removeWatchedEpisode(watchedItem: Watched, id: number) {
-	const nid = notify({ text: `Removing`, type: "loading" });
+	const nid = notify({ text: t("common.removing"), type: "loading" });
 	try {
 		const r = await req.delete<Activity>(`/watched/episode/${id}`);
 		watchedItem.watchedEpisodes = watchedItem.watchedEpisodes?.filter(
@@ -242,9 +243,9 @@ export async function removeWatchedEpisode(watchedItem: Watched, id: number) {
 				watchedItem.activity = [r];
 			}
 		}
-		notify({ id: nid, text: `Removed!`, type: "success" });
+		notify({ id: nid, text: t("common.removed"), type: "success" });
 	} catch (err) {
 		console.error("removeWatchedEpisode: Failed!", err);
-		notify({ id: nid, text: "Failed To Remove!", type: "error" });
+		notify({ id: nid, text: t("common.failedToRemove"), type: "error" });
 	}
 }

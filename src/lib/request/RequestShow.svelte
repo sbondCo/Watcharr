@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { req } from "../util/api";
 	import Modal from "../Modal.svelte";
 	import type {
@@ -40,7 +41,7 @@
 					return {
 						id: s.number,
 						value: false,
-						displayValue: s.name ?? `(${s.number}) Unknown`,
+						displayValue: s.name ?? `(${s.number}) ${t("common.unknown")}`,
 					};
 				})
 			: [],
@@ -54,12 +55,12 @@
 				servarrs = r;
 				selectedServarrIndex = 0;
 			} else {
-				notify({ text: "No servers found", type: "error" });
+				notify({ text: t("request.noServersFound"), type: "error" });
 			}
 			processOriginalRequest();
 		} catch (err) {
 			console.error("Failed to get servers!", err);
-			notify({ text: "Failed to load servers", type: "error" });
+			notify({ text: t("request.failedToLoadServers"), type: "error" });
 		}
 	}
 
@@ -69,7 +70,7 @@
 			selectedServerCfg = r;
 		} catch (err) {
 			console.error("Failed to get config!", err);
-			notify({ text: "Failed to load config", type: "error" });
+			notify({ text: t("request.failedToLoadConfig"), type: "error" });
 		}
 	}
 
@@ -77,15 +78,15 @@
 		let nid;
 		try {
 			if (!servarrs || !servarrs[selectedServarrIndex]) {
-				notify({ text: "Must select a server", type: "error" });
+				notify({ text: t("request.mustSelectServer"), type: "error" });
 				return;
 			}
 			if (!selectedServerCfg) {
-				notify({ text: "No selected server config found", type: "error" });
+				notify({ text: t("request.noServerConfig"), type: "error" });
 				return;
 			}
 			addRequestRunning = true;
-			nid = notify({ text: "Requesting", type: "loading" });
+			nid = notify({ text: t("request.requesting"), type: "loading" });
 			const server = servarrs[selectedServarrIndex];
 			const rootFolder = selectedServerCfg.rootFolders?.find(
 				(f) => f.id === server.rootFolder,
@@ -97,7 +98,7 @@
 					"rf:",
 					rootFolder,
 				);
-				notify({ id: nid, text: "No Root Folder Found", type: "error" });
+				notify({ id: nid, text: t("request.noRootFolder"), type: "error" });
 				return;
 			}
 			const resp = await req.post<ArrRequestResponse>(
@@ -124,13 +125,13 @@
 			);
 			addRequestRunning = false;
 			if (resp) {
-				notify({ id: nid, text: "Request complete", type: "success" });
+				notify({ id: nid, text: t("request.complete"), type: "success" });
 				onClose(resp);
 			}
 		} catch (err) {
 			console.error("content request failed!", err);
 			addRequestRunning = false;
-			notify({ id: nid, text: "Request failed!", type: "error" });
+			notify({ id: nid, text: t("request.failed"), type: "error" });
 		}
 	}
 
@@ -172,14 +173,14 @@
 			} else {
 				notify({
 					type: "error",
-					text: "Full original request could not be restored. You may continue, but prefilled settings may not be true to the original request.",
+					text: t("request.couldNotRestore"),
 					time: 10000,
 				});
 			}
 		} catch (err) {
 			console.error("processOriginalRequest: Failed!", err);
 			notify({
-				text: "Failed when processing original request!",
+				text: t("request.failedProcessingOriginal"),
 				type: "error",
 			});
 		}
@@ -204,7 +205,7 @@
 </script>
 
 <Modal
-	title={approveMode ? "Approve Request" : "Request"}
+	title={approveMode ? t("request.approveRequest") : t("request.request")}
 	desc={content.name}
 	maxWidth="700px"
 	onClose={() => onClose(undefined)}
@@ -212,13 +213,16 @@
 	<div class="req-ctr">
 		{#if servarrs}
 			<div class="seasons-list">
-				<ListBox bind:options={seasonItems} allCheckBox="All Seasons" />
+				<ListBox
+					bind:options={seasonItems}
+					allCheckBox={t("request.allSeasons")}
+				/>
 			</div>
 
 			{#if servarrs?.length > 1}
-				<Setting title="Select the server to use">
+				<Setting title={t("request.selectServerTitle")}>
 					<DropDown
-						placeholder="Select a server"
+						placeholder={t("request.selectServer")}
 						bind:active={selectedServarrIndex}
 						options={servarrs?.length > 0
 							? servarrs.map((s, i) => {
@@ -230,7 +234,7 @@
 			{/if}
 
 			<button onclick={request} disabled={addRequestRunning}>
-				{approveMode ? "Approve" : "Request"}
+				{approveMode ? t("request.approve") : t("request.request")}
 			</button>
 		{:else}
 			<Spinner />

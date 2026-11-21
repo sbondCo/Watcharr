@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { store } from "@/store.svelte";
 	import Modal from "../Modal.svelte";
 	import { notify } from "../util/notify";
@@ -20,22 +21,22 @@
 	async function deleteTag() {
 		console.debug("deleteTag:", tag);
 		if (!tag || !tag.id) {
-			error = "Tag doesn't have an id!";
+			error = t("tags.noId");
 			return;
 		}
 		deleteDisabled = true;
-		const nid = notify({ text: "Deleting Tag", type: "loading" });
+		const nid = notify({ text: t("tags.deleting"), type: "loading" });
 		try {
 			const resp = await req.delete(`/tag/${tag.id}`);
 			console.log("deleteTag: Tag was deleted", resp);
 			// Remove tag from store.
 			store.tags = store.tags.filter((t) => t.id !== tag.id);
-			notify({ id: nid, text: "Tag Deleted!", type: "success" });
+			notify({ id: nid, text: t("tags.deleted"), type: "success" });
 			onClose();
 		} catch (err) {
 			console.error("deleteTag: Failed!", err);
-			notify({ id: nid, text: "Failed!", type: "error", time: 1 });
-			error = "Failed To Delete!";
+			notify({ id: nid, text: t("common.failed"), type: "error", time: 1 });
+			error = t("common.failedToDelete");
 		}
 		deleteDisabled = false;
 	}
@@ -51,8 +52,8 @@
 </script>
 
 <Modal
-	title="Permanently Delete Tag"
-	desc="Are you sure you want to delete this tag?"
+	title={t("tags.delete.title")}
+	desc={t("tags.delete.desc")}
 	maxWidth="500px"
 	{onClose}
 	{error}
@@ -64,7 +65,7 @@
 			onclick={() => deleteTag()}
 			disabled={deleteDisabled}
 		>
-			Yes, fully delete (unrecoverable)
+			{t("tags.delete.confirm")}
 		</button>
 	</div>
 </Modal>

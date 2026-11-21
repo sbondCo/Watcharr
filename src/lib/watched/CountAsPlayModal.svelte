@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Modal from "../Modal.svelte";
 	import type { Signal } from "../util/signal";
 
@@ -10,15 +11,17 @@
 </script>
 
 <Modal
-	title="Count as Whole Play"
-	desc="Do you want to increment the Plays for this media by one?"
+	title={t("watched.countAsPlay.title")}
+	desc={t("watched.countAsPlay.desc")}
 	maxWidth="450px"
 >
 	<div class="button-row">
 		<button class="danger" onclick={() => onDecision.fire(false)}>
-			No, Don't Count
+			{t("watched.countAsPlay.no")}
 		</button>
-		<button onclick={() => onDecision.fire(true)}>Yes, Count as Play</button>
+		<button onclick={() => onDecision.fire(true)}
+			>{t("watched.countAsPlay.yes")}</button
+		>
 	</div>
 </Modal>
 

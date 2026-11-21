@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Icon from "@/lib/Icon.svelte";
 	import Modal from "@/lib/Modal.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
@@ -42,7 +43,7 @@
 		} catch (err) {
 			console.error("startSync failed!", err);
 			step = "errored";
-			jobFailError = ReqerError.getMsg(err, "Starting sync failed");
+			jobFailError = ReqerError.getMsg(err, t("job.startingSyncFailed"));
 		}
 	}
 
@@ -50,7 +51,7 @@
 		if (!jobId) {
 			console.error("startJobWatcher: No Job Id");
 			notify({
-				text: "Unable to start job watcher, no job id.",
+				text: t("job.noJobId"),
 				type: "error",
 			});
 			return;
@@ -81,7 +82,7 @@
 			if (seqfailedJobReqs >= 10) {
 				console.error("jobWatcher: Failed 10 times in a row!");
 				notify({
-					text: "Status checker has failed 10 times in a row!",
+					text: t("job.statusCheckerFailed"),
 					type: "error",
 					time: 30000,
 				});
@@ -95,7 +96,7 @@
 	function modalClose() {
 		if (step === "job-running") {
 			notify({
-				text: "Sync will continue in the background.. please refresh the page periodically to view your updated list or come back later.",
+				text: t("job.continuesInBackground"),
 				time: 10000,
 			});
 		}
@@ -126,25 +127,24 @@
 		{/if}
 		<div>
 			{#if step === "starting"}
-				<h4 class="norm">Starting</h4>
+				<h4 class="norm">{t("job.starting")}</h4>
 				<span>{messages.starting}</span>
 			{:else if step === "job-running"}
-				<h4 class="norm">Running</h4>
+				<h4 class="norm">{t("job.running")}</h4>
 				{#if currentTask}
 					<span>{currentTask}</span>
 				{/if}
 			{:else if step === "done"}
 				{#if !latestJobStatus?.errors || latestJobStatus?.errors?.length <= 0}
-					<h4 class="norm">Finished</h4>
-					<span>We have finished. Looks like there were no errors!</span>
+					<h4 class="norm">{t("job.finished")}</h4>
+					<span>{t("job.finishedNoErrors")}</span>
 				{:else}
 					<h4 class="norm">
-						Finished With {latestJobStatus?.errors?.length} Error{latestJobStatus
-							?.errors?.length === 1
-							? ""
-							: "s"}
+						{t("job.finishedWithErrors", {
+							count: latestJobStatus?.errors?.length,
+						})}
 					</h4>
-					<span>Job finished, but with errors:</span>
+					<span>{t("job.finishedButWithErrors")}</span>
 					<ul>
 						{#each latestJobStatus?.errors as e (e)}
 							<li>{e}</li>
@@ -152,13 +152,11 @@
 					</ul>
 				{/if}
 			{:else if step === "errored"}
-				<h4 class="norm">We Errored!</h4>
+				<h4 class="norm">{t("job.weErrored")}</h4>
 				{#if jobFailError}
 					<span>{jobFailError}</span>
 				{:else}
-					<span
-						>We errored before starting the job or the job was cancelled.</span
-					>
+					<span>{t("job.erroredBeforeStart")}</span>
 				{/if}
 				{#if latestJobStatus?.errors && latestJobStatus?.errors?.length > 0}
 					<ul>
@@ -168,8 +166,8 @@
 					</ul>
 				{/if}
 			{:else}
-				<h4 class="norm">Unknown State!</h4>
-				<span>We're not sure of the current job status.</span>
+				<h4 class="norm">{t("job.unknownState")}</h4>
+				<span>{t("job.unknownStateDesc")}</span>
 			{/if}
 		</div>
 	</div>
