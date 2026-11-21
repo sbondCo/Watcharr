@@ -1,9 +1,12 @@
+<script lang="ts">
+	import Trans from "@/lib/i18n/Trans.svelte";
+	import { t } from "@/lib/i18n/index.svelte";
+</script>
+
 <p>
-	This is <b>not</b> necessary, because Watcharr comes with its own api key baked
-	in.
+	<Trans key="handbook.tmdbKey.p1" />
 </p>
 
 <p>
-	However, if you ever have issues with our key for any reason, or simply want
-	to provide your own, simply place it in your server settings.
+	{t("handbook.tmdbKey.p2")}
 </p>

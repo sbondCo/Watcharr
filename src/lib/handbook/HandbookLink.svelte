@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { resolve } from "$app/paths";
 	import tooltip from "../actions/tooltip";
 	import type { HandbookEntryId } from "./entries";
@@ -33,10 +34,10 @@
 	href={resolve(`/handbook?entry=${handbook}`)}
 	onclick={linkClicked}
 	use:tooltip={{
-		text: "Open Handbook",
+		text: t("handbook.open"),
 		pos: "top",
 	}}
-	aria-label={`Open handbook for ${handbook}`}
+	aria-label={t("handbook.openFor", { entry: handbook })}
 >
 	help
 </a>

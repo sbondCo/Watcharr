@@ -5,62 +5,50 @@
 	import step4 from "./step4.png";
 	import fullPage from "./content-full-page.png";
 	import HandbookImage from "@/lib/handbook/internal/HandbookImage.svelte";
+	import { t } from "@/lib/i18n/index.svelte";
 </script>
 
-<p>Adding media to your list is the core feature of Watcharr.</p>
+<p>{t("handbook.addingToWatchlist.p1")}</p>
 
-<p>
-	The homepage is where your list will appear once you have added something.
-</p>
+<p>{t("handbook.addingToWatchlist.p2")}</p>
 
-<p>
-	To get started, you can follow along with these steps to add your first movie
-	(or show, etc):
-</p>
+<p>{t("handbook.addingToWatchlist.p3")}</p>
 
 <ol>
 	<li>
-		<p>Use the search bar at the top of the page to find content.</p>
+		<p>{t("handbook.addingToWatchlist.step1")}</p>
 		<p>
-			<HandbookImage src={step1} alt="Step 1" />
+			<HandbookImage src={step1} alt={t("handbook.step", { step: 1 })} />
 		</p>
 	</li>
 	<li>
-		<p>Hover or click on the content you want to add.</p>
+		<p>{t("handbook.addingToWatchlist.step2")}</p>
 		<p>
-			<HandbookImage src={step2} alt="Step 2" />
+			<HandbookImage src={step2} alt={t("handbook.step", { step: 2 })} />
 		</p>
 	</li>
 	<li>
-		<p>Clicking the + (Plus) icon will let you give the content a status.</p>
+		<p>{t("handbook.addingToWatchlist.step3")}</p>
+		<p>{t("handbook.addingToWatchlist.step3Statuses")}</p>
 		<p>
-			Currently supported statuses include: Finished, Watching, Held, Planned,
-			Dropped.
-		</p>
-		<p>
-			<HandbookImage src={step3} alt="Step 3" />
+			<HandbookImage src={step3} alt={t("handbook.step", { step: 3 })} />
 		</p>
 	</li>
 	<li>
-		<p>Rate the content.</p>
+		<p>{t("handbook.addingToWatchlist.step4")}</p>
 		<p>
-			<HandbookImage src={step4} alt="Step 4" />
+			<HandbookImage src={step4} alt={t("handbook.step", { step: 4 })} />
 		</p>
 	</li>
 </ol>
 
-<p>
-	If you prefer, you can also do this by clicking/tapping on the active poster
-	again. This will take you to the contents full page. Here you can see all the
-	options, including adding Thoughts for the content.
-</p>
+<p>{t("handbook.addingToWatchlist.p4")}</p>
 
 <p>
-	<HandbookImage src={fullPage} alt="Content Full Page" />
+	<HandbookImage
+		src={fullPage}
+		alt={t("handbook.addingToWatchlist.fullPageAlt")}
+	/>
 </p>
 
-<p>
-	Thoughts can be anything you would like to write down or remember about the
-	specific movie/show. For example, sometimes I like to write something specific
-	that I really liked about the content.
-</p>
+<p>{t("handbook.addingToWatchlist.p5")}</p>

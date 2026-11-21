@@ -1,39 +1,41 @@
 import type { Component } from "svelte";
 
 type HandbookGroup = {
+	/** Translation key of the title. */
 	title: string;
 	entries: HandbookEntry[];
 };
 
 export type HandbookEntry = {
 	id: string;
+	/** Translation key of the title. */
 	title: string;
 	comp: () => Promise<{ default: Component }>;
 };
 
 export const entries = [
 	{
-		title: "General",
+		title: "handbook.groups.general",
 		entries: [
 			{
 				id: "adding-to-your-watchlist",
-				title: "Adding to your watchlist",
+				title: "handbook.addingToWatchlist.title",
 				comp: () =>
 					import("./entries/general/AddingToYourWatchlist/AddingToYourWatchlist.svelte"),
 			},
 		],
 	},
 	{
-		title: "Admin",
+		title: "handbook.groups.admin",
 		entries: [
 			{
 				id: "jellyfin-webhook-setup",
-				title: "Jellyfin Webhook Setup",
+				title: "handbook.jellyfinWebhook.title",
 				comp: () => import("./entries/admin/JellyfinWebhookSetup.svelte"),
 			},
 			{
 				id: "your-own-tmdb-api-key",
-				title: "Providing Your Own TMDB API Key",
+				title: "handbook.tmdbKey.title",
 				comp: () => import("./entries/admin/YourOwnTMDBAPIKey.svelte"),
 			},
 		],
