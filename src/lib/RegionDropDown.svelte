@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { t } from "@/lib/i18n/index.svelte";
+	import { defaultLanguage, getLanguage, t } from "@/lib/i18n/index.svelte";
 	import DropDown from "./DropDown.svelte";
 	import type { DropDownItem, TMDBRegions } from "@/types";
 	import Error from "./Error.svelte";
@@ -17,18 +17,36 @@
 		onChange,
 	}: Props = $props();
 
-	let mappedCountries: DropDownItem[] = $state([]);
+	let regions: TMDBRegions["results"] = $state([]);
+
+	// Show country names in the users language when possible
+	// (TMDB only gives us english names).
+	let mappedCountries: DropDownItem[] = $derived.by(() => {
+		const lang = getLanguage();
+		let names: Intl.DisplayNames | undefined;
+		if (lang !== defaultLanguage) {
+			try {
+				names = new Intl.DisplayNames([lang], { type: "region" });
+			} catch (err) {
+				console.warn("RegionDropDown: Intl.DisplayNames unsupported", err);
+			}
+		}
+		return regions
+			.map((cc) => {
+				let value = cc.english_name;
+				try {
+					value = names?.of(cc.iso_3166_1) ?? cc.english_name;
+				} catch {
+					// Invalid region code, keep the english name.
+				}
+				return { id: cc.iso_3166_1, value } as DropDownItem;
+			})
+			.sort((a, b) => a.value.localeCompare(b.value, lang));
+	});
 
 	async function getCountries() {
 		const c = await req.get<TMDBRegions>(`/content/regions`);
-		mappedCountries = c.results
-			.map((cc) => {
-				return {
-					id: cc.iso_3166_1,
-					value: cc.english_name,
-				} as DropDownItem;
-			})
-			.sort((a, b) => a.value.localeCompare(b.value));
+		regions = c.results;
 	}
 </script>
 

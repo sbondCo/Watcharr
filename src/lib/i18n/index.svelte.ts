@@ -75,6 +75,12 @@ i18next.init({
 	returnNull: false,
 });
 
+// Allow translations to lowercase a value (eg `{{status, lowercase}}`),
+// for languages that don't capitalize words in the middle of a sentence.
+i18next.services.formatter?.add("lowercase", (value, lng) =>
+	String(value).toLocaleLowerCase(lng),
+);
+
 /**
  * Translate a key into the current language.
  *
