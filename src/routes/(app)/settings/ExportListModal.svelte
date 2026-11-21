@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
+	import Trans from "@/lib/i18n/Trans.svelte";
 	import Modal from "@/lib/Modal.svelte";
 	import { req } from "@/lib/util/api";
 	import { notify } from "@/lib/util/notify";
@@ -10,7 +12,7 @@
 	let { onClose }: Props = $props();
 
 	async function downloadWatchedList() {
-		const nid = notify({ text: "Exporting", type: "loading" });
+		const nid = notify({ text: t("export.exporting"), type: "loading" });
 		try {
 			// We re-fetch, to ensure data we export is up to date.
 			const r = await req.get<unknown[]>("/watched");
@@ -18,7 +20,7 @@
 			if (!r || r?.length <= 0) {
 				notify({
 					id: nid,
-					text: "Can't export an empty watch list!",
+					text: t("export.emptyList"),
 					type: "error",
 					time: 10000,
 				});
@@ -31,33 +33,32 @@
 			a.href = URL.createObjectURL(file);
 			a.download = "watcharr-export.json";
 			a.click();
-			notify({ id: nid, text: "Successfully Exported", type: "success" });
+			notify({ id: nid, text: t("export.success"), type: "success" });
 			onClose();
 		} catch (err) {
 			console.error("downloadWatchedList failed!", err);
-			notify({ id: nid, text: "Export Failed!", type: "error" });
+			notify({ id: nid, text: t("export.failed"), type: "error" });
 		}
 	}
 </script>
 
-<Modal title="Export Watched List" maxWidth="600px" {onClose}>
+<Modal title={t("export.title")} maxWidth="600px" {onClose}>
 	<p>
-		Only use this feature if you are leaving Watcharr to use another platform OR
-		leaving to another Watcharr instance where you don't own this or the other
-		instance.
+		{t("export.p1")}
 	</p>
 	<p>
-		If you are migrating to another server that you own, it's best to take your
-		existing database with you.
+		{t("export.p2")}
 	</p>
 	<p>
-		<b>Warning</b>: This is not a backup feature. Backups should be done on the
-		server (see:
-		<a href="https://watcharr.app/docs/server_config/backup" target="_blank"
-			>https://watcharr.app/docs/server_config/backup</a
-		>).
+		<Trans key="export.warning">
+			{#snippet link(text: string)}
+				<a href="https://watcharr.app/docs/server_config/backup" target="_blank"
+					>{text}</a
+				>
+			{/snippet}
+		</Trans>
 	</p>
-	<button onclick={() => downloadWatchedList()}>Export</button>
+	<button onclick={() => downloadWatchedList()}>{t("settings.export")}</button>
 </Modal>
 
 <style lang="scss">

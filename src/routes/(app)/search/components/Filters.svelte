@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Icon from "@/lib/Icon.svelte";
 	import Modal from "@/lib/Modal.svelte";
+	import Trans from "@/lib/i18n/Trans.svelte";
 
 	let modalShown = $state(false);
 </script>
@@ -9,49 +11,46 @@
 	onclick={() => (modalShown = true)}
 	style="width: min-content; margin-left:auto; gap: 5px;"
 >
-	<Icon i="filter" wh={16} /> Filters
+	<Icon i="filter" wh={16} />
+	{t("search.filters.title")}
 </button>
 
 {#if modalShown}
-	<Modal title="Filters Help" onClose={() => (modalShown = false)}>
+	<Modal title={t("search.filters.help")} onClose={() => (modalShown = false)}>
 		<div class="modal-inner">
 			<p>
-				Currently to apply filters you must include them in your search bar
-				manually.
+				{t("search.filters.howTo")}
 			</p>
-			<p><b>Supported Filters</b></p>
+			<p><b>{t("search.filters.supported")}</b></p>
 			<ul>
 				<li>
-					<b>year</b>, <b>y</b> - Media has <i>any</i> release date matching the year
-					(only works with a media type selected, like Movies).
+					<b>year</b>, <b>y</b> - <Trans key="search.filters.year" />
 				</li>
 				<li>
-					<b>fyear</b>, <b>fy</b> - Media was <i>first</i> released on the year (only
-					works with a media type selected, like Movies).
+					<b>fyear</b>, <b>fy</b> - <Trans key="search.filters.fyear" />
 				</li>
 				<li>
-					<b>adult</b> - Toggle on adult results. This always defaults to "off" (Only
-					Movies, TV Shows, People). Set this to any value to turn it "on".
+					<b>adult</b> - {t("search.filters.adult")}
 				</li>
 			</ul>
-			<p><b>Examples</b></p>
+			<p><b>{t("search.filters.examples")}</b></p>
 			<ul>
 				<li>
-					<b>Filter by any matching release year:</b>
+					<b>{t("search.filters.exampleYear")}</b>
 					<ul>
 						<li>Spider Man year:2026</li>
 						<li>Spider Man y:2026</li>
 					</ul>
 				</li>
 				<li>
-					<b>Filter by primary/first release year:</b>
+					<b>{t("search.filters.exampleFyear")}</b>
 					<ul>
 						<li>Spider Man fyear:2026</li>
 						<li>Spider Man fy:2026</li>
 					</ul>
 				</li>
 				<li>
-					<b>Toggle on adult movies, tv or people in results:</b>
+					<b>{t("search.filters.exampleAdult")}</b>
 					<ul>
 						<li>Spider Man adult:1</li>
 					</ul>

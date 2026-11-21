@@ -5,6 +5,7 @@
  -->
 
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { goto } from "$app/navigation";
 	import DropDown from "@/lib/DropDown.svelte";
 	import Error from "@/lib/Error.svelte";
@@ -14,7 +15,7 @@
 	import PosterList from "@/lib/poster/PosterList.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import SpinnerTiny from "@/lib/SpinnerTiny.svelte";
-	import { sleep } from "@/lib/util/helpers";
+	import { sleep, statusLabel } from "@/lib/util/helpers";
 	import { notify } from "@/lib/util/notify";
 	import { store } from "@/store.svelte";
 	import {
@@ -49,11 +50,14 @@
 
 	// This isn't reactive to avoid bugs (hopefully this isn't a bug)
 	let dropDownSupportedTypes = (() => {
-		let t = ["movie", "tv"];
+		let types = ["movie", "tv"];
 		if (store.serverFeatures?.games) {
-			t.push("game");
+			types.push("game");
 		}
-		return t;
+		return types.map((type) => ({
+			id: type,
+			value: t(`import.process.contentTypes.${type}`),
+		}));
 	})();
 
 	// Set when current item being imported gets an IMPORT_MULTI
@@ -73,7 +77,7 @@
 		}
 		console.log("getList", list);
 		if (list?.type === "text-list") {
-			importText = "Text List";
+			importText = t("import.process.textList");
 			// Regex to match a year in between brackets,
 			// which we assume is the release year of content.
 			const yearRegex = new RegExp(/\([0-9]{4}\)/);
@@ -145,7 +149,7 @@
 					console.error("Failed to process an item!", err);
 					notify({
 						type: "error",
-						text: "Failed to process an item!",
+						text: t("import.process.failedToProcessItem"),
 					});
 				}
 			}
@@ -237,18 +241,18 @@
 					console.error("Failed to process an item!", err);
 					notify({
 						type: "error",
-						text: "Failed to process an item!",
+						text: t("import.process.failedToProcessItem"),
 					});
 				}
 			}
 			notify({
-				text: "Any tv episodes will be added to the bottom of the table, don't change the Type on these!",
+				text: t("import.process.tvEpisodesAtBottom"),
 				time: 20000,
 			});
 			if (anySkipped) {
 				notify({
 					type: "error",
-					text: "Some items with invalid data may have been skipped (check source data for missing ids/titles or look in console for more details).",
+					text: t("import.process.itemsSkipped"),
 				});
 			}
 		} else if (list?.type === "movary") {
@@ -261,7 +265,7 @@
 				console.error("Movary import processing failed!", err);
 				notify({
 					type: "error",
-					text: "Processing failed!. Please report this issue if it persists.",
+					text: t("import.process.processingFailed"),
 				});
 			}
 		} else if (list?.type === "watcharr") {
@@ -274,7 +278,7 @@
 				console.error("Watcharr import processing failed!", err);
 				notify({
 					type: "error",
-					text: "Processing failed!. Please report this issue if it persists.",
+					text: t("import.process.processingFailed"),
 				});
 			}
 		} else if (list?.type === "myanimelist") {
@@ -287,7 +291,7 @@
 					console.error("MyAnimeList parse error:", errorNode);
 					notify({
 						type: "error",
-						text: "An error occurred while parsing your MyAnimeList export!",
+						text: t("import.myAnimeList.parseError"),
 					});
 					return;
 				}
@@ -297,7 +301,7 @@
 					console.error("MyAnimeList: Found no anime nodes:", animeNodes);
 					notify({
 						type: "error",
-						text: "We found no Anime entries in your export file!",
+						text: t("import.myAnimeList.noEntries"),
 					});
 					return;
 				}
@@ -309,7 +313,7 @@
 						console.error("No title found for an anime!", animeNode, titleNode);
 						notify({
 							type: "error",
-							text: "An anime failed to import, a title was not found! Check console for more details.",
+							text: t("import.myAnimeList.noTitle"),
 						});
 						continue;
 					}
@@ -386,7 +390,7 @@
 						);
 						notify({
 							type: "error",
-							text: "Failed to process start/finish times for an anime! Check console for more details.",
+							text: t("import.myAnimeList.timesFailed"),
 						});
 					}
 					rList.push(l);
@@ -395,7 +399,7 @@
 				console.error("MyAnimeList import failed!", err);
 				notify({
 					type: "error",
-					text: "Failed to process import data!",
+					text: t("import.process.failedToProcessData"),
 				});
 			}
 		} else if (list?.type === "ryot") {
@@ -408,7 +412,7 @@
 				console.error("Ryot import processing failed!", err);
 				notify({
 					type: "error",
-					text: "Processing failed!. Please report this issue if it persists.",
+					text: t("import.process.processingFailed"),
 				});
 			}
 		} else if (list?.type === "todomovies") {
@@ -421,7 +425,7 @@
 				console.error("TodoMovies import processing failed!", err);
 				notify({
 					type: "error",
-					text: "Processing failed!. Please report this issue if it persists.",
+					text: t("import.process.processingFailed"),
 				});
 			}
 		}
@@ -485,7 +489,7 @@
 			);
 			notify({
 				type: "error",
-				text: "An error was found in one of the inputs, please fix it and try starting the import again.",
+				text: t("import.process.inputError"),
 			});
 			return;
 		}
@@ -494,7 +498,7 @@
 		window.scrollTo(0, 0);
 		for (let i = 0; i < rList.length; i++) {
 			if (cancelled) {
-				notify({ type: "error", text: "Importing Cancelled" });
+				notify({ type: "error", text: t("import.process.cancelled") });
 				return;
 			}
 			const li = rList[i];
@@ -506,7 +510,7 @@
 				console.error("Failed to import item:", li, "reason:", err);
 				notify({
 					type: "error",
-					text: "Failed to import an item! Check console for more info.",
+					text: t("import.process.failedToImportItem"),
 					time: Infinity,
 				});
 			}
@@ -526,7 +530,7 @@
 		} else {
 			notify({
 				type: "success",
-				text: "All content successfully imported!",
+				text: t("import.process.allImported"),
 				time: 15000,
 			});
 			goto(resolve("/"));
@@ -587,8 +591,10 @@
 				if (w) {
 					const release = w.media?.releaseDate;
 					if (release) item.year = new Date(Date.parse(release)).getFullYear();
-					const t = w.media ? getContentTypeFromMedia(w.media) : undefined;
-					if (t) item.type = t;
+					const contentType = w.media
+						? getContentTypeFromMedia(w.media)
+						: undefined;
+					if (contentType) item.type = contentType;
 				}
 				rList = rList;
 				res(0);
@@ -627,7 +633,7 @@
 				console.error("changeAllStatusesModalCb: Failed!", err);
 				notify({
 					type: "error",
-					text: "Failed when updating all statuses. Please try again!",
+					text: t("import.process.failedToUpdateStatuses"),
 				});
 			}
 			changeAllStatusesModalCb = undefined;
@@ -645,12 +651,16 @@
 	<div class="content">
 		<div class="inner">
 			{#if rList}
-				<h2>Importing {importText ? `From ${importText}` : ""}</h2>
+				<h2>
+					{importText
+						? t("import.process.importingFrom", { service: importText })
+						: t("import.process.importing")}
+				</h2>
 				<h5 class="norm">
 					{#if !isImporting}
-						Review your imported list and fix any problems.
+						{t("import.process.review")}
 					{:else}
-						You can fix any failed imports when the process completes.
+						{t("import.process.fixLater")}
 					{/if}
 				</h5>
 				<div class="table-wrap">
@@ -663,11 +673,11 @@
 								{#if isImporting}
 									<th class="loading-col"></th>
 								{/if}
-								<th>Name</th>
-								<th>Year</th>
-								<th>Type</th>
-								<th>Status</th>
-								<th>Rating</th>
+								<th>{t("import.process.columns.name")}</th>
+								<th>{t("import.process.columns.year")}</th>
+								<th>{t("import.process.columns.type")}</th>
+								<th>{t("import.process.columns.status")}</th>
+								<th>{t("import.process.columns.rating")}</th>
 								{#if !isImporting}
 									<th></th>
 								{/if}
@@ -706,7 +716,7 @@
 										<input
 											class="plain"
 											bind:value={l.year}
-											placeholder="YYYY"
+											placeholder={t("import.process.yearPlaceholder")}
 											type="number"
 											disabled={isImporting}
 										/>
@@ -714,23 +724,27 @@
 									<td class="type">
 										<DropDown
 											options={dropDownSupportedTypes}
+											isDropDownItem={true}
 											bind:active={l.type}
-											placeholder="Type"
+											placeholder={t("import.process.columns.type")}
 											blendIn={true}
 											disabled={isImporting}
 										/>
 									</td>
 									<td class="status">
 										<DropDown
-											options={[
-												"FINISHED",
-												"PLANNED",
-												"WATCHING",
-												"HOLD",
-												"DROPPED",
-											]}
+											options={(
+												[
+													"FINISHED",
+													"PLANNED",
+													"WATCHING",
+													"HOLD",
+													"DROPPED",
+												] as WatchedStatus[]
+											).map((s) => ({ id: s, value: statusLabel(s) }))}
+											isDropDownItem={true}
 											bind:active={l.status}
-											placeholder="Status"
+											placeholder={t("import.process.columns.status")}
 											blendIn={true}
 											disabled={isImporting}
 										/>
@@ -767,7 +781,7 @@
 									<td
 										><input
 											class="plain"
-											placeholder="Name"
+											placeholder={t("import.process.columns.name")}
 											onblur={addRow}
 										/></td
 									>
@@ -775,7 +789,7 @@
 										<input
 											class="plain"
 											id="addYear"
-											placeholder="YYYY"
+											placeholder={t("import.process.yearPlaceholder")}
 											type="number"
 										/>
 									</td>
@@ -790,19 +804,19 @@
 				</div>
 				<div class="btns">
 					<button onclick={() => goto(resolve("/import"))}>
-						<Icon i="arrow" />Back
+						<Icon i="arrow" />{t("common.back")}
 					</button>
 					<button onclick={() => changeAllStatuses()} disabled={isImporting}>
-						Change All Statuses
+						{t("import.process.changeAllStatuses")}
 					</button>
 					<button onclick={startImport} disabled={isImporting}>
-						Start Importing
+						{t("import.process.startImporting")}
 					</button>
 				</div>
 				{#if typeof changeAllStatusesModalCb === "function"}
 					<Modal
-						title="Select a New Status"
-						desc="Override the status for all content in the table"
+						title={t("import.process.selectNewStatus")}
+						desc={t("import.process.selectNewStatusDesc")}
 						maxWidth="600px"
 						onClose={() =>
 							typeof changeAllStatusesModalCb === "function"
@@ -813,7 +827,7 @@
 					</Modal>
 				{/if}
 			{:else}
-				<h2>No list</h2>
+				<h2>{t("import.process.noList")}</h2>
 			{/if}
 		</div>
 	</div>
@@ -821,10 +835,14 @@
 	<!-- Multiple results found modal -->
 	{#if importMultiItem}
 		<Modal
-			title="Multiple Results Found"
-			desc="Select the correct item for {importMultiItem.original
-				.name} {importMultiItem.original.year &&
-				'(' + importMultiItem.original.year + ')'}"
+			title={t("import.process.multipleResults")}
+			desc={t("import.process.selectCorrectItem", {
+				item: `${importMultiItem.original.name} ${
+					importMultiItem.original.year
+						? "(" + importMultiItem.original.year + ")"
+						: ""
+				}`.trim(),
+			})}
 			onClose={() => {
 				importMultiItem?.callback("closed results modal");
 				importMultiItem = undefined;
@@ -857,7 +875,7 @@
 									item.state = ImportResponseType.IMPORT_FAILED;
 									notify({
 										type: "error",
-										text: "Can't import selected result because it has an unsupported type associated with it!",
+										text: t("import.process.unsupportedType"),
 										time: 10000,
 									});
 									return;
@@ -880,7 +898,7 @@
 		</Modal>
 	{/if}
 {:catch err}
-	<Error error={err} pretty="Failed to process list!" />
+	<Error error={err} pretty={t("import.process.failedToProcessList")} />
 {/await}
 
 <style lang="scss">

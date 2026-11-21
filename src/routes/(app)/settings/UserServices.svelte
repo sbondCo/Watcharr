@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Checkbox from "@/lib/Checkbox.svelte";
 	import Error from "@/lib/Error.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
@@ -39,7 +40,7 @@
 			return resp;
 		} catch (err) {
 			console.error("updating autoSync failed!", err);
-			notify({ type: "error", text: "Request failed!" });
+			notify({ type: "error", text: t("request.failed") });
 			return {};
 		}
 	}
@@ -50,7 +51,7 @@
 </script>
 
 {#if error}
-	<Error {error} pretty="Failed getting services!" />
+	<Error {error} pretty={t("settings.userServices.failedToGet")} />
 {:else if !data}
 	<Spinner />
 {:else if data.length > 0}
@@ -63,7 +64,11 @@
 				</span>
 			</div>
 
-			<Setting title="Auto Sync" desc="Allow automatic sync?" row>
+			<Setting
+				title={t("settings.userServices.autoSync")}
+				desc={t("settings.userServices.autoSyncDesc")}
+				row
+			>
 				<Checkbox
 					name="autoSync"
 					disabled={autoSyncDisabled}
@@ -81,7 +86,7 @@
 		</div>
 	{/each}
 {:else}
-	None
+	{t("common.none")}
 {/if}
 
 <style lang="scss">

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Modal from "@/lib/Modal.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
 	import SettingsList from "@/lib/settings/SettingsList.svelte";
@@ -26,7 +27,7 @@
 			errs.push("Client Secret");
 		}
 		if (errs.length > 0) {
-			error = `Missing required params: ${errs.join(", ")}`;
+			error = t("password.missingParams", { params: errs.join(", ") });
 		} else {
 			error = "";
 		}
@@ -40,20 +41,20 @@
 				await req.post(`/game/config`, cfg);
 				notify({
 					type: "success",
-					text: "Changes saved!",
+					text: t("manageUsers.edit.changesSaved"),
 				});
 				onClose();
 			} catch (err) {
 				console.error("Failed to save twitch cfg!", err);
-				error = ReqerError.getMsg(err, "Failed to save");
+				error = ReqerError.getMsg(err, t("manageUsers.edit.failedToSave"));
 			}
 		}
 	}
 </script>
 
 <Modal
-	title="Twitch Config"
-	desc="Setup your twitch application to enable game support."
+	title={t("server.twitch.title")}
+	desc={t("server.twitch.desc")}
 	{onClose}
 >
 	{#if error}
@@ -65,10 +66,13 @@
 			href="https://watcharr.app/docs/server_config/game-support-igdb"
 			target="_blank"
 		>
-			Learn how to configure this option at Watcharr Docs.
+			{t("server.twitch.learnHow")}
 		</a>
 
-		<Setting title="Client ID" desc="Twitch application Client ID.">
+		<Setting
+			title={t("server.twitch.clientId")}
+			desc={t("server.twitch.clientIdDesc")}
+		>
 			<input
 				type="text"
 				placeholder="yrbrrakvgbce99fzjsidkfoalsk9eee"
@@ -77,7 +81,10 @@
 				disabled={formDisabled}
 			/>
 		</Setting>
-		<Setting title="Client Secret" desc="Twitch application Client Secret.">
+		<Setting
+			title={t("server.twitch.clientSecret")}
+			desc={t("server.twitch.clientSecretDesc")}
+		>
 			<input
 				type="text"
 				placeholder="yrbralsodkfishfzpajdkflqoefeee"
@@ -87,7 +94,7 @@
 			/>
 		</Setting>
 		<div class="btns">
-			<button onclick={() => save()}>Save</button>
+			<button onclick={() => save()}>{t("common.save")}</button>
 		</div>
 	</SettingsList>
 </Modal>

@@ -287,7 +287,7 @@
 			<input
 				bind:this={mainSearchEl}
 				type="text"
-				placeholder="Search"
+				placeholder={t("nav.search")}
 				bind:value={store.searchQuery}
 				onkeydown={searchBarKeyDown}
 			/>
@@ -303,7 +303,7 @@
 						detailedMenuShown = !detailedMenuShown;
 					}}
 					use:tooltip={{
-						text: "Detailed View",
+						text: t("nav.detailedView"),
 						pos: "bot",
 						condition: !detailedMenuShown,
 					}}
@@ -325,7 +325,11 @@
 						closeAllSubMenus("sort");
 						sortMenuShown = !sortMenuShown;
 					}}
-					use:tooltip={{ text: "Sort", pos: "bot", condition: !sortMenuShown }}
+					use:tooltip={{
+						text: t("nav.sort.title"),
+						pos: "bot",
+						condition: !sortMenuShown,
+					}}
 				>
 					<Icon i="sort" />
 					<!-- Show indicator if not equal to default and second item in array is not falsy -->
@@ -340,7 +344,7 @@
 						filterMenuShown = !filterMenuShown;
 					}}
 					use:tooltip={{
-						text: "Filter",
+						text: t("nav.filter.title"),
 						pos: "bot",
 						condition: !filterMenuShown,
 					}}
@@ -363,7 +367,11 @@
 					closeAllSubMenus("tag");
 					tagMenuShown = !tagMenuShown;
 				}}
-				use:tooltip={{ text: "Tags", pos: "bot", condition: !tagMenuShown }}
+				use:tooltip={{
+					text: t("nav.tags"),
+					pos: "bot",
+					condition: !tagMenuShown,
+				}}
 			>
 				<Icon i="tag" />
 			</button>
@@ -379,7 +387,7 @@
 			<button
 				class="plain other discover"
 				onclick={() => goto(resolve("/discover"))}
-				use:tooltip={{ text: "Discover", pos: "bot" }}
+				use:tooltip={{ text: t("nav.discover"), pos: "bot" }}
 			>
 				<Icon i="compass" wh={26} />
 			</button>
@@ -390,7 +398,7 @@
 					followingMenuShown = !followingMenuShown;
 				}}
 				use:tooltip={{
-					text: "Following",
+					text: t("nav.following.tooltip"),
 					pos: "bot",
 					condition: !followingMenuShown,
 				}}
@@ -409,7 +417,7 @@
 	<input
 		class="small"
 		type="text"
-		placeholder="Search"
+		placeholder={t("nav.search")}
 		bind:value={store.searchQuery}
 		onkeydown={searchBarKeyDown}
 	/>
@@ -421,7 +429,7 @@
 	{@render children?.()}
 {:catch err}
 	<Error
-		pretty="Couldn't fetch app data!"
+		pretty={t("nav.couldNotFetchAppData")}
 		error={err}
 		onRetry={() => {
 			location.reload();

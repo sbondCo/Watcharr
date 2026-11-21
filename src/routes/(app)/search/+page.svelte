@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { page } from "$app/state";
 	import { afterNavigate, goto } from "$app/navigation";
 	import { req } from "@/lib/util/api.js";
@@ -156,9 +157,9 @@
 
 <svelte:head>
 	<title
-		>Search Results{store.searchQuery
-			? ` for '${store.searchQuery}'`
-			: ""}</title
+		>{store.searchQuery
+			? t("search.pageTitleFor", { query: store.searchQuery })
+			: t("search.pageTitle")}</title
 	>
 </svelte:head>
 
@@ -173,10 +174,10 @@
 					<UsersList users={results} />
 				{/if}
 			{:catch err}
-				<Error pretty="Failed to load users!" error={err} />
+				<Error pretty={t("search.failedToLoadUsers")} error={err} />
 			{/await}
 
-			<PageTitle title="Results">
+			<PageTitle title={t("search.results")}>
 				<MediaTypeFilter
 					active={searchType}
 					disabled={dataLoader.state.reqLoading || showingResultsFromMyList}
@@ -192,8 +193,8 @@
 					class="from-my-list-msg plain"
 					onclick={dontPreferMyListClicked}
 				>
-					<b>Showing results from your list.</b>
-					<span>Do a full search instead?</span>
+					<b>{t("search.showingFromList")}</b>
+					<span>{t("search.doFullSearch")}</span>
 				</button>
 			{/if}
 
@@ -216,8 +217,8 @@
 					{/each}
 				{:else if !dataLoader.state.reqLoading && !dataLoader.state.reqLoadError}
 					<!-- If search is running or we have an error, no point in showing 'no results' message. -->
-					<h2 class="norm" title="Hovering over me doesn't change the facts ;(">
-						No Results!
+					<h2 class="norm" title={t("search.noResultsTooltip")}>
+						{t("search.noResults")}
 					</h2>
 				{/if}
 			</PosterList>
@@ -231,7 +232,7 @@
 			{#if dataLoader.state.reqLoadError}
 				<div style="margin-bottom: 60px;">
 					<Error
-						pretty="Failed to load results!"
+						pretty={t("list.failedToLoad")}
 						error={dataLoader.state.reqLoadError}
 						onRetry={() => {
 							dataLoader.state.reqLoadError = undefined;
@@ -243,7 +244,7 @@
 				</div>
 			{/if}
 		{:else}
-			<h2>No Search Query!</h2>
+			<h2>{t("search.noQuery")}</h2>
 		{/if}
 	</div>
 </div>

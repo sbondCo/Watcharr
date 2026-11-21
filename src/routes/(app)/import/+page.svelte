@@ -6,6 +6,7 @@
  -->
 
 <script lang="ts">
+	import { getLanguage, t } from "@/lib/i18n/index.svelte";
 	import { goto } from "$app/navigation";
 	import DropFileButton from "@/lib/DropFileButton.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
@@ -39,7 +40,7 @@
 				console.error("processFiles", "No files to process!");
 				notify({
 					type: "error",
-					text: "File not found in dropped items. Please try again or refresh.",
+					text: t("import.fileNotFound"),
 					time: 6000,
 				});
 				return;
@@ -48,7 +49,7 @@
 			if (files.length > 1) {
 				notify({
 					type: "error",
-					text: "Only one file at a time is supported. Continuing with the first.",
+					text: t("import.onlyOneFile"),
 					time: 6000,
 				});
 			}
@@ -57,7 +58,7 @@
 			if (type === "text-list" && file.type !== "text/plain") {
 				notify({
 					type: "error",
-					text: "Text list export must be a .txt file!",
+					text: t("import.mustBeTxt"),
 				});
 				isLoading = false;
 				return;
@@ -65,7 +66,7 @@
 			if ((type === "tmdb" || type === "imdb") && file.type !== "text/csv") {
 				notify({
 					type: "error",
-					text: `${type} export must be a .csv file!`,
+					text: t("import.mustBeCsv", { type }),
 				});
 				isLoading = false;
 				return;
@@ -87,7 +88,7 @@
 			r.readAsText(file);
 		} catch (err) {
 			isLoading = false;
-			notify({ type: "error", text: "Failed to read file!" });
+			notify({ type: "error", text: t("import.failedToReadFile") });
 			console.error("import: Failed to read file!", err);
 		}
 	}
@@ -133,7 +134,7 @@
 				console.error("processFilesMovary", "No files to process!");
 				notify({
 					type: "error",
-					text: "File not found in dropped items. Please try again or refresh.",
+					text: t("import.fileNotFound"),
 					time: 6000,
 				});
 				return;
@@ -141,7 +142,7 @@
 			if (files.length !== 3) {
 				notify({
 					type: "error",
-					text: "You must select or drop 3 files: history.csv, ratings.csv and watchlist.csv.",
+					text: t("import.movary.mustSelect3"),
 					time: 6000,
 				});
 				return;
@@ -165,7 +166,7 @@
 			if (!history || !ratings || !watchlist) {
 				notify({
 					type: "error",
-					text: "Failed to read history, ratings or watchlist. Ensure you have attached 3 files: history.csv, ratings.csv and watchlist.csv.",
+					text: t("import.movary.failedToRead"),
 					time: 6000,
 				});
 				isLoading = false;
@@ -196,7 +197,7 @@
 					continue;
 				}
 				const ratingsEntry = ratingsJson.data.find((r) => r.tmdbId == h.tmdbId);
-				const t: ImportedList = {
+				const entry: ImportedList = {
 					name: h.title,
 					tmdbId: Number(h.tmdbId),
 					status: "FINISHED",
@@ -211,19 +212,19 @@
 				for (let i = 0; i < allEntries.length; i++) {
 					const e = allEntries[i];
 					if (e.watchedAt) {
-						t.datesWatched?.push(new Date(e.watchedAt));
+						entry.datesWatched?.push(new Date(e.watchedAt));
 					}
 					if (e.comment) {
-						t.thoughts += e.comment + "\n";
+						entry.thoughts += e.comment + "\n";
 					}
 				}
 				if (h.year) {
-					t.year = Number(h.year);
+					entry.year = Number(h.year);
 				}
 				if (ratingsEntry && ratingsEntry?.userRating) {
-					t.rating = Number(ratingsEntry.userRating);
+					entry.rating = Number(ratingsEntry.userRating);
 				}
-				toImport.push(t);
+				toImport.push(entry);
 			}
 			// Add all watchlist movies (planned).
 			for (let i = 0; i < watchlistJson.data.length; i++) {
@@ -251,7 +252,7 @@
 			goto(resolve("/import/process"));
 		} catch (err) {
 			isLoading = false;
-			notify({ type: "error", text: "Failed to read files!" });
+			notify({ type: "error", text: t("import.failedToReadFiles") });
 			console.error("import: Failed to read files!", err);
 		}
 	}
@@ -263,7 +264,7 @@
 				console.error("processWatcharrFile", "No files to process!");
 				notify({
 					type: "error",
-					text: "File not found in dropped items. Please try again or refresh.",
+					text: t("import.fileNotFound"),
 					time: 6000,
 				});
 				return;
@@ -272,7 +273,7 @@
 			if (files.length > 1) {
 				notify({
 					type: "error",
-					text: "Only one file at a time is supported. Continuing with the first.",
+					text: t("import.onlyOneFile"),
 					time: 6000,
 				});
 			}
@@ -281,7 +282,7 @@
 			if (file.type !== "application/json") {
 				notify({
 					type: "error",
-					text: "Must be a Watcharr JSON export file",
+					text: t("import.watcharr.mustBeJson"),
 				});
 				isLoading = false;
 				return;
@@ -294,7 +295,7 @@
 			let invalidStructureErrorOccurred = false;
 			let processedGame = false;
 			for (const v of jsonData) {
-				const t: ImportedList = {
+				const entry: ImportedList = {
 					rating: v.rating,
 					status: v.status,
 					thoughts: v.thoughts,
@@ -304,29 +305,29 @@
 					watchedSeasons: v.watchedSeasons,
 				};
 				if (v.content) {
-					t.tmdbId = v.content.tmdbId;
-					t.name = v.content.title;
-					t.year = new Date(v.content.release_date)?.getFullYear();
-					t.type = v.content.type;
+					entry.tmdbId = v.content.tmdbId;
+					entry.name = v.content.title;
+					entry.year = new Date(v.content.release_date)?.getFullYear();
+					entry.type = v.content.type;
 				} else if (v.game) {
-					t.igdbId = v.game.igdbId;
-					t.name = v.game.name;
-					t.year = new Date(v.game.releaseDate)?.getFullYear();
-					t.type = "game";
+					entry.igdbId = v.game.igdbId;
+					entry.name = v.game.name;
+					entry.year = new Date(v.game.releaseDate)?.getFullYear();
+					entry.type = "game";
 					processedGame = true;
 				} else {
 					console.error("processWatcharrFile: Went over invalid item.", v);
 					if (!invalidStructureErrorOccurred) {
 						notify({
 							type: "error",
-							text: "Item(s) in export has an invalid structure! Look in console for more details.",
+							text: t("import.watcharr.invalidStructure"),
 						});
 						// So we don't spam it...
 						invalidStructureErrorOccurred = true;
 					}
 					continue;
 				}
-				toImport.push(t);
+				toImport.push(entry);
 			}
 			if (processedGame && !store.serverFeatures?.games) {
 				// We know the server hasnt told us it supports games yet
@@ -334,10 +335,7 @@
 				// importing.
 				notify({
 					type: "error",
-					text:
-						"It looks like this server doesn't support 'Games'! " +
-						"The server should be configured properly before " +
-						"proceeding otherwise none of your games will be imported!",
+					text: t("import.watcharr.gamesNotSupported"),
 					time: Infinity,
 				});
 				// We still allow the user to continue (BECAUSE EIN CUSTOMER ISH ALWAYS REIGHT!!!!
@@ -352,7 +350,7 @@
 			goto(resolve("/import/process"));
 		} catch (err) {
 			isLoading = false;
-			notify({ type: "error", text: "Failed to read file!" });
+			notify({ type: "error", text: t("import.failedToReadFile") });
 			console.error("import: Failed to read file!", err);
 		}
 	}
@@ -364,7 +362,7 @@
 				console.error("processFilesMyAnimeList", "No files to process!");
 				notify({
 					type: "error",
-					text: "File not found in dropped items. Please try again or refresh.",
+					text: t("import.fileNotFound"),
 					time: 6000,
 				});
 				return;
@@ -373,7 +371,7 @@
 			if (files.length > 1) {
 				notify({
 					type: "error",
-					text: "Only one file at a time is supported. Continuing with the first.",
+					text: t("import.onlyOneFile"),
 					time: 6000,
 				});
 			}
@@ -382,7 +380,7 @@
 			if (file.type !== "text/xml") {
 				notify({
 					type: "error",
-					text: "Your MyAnimeList export should be a xml file.",
+					text: t("import.myAnimeList.mustBeXml"),
 				});
 				isLoading = false;
 				return;
@@ -404,7 +402,7 @@
 			r.readAsText(file);
 		} catch (err) {
 			isLoading = false;
-			notify({ type: "error", text: "Failed to read file!" });
+			notify({ type: "error", text: t("import.failedToReadFile") });
 			console.error("import: Failed to read file!", err);
 		}
 	}
@@ -416,7 +414,7 @@
 				console.error("processRyotFile", "No files to process!");
 				notify({
 					type: "error",
-					text: "File not found in dropped items. Please try again or refresh.",
+					text: t("import.fileNotFound"),
 					time: 6000,
 				});
 				return;
@@ -425,7 +423,7 @@
 			if (files.length > 1) {
 				notify({
 					type: "error",
-					text: "Only one file at a time is supported. Continuing with the first.",
+					text: t("import.onlyOneFile"),
 					time: 6000,
 				});
 			}
@@ -435,7 +433,7 @@
 			if (file.type !== "application/json") {
 				notify({
 					type: "error",
-					text: "Must be a Ryot JSON export file",
+					text: t("import.ryot.mustBeJson"),
 				});
 				isLoading = false;
 				return;
@@ -454,7 +452,7 @@
 				) {
 					notify({
 						type: "error",
-						text: "Item in export either has no title, TMDB identifier or is not a movie/tv show! Look in console for more details.",
+						text: t("import.ryot.invalidItem"),
 					});
 					console.error(
 						"Can't add export item to import table! It has title, TMDB identifier or is not a movie/tv show! Item:",
@@ -493,7 +491,7 @@
 					return Math.floor(r / 10);
 				};
 
-				const t: ImportedList = {
+				const entry: ImportedList = {
 					tmdbId: Number(v.identifier),
 					name: v.source_id,
 					type: v.lot === "show" ? "tv" : v.lot,
@@ -548,7 +546,7 @@
 								}))
 							: undefined,
 				};
-				toImport.push(t);
+				toImport.push(entry);
 			}
 			console.log("toImport:", toImport);
 			store.importedList = {
@@ -558,7 +556,7 @@
 			goto(resolve("/import/process"));
 		} catch (err) {
 			isLoading = false;
-			notify({ type: "error", text: "Failed to read file!" });
+			notify({ type: "error", text: t("import.failedToReadFile") });
 			console.error("import: Failed to read file!", err);
 		}
 	}
@@ -570,7 +568,7 @@
 				console.error("processFilesTodoMovies", "No files to process!");
 				notify({
 					type: "error",
-					text: "File not found in dropped items. Please try again or refresh.",
+					text: t("import.fileNotFound"),
 					time: 6000,
 				});
 				return;
@@ -579,7 +577,7 @@
 			if (files.length > 1) {
 				notify({
 					type: "error",
-					text: "Only one file at a time is supported. Continuing with the first.",
+					text: t("import.onlyOneFile"),
 					time: 6000,
 				});
 			}
@@ -589,7 +587,7 @@
 			if (file.type !== "" && !file.name.endsWith(".todomovieslist")) {
 				notify({
 					type: "error",
-					text: "Must be a TodoMovies backup file (.todomovieslist)",
+					text: t("import.todoMovies.mustBeBackup"),
 				});
 				isLoading = false;
 				return;
@@ -602,7 +600,7 @@
 			if (!exportTodoMoviesStr) {
 				notify({
 					type: "error",
-					text: "Failed to read export file. Ensure you have attached the correct file.",
+					text: t("import.todoMovies.failedToRead"),
 					time: 6000,
 				});
 				isLoading = false;
@@ -646,12 +644,14 @@
 				const tags = tagsIds.map((tagId) => {
 					const tag = customLists.find((list) => list.ObjectID == tagId);
 					return {
-						name: "TodoMovies list: " + tag?.Attrs.name,
+						name: t("import.todoMovies.listTagName", {
+							name: tag?.Attrs.name,
+						}),
 						color: "#000000",
 						bgColor: tag?.Attrs.colorInHex,
 					} as TagAddRequest;
 				});
-				const t: ImportedList = {
+				const entry: ImportedList = {
 					name: h.Attrs.title,
 					tmdbId: Number(h.Attrs.tmdbID),
 					status: h.Attrs.isWatched == 1 ? "FINISHED" : "PLANNED",
@@ -661,7 +661,7 @@
 					rating: h.Attrs.myScore,
 					tags: tags,
 				};
-				toImport.push(t);
+				toImport.push(entry);
 			}
 
 			console.log("toImport:", toImport);
@@ -673,7 +673,7 @@
 			goto(resolve("/import/process"));
 		} catch (err) {
 			isLoading = false;
-			notify({ type: "error", text: "Failed to read files!" });
+			notify({ type: "error", text: t("import.failedToReadFiles") });
 			console.error("import: Failed to read files!", err);
 		}
 	}
@@ -689,8 +689,10 @@
 	<div class="inner">
 		<div>
 			<span class="header">
-				<h2>Import Your Watchlist</h2>
-				<h5 class="norm">beta</h5>
+				<h2>{t("import.title")}</h2>
+				<h5 class="norm">
+					{t("common.beta").toLocaleLowerCase(getLanguage())}
+				</h5>
 			</span>
 			<!-- <h4 class="norm">Currently txt and csv (TMDb export) files are supported.</h4> -->
 		</div>
@@ -699,13 +701,13 @@
 				<Spinner />
 			{:else}
 				<DropFileButton
-					text="Watcharr Export"
+					text={t("import.types.export", { service: "Watcharr" })}
 					filesSelected={(f) => processWatcharrFile(f)}
 				/>
 
 				<!-- TODO Add info... on what a '.txt list' means and supports -->
 				<DropFileButton
-					text=".txt list"
+					text={t("import.types.txtList")}
 					filesSelected={(f) => processFiles(f, "text-list")}
 				/>
 
@@ -717,7 +719,7 @@
 
 				<button class="plain" onclick={() => goto(resolve("/import/trakt"))}>
 					<Icon i="trakt" wh="100%" />
-					<h4 class="norm">Trakt Import</h4>
+					<h4 class="norm">{t("activity.importFrom", { service: "Trakt" })}</h4>
 				</button>
 
 				<DropFileButton
@@ -728,20 +730,20 @@
 
 				<DropFileButton
 					icon="movary"
-					text="Movary Exports"
+					text={t("import.types.exports", { service: "Movary" })}
 					filesSelected={(f) => processFilesMovary(f)}
 					allowSelectMultipleFiles
 				/>
 
 				<DropFileButton
 					icon="myanimelist"
-					text="MyAnimeList Export"
+					text={t("import.types.export", { service: "MyAnimeList" })}
 					filesSelected={(f) => processFilesMyAnimeList(f)}
 				/>
 
 				<DropFileButton
 					icon="ryot"
-					text="Ryot Exports"
+					text={t("import.types.exports", { service: "Ryot" })}
 					filesSelected={(f) => processRyotFile(f)}
 				/>
 

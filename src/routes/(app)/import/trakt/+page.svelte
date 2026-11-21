@@ -4,6 +4,8 @@
  -->
 
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
+	import Trans from "@/lib/i18n/Trans.svelte";
 	import JobWatcherModal from "@/lib/JobWatcherModal.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
 	import { req } from "@/lib/util/api";
@@ -24,7 +26,7 @@
 		if (!r?.jobId) {
 			notify({
 				type: "error",
-				text: "No job id was returned! Cannot watch job, if it even started.",
+				text: t("import.trakt.noJobId"),
 			});
 			return;
 		}
@@ -34,26 +36,30 @@
 
 <div class="content">
 	<div class="inner">
-		<h2>Trakt Import</h2>
+		<h2>{t("activity.importFrom", { service: "Trakt" })}</h2>
 		<h5 class="norm">
-			Provide the username to your <b>public</b> Trakt profile to start the import
-			job.
+			<Trans key="import.trakt.desc" />
 		</h5>
 
 		<input
 			class="username"
 			type="text"
-			placeholder={store.userInfo?.username ?? "Trakt Username"}
+			placeholder={store.userInfo?.username ?? t("import.trakt.username")}
 			bind:value={traktUsername}
 		/>
-		<button onclick={() => (modalOpen = true)}>Start Import</button>
+		<button onclick={() => (modalOpen = true)}
+			>{t("import.trakt.startImport")}</button
+		>
 
 		<div class="settings-ctr">
 			<Setting
-				title="(Optional) API Key"
-				desc="Provide your own Trakt App Client ID if you are having trouble using our default key."
+				title={t("import.trakt.apiKey")}
+				desc={t("import.trakt.apiKeyDesc")}
 			>
-				<input placeholder="Trakt Client ID" bind:value={traktApiKey} />
+				<input
+					placeholder={t("import.trakt.clientId")}
+					bind:value={traktApiKey}
+				/>
 			</Setting>
 		</div>
 
@@ -62,14 +68,16 @@
 			href="https://watcharr.app/docs/importing/trakt"
 			target="_blank"
 		>
-			Need help? See: https://watcharr.app/docs/importing/trakt
+			{t("import.trakt.needHelp", {
+				url: "https://watcharr.app/docs/importing/trakt",
+			})}
 		</a>
 	</div>
 
 	{#if modalOpen}
 		<JobWatcherModal
-			modalTitle="Trakt Import"
-			messages={{ starting: "Trakt import job is starting" }}
+			modalTitle={t("activity.importFrom", { service: "Trakt" })}
+			messages={{ starting: t("import.trakt.starting") }}
 			getJobId={startJob}
 			onClose={() => (modalOpen = false)}
 		/>

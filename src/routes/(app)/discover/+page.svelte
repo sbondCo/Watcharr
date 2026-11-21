@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import { req } from "@/lib/util/api";
 	import Poster from "@/lib/poster/Poster.svelte";
@@ -99,12 +100,12 @@
 </script>
 
 <svelte:head>
-	<title>Discover Content</title>
+	<title>{t("discover.pageTitle")}</title>
 </svelte:head>
 
 <div class="content">
 	<div class="inner">
-		<PageTitle title="Discover">
+		<PageTitle title={t("nav.discover")}>
 			<div class="pagetitle-mediatypefilter">
 				<MediaTypeFilter
 					active={discoverType}
@@ -149,8 +150,8 @@
 				{/each}
 			{:else if !dataLoader.state.reqLoading && !dataLoader.state.reqLoadError}
 				<!-- If request is running or we have an error, no point in showing 'no results' message. -->
-				<h2 class="norm" title="Hovering over me doesn't change the facts ;(">
-					No Results!
+				<h2 class="norm" title={t("search.noResultsTooltip")}>
+					{t("search.noResults")}
 				</h2>
 			{/if}
 		</PosterList>
@@ -164,7 +165,7 @@
 		{#if dataLoader.state.reqLoadError}
 			<div style="margin-bottom: 60px;">
 				<Error
-					pretty="Failed to load results!"
+					pretty={t("list.failedToLoad")}
 					error={dataLoader.state.reqLoadError}
 					onRetry={() => {
 						dataLoader.state.reqLoadError = undefined;

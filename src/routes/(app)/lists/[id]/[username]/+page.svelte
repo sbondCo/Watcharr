@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Icon from "@/lib/Icon.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import tooltip from "@/lib/actions/tooltip.js";
@@ -140,7 +141,7 @@
 </script>
 
 <svelte:head>
-	<title>{meta.username}'s Watched List</title>
+	<title>{t("list.usersPageTitle", { user: meta.username })}</title>
 </svelte:head>
 
 <div class="content">
@@ -155,7 +156,9 @@
 					class="plain"
 					disabled={followBtnDisabled}
 					onclick={follow}
-					use:tooltip={{ text: isFollowing ? "Unfollow" : "Follow" }}
+					use:tooltip={{
+						text: isFollowing ? t("follow.unfollow") : t("follow.follow"),
+					}}
 				>
 					<Icon i={isFollowing ? "person-minus" : "person-add"} />
 				</button>
@@ -182,10 +185,12 @@
 	{:else if !dataLoader.state.reqLoading && !dataLoader.state.reqLoadError}
 		<div class="empty-list">
 			<Icon i={store.hasActiveFilters ? "filter-circle" : "reel"} wh={80} />
-			<h2 class="norm">This list is empty!</h2>
-			<h4 class="norm">Come back later to see if they have added anything.</h4>
+			<h2 class="norm">{t("list.usersEmptyTitle")}</h2>
+			<h4 class="norm">{t("list.usersEmptyDesc")}</h4>
 			{#if store.hasActiveFilters}
-				<button onclick={() => clearActiveFilters()}>Clear Filters</button>
+				<button onclick={() => clearActiveFilters()}
+					>{t("list.clearFilters")}</button
+				>
 			{/if}
 		</div>
 	{/if}
@@ -200,7 +205,7 @@
 {#if dataLoader.state.reqLoadError}
 	<div style="margin-bottom: 60px;">
 		<Error
-			pretty="Failed to load results!"
+			pretty={t("list.failedToLoad")}
 			error={dataLoader.state.reqLoadError}
 			onRetry={() => {
 				dataLoader.state.reqLoadError = undefined;

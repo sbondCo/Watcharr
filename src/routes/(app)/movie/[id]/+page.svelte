@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import PersonPoster from "@/lib/poster/PersonPoster.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import HorizontalList from "@/lib/HorizontalList.svelte";
@@ -113,11 +114,11 @@
 </script>
 
 <svelte:head>
-	<title>{movie?.name ? `${movie.name} - ` : ""}Movie</title>
+	<title>{movie?.name ? `${movie.name} - ` : ""}{t("content.movie")}</title>
 </svelte:head>
 
 {#if pageError}
-	<Error pretty="Failed to load movie!" error={pageError} />
+	<Error pretty={t("content.failedToLoadMovie")} error={pageError} />
 {:else if !movie}
 	<Spinner />
 {:else if Object.keys(movie).length > 0}
@@ -166,9 +167,13 @@
 									target="_blank"
 								>
 									{#if localStorage.getItem("useEmby")}
-										<Icon i="emby" wh={14} />Play On Emby
+										<Icon i="emby" wh={14} />{t("content.playOn", {
+											service: "Emby",
+										})}
 									{:else}
-										<Icon i="jellyfin" wh={14} />Play On Jellyfin
+										<Icon i="jellyfin" wh={14} />{t("content.playOn", {
+											service: "Jellyfin",
+										})}
 									{/if}
 								</a>
 							{/if}
@@ -193,7 +198,9 @@
 											}
 										}}
 										use:tooltip={{
-											text: `${movie.watched?.pinned ? "Unpin from" : "Pin to"} top of list`,
+											text: movie.watched?.pinned
+												? t("content.unpinFromTop")
+												: t("content.pinToTop"),
 											pos: "bot",
 										}}
 									>
@@ -260,7 +267,7 @@
 				{/if}
 
 				{#if credits.cast?.length > 0}
-					<HorizontalList title="Cast">
+					<HorizontalList title={t("content.cast")}>
 						{#each credits.cast?.slice(0, 50) as cast (cast.credit_id)}
 							<PersonPoster
 								id={cast.id}
@@ -273,7 +280,7 @@
 					</HorizontalList>
 				{/if}
 			{:catch err}
-				<Error error={err} pretty="Failed to load cast!" />
+				<Error error={err} pretty={t("content.failedToLoadCast")} />
 			{/await}
 
 			{#if movie.similar}
@@ -289,7 +296,7 @@
 		</div>
 	</div>
 {:else}
-	Movie not found
+	{t("content.movieNotFound")}
 {/if}
 
 <style lang="scss">

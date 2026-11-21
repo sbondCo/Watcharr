@@ -1,11 +1,9 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Icon from "@/lib/Icon.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
-	import {
-		getOrdinalSuffix,
-		monthsShort,
-		userHasPermission,
-	} from "@/lib/util/helpers";
+	import { userHasPermission } from "@/lib/util/helpers";
+	import { formatShortDate } from "@/lib/util/date";
 	import { UserPermission, type ManagedUser } from "@/types";
 	import { req } from "@/lib/util/api";
 	import EditUserModal from "./modals/EditUserModal.svelte";
@@ -24,9 +22,9 @@
 
 <div class="content">
 	<div class="inner">
-		<h2>User Management</h2>
+		<h2>{t("manageUsers.title")}</h2>
 		<h5 class="norm">
-			Take control and manage all the users using your server.
+			{t("manageUsers.desc")}
 		</h5>
 
 		{#await getUsers()}
@@ -35,9 +33,9 @@
 			<table>
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Private</th>
-						<th>Joined</th>
+						<th>{t("manageUsers.name")}</th>
+						<th>{t("manageUsers.private")}</th>
+						<th>{t("manageUsers.joined")}</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -50,17 +48,16 @@
 									<UserTypeIcon type={u.type} />
 									{u.username}
 									{#if userHasPermission(u.permissions, UserPermission.PERM_ADMIN)}
-										<span class="tag">Admin</span>
+										<span class="tag">{t("manageUsers.admin")}</span>
 									{/if}
 								</div>
 							</td>
-							<td>{u.private === true ? "Yes" : "No"}</td>
+							<td>{u.private === true ? t("common.yes") : t("common.no")}</td>
 							<td>
-								{joinDate.getDate()}{getOrdinalSuffix(joinDate.getDate())}
-								{monthsShort[joinDate.getMonth()]}
-								{joinDate.getFullYear() === currentYear
-									? ""
-									: `'${String(joinDate.getFullYear()).substring(2, 4)}`}</td
+								{formatShortDate(
+									joinDate,
+									joinDate.getFullYear() === currentYear ? false : "short",
+								)}</td
 							>
 							<td>
 								<button class="plain" on:click={() => (editingUser = u)}>
@@ -82,7 +79,7 @@
 				/>
 			{/if}
 		{:catch err}
-			<Error error={err} pretty="Failed to fetch users!" />
+			<Error error={err} pretty={t("manageUsers.failedToFetch")} />
 		{/await}
 	</div>
 </div>

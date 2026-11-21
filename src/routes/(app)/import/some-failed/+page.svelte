@@ -11,6 +11,7 @@
  -->
 
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { store } from "@/store.svelte";
@@ -44,11 +45,16 @@
 
 <div class="content">
 	<div class="inner">
-		<h2>Some Content Failed To Import</h2>
+		<h2>{t("import.someFailed.title")}</h2>
 		<h5 class="norm">
-			You can search for the failed imports and manually add them.
+			{t("import.someFailed.desc")}
 		</h5>
-		<h4 class="norm">{successCount} succeeded and {failed.length} failed.</h4>
+		<h4 class="norm">
+			{t("import.someFailed.counts", {
+				succeeded: successCount,
+				failed: failed.length,
+			})}
+		</h4>
 
 		{#if failed}
 			<ul>
@@ -61,7 +67,7 @@
 				{/each}
 			</ul>
 		{:else}
-			No List
+			{t("import.process.noList")}
 		{/if}
 	</div>
 </div>

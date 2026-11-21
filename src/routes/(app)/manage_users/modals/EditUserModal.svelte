@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Checkbox from "@/lib/Checkbox.svelte";
 	import DropDown from "@/lib/DropDown.svelte";
 	import Modal from "@/lib/Modal.svelte";
@@ -32,7 +33,7 @@
 		const changedType = user.type !== originalUser.type;
 		// If nothing changed.. error
 		if (!changedPerms && !changedType) {
-			error = "Nothing has been changed";
+			error = t("manageUsers.edit.nothingChanged");
 			return;
 		}
 		if (!error) {
@@ -47,12 +48,12 @@
 				await req.post(`/server/users/${user.id}`, toUpdate);
 				notify({
 					type: "success",
-					text: "Changes saved!",
+					text: t("manageUsers.edit.changesSaved"),
 				});
 				onClose();
 			} catch (err) {
 				console.error("Failed to save user!", err);
-				error = ReqerError.getMsg(err, "Failed to save");
+				error = ReqerError.getMsg(err, t("manageUsers.edit.failedToSave"));
 			}
 		}
 	}
@@ -64,8 +65,8 @@
 </script>
 
 <Modal
-	title="Edit User"
-	desc={`Configuring ${user.username}`}
+	title={t("manageUsers.edit.title")}
+	desc={t("manageUsers.edit.desc", { user: user.username })}
 	maxWidth="500px"
 	{onClose}
 >
@@ -74,11 +75,11 @@
 	{/if}
 
 	<SettingsList>
-		<h3 class="norm">Permissions</h3>
+		<h3 class="norm">{t("manageUsers.edit.permissions")}</h3>
 
 		<Setting
-			title="Admin"
-			desc="Give user admin, overrides all other permissions."
+			title={t("manageUsers.admin")}
+			desc={t("manageUsers.edit.adminDesc")}
 			row
 		>
 			<Checkbox
@@ -91,8 +92,8 @@
 		</Setting>
 
 		<Setting
-			title="Request Content"
-			desc="Give user permission to request content."
+			title={t("manageUsers.edit.requestContent")}
+			desc={t("manageUsers.edit.requestContentDesc")}
 			row
 		>
 			<Checkbox
@@ -108,8 +109,8 @@
 		</Setting>
 
 		<Setting
-			title="Auto Approve Content Request"
-			desc="Auto approve user's content requests."
+			title={t("manageUsers.edit.autoApprove")}
+			desc={t("manageUsers.edit.autoApproveDesc")}
 			row
 		>
 			<Checkbox
@@ -126,15 +127,15 @@
 			/>
 		</Setting>
 
-		<h3 class="norm">Other</h3>
+		<h3 class="norm">{t("manageUsers.edit.other")}</h3>
 
 		<Setting
-			title="User Type"
-			desc="The type of this user, affects how they login and certain features. Currently only possible to swap between Watcharr/Proxy types."
+			title={t("manageUsers.edit.userType")}
+			desc={t("manageUsers.edit.userTypeDesc")}
 		>
 			{#if !user.type || user.type === UserType.Proxy}
 				<DropDown
-					placeholder="Unknown"
+					placeholder={t("common.unknown")}
 					bind:active={user.type}
 					options={[
 						{
@@ -151,18 +152,18 @@
 						// },
 						{
 							id: UserType.Proxy,
-							value: "Proxy",
+							value: t("manageUsers.edit.proxy"),
 						},
 					]}
 					isDropDownItem={true}
 				/>
 			{:else}
-				<p>This option is not supported for this user type yet.</p>
+				<p>{t("manageUsers.edit.notSupported")}</p>
 			{/if}
 		</Setting>
 
 		<div class="btns">
-			<button onclick={() => save()}>Save</button>
+			<button onclick={() => save()}>{t("common.save")}</button>
 		</div>
 	</SettingsList>
 </Modal>
