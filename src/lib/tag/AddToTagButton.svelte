@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import type { Tag, Watched } from "@/types";
 	import tooltip from "../actions/tooltip";
 	import Icon from "../Icon.svelte";
@@ -52,7 +53,7 @@
 	<button
 		onclick={() => (menuOpen = !menuOpen)}
 		use:tooltip={{
-			text: `Add to a Tag`,
+			text: t("tags.addToTag"),
 			pos: "bot",
 		}}
 	>

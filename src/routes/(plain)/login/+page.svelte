@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import Icon from "@/lib/Icon.svelte";
@@ -24,7 +25,7 @@
 		}
 
 		if (!error && page.url.searchParams.get("again")) {
-			error = "Please Login Again";
+			error = t("login.loginAgain");
 		}
 		if (page.url.searchParams.get("noAuto") == "1") {
 			console.info(
@@ -47,7 +48,7 @@
 			notify({
 				type: "error",
 				time: 10000,
-				text: "Failed to get available login methods",
+				text: t("login.failedToGetMethods"),
 			});
 			return;
 		}
@@ -82,12 +83,12 @@
 
 		if (isJellyfin) {
 			if (!user) {
-				error = "Username is required";
+				error = t("login.usernameRequired");
 				return;
 			}
 		} else {
 			if (!user || !pass) {
-				error = "Username and Password fields are required";
+				error = t("login.usernameAndPasswordRequired");
 				return;
 			}
 		}
@@ -97,7 +98,7 @@
 			customAuthEP = "jellyfin";
 		}
 
-		const nid = notify({ text: "Logging in", type: "loading" });
+		const nid = notify({ text: t("login.loggingIn"), type: "loading" });
 		noAuthReq
 			.post<AuthResponse>(`/auth${login ? `/${customAuthEP}` : "/register"}`, {
 				username: user,
@@ -113,11 +114,15 @@
 						localStorage.removeItem("useEmby");
 					}
 					goto(resolve("/"));
-					notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
+					notify({
+						id: nid,
+						text: t("login.welcomeUser", { user }),
+						type: "success",
+					});
 				}
 			})
 			.catch((err) => {
-				error = ReqerError.getMsg(err, "Login failed");
+				error = ReqerError.getMsg(err, t("login.loginFailed"));
 				unNotify(nid);
 			});
 	}
@@ -130,11 +135,11 @@
 			const pin = await doPlexLogin(p);
 			plexPinPoll(pin, p, (err, token) => {
 				if (err) {
-					error = "Plex Auth Failed";
+					error = t("login.plexAuthFailed");
 					console.error("Plex auth failed!", err);
 					return;
 				}
-				const nid = notify({ text: "Logging in", type: "loading" });
+				const nid = notify({ text: t("login.loggingIn"), type: "loading" });
 				noAuthReq
 					.post<AuthResponse>("/auth/plex", {
 						token,
@@ -145,23 +150,23 @@
 							console.log("Received token... logging in.");
 							localStorage.setItem("token", resp.token);
 							goto(resolve("/"));
-							notify({ id: nid, text: `Welcome!`, type: "success" });
+							notify({ id: nid, text: t("login.welcome"), type: "success" });
 						}
 					})
 					.catch((err) => {
 						console.error("plexLogin: Fail", err);
-						error = ReqerError.getMsg(err, "Login failed");
-						notify({ id: nid, text: `Failed!`, type: "error" });
+						error = ReqerError.getMsg(err, t("login.loginFailed"));
+						notify({ id: nid, text: t("common.failed"), type: "error" });
 					});
 			});
 		} catch (err) {
 			console.error("plexLogin: failed!", err);
-			error = "Plex login failed";
+			error = t("login.plexLoginFailed");
 		}
 	}
 
 	function proxyLogin(auto = false) {
-		const nid = notify({ text: "Logging in", type: "loading" });
+		const nid = notify({ text: t("login.loggingIn"), type: "loading" });
 		noAuthReq
 			.post<AuthResponse>(`/auth/proxy`)
 			.then((resp) => {
@@ -169,15 +174,15 @@
 					console.log("Received token... logging in.");
 					localStorage.setItem("token", resp.token);
 					goto(resolve("/"));
-					notify({ id: nid, text: `Welcome!`, type: "success" });
+					notify({ id: nid, text: t("login.welcome"), type: "success" });
 				}
 			})
 			.catch((err) => {
-				error = ReqerError.getMsg(err, "Login failed");
+				error = ReqerError.getMsg(err, t("login.loginFailed"));
 				if (auto) {
 					notify({
 						id: nid,
-						text: `Automatic SSO Login Failed!`,
+						text: t("login.automaticSsoFailed"),
 						type: "error",
 					});
 				} else {
@@ -191,9 +196,9 @@
 	<div class="inner">
 		<h2>
 			{#if login}
-				Get Back In!
+				{t("login.getBackIn")}
 			{:else}
-				Lucky You Found Us!
+				{t("login.luckyYouFoundUs")}
 			{/if}
 		</h2>
 
@@ -202,14 +207,20 @@
 		{/if}
 
 		<form onsubmit={handleLogin}>
-			<label for="username">Username</label>
-			<input type="text" name="username" placeholder="Username" />
+			<label for="username">{t("login.username")}</label>
+			<input type="text" name="username" placeholder={t("login.username")} />
 
-			<label for="password">Password</label>
-			<input type="password" name="password" placeholder="Password" />
+			<label for="password">{t("login.password")}</label>
+			<input
+				type="password"
+				name="password"
+				placeholder={t("login.password")}
+			/>
 
 			{#if login}
-				<span class="login-with" style="font-weight: bold">Login With</span>
+				<span class="login-with" style="font-weight: bold"
+					>{t("login.loginWith")}</span
+				>
 				<div class="login-btns">
 					<button type="submit"><span class="watcharr">W</span>Watcharr</button>
 					{#if availableProviders?.length > 0}
@@ -229,7 +240,7 @@
 					{/if}
 				</div>
 				{#if apHeader || apPlex}
-					<p style="font-weight: bold; font-size: 14px;">or</p>
+					<p style="font-weight: bold; font-size: 14px;">{t("login.or")}</p>
 					{#if apHeader}
 						<div class="login-btns">
 							<button
@@ -240,7 +251,7 @@
 									proxyLogin();
 								}}
 							>
-								<Icon i="lock-closed" wh={18} />Continue with Single Sign-On
+								<Icon i="lock-closed" wh={18} />{t("login.continueWithSso")}
 							</button>
 						</div>
 					{/if}
@@ -254,14 +265,16 @@
 								name="plex"
 								class="plex other"
 							>
-								<Icon i="plex" wh={18} />Continue with Plex
+								<Icon i="plex" wh={18} />{t("login.continueWith", {
+									service: "Plex",
+								})}
 							</button>
 						</div>
 					{/if}
 				{/if}
 			{:else}
 				<div class="login-btns">
-					<button type="submit">Sign Up</button>
+					<button type="submit">{t("login.signUp")}</button>
 				</div>
 			{/if}
 		</form>
@@ -274,9 +287,9 @@
 				}}
 			>
 				{#if login}
-					Not a user?
+					{t("login.notAUser")}
 				{:else}
-					Already a user?
+					{t("login.alreadyAUser")}
 				{/if}
 			</button>
 		{/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import type {
 		TMDBSeasonDetailsEpisode,
 		WatchedStatus,
@@ -70,7 +71,7 @@
 		if (type === "DELETE") {
 			if (!we || !we.id) {
 				notify({
-					text: "Failed to find watched episode id. Please try refreshing.",
+					text: t("season.watchedEpisodeIdNotFound"),
 					type: "error",
 				});
 				console.error(
@@ -127,8 +128,8 @@
 				{#if ep.runtime}
 					<span
 						class="episode-runtime"
-						title="This episode has a runtime of {ep.runtime} minutes."
-						>{ep.runtime} min</span
+						title={t("season.episodeRuntime", { count: ep.runtime })}
+						>{t("season.runtimeShort", { runtime: ep.runtime })}</span
 					>
 				{/if}
 				{#if !isUnaired && airDate}
@@ -144,7 +145,10 @@
 			{:else}
 				<span
 					class="rating"
-					title={`TMDB Rating: ${ep.vote_average} out of 10 (based on ${ep.vote_count} votes)`}
+					title={t("season.tmdbRatingTooltip", {
+						vote: ep.vote_average,
+						count: ep.vote_count,
+					})}
 				>
 					<span>*</span>
 					{Math.round(ep.vote_average * 10) / 10}
@@ -154,7 +158,7 @@
 		{#if isUnaired && airDate}
 			<!-- Air date for unaired episodes. -->
 			<span class="episode-air-date">
-				Airs on {toRelativeDate(airDate)}
+				{t("season.airsOn", { date: toRelativeDate(airDate) })}
 			</span>
 		{/if}
 		<span class="overview">{ep.overview}</span>
@@ -164,7 +168,7 @@
 			<div class="rating" style="width: 45px">
 				<PosterRating
 					rating={we?.rating}
-					btnTooltip={`Episode ${ep.episode_number} Rating`}
+					btnTooltip={t("season.episodeRating", { episode: ep.episode_number })}
 					handleStarClick={(r) => handleStarClick(r)}
 					minimal={true}
 					direction="bot"
@@ -174,8 +178,8 @@
 			<div class="status">
 				<PosterStatus
 					status={we?.status}
-					btnTooltip={`Episode ${ep.episode_number} Status`}
-					handleStatusClick={(t) => handleStatusClick(t)}
+					btnTooltip={t("season.episodeStatus", { episode: ep.episode_number })}
+					handleStatusClick={(s) => handleStatusClick(s)}
 					minimal={true}
 					direction="bot"
 				/>
@@ -185,7 +189,7 @@
 	{#if isHidden}
 		<button class="plain spoiler-text" onclick={() => (isHidden = false)}>
 			<Icon i="eye-closed" wh={34} />
-			<span>Click To Reveal</span>
+			<span>{t("season.clickToReveal")}</span>
 		</button>
 	{/if}
 </li>

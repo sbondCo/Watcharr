@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { pushState } from "$app/navigation";
 	import { page } from "$app/state";
 	import {
@@ -54,7 +55,11 @@
 </script>
 
 <svelte:head>
-	<title>{activeEntry ? `${activeEntry.title} - ` : ""}Handbook</title>
+	<title
+		>{activeEntry ? `${t(activeEntry.title)} - ` : ""}{t(
+			"handbook.title",
+		)}</title
+	>
 </svelte:head>
 
 <div class="content">
@@ -64,41 +69,40 @@
 				<div class="top-bar">
 					<button class="back" onclick={() => setActive(undefined)}>
 						<Icon i="chevron" facing="left" wh={18} />
-						<span>Back</span>
+						<span>{t("common.back")}</span>
 					</button>
 
-					<span class="title">{activeEntry.title}</span>
+					<span class="title">{t(activeEntry.title)}</span>
 				</div>
 
 				{#await activeEntry.comp() then module}
 					{@const EntryComponent = module.default}
 					<EntryComponent />
 				{:catch error}
-					<p>Couldn't load component: {error.message}</p>
+					<p>{t("handbook.couldNotLoad", { error: error.message })}</p>
 				{/await}
 			{:else}
 				<h2 class="norm">
 					<!-- NOTE for later self: This page is in beta since its navigation is slightly broken.
 					 after sveltekit v3 migration we should be able to fix the shallow routing with the new goto func. -->
-					Welcome to your handbook. <span style="font-size: 12px">Beta</span>
+					{t("handbook.welcome")}
+					<span style="font-size: 12px">{t("common.beta")}</span>
 				</h2>
 
 				<p>
-					Inside, you will find useful information in regard to using Watcharr.
+					{t("handbook.intro1")}
 				</p>
 				<p>
-					Part of Watcharr's mission is to be extra user-friendly (aka
-					intuitive), so hopefully you don't need to reference guides much, but
-					they may come in handy, which is why this handbook was made.
+					{t("handbook.intro2")}
 				</p>
 
 				<div class="entries">
 					{#each entries as group (group.title)}
-						<h2 class="plain">{group.title}</h2>
+						<h2 class="plain">{t(group.title)}</h2>
 						<div class="btns">
 							{#each group.entries as ent (ent.id)}
 								<button class:plain={true} onclick={() => setActive(ent.id)}>
-									{ent.title}
+									{t(ent.title)}
 								</button>
 							{/each}
 						</div>

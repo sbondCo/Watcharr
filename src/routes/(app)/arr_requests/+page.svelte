@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { resolve } from "$app/paths";
 	import Error from "@/lib/Error.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
@@ -36,7 +37,7 @@
 			getRequests();
 		} catch (err) {
 			console.error("Failed to deny request!", err);
-			notify({ type: "error", text: "Failed when denying request!" });
+			notify({ type: "error", text: t("arrRequests.failedToDeny") });
 		}
 	}
 
@@ -53,7 +54,7 @@
 		} else {
 			notify({
 				type: "error",
-				text: "Unknown content type, can't continue approval!",
+				text: t("arrRequests.unknownContentType"),
 			});
 			return;
 		}
@@ -63,8 +64,8 @@
 
 <div class="content">
 	<div class="inner">
-		<h2>Media Requests</h2>
-		<h5 class="norm">Manage and view all of your media requests.</h5>
+		<h2>{t("arrRequests.title")}</h2>
+		<h5 class="norm">{t("arrRequests.desc")}</h5>
 
 		{#await getRequests()}
 			<Spinner />
@@ -107,20 +108,23 @@
 									<span
 										style="font-size: 12px; margin-top: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
 									>
-										By {r.username} &#160;&#8226;&#160; {toRelativeDate(
-											new Date(r.createdAt),
-										)}
+										{t("arrRequests.by", { user: r.username })} &#160;&#8226;&#160;
+										{toRelativeDate(new Date(r.createdAt))}
 									</span>
 								{/if}
 								{#if r.status === "PENDING"}
 									<button class="decline" onclick={() => deny(r)}
-										>Decline</button
+										>{t("arrRequests.decline")}</button
 									>
 									<button class="approve" onclick={() => approve(r)}
-										>Approve</button
+										>{t("request.approve")}</button
 									>
 								{:else}
-									<button disabled>{r.status}</button>
+									<button disabled
+										>{t(`arrRequests.status.${r.status}`, {
+											defaultValue: r.status,
+										})}</button
+									>
 								{/if}
 							</div>
 						</div>
@@ -128,7 +132,7 @@
 				{/each}
 			</div>
 		{:catch err}
-			<Error error={err} pretty="Failed to fetch media requests!" />
+			<Error error={err} pretty={t("arrRequests.failedToFetch")} />
 		{/await}
 
 		{#if showBeingApproved}

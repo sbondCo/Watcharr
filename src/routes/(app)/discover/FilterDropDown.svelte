@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import tooltip from "@/lib/actions/tooltip";
 	import DropDown from "@/lib/DropDown.svelte";
 	import {
@@ -16,32 +17,33 @@
 
 	let { active = $bindable(), discoverType, onChange }: Props = $props();
 
-	const dropDownOptions: { [x in DiscoverFilterOption]: DropDownItem } = {
-		trending: {
-			id: DiscoverFilter.trending,
-			value: "Trending",
-		},
-		popular: {
-			id: DiscoverFilter.popular,
-			value: "Popular",
-		},
-		upcoming: {
-			id: DiscoverFilter.upcoming,
-			value: "Upcoming",
-		},
-		intheatres: {
-			id: DiscoverFilter.inTheatres,
-			value: "In Theatres",
-		},
-		streaming: {
-			id: DiscoverFilter.streaming,
-			value: "Streaming",
-		},
-		// advanced: {
-		// 	id: "advanced",
-		// 	value: "Advanced Search",
-		// },
-	};
+	const dropDownOptions: { [x in DiscoverFilterOption]: DropDownItem } =
+		$derived({
+			trending: {
+				id: DiscoverFilter.trending,
+				value: t("discover.filter.trending"),
+			},
+			popular: {
+				id: DiscoverFilter.popular,
+				value: t("discover.filter.popular"),
+			},
+			upcoming: {
+				id: DiscoverFilter.upcoming,
+				value: t("discover.filter.upcoming"),
+			},
+			intheatres: {
+				id: DiscoverFilter.inTheatres,
+				value: t("discover.filter.inTheatres"),
+			},
+			streaming: {
+				id: DiscoverFilter.streaming,
+				value: t("discover.filter.streaming"),
+			},
+			// advanced: {
+			// 	id: "advanced",
+			// 	value: "Advanced Search",
+			// },
+		});
 
 	let options = $derived.by(() => {
 		let o: DropDownItem[] = [dropDownOptions.trending];
@@ -71,13 +73,13 @@
 
 <div
 	use:tooltip={{
-		text: "Must select a type first.",
+		text: t("discover.mustSelectType"),
 		pos: "left",
 		condition: onMultiDiscover,
 	}}
 >
 	<DropDown
-		placeholder="Trending"
+		placeholder={t("discover.filter.trending")}
 		{options}
 		isDropDownItem={true}
 		bind:active

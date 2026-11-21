@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { resolve } from "$app/paths";
 	import type { PublicUser } from "@/types";
 
@@ -10,7 +11,7 @@
 </script>
 
 <div>
-	<h2>Users</h2>
+	<h2>{t("search.users")}</h2>
 	<ul>
 		{#each users as user (user.id)}
 			<li title={user.username}>

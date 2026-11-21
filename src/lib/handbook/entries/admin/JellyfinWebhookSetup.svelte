@@ -1,85 +1,49 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
+	import Trans from "@/lib/i18n/Trans.svelte";
+	import { t } from "@/lib/i18n/index.svelte";
 </script>
 
-<p>
-	The Jellyfin Webhook support in Watcharr allows for automatic tracking of new
-	media as soon as it is started or completed in Jellyfin.
-</p>
+<p>{t("handbook.jellyfinWebhook.intro")}</p>
 
 <p>
-	Configuration changes must be made to both Jellyfin and Watcharr to enable
-	this feature. Each step in this guide will be prefaced with either <code>
-		(WATCHARR)</code
-	>
-	or <code>(JELLYFIN)</code> to indicate in which application you are making the change.
+	<Trans key="handbook.jellyfinWebhook.configIntro" />
 </p>
 
 <ol>
 	<li>
-		<p><b>(JELLYFIN)</b> Install the Official Webhook plugin in Jellyfin.</p>
-		<p>
-			Simply go to your server dashboard, find the plugins store and look for
-			one called <code>Webhook</code> and install it.
-		</p>
-		<p>
-			If you see more than one Webhook plugin and don't know which to pick: Get
-			the one from the <code>Jellyfin Stable</code> repository by the developer
-			<code>jellyfin</code>.
-		</p>
+		<p><Trans key="handbook.jellyfinWebhook.step1" /></p>
+		<p><Trans key="handbook.jellyfinWebhook.step1Detail" /></p>
+		<p><Trans key="handbook.jellyfinWebhook.step1Which" /></p>
+	</li>
+	<li>
+		<p><Trans key="handbook.jellyfinWebhook.step2" /></p>
+		<p>{t("handbook.jellyfinWebhook.step2Restart")}</p>
 	</li>
 	<li>
 		<p>
-			<b>(JELLYFIN)</b> Once the Webhook plugin is installed, you should see a
-			<code>settings</code> button. Click it to enter the Webhook plugin settings.
-		</p>
-		<p>
-			If you were prompted to restart the Jellyfin server, you should do that.
-			Then you'll see the Settings button in the Webhook plugin page.
-		</p>
-	</li>
-	<li>
-		<p>
-			<b>(WATCHARR)</b> Go to
-			<a href={resolve("/server")}>your server configuration page</a>, find the
-			Jellyfin Webhook setting and toggle it ON.
+			<Trans key="handbook.jellyfinWebhook.step3">
+				{#snippet link(text: string)}
+					<a href={resolve("/server")}>{text}</a>
+				{/snippet}
+			</Trans>
 		</p>
 	</li>
 	<li>
-		<p>
-			<b>(WATCHARR)</b> You will now see a new setting popup below the one you just
-			toggled ON called Jellyfin Webhook Endpoint. Copy the address to your clipboard
-			for the next step.
-		</p>
+		<p><Trans key="handbook.jellyfinWebhook.step4" /></p>
 	</li>
 	<li>
-		<p>
-			<b>(JELLYFIN)</b> Click <code>Add Generic Destination</code>, then scroll
-			down to the settings for the destination.
-		</p>
+		<p><Trans key="handbook.jellyfinWebhook.step5" /></p>
 	</li>
 	<li>
-		<p>
-			<b>(JELLYFIN)</b> Set the <code>Webhook Name</code> to
-			<code>Watcharr</code> (or anything you please).
-		</p>
+		<p><Trans key="handbook.jellyfinWebhook.step6" /></p>
 	</li>
 	<li>
-		<p>
-			<b>(JELLYFIN)</b> Paste the address we copied from Watcharr into the
-			<code>Webhook Url</code> field.
-		</p>
-		<p>
-			Note: The full address copied from Watcharr <i>may</i> be wrong! Depending on
-			how your server is configured, you may need to replace the hostname part of
-			the address to one that your Jellyfin service can use to talk to your Watcharr
-			instance.
-		</p>
+		<p><Trans key="handbook.jellyfinWebhook.step7" /></p>
+		<p><Trans key="handbook.jellyfinWebhook.step7Note" /></p>
 	</li>
 	<li>
-		<p>
-			<b>(JELLYFIN)</b> Enable the following Notification Types:
-		</p>
+		<p><Trans key="handbook.jellyfinWebhook.step8" /></p>
 		<ul>
 			<li>
 				<p>Playback Start</p>
@@ -95,37 +59,21 @@
 		</ul>
 	</li>
 	<li>
-		<p>
-			<b>(JELLYFIN)</b> Enable the users you want webhook events to be sent for.
-		</p>
+		<p><Trans key="handbook.jellyfinWebhook.step9" /></p>
 	</li>
 	<li>
-		<p>
-			<b>(JELLYFIN)</b> Enable <code>Send All Properties</code>.
-		</p>
+		<p><Trans key="handbook.jellyfinWebhook.step10" /></p>
 	</li>
 	<li>
-		<p>
-			<b>(JELLYFIN)</b> Scroll to the bottom and click <code>Save</code>.
-		</p>
+		<p><Trans key="handbook.jellyfinWebhook.step11" /></p>
 	</li>
 	<li>
-		<p>
-			Done! All you have to do now is go watch something on Jellyfin and see if
-			it shows up in Watcharr automatically.
-		</p>
+		<p>{t("handbook.jellyfinWebhook.done")}</p>
 	</li>
 </ol>
 
-<h2>Problems?</h2>
+<h2>{t("handbook.jellyfinWebhook.problems")}</h2>
 
-<p>
-	If you have any problems, the best place to start is by checking your server
-	logs (Watcharr and Jellyfin).
-</p>
+<p>{t("handbook.jellyfinWebhook.problemsP1")}</p>
 
-<p>
-	For example, if Jellyfin server logs show 404 errors whenever it tries sending
-	the webhook, it's likely you need to double check the Webhook Url in Jellyfin
-	and ensure it is correct.
-</p>
+<p>{t("handbook.jellyfinWebhook.problemsP2")}</p>

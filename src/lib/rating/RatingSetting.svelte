@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { store } from "@/store.svelte";
 	import Setting from "../settings/Setting.svelte";
 	import { RatingStep, RatingSystem } from "@/types";
@@ -25,7 +26,10 @@
 	}
 </script>
 
-<Setting title="Rating System" desc="How would you like to rate content?">
+<Setting
+	title={t("settings.rating.system")}
+	desc={t("settings.rating.systemDesc")}
+>
 	<div class="rat-wrap">
 		<button
 			class={[
@@ -70,15 +74,15 @@
 			].join(" ")}
 			onclick={() => update(RatingSystem.Thumbs)}
 		>
-			Thumbs
+			{t("settings.rating.thumbs")}
 		</button>
 	</div>
 </Setting>
 
 {#if store.userSettings?.ratingSystem === RatingSystem.OutOf10 || store.userSettings?.ratingSystem === RatingSystem.OutOf5 || !store.userSettings?.ratingSystem}
 	<Setting
-		title="Rating Step"
-		desc="How would you like to increment through the stars?"
+		title={t("settings.rating.step")}
+		desc={t("settings.rating.stepDesc")}
 	>
 		<div class="rat-wrap">
 			<button

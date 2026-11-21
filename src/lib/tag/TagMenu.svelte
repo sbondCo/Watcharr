@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { store } from "@/store.svelte";
 	import Icon from "../Icon.svelte";
 	import CreateTagModal from "./CreateTagModal.svelte";
@@ -48,7 +49,7 @@
 
 <Menu conf={Object.assign(defaultMenuConfig, menuConfig)}>
 	<div class="title">
-		<h4 class="norm sm-caps">{titleText ? titleText : "my tags"}</h4>
+		<h4 class="norm sm-caps">{titleText ? titleText : t("tags.myTags")}</h4>
 		{#if showManageBtn}
 			<button
 				class={["plain", inManageMode ? "manage-on" : ""].join(" ")}
@@ -64,21 +65,21 @@
 	{#if allTags && allTags.length > 0}
 		{#if inManageMode}
 			<strong style="font-size: 12px; margin-bottom: 10px;"
-				>Click a tag to delete it.</strong
+				>{t("tags.clickToDelete")}</strong
 			>
 		{/if}
 		<div class="list">
-			{#each allTags as t (t.id)}
+			{#each allTags as tg (tg.id)}
 				{@const isSelected = selectedTags
-					? selectedTags.find((tag) => tag.id === t.id)
+					? selectedTags.find((tag) => tag.id === tg.id)
 						? true
 						: false
 					: false}
 				<div>
 					<Tag
-						tag={t}
+						tag={tg}
 						onClick={() =>
-							inManageMode ? deleteTag(t) : onTagClick(t, isSelected)}
+							inManageMode ? deleteTag(tg) : onTagClick(tg, isSelected)}
 					/>
 					{#if isSelected}
 						<Icon i="check" wh={18} />
@@ -87,7 +88,7 @@
 			{/each}
 		</div>
 	{:else}
-		<span style="margin-top: 0;">You have no tags yet!</span>
+		<span style="margin-top: 0;">{t("tags.noTags")}</span>
 	{/if}
 </Menu>
 

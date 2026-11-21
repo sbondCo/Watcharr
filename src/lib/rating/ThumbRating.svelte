@@ -1,6 +1,7 @@
 <!-- To be used from Rating component -->
 
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Icon from "../Icon.svelte";
 	import tooltip from "../actions/tooltip";
 
@@ -16,21 +17,21 @@
 
 <div class="thumbs-ctr">
 	<button
-		use:tooltip={{ text: "Disliked", pos: "top" }}
+		use:tooltip={{ text: t("rating.thumbs.disliked"), pos: "top" }}
 		onclick={() => onChange(1)}
 		class={r && r > 0 && r < 5 ? "active" : ""}
 	>
 		<Icon i="thumb-down" />
 	</button>
 	<button
-		use:tooltip={{ text: "Mediocre", pos: "top" }}
+		use:tooltip={{ text: t("rating.thumbs.mediocre"), pos: "top" }}
 		onclick={() => onChange(5)}
 		class={r && r > 4 && r < 8 ? "active" : ""}
 	>
 		<span>-</span>
 	</button>
 	<button
-		use:tooltip={{ text: "Liked", pos: "top" }}
+		use:tooltip={{ text: t("rating.thumbs.liked"), pos: "top" }}
 		onclick={() => onChange(9)}
 		class={r && r > 7 ? "active" : ""}
 	>

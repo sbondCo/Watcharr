@@ -83,6 +83,9 @@ type UserSettings struct {
 	RatingSystem *int `json:"ratingSystem" binding:"omitempty,max=3"`
 	// Rating step for supported rating systems (frontend only, enum goes up to 2).
 	RatingStep *int `json:"ratingStep" binding:"omitempty,max=2"`
+	// UI language (BCP 47 tag, e.g. "en" or "it") (frontend only).
+	// Empty means the frontend should detect it from the browser.
+	Language *string `json:"language" binding:"omitempty,max=16"`
 }
 
 // Public user details for search results

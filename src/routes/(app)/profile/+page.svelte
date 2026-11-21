@@ -1,10 +1,11 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Error from "@/lib/Error.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import Stat from "@/lib/stats/Stat.svelte";
 	import Stats from "@/lib/stats/Stats.svelte";
 	import { req } from "@/lib/util/api";
-	import { getOrdinalSuffix, monthsShort } from "@/lib/util/helpers";
+	import { formatShortDate } from "@/lib/util/date";
 	import { store } from "@/store.svelte";
 	import { type Image, type Profile } from "@/types";
 	import { notify } from "@/lib/util/notify";
@@ -19,12 +20,6 @@
 		return await req.get<Profile>(`/profile`);
 	}
 
-	function formatDate(d: Date) {
-		return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${
-			monthsShort[d.getMonth()]
-		} ${d.getFullYear()}`;
-	}
-
 	function updateBio(
 		ev: FocusEvent & { currentTarget: EventTarget & HTMLTextAreaElement },
 	) {
@@ -33,19 +28,19 @@
 			console.warn("updateBio called without any value", newBio);
 			return;
 		}
-		const nid = notify({ text: "Updating Bio", type: "loading" });
+		const nid = notify({ text: t("profile.updatingBio"), type: "loading" });
 		req
 			.post("/user/bio", { newBio: newBio })
 			.then(() => {
 				if (user) {
 					user.bio = newBio;
-					notify({ id: nid, text: "Updated Bio", type: "success" });
+					notify({ id: nid, text: t("profile.updatedBio"), type: "success" });
 				}
 			})
 			.catch((err) => {
 				notify({
 					id: nid,
-					text: ReqerError.getMsg(err, "Failed to update bio"),
+					text: ReqerError.getMsg(err, t("profile.failedToUpdateBio")),
 					type: "error",
 				});
 			});
@@ -57,7 +52,7 @@
 			console.error("avatarDropped: no file found");
 			return;
 		}
-		const nid = notify({ text: "Uploading avatar", type: "loading" });
+		const nid = notify({ text: t("profile.uploadingAvatar"), type: "loading" });
 		const fd = new FormData();
 		fd.append("avatar", files[0]);
 		req
@@ -65,14 +60,18 @@
 			.then((r) => {
 				if (user) {
 					user.avatar = r;
-					notify({ id: nid, text: "Avatar Uploaded", type: "success" });
+					notify({
+						id: nid,
+						text: t("profile.avatarUploaded"),
+						type: "success",
+					});
 				}
 			})
 			.catch((err) => {
 				console.error("uploading avatar failed", err);
 				notify({
 					id: nid,
-					text: ReqerError.getMsg(err, "Failed to upload avatar"),
+					text: ReqerError.getMsg(err, t("profile.failedToUploadAvatar")),
 					type: "error",
 				});
 			});
@@ -84,30 +83,30 @@
 	 */
 	function toFormattedTimeLong(m: number) {
 		// Considers a 30 days long month
-		const countInMinutes = [
-			["month", 43200],
-			["week", 10080],
-			["day", 1440],
-			["hour", 60],
+		const countInMinutes: [string, number][] = [
+			["time.months", 43200],
+			["time.weeks", 10080],
+			["time.days", 1440],
+			["time.hours", 60],
 		];
-		let ansString = "";
+		const parts: string[] = [];
 		let tmp;
-		for (const c of countInMinutes) {
-			tmp = Math.floor(m / (c[1] as number));
+		for (const [key, minutes] of countInMinutes) {
+			tmp = Math.floor(m / minutes);
 
 			// Ignore fields with fewer than 1 unit
-			if (tmp) ansString += `${tmp} ${c[0]}${tmp >= 2 ? "s, " : ", "}`;
-			m -= tmp * (c[1] as number);
+			if (tmp) parts.push(t(key, { count: tmp }));
+			m -= tmp * minutes;
 		}
-		if (!ansString) {
-			return "0 hours";
+		if (parts.length <= 0) {
+			return t("time.hours", { count: 0 });
 		}
-		return ansString.slice(0, -2);
+		return parts.join(", ");
 	}
 </script>
 
 <svelte:head>
-	<title>My Profile</title>
+	<title>{t("profile.pageTitle")}</title>
 </svelte:head>
 
 <div class="content">
@@ -117,13 +116,13 @@
 			<div>
 				<h2 title={user?.username}>
 					<span style="font-weight: normal; font-variant: all-small-caps;"
-						>Hey</span
+						>{t("profile.hey")}</span
 					>
 					{user?.username}
 				</h2>
 				<textarea
 					rows="1"
-					placeholder="my bio"
+					placeholder={t("profile.myBio")}
 					onblur={updateBio}
 					value={user?.bio}></textarea>
 			</div>
@@ -133,27 +132,38 @@
 			{#await getProfilePromise}
 				<Spinner />
 			{:then profile}
-				<Stat name="Joined" value={formatDate(new Date(profile.joined))} />
-				<Stat name="Movies Watched" value={profile.moviesWatched} large />
-				<Stat name="Shows Watched" value={profile.showsWatched} large />
 				<Stat
-					name="Watching Movies"
+					name={t("profile.joined")}
+					value={formatShortDate(new Date(profile.joined))}
+				/>
+				<Stat
+					name={t("profile.moviesWatched")}
+					value={profile.moviesWatched}
+					large
+				/>
+				<Stat
+					name={t("profile.showsWatched")}
+					value={profile.showsWatched}
+					large
+				/>
+				<Stat
+					name={t("profile.watchingMovies")}
 					value={toFormattedTimeLong(profile.moviesWatchedRuntime)}
 				/>
 				<Stat
-					name="Watching Shows"
+					name={t("profile.watchingShows")}
 					value={toFormattedTimeLong(profile.showsWatchedRuntime)}
-					disc="This is very inaccurate 🚀"
+					disc={t("profile.veryInaccurate")}
 				/>
 			{:catch err}
-				<Error error={err} pretty="Failed to get stats!" />
+				<Error error={err} pretty={t("profile.failedToGetStats")} />
 			{/await}
 		</Stats>
 
 		<div style="margin-top: 10px;">
 			<!-- Temporary link to settings, since we just moved them to
 			 another page, can remove this later. -->
-			<a href={resolve("/settings")}>Looking for settings?</a>
+			<a href={resolve("/settings")}>{t("profile.lookingForSettings")}</a>
 		</div>
 	</div>
 </div>

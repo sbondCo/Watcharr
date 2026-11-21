@@ -1,12 +1,10 @@
 <!-- Extra Details View For Posters -->
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { store } from "@/store.svelte";
 	import { RatingSystem } from "@/types";
-	import {
-		getOrdinalSuffix,
-		monthsShort,
-		watchedStatuses,
-	} from "../util/helpers";
+	import { watchedStatuses } from "../util/helpers";
+	import { formatShortDate } from "../util/date";
 	import Icon from "../Icon.svelte";
 	import { toShowableRating, toWhichThumb } from "../rating/helpers";
 	import { page } from "$app/state";
@@ -27,12 +25,9 @@
 
 	function formatDate(e: number) {
 		if (!e) {
-			return "Unknown";
+			return t("common.unknown");
 		}
-		const d = new Date(e);
-		return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]} '${String(
-			d.getFullYear(),
-		).substring(2, 4)}`;
+		return formatShortDate(new Date(e), "short");
 	}
 </script>
 
@@ -47,26 +42,26 @@
     -->
 		<div>
 			{#if dateAdded && store.wlDetailedView.includes("dateAdded")}
-				<span title="Date added to watch list">
+				<span title={t("poster.dateAdded")}>
 					<i><Icon i="calendar" /></i>
 					<span>
 						{formatDate(Date.parse(dateAdded))}
 					</span>
 				</span>
 			{/if}{#if dateModified && store.wlDetailedView.includes("dateModified")}
-				<span title="Date last modified">
+				<span title={t("poster.dateModified")}>
 					<i><Icon i="pencil" wh={15} /></i>
 					<span>
 						{formatDate(Date.parse(dateModified))}
 					</span>
 				</span>
 			{/if}{#if lastWatched && store.wlDetailedView.includes("lastWatched")}
-				<span title="Latest season watched">
+				<span title={t("poster.latestSeasonWatched")}>
 					<i><Icon i="play" wh={15} /></i>
 					<span>{lastWatched}</span>
 				</span>
 			{/if}{#if store.wlDetailedView.includes("statusRating")}
-				<span class="status-rating" title="Status and Rating">
+				<span class="status-rating" title={t("poster.statusAndRating")}>
 					{#if !isUsingThumbs}
 						<i><Icon i="star" /></i>
 					{/if}

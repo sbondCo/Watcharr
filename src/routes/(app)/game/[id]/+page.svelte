@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import { type Media, type WatchedStatus } from "@/types";
 	import Activity from "@/lib/activity/Activity.svelte";
@@ -81,11 +82,11 @@
 </script>
 
 <svelte:head>
-	<title>{game?.name ? `${game.name} - ` : ""}Game</title>
+	<title>{game?.name ? `${game.name} - ` : ""}{t("content.game")}</title>
 </svelte:head>
 
 {#if pageError}
-	<Error pretty="Failed to load game!" error={pageError} />
+	<Error pretty={t("content.failedToLoadGame")} error={pageError} />
 {:else if !game}
 	<Spinner />
 {:else if Object.keys(game).length > 0}
@@ -137,7 +138,9 @@
 											}
 										}}
 										use:tooltip={{
-											text: `${game.watched?.pinned ? "Unpin from" : "Pin to"} top of list`,
+											text: game.watched?.pinned
+												? t("content.unpinFromTop")
+												: t("content.pinToTop"),
 											pos: "bot",
 										}}
 									>
@@ -192,7 +195,7 @@
 		</div>
 	</div>
 {:else}
-	<Error error="Game not found" pretty="Game not found" />
+	<Error error={t("content.gameNotFound")} pretty={t("content.gameNotFound")} />
 {/if}
 
 <style lang="scss">

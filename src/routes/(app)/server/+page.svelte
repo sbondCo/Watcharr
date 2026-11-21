@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
+	import Trans from "@/lib/i18n/Trans.svelte";
 	import Checkbox from "@/lib/Checkbox.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import { notify } from "@/lib/util/notify";
@@ -66,12 +68,12 @@
 	) {
 		if (!serverConfig) {
 			console.error("updateServerConfig: No server config to update!");
-			notify({ type: "error", text: "No server config to update!" });
+			notify({ type: "error", text: t("server.noConfig") });
 			return;
 		}
 		console.log("Updating server setting", name, "to", value);
 		const originalValue = serverConfig[name];
-		const nid = notify({ type: "loading", text: "Updating" });
+		const nid = notify({ type: "loading", text: t("common.updating") });
 		let ep = "/server/config";
 		if (name === "PLEX_HOST") {
 			ep = "/server/config/plex_host";
@@ -83,13 +85,13 @@
 			.then((r) => {
 				if (r.status === 200) {
 					serverConfig![name] = value;
-					notify({ id: nid, type: "success", text: "Updated" });
+					notify({ id: nid, type: "success", text: t("common.updated") });
 					if (typeof done !== "undefined") done(r?.body);
 				}
 			})
 			.catch((err) => {
 				console.error("Failed to update user setting", err);
-				notify({ id: nid, type: "error", text: "Couldn't Update" });
+				notify({ id: nid, type: "error", text: t("common.failedToUpdate") });
 				serverConfig![name] = originalValue;
 				if (typeof done !== "undefined") done();
 			});
@@ -112,56 +114,76 @@
 </script>
 
 <svelte:head>
-	<title>Server</title>
+	<title>{t("server.pageTitle")}</title>
 </svelte:head>
 
 <div class="content">
 	<div class="inner">
 		<SettingsList>
-			<h2>Server Settings</h2>
+			<h2>{t("server.title")}</h2>
 
 			<Stats>
 				{#await getServerStats()}
 					<Spinner />
 				{:then stats}
 					<Stat
-						name="Users"
+						name={t("server.stats.users")}
 						value={stats.users}
 						href={resolve("/manage_users")}
 						large
 					/>
-					<Stat name="Private Users" value={stats.privateUsers} large />
-					<Stat name="Watched Movies" value={stats.watchedMovies} large />
-					<Stat name="Watched Shows" value={stats.watchedShows} large />
-					<Stat name="Watched Seasons" value={stats.watchedSeasons} large />
-					<Stat name="Activities" value={stats.activities} large />
+					<Stat
+						name={t("server.stats.privateUsers")}
+						value={stats.privateUsers}
+						large
+					/>
+					<Stat
+						name={t("server.stats.watchedMovies")}
+						value={stats.watchedMovies}
+						large
+					/>
+					<Stat
+						name={t("server.stats.watchedShows")}
+						value={stats.watchedShows}
+						large
+					/>
+					<Stat
+						name={t("server.stats.watchedSeasons")}
+						value={stats.watchedSeasons}
+						large
+					/>
+					<Stat
+						name={t("server.stats.activities")}
+						value={stats.activities}
+						large
+					/>
 					{#if stats.mostWatchedMovie?.title}
 						<Stat
-							name="Most Watched Movie"
+							name={t("server.stats.mostWatchedMovie")}
 							value={stats.mostWatchedMovie.title}
 							href={resolve(`/movie/${stats.mostWatchedMovie.tmdbId}`)}
 						/>
 					{/if}
 					{#if stats.mostWatchedShow?.title}
 						<Stat
-							name="Most Watched Show"
+							name={t("server.stats.mostWatchedShow")}
 							value={stats.mostWatchedShow.title}
 							href={resolve(`/tv/${stats.mostWatchedShow.tmdbId}`)}
 						/>
 					{/if}
 				{:catch err}
-					<Error error={err} pretty="Failed to get server stats!" />
+					<Error error={err} pretty={t("server.stats.failedToGet")} />
 				{/await}
 			</Stats>
 
 			{#await getServerConfig()}
 				<Spinner />
 			{:then}
-				<h3>General</h3>
+				<h3>{t("settings.general")}</h3>
 				{#if serverConfig}
 					<Setting
-						title="Default Country"
-						desc="Default country for new users. This can be changed per user and won't affect existing users."
+						title={t("server.defaultCountry")}
+						desc={t("server.defaultCountryDesc")}
 					>
 						<RegionDropDown
 							selectedCountry={serverConfig.DEFAULT_COUNTRY}
@@ -175,9 +197,8 @@
 						/>
 					</Setting>
 					<Setting
-						title="{jellyfinOrEmby} Host"
-						desc="Point to your {jellyfinOrEmby} server to enable related features. Don't change server after
-        already using another."
+						title={t("server.host", { service: jellyfinOrEmby })}
+						desc={t("server.hostDesc", { service: jellyfinOrEmby })}
 					>
 						<input
 							type="text"
@@ -197,8 +218,8 @@
 						/>
 					</Setting>
 					<Setting
-						title="Jellyfin Webhook"
-						desc="Do you want to enable Jellyfin Webhook support?"
+						title={t("server.jellyfinWebhook")}
+						desc={t("server.jellyfinWebhookDesc")}
 						row
 						handbook="jellyfin-webhook-setup"
 					>
@@ -225,8 +246,8 @@
 					</Setting>
 					{#if serverConfig.JELLYFIN_WEBHOOK_ENABLED}
 						<Setting
-							title="Jellyfin Webhook Endpoint"
-							desc="This is the address you should use when creating the webhook in Jellyfin. Depending on your setup, you may need to alter the hostname. This address contains a secret key, don't share it with others!"
+							title={t("server.jellyfinWebhookEndpoint")}
+							desc={t("server.jellyfinWebhookEndpointDesc")}
 						>
 							<code>
 								{jellyfinWebhookEndpoint}
@@ -234,8 +255,8 @@
 						</Setting>
 					{/if}
 					<Setting
-						title="Use Emby"
-						desc="Do you want to pretend you're using Emby instead of Jellyfin?"
+						title={t("server.useEmby")}
+						desc={t("server.useEmbyDesc")}
 						row
 					>
 						<Checkbox
@@ -251,9 +272,8 @@
 						/>
 					</Setting>
 					<Setting
-						title="Plex Host"
-						desc="Point to your Plex server to enable related features. Don't change server after
-        already using another."
+						title={t("server.host", { service: "Plex" })}
+						desc={t("server.hostDesc", { service: "Plex" })}
 					>
 						<input
 							type="text"
@@ -279,18 +299,20 @@
 						/>
 						{#if serverConfig.PLEX_MACHINE_ID}
 							<span style="font-size: 10px"
-								>Machine Id: {serverConfig.PLEX_MACHINE_ID}</span
+								>{t("server.machineId", {
+									id: serverConfig.PLEX_MACHINE_ID,
+								})}</span
 							>
 						{/if}
 					</Setting>
 					<Setting
-						title="TMDB Key"
-						desc="Provide your own TMDB API Key"
+						title={t("server.tmdbKey")}
+						desc={t("server.tmdbKeyDesc")}
 						handbook="your-own-tmdb-api-key"
 					>
 						<input
 							type="password"
-							placeholder="TMDB Key"
+							placeholder={t("server.tmdbKey")}
 							bind:value={serverConfig.TMDB_KEY}
 							onblur={() => {
 								tmdbkDisabled = true;
@@ -301,11 +323,7 @@
 							disabled={tmdbkDisabled}
 						/>
 					</Setting>
-					<Setting
-						title="Signup"
-						desc="Allow signing up with Watcharr credentials."
-						row
-					>
+					<Setting title={t("server.signup")} desc={t("server.signupDesc")} row>
 						<Checkbox
 							name="SIGNUP_ENABLED"
 							disabled={signupDisabled}
@@ -318,11 +336,7 @@
 							}}
 						/>
 					</Setting>
-					<Setting
-						title="Debug"
-						desc="Enable debug logging. Don't keep this on all the time, only use this when trying to resolve an issue."
-						row
-					>
+					<Setting title={t("server.debug")} desc={t("server.debugDesc")} row>
 						<Checkbox
 							name="DEBUG"
 							disabled={debugDisabled}
@@ -337,8 +351,8 @@
 					</Setting>
 					<Setting>
 						<SettingButton
-							title="Task Schedule"
-							desc="View and configure server task schedule."
+							title={t("server.taskSchedule")}
+							desc={t("server.taskScheduleDesc")}
 							icon="arrow"
 							onClick={() => {
 								taskScheduleModalOpen = true;
@@ -351,8 +365,8 @@
 					{/if}
 					<Setting>
 						<SettingButton
-							title="Trusted Header Authentication"
-							desc="Configure trusted header single sign-on."
+							title={t("server.headerAuth")}
+							desc={t("server.headerAuthDesc")}
 							icon="arrow"
 							onClick={() => {
 								headerSSOModalOpen = true;
@@ -364,24 +378,26 @@
 						></TrustedHeaderAuthModal>
 					{/if}
 					<div>
-						<h3>Services</h3>
+						<h3>{t("settings.services")}</h3>
 						<h5 class="norm">
-							These integrations are not in their final stages. Consider them a
-							preview/beta, if you have any issues,
-							<a
-								style="text-decoration: underline;"
-								href="https://github.com/sbondCo/Watcharr/issues/new/choose"
-								target="_blank"
-							>
-								please report them.
-							</a>
+							<Trans key="server.servicesDesc">
+								{#snippet link(text: string)}
+									<a
+										style="text-decoration: underline;"
+										href="https://github.com/sbondCo/Watcharr/issues/new/choose"
+										target="_blank"
+									>
+										{text}
+									</a>
+								{/snippet}
+							</Trans>
 						</h5>
 					</div>
 
 					<Setting title="Twitch">
 						<SettingButton
 							title="Twitch"
-							desc="Twitch application credentials for enabling game support (via IGDB)."
+							desc={t("server.twitchDesc")}
 							icon={serverConfig.TWITCH &&
 							Object.keys(serverConfig.TWITCH).length > 0
 								? "arrow"
@@ -397,7 +413,7 @@
 							{#each serverConfig.SONARR as server (server.name)}
 								<SettingButton
 									title={server.name}
-									desc={`Configure server at ${server.host}`}
+									desc={t("server.configureServerAt", { host: server.host })}
 									onClick={() => {
 										sonarrServerEditing = server;
 										sonarrModalEditing = true;
@@ -408,7 +424,7 @@
 						{/if}
 						<SettingButton
 							title="Sonarr"
-							desc="Add a Sonarr server."
+							desc={t("server.addServer", { service: "Sonarr" })}
 							icon="add"
 							onClick={() => {
 								let name = "Sonarr";
@@ -428,7 +444,7 @@
 							{#each serverConfig.RADARR as server (server.name)}
 								<SettingButton
 									title={server.name}
-									desc={`Configure server at ${server.host}`}
+									desc={t("server.configureServerAt", { host: server.host })}
 									onClick={() => {
 										radarrServerEditing = server;
 										radarrModalEditing = true;
@@ -439,7 +455,7 @@
 						{/if}
 						<SettingButton
 							title="Radarr"
-							desc="Add a Radarr server."
+							desc={t("server.addServer", { service: "Radarr" })}
 							icon="add"
 							onClick={() => {
 								let name = "Radarr";
@@ -498,7 +514,7 @@
 					{/if}
 				{/if}
 			{:catch err}
-				<Error error={err} pretty="Failed to load server config!" />
+				<Error error={err} pretty={t("server.failedToLoadConfig")} />
 			{/await}
 		</SettingsList>
 	</div>

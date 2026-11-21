@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { afterNavigate } from "$app/navigation";
 	import { page } from "$app/state";
 	import Error from "@/lib/Error.svelte";
@@ -104,7 +105,11 @@
 </script>
 
 <svelte:head>
-	<title>{tag ? `${tag.name} - Tag` : "Tag"}</title>
+	<title
+		>{tag
+			? t("tags.pageTitleNamed", { name: tag.name })
+			: t("tags.pageTitle")}</title
+	>
 </svelte:head>
 
 {#if tag}
@@ -136,13 +141,16 @@
 		{:else if !dataLoader.state.reqLoading && !dataLoader.state.reqLoadError}
 			<div class="empty-list">
 				<Icon i="ticket" wh={80} />
-				<h2 class="norm">This tag is empty!</h2>
+				<h2 class="norm">{t("tags.emptyTitle")}</h2>
 				<h4 class="norm">
-					{`${store.hasActiveFilters ? "Try removing your active filters or a" : "A"}`}dd
-					entries to this tag via its content page.
+					{store.hasActiveFilters
+						? t("tags.emptyDescWithFilters")
+						: t("tags.emptyDesc")}
 				</h4>
 				{#if store.hasActiveFilters}
-					<button onclick={() => clearActiveFilters()}>Clear Filters</button>
+					<button onclick={() => clearActiveFilters()}
+						>{t("list.clearFilters")}</button
+					>
 				{/if}
 			</div>
 		{/if}
@@ -157,7 +165,7 @@
 	{#if dataLoader.state.reqLoadError}
 		<div style="margin-bottom: 60px;">
 			<Error
-				pretty="Failed to load results!"
+				pretty={t("list.failedToLoad")}
 				error={dataLoader.state.reqLoadError}
 				onRetry={() => {
 					dataLoader.state.reqLoadError = undefined;
@@ -169,7 +177,7 @@
 {:else}
 	<div class="content">
 		<div class="inner">
-			<strong>Tag does not exist!</strong>
+			<strong>{t("tags.doesNotExist")}</strong>
 		</div>
 	</div>
 {/if}

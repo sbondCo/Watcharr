@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Modal from "@/lib/Modal.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
 	import Setting from "@/lib/settings/Setting.svelte";
@@ -36,19 +37,19 @@
 			console.error("getAllTasks failed!", err);
 			notify({
 				type: "error",
-				text: "Failed to get all tasks from server.",
+				text: t("server.tasks.failedToGet"),
 				time: 6000,
 			});
 		}
 	}
 
 	async function rescheduleTask(name: string, seconds: number) {
-		const nid = notify({ type: "loading", text: "Updating.." });
+		const nid = notify({ type: "loading", text: t("common.updating") });
 		try {
 			formDisabled = true;
 			const res = await req.putWhole(`/task/${name}`, { seconds });
 			if (res.status === 200) {
-				notify({ id: nid, type: "success", text: "Schedule updated." });
+				notify({ id: nid, type: "success", text: t("server.tasks.updated") });
 				getAllTasks();
 			} else {
 				console.error(
@@ -58,7 +59,7 @@
 				notify({
 					id: nid,
 					type: "error",
-					text: "Unexpected response from reschedule request.",
+					text: t("server.tasks.unexpectedResponse"),
 					time: 6000,
 				});
 			}
@@ -68,7 +69,7 @@
 			notify({
 				id: nid,
 				type: "error",
-				text: "Failed to update schedule.",
+				text: t("server.tasks.failedToUpdate"),
 				time: 6000,
 			});
 			formDisabled = false;
@@ -76,16 +77,16 @@
 	}
 
 	async function runTask(name: string) {
-		const nid = notify({ type: "loading", text: "Executing.." });
+		const nid = notify({ type: "loading", text: t("server.tasks.executing") });
 		try {
 			await req.post(`/task/${name}/run`);
-			notify({ id: nid, type: "success", text: "Executed!" });
+			notify({ id: nid, type: "success", text: t("server.tasks.executed") });
 		} catch (err) {
 			console.error("runTask failed!", err);
 			notify({
 				id: nid,
 				type: "error",
-				text: "Manual run failed!",
+				text: t("server.tasks.manualRunFailed"),
 			});
 		}
 	}
@@ -106,8 +107,8 @@
 </script>
 
 <Modal
-	title="Tasks Schedule"
-	desc="Want a routine task to occur more or less frequently? Configure it below."
+	title={t("server.tasks.title")}
+	desc={t("server.tasks.desc")}
 	maxWidth="700px"
 	{onClose}
 >
@@ -121,7 +122,7 @@
 				)}
 				<Setting title={task.name}>
 					<div class="entry">
-						<span>Runs every</span>
+						<span>{t("server.tasks.runsEvery")}</span>
 						<input
 							type="number"
 							placeholder="60"
@@ -132,8 +133,9 @@
 							}}
 						/>
 						<span>
-							seconds. Next{nextRun === "now" ? "" : " in"}
-							{nextRun}.
+							{nextRun === t("time.now")
+								? t("server.tasks.secondsNextNow")
+								: t("server.tasks.secondsNextIn", { time: nextRun })}
 						</span>
 						<button onclick={() => runTask(task.name)}>
 							<Icon i="play" />

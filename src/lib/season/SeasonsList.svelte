@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import type {
 		MediaSeason,
 		TMDBSeasonDetails,
@@ -65,7 +66,7 @@
 					);
 					notify({
 						type: "error",
-						text: "Failed when saving last viewed season",
+						text: t("season.failedSavingLastViewed"),
 					});
 				}
 			}
@@ -92,7 +93,7 @@
 			);
 			if (!ws) {
 				notify({
-					text: "Failed to find watched season id. Please try refreshing.",
+					text: t("season.watchedSeasonIdNotFound"),
 					type: "error",
 				});
 				return;
@@ -146,9 +147,9 @@
 					<h1 class="season-name">{season.name}</h1>
 					<h2 class="season-episodes">
 						{#if season.episodeCount > 0}
-							{season.episodeCount} Episodes
+							{t("season.episodes", { count: season.episodeCount })}
 						{:else}
-							No Episodes Yet
+							{t("season.noEpisodesYet")}
 						{/if}
 					</h2>
 				</div>
@@ -158,7 +159,7 @@
 							{new Date(Date.parse(season.releaseDate)).getFullYear()}
 						</h2>
 					{:else if season.number > 0}
-						<h2>TBD</h2>
+						<h2>{t("season.tbd")}</h2>
 					{/if}
 
 					{#if watchedItem}
@@ -193,7 +194,7 @@
 							<div class="rating">
 								<PosterRating
 									rating={ws?.rating}
-									btnTooltip="Season Rating"
+									btnTooltip={t("season.seasonRating")}
 									handleStarClick={(r) =>
 										handleStarClick(r, season.season_number)}
 									minimal={true}
@@ -204,9 +205,9 @@
 						<div class="status">
 							<PosterStatus
 								status={ws?.status}
-								btnTooltip="Season Status"
-								handleStatusClick={(t) =>
-									handleStatusClick(t, season.season_number)}
+								btnTooltip={t("season.seasonStatus")}
+								handleStatusClick={(s) =>
+									handleStatusClick(s, season.season_number)}
 								minimal={true}
 								direction="bot"
 							/>
@@ -220,14 +221,14 @@
 						{/each}
 					</ul>
 				{:else}
-					<h3 class="norm">No episodes in this season yet!</h3>
+					<h3 class="norm">{t("season.noEpisodesInSeason")}</h3>
 				{/if}
 			{:catch err}
-				<Error pretty="Failed to load season details!" error={err} />
+				<Error pretty={t("season.failedToLoad")} error={err} />
 			{/await}
 		</div>
 	{:else}
-		<h3 class="norm">Try selecting a season.</h3>
+		<h3 class="norm">{t("season.trySelecting")}</h3>
 	{/if}
 </div>
 

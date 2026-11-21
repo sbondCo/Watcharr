@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { run } from "svelte/legacy";
 
 	import Checkbox from "@/lib/Checkbox.svelte";
@@ -36,7 +37,7 @@
 		} else {
 			qualityProfiles = [];
 			rootFolders = [];
-			error = "host and key must be provided to test the connection";
+			error = t("server.arr.hostAndKeyRequired");
 		}
 	}
 
@@ -57,7 +58,7 @@
 			error = "";
 		} catch (err) {
 			console.error("getSettingsData failed!", err);
-			error = `Request Failed, check your Host and Key`;
+			error = t("server.arr.checkHostAndKey");
 			formDisabled = false;
 		}
 	}
@@ -80,7 +81,7 @@
 			errs.push("rootFolder");
 		}
 		if (errs.length > 0) {
-			error = `Missing required params: ${errs.join(", ")}`;
+			error = t("password.missingParams", { params: errs.join(", ") });
 		} else {
 			error = "";
 		}
@@ -95,14 +96,18 @@
 				await req.post(`/arr/rad/${isEditing ? "edit" : "add"}`, servarr);
 				notify({
 					type: "success",
-					text: isEditing ? "Changes saved!" : "Server added successfully!",
+					text: isEditing
+						? t("manageUsers.edit.changesSaved")
+						: t("server.arr.added"),
 				});
 				onClose();
 			} catch (err) {
 				console.error("Failed to save server!", err);
 				error = ReqerError.getMsg(
 					err,
-					`Failed to ${isEditing ? "edit" : "add"}`,
+					isEditing
+						? t("server.arr.failedToEdit")
+						: t("server.arr.failedToAdd"),
 				);
 			}
 		}
@@ -113,12 +118,12 @@
 			await req.post(`/arr/rad/rm/${servarr.name}`);
 			notify({
 				type: "success",
-				text: "Removed server",
+				text: t("server.arr.removed"),
 			});
 			onClose();
 		} catch (err) {
 			console.error("Failed to remove server!", err);
-			error = ReqerError.getMsg(err, "Failed to remove");
+			error = ReqerError.getMsg(err, t("server.arr.failedToRemove"));
 		}
 	}
 	run(() => {
@@ -129,8 +134,10 @@
 </script>
 
 <Modal
-	title={isEditing ? `Edit ${servarr.name}` : "Add Radarr Server"}
-	desc="Setup a connection to your Radarr server"
+	title={isEditing
+		? t("server.arr.edit", { name: servarr.name })
+		: t("server.arr.add", { service: "Radarr" })}
+	desc={t("server.arr.setupDesc", { service: "Radarr" })}
 	{onClose}
 >
 	{#if error}
@@ -138,7 +145,7 @@
 	{/if}
 	<SettingsList>
 		{#if !isEditing}
-			<Setting title="Name" desc="Give your server a memorable name.">
+			<Setting title={t("tags.name")} desc={t("server.arr.nameDesc")}>
 				<input
 					type="text"
 					placeholder="https://radarr.example.com"
@@ -148,8 +155,8 @@
 			</Setting>
 		{/if}
 		<Setting
-			title="Radarr Host"
-			desc="Point to your Radarr server to enable movie requesting."
+			title={t("server.host", { service: "Radarr" })}
+			desc={t("server.arr.hostDescRadarr")}
 		>
 			<input
 				type="text"
@@ -158,7 +165,10 @@
 				disabled={formDisabled}
 			/>
 		</Setting>
-		<Setting title="Radarr Key" desc="API key for your Radarr instance.">
+		<Setting
+			title={t("server.arr.key", { service: "Radarr" })}
+			desc={t("server.arr.keyDesc", { service: "Radarr" })}
+		>
 			<input
 				type="text"
 				placeholder="dGhhbmtzIGZvciB1c2luZyB3YXRjaGFyciA6KQ=="
@@ -167,31 +177,34 @@
 			/>
 		</Setting>
 		<Setting
-			title="Quality Profile"
-			desc="Default quality profile when adding movies."
+			title={t("server.arr.qualityProfile")}
+			desc={t("server.arr.qualityProfileDescRadarr")}
 		>
 			<DropDown
 				placeholder={qualityProfiles?.length == 0
-					? "Add a Host and Key, then press test to view"
-					: "Select a quality profile"}
+					? t("server.arr.addHostAndKeyFirst")
+					: t("server.arr.selectQualityProfile")}
 				options={qualityProfiles}
 				bind:active={servarr.qualityProfile}
 				disabled={formDisabled}
 			/>
 		</Setting>
-		<Setting title="Root Folder" desc="Default root folder when adding movies.">
+		<Setting
+			title={t("server.arr.rootFolder")}
+			desc={t("server.arr.rootFolderDescRadarr")}
+		>
 			<DropDown
 				placeholder={rootFolders?.length == 0
-					? "Add a Host and Key, then press test to view"
-					: "Select a root folder"}
+					? t("server.arr.addHostAndKeyFirst")
+					: t("server.arr.selectRootFolder")}
 				options={rootFolders}
 				bind:active={servarr.rootFolder}
 				disabled={formDisabled}
 			/>
 		</Setting>
 		<Setting
-			title="Automatic Search"
-			desc="Start movie search automatically?"
+			title={t("server.arr.automaticSearch")}
+			desc={t("server.arr.automaticSearchDescRadarr")}
 			row
 		>
 			<Checkbox
@@ -202,12 +215,15 @@
 		</Setting>
 		<div class="btns">
 			{#if isEditing}
-				<button class="danger" onclick={() => remove()}>Delete</button>
+				<button class="danger" onclick={() => remove()}
+					>{t("common.delete")}</button
+				>
 			{/if}
 			<button id="test" class="secondary" onclick={() => testIfHostAndKeySet()}
-				>Test</button
+				>{t("server.arr.test")}</button
 			>
-			<button onclick={() => save()}>{isEditing ? "Save" : "Add Server"}</button
+			<button onclick={() => save()}
+				>{isEditing ? t("common.save") : t("server.arr.addServer")}</button
 			>
 		</div>
 	</SettingsList>

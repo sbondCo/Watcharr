@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import Error from "@/lib/Error.svelte";
@@ -70,7 +71,7 @@
 </script>
 
 <svelte:head>
-	<title>Watched List</title>
+	<title>{t("list.pageTitle")}</title>
 </svelte:head>
 
 <!-- <span
@@ -102,16 +103,21 @@
 	{:else if !dataLoader.state.reqLoading && !dataLoader.state.reqLoadError}
 		<div class="empty-list">
 			<Icon i={store.hasActiveFilters ? "filter-circle" : "reel"} wh={80} />
-			<h2 class="norm">Your list looks empty!</h2>
+			<h2 class="norm">{t("list.emptyTitle")}</h2>
 			<h4 class="norm">
-				Try {`${store.hasActiveFilters ? "removing your active filters or" : ""}`}
-				searching for something you would like to add.
+				{store.hasActiveFilters
+					? t("list.emptyDescWithFilters")
+					: t("list.emptyDesc")}
 			</h4>
 			{#if !store.hasActiveFilters}
-				<button onclick={() => goto(resolve("/import"))}>Import</button>
+				<button onclick={() => goto(resolve("/import"))}
+					>{t("settings.import")}</button
+				>
 			{/if}
 			{#if store.hasActiveFilters}
-				<button onclick={() => clearActiveFilters()}>Clear Filters</button>
+				<button onclick={() => clearActiveFilters()}
+					>{t("list.clearFilters")}</button
+				>
 			{/if}
 		</div>
 	{/if}
@@ -126,7 +132,7 @@
 {#if dataLoader.state.reqLoadError}
 	<div style="margin-bottom: 60px;">
 		<Error
-			pretty="Failed to load results!"
+			pretty={t("list.failedToLoad")}
 			error={dataLoader.state.reqLoadError}
 			onRetry={() => {
 				dataLoader.state.reqLoadError = undefined;

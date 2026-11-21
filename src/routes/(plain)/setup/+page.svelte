@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { goto } from "$app/navigation";
 	import type { AuthResponse, AvailableAuthProviders } from "@/types";
 	import { onMount } from "svelte";
@@ -31,11 +32,11 @@
 		const pass = fd.get("password");
 
 		if (!user || !pass) {
-			error = "Username and Password fields are required";
+			error = t("login.usernameAndPasswordRequired");
 			return;
 		}
 
-		const nid = notify({ text: "Setting Up Admin User", type: "loading" });
+		const nid = notify({ text: t("setup.settingUpAdmin"), type: "loading" });
 		noAuthReq
 			.post<AuthResponse>("/setup/create_admin", {
 				username: user,
@@ -46,25 +47,29 @@
 					console.log("Received token... logging in.");
 					localStorage.setItem("token", resp.token);
 					goto(resolve("/"));
-					notify({ id: nid, text: `Welcome ${user}!`, type: "success" });
+					notify({
+						id: nid,
+						text: t("login.welcomeUser", { user }),
+						type: "success",
+					});
 				}
 			})
 			.catch((err) => {
-				error = ReqerError.getMsg(err, "Setting up user failed");
+				error = ReqerError.getMsg(err, t("setup.settingUpFailed"));
 				unNotify(nid);
 			});
 	}
 </script>
 
 <svelte:head>
-	<title>Setup Watcharr</title>
+	<title>{t("setup.pageTitle")}</title>
 </svelte:head>
 
 <div>
 	<div class="inner">
 		<div class="headers">
-			<h2>Setup Admin User</h2>
-			<h5 class="norm">Welcome to Watcharr! Setup your admin acount below.</h5>
+			<h2>{t("setup.title")}</h2>
+			<h5 class="norm">{t("setup.desc")}</h5>
 		</div>
 
 		{#if error}
@@ -72,14 +77,20 @@
 		{/if}
 
 		<form onsubmit={handleLogin}>
-			<label for="username">Username</label>
-			<input type="text" name="username" placeholder="Username" />
+			<label for="username">{t("login.username")}</label>
+			<input type="text" name="username" placeholder={t("login.username")} />
 
-			<label for="password">Password</label>
-			<input type="password" name="password" placeholder="Password" />
+			<label for="password">{t("login.password")}</label>
+			<input
+				type="password"
+				name="password"
+				placeholder={t("login.password")}
+			/>
 
 			<div class="login-btns">
-				<button type="submit"><span class="watcharr">W</span>Set Up</button>
+				<button type="submit"
+					><span class="watcharr">W</span>{t("setup.setUp")}</button
+				>
 			</div>
 		</form>
 	</div>

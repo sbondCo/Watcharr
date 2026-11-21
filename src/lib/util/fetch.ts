@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/index.svelte";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { clearWatcharrData } from "../logout";
@@ -86,7 +87,7 @@ export class ReqerError extends Error {
 		// a random html error page or whatever (its better to show a pretty
 		// error whenever possible, debugging errors are always in console),
 		// if there is no `error`, we try the `err.message`.
-		let msg = "You've encountered an extremely unguarded error!";
+		let msg = t("errors.unguarded");
 		if (ReqerError.withBody(err) && err.hasErrorInBody()) {
 			msg = err.body.error;
 		} else if (err instanceof Error && err.message) {
@@ -239,7 +240,7 @@ export class Reqer {
 				if (!token) {
 					console.error("No token, going to login.");
 					goto(resolve("/login?again=1"));
-					throw new ReqerError("No auth token found");
+					throw new ReqerError(t("errors.noAuthToken"));
 				}
 				headers.append("Authorization", token);
 			}
@@ -257,7 +258,9 @@ export class Reqer {
 
 			if (!res.ok) {
 				throw new ReqerError(
-					`request failed with ${res.status} ${res.statusText}`,
+					t("errors.requestFailed", {
+						status: `${res.status} ${res.statusText}`,
+					}),
 					resBody,
 					res,
 				);
@@ -273,7 +276,7 @@ export class Reqer {
 			if (err instanceof ReqerError) {
 				if (this.watcharrAuthed && err.response?.status === 401) {
 					console.error("Recieved 401 response, going to login.");
-					notify({ text: "Request Authorization Failed!", type: "error" });
+					notify({ text: t("errors.authFailed"), type: "error" });
 					clearWatcharrData();
 					goto(resolve("/login?again=1"));
 				}

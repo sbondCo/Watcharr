@@ -1,6 +1,7 @@
 <!-- To be used from Rating component -->
 
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { run } from "svelte/legacy";
 
 	import { store } from "@/store.svelte";
@@ -35,18 +36,18 @@
 	 */
 	let scrollLocAtStart = 0;
 
-	const ratingDesc = [
-		"Apalling",
-		"Horrible",
-		"Very Bad",
-		"Bad",
-		"Average",
-		"Fine",
-		"Good",
-		"Very Good",
-		"Great",
-		"Masterpiece",
-	];
+	const ratingDesc = $derived([
+		t("rating.desc.1"),
+		t("rating.desc.2"),
+		t("rating.desc.3"),
+		t("rating.desc.4"),
+		t("rating.desc.5"),
+		t("rating.desc.6"),
+		t("rating.desc.7"),
+		t("rating.desc.8"),
+		t("rating.desc.9"),
+		t("rating.desc.10"),
+	]);
 
 	async function saveSelectedRating() {
 		if (!shownPerc) {
@@ -322,7 +323,7 @@ shownPerc: {shownPerc}<br /> -->
 				{/if}
 			{/if}
 		{:else}
-			Select Your Rating
+			{t("rating.selectYourRating")}
 		{/if}
 	</span>
 	<div
@@ -404,9 +405,7 @@ shownPerc: {shownPerc}<br /> -->
 			{/each}
 		</div>
 	</div>
-	<span class="keyboard-tip"
-		>Left/Right Arrows to change rating, Enter to save.</span
-	>
+	<span class="keyboard-tip">{t("rating.keyboardTip")}</span>
 </div>
 
 <style lang="scss">

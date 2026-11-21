@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Checkbox from "@/lib/Checkbox.svelte";
 	import Modal from "@/lib/Modal.svelte";
 	import Notice from "@/lib/Notice.svelte";
@@ -41,7 +42,7 @@
 			console.error("getHeaderCfg failed!", err);
 			notify({
 				type: "error",
-				text: "Failed to get configuration from server.",
+				text: t("server.headerAuthModal.failedToGet"),
 				time: 6000,
 			});
 		}
@@ -50,7 +51,7 @@
 	async function save() {
 		const nid = notify({
 			type: "loading",
-			text: "Saving..",
+			text: t("common.saving"),
 		});
 		try {
 			await req.post("/server/config", headerCfg, {
@@ -59,7 +60,7 @@
 			notify({
 				id: nid,
 				type: "success",
-				text: "Changes saved!",
+				text: t("manageUsers.edit.changesSaved"),
 			});
 			onClose();
 		} catch (err) {
@@ -67,7 +68,7 @@
 			notify({
 				id: nid,
 				type: "error",
-				text: "Failed to save config. Please try again!",
+				text: t("server.headerAuthModal.failedToSave"),
 				time: 6000,
 			});
 		}
@@ -79,8 +80,8 @@
 </script>
 
 <Modal
-	title="Trusted Header Authentication"
-	desc="Configure trusted header single sign-on."
+	title={t("server.headerAuth")}
+	desc={t("server.headerAuthDesc")}
 	{onClose}
 >
 	{#if error}
@@ -91,13 +92,13 @@
 	{:else}
 		<SettingsList>
 			<Notice
-				title="This is dangerous!"
-				desc="If setup incorrectly, the authorization module for your server could be easily comprimised. If configured, please ensure your Watcharr instance is only available through your proxy and not available directly."
+				title={t("server.headerAuthModal.dangerous")}
+				desc={t("server.headerAuthModal.dangerousDesc")}
 				type="warn"
 			/>
 			<Setting
-				title="Header Name"
-				desc="Name of the header used for authentication."
+				title={t("server.headerAuthModal.headerName")}
+				desc={t("server.headerAuthModal.headerNameDesc")}
 			>
 				<input
 					type="text"
@@ -108,8 +109,8 @@
 				/>
 			</Setting>
 			<Setting
-				title="Logout URL"
-				desc="Where can we redirect so that the user can logout?"
+				title={t("server.headerAuthModal.logoutUrl")}
+				desc={t("server.headerAuthModal.logoutUrlDesc")}
 			>
 				<input
 					type="text"
@@ -120,8 +121,8 @@
 				/>
 			</Setting>
 			<Setting
-				title="Auto Login"
-				desc="Should we auto login users as soon as they reach our login page?"
+				title={t("server.headerAuthModal.autoLogin")}
+				desc={t("server.headerAuthModal.autoLoginDesc")}
 				row
 			>
 				<Checkbox
@@ -131,8 +132,8 @@
 				/>
 			</Setting>
 			<Setting
-				title="Enabled"
-				desc="Enable Trusted Header Single Sign-On? Toggle on to activate above configuration."
+				title={t("server.headerAuthModal.enabled")}
+				desc={t("server.headerAuthModal.enabledDesc")}
 				row
 			>
 				<Checkbox
@@ -142,7 +143,7 @@
 				/>
 			</Setting>
 			<div class="btns">
-				<button onclick={() => save()}>Save</button>
+				<button onclick={() => save()}>{t("common.save")}</button>
 			</div>
 		</SettingsList>
 	{/if}

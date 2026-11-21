@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import Modal from "../Modal.svelte";
 	import HandbookPage from "@/routes/(app)/handbook/+page.svelte";
 
@@ -9,7 +10,7 @@
 	let { onClose }: Props = $props();
 </script>
 
-<Modal title="Handbook" {onClose} maxWidth="1200px">
+<Modal title={t("handbook.title")} {onClose} maxWidth="1200px">
 	<div class="content">
 		<div class="inner">
 			<HandbookPage />

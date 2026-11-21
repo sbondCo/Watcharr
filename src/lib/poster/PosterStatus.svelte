@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import type { WatchedStatus } from "@/types";
 	import Icon from "../Icon.svelte";
 	import tooltip from "../actions/tooltip";
@@ -73,7 +74,7 @@
 			<button
 				class="plain not-active"
 				onclick={() => handleStatusClick("DELETE")}
-				use:tooltip={{ text: "Delete" }}
+				use:tooltip={{ text: t("common.delete") }}
 			>
 				<Icon i="trash" />
 			</button>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { updateActivity, removeActivity } from "@/lib/util/api";
 	import Modal from "../Modal.svelte";
 	import type { Activity } from "@/types";
@@ -32,12 +33,12 @@
 		error = "";
 
 		if (!anythingChanged) {
-			error = "Nothing changed!";
+			error = t("activity.editor.nothingChanged");
 			return;
 		}
 
 		if (isNaN(date.getTime()) || date.getTime() < 0) {
-			error = "Date is invalid!";
+			error = t("activity.editor.dateInvalid");
 			return;
 		}
 
@@ -65,31 +66,42 @@
 	}
 </script>
 
-<Modal title="Edit Activity" desc={activityMessage} maxWidth="400px" {onClose}>
+<Modal
+	title={t("activity.editor.title")}
+	desc={activityMessage}
+	maxWidth="400px"
+	{onClose}
+>
 	{#if error}
-		<Error pretty="Update Failed" {error} margin="0 0 10px 0" />
+		<Error
+			pretty={t("activity.editor.updateFailed")}
+			{error}
+			margin="0 0 10px 0"
+		/>
 	{/if}
 
 	<div class="centered">
-		<h3>Date</h3>
+		<h3>{t("activity.editor.date")}</h3>
 		<DateInput {date} />
 
-		<h3>Time</h3>
+		<h3>{t("activity.editor.time")}</h3>
 		<TimeInput {date} />
 
-		<h3>Note</h3>
+		<h3>{t("activity.editor.note")}</h3>
 		<textarea
 			name="note"
 			rows="3"
-			placeholder="Reasons, thoughts or whatever."
+			placeholder={t("activity.editor.notePlaceholder")}
 			bind:value={note}></textarea>
 
 		<ActivityEditorRawView {activity} />
 
 		<div class="button-row">
-			<button class="danger" onclick={remove}>Delete</button>
+			<button class="danger" onclick={remove}>{t("common.delete")}</button>
 			<div>
-				<button onclick={update} disabled={!anythingChanged}>Update</button>
+				<button onclick={update} disabled={!anythingChanged}
+					>{t("common.update")}</button
+				>
 			</div>
 		</div>
 	</div>

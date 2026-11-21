@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	interface Props {
 		text?: string;
 		title?: string;
@@ -44,7 +45,7 @@
 			{/if}
 			{#if splitText.rest}
 				<button class="plain" onclick={() => (bioExtended = !bioExtended)}>
-					{bioExtended ? "Less" : "More"}
+					{bioExtended ? t("common.less") : t("common.more")}
 				</button>
 			{/if}
 		</p>

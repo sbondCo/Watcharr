@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { req } from "@/lib/util/api";
@@ -17,7 +18,7 @@
 			})
 			.catch((err) => {
 				console.error("Failed to generate admin token", err);
-				notify({ type: "error", text: "Failed to generate a token" });
+				notify({ type: "error", text: t("requestAdmin.failedToGenerate") });
 			});
 	}
 
@@ -29,7 +30,7 @@
 		req
 			.post("/auth/admin_token", { token: adminToken })
 			.then(() => {
-				notify({ type: "success", text: "You now have admin!" });
+				notify({ type: "success", text: t("requestAdmin.nowAdmin") });
 				if (store.userInfo) {
 					store.userInfo.permissions = UserPermission.PERM_ADMIN;
 				}
@@ -37,24 +38,27 @@
 			})
 			.catch((err) => {
 				console.error("Failed to use admin token", err);
-				notify({ type: "error", text: "Failed to use admin token!" });
+				notify({ type: "error", text: t("requestAdmin.failedToUse") });
 			});
 	}
 </script>
 
 <div class="content">
 	<div class="inner">
-		<h2>Request Admin</h2>
+		<h2>{t("requestAdmin.title")}</h2>
 
 		{#if page == 0}
-			<button onclick={generateAdminToken}>Request</button>
+			<button onclick={generateAdminToken}>{t("request.request")}</button>
 		{:else if page == 1}
 			<p>
-				Check your sever log to retrieve your token. Once you have it type it
-				down below.
+				{t("requestAdmin.checkLog")}
 			</p>
-			<input bind:value={adminToken} type="text" placeholder="Admin Token" />
-			<button onclick={useAdminToken}>Check Token</button>
+			<input
+				bind:value={adminToken}
+				type="text"
+				placeholder={t("requestAdmin.token")}
+			/>
+			<button onclick={useAdminToken}>{t("requestAdmin.checkToken")}</button>
 		{/if}
 	</div>
 </div>

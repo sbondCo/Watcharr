@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "@/lib/i18n/index.svelte";
 	import type { Media } from "@/types";
 	import HorizontalList from "../HorizontalList.svelte";
 	import Poster from "../poster/Poster.svelte";
@@ -11,7 +12,7 @@
 </script>
 
 {#if similar?.length > 0}
-	<HorizontalList title="Similar">
+	<HorizontalList title={t("content.similar")}>
 		{#each similar as content, i (content.ids)}
 			<Poster media={content} small={true} bind:watched={similar[i].watched} />
 		{/each}

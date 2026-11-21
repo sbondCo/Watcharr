@@ -5,6 +5,8 @@ import {
 	type TokenClaims,
 	type WatchedStatus,
 } from "@/types";
+import { getLanguage, t } from "@/lib/i18n/index.svelte";
+import { formatShortDate } from "./date";
 
 export const watchedStatuses: {
 	[key in WatchedStatus]: Icon;
@@ -15,36 +17,6 @@ export const watchedStatuses: {
 	HOLD: "pause",
 	DROPPED: "thumb-down",
 };
-
-export const months = [
-	"January",
-	"February",
-	"March",
-	"April",
-	"May",
-	"June",
-	"July",
-	"August",
-	"September",
-	"October",
-	"November",
-	"December",
-];
-
-export const monthsShort = [
-	"Jan",
-	"Feb",
-	"March",
-	"Apr",
-	"May",
-	"June",
-	"July",
-	"Aug",
-	"Sept",
-	"Oct",
-	"Nov",
-	"Dec",
-];
 
 export function isTouch() {
 	return "ontouchstart" in window;
@@ -65,17 +37,40 @@ export function isTouch() {
  * @param isForGame If this status is being displayed for a game or not.
  */
 export function toUnderstandableStatus(s: WatchedStatus, isForGame: boolean) {
+	return statusLabel(s, isForGame).toLocaleLowerCase(getLanguage());
+}
+
+/**
+ * Get the translated, title cased name of a WatchedStatus
+ * (eg: `On Hold`).
+ *
+ * Like `toUnderstandableStatus`, only for displaying in the ui.
+ *
+ * @param s The watched status.
+ * @param isForGame If this status is being displayed for a game or not.
+ */
+export function statusLabel(s: WatchedStatus, isForGame = false): string {
 	if (isForGame) {
 		if (s === "FINISHED") {
-			return "played";
+			return t("status.played");
 		} else if (s === "WATCHING") {
-			return "playing";
+			return t("status.playing");
 		}
 	}
-	if (s === "HOLD") {
-		return "on hold";
+	switch (s) {
+		case "PLANNED":
+			return t("status.planned");
+		case "WATCHING":
+			return t("status.watching");
+		case "FINISHED":
+			return t("status.finished");
+		case "HOLD":
+			return t("status.hold");
+		case "DROPPED":
+			return t("status.dropped");
+		default:
+			return s ?? t("common.unknown");
 	}
-	return s?.toLowerCase();
 }
 
 /**
@@ -145,25 +140,6 @@ export function calculateTransformOrigin(
 	}
 }
 
-/**
- * Get ordinal suffix to use from day number (1`st`, 2`nd`, 3`rd`).
- * @param i Day number.
- */
-export function getOrdinalSuffix(i: number) {
-	const j = i % 10,
-		k = i % 100;
-	if (j == 1 && k != 11) {
-		return "st";
-	}
-	if (j == 2 && k != 12) {
-		return "nd";
-	}
-	if (j == 3 && k != 13) {
-		return "rd";
-	}
-	return "th";
-}
-
 export function parseTokenPayload(): TokenClaims | undefined {
 	try {
 		const token = localStorage.getItem("token");
@@ -202,7 +178,11 @@ export function seasonAndEpToReadable(
 	season: number | undefined,
 	episode: number | undefined,
 ) {
-	return `S${typeof season === "number" ? String(season) : "(unknown)"}E${typeof episode === "number" ? String(episode) : "(unknown)"}`;
+	const unknown = `(${t("common.unknown").toLocaleLowerCase(getLanguage())})`;
+	return t("season.seasonAndEpisodeShort", {
+		season: typeof season === "number" ? String(season) : unknown,
+		episode: typeof episode === "number" ? String(episode) : unknown,
+	});
 }
 
 export function msToAmountsOfTime(ms: number) {
@@ -216,18 +196,18 @@ export function msToAmountsOfTime(ms: number) {
 /** I'm no warden of time, this is as relative as it's getting. */
 export function toRelativeDate(d: Date): string {
 	if (!d) {
-		return "Unknown";
+		return t("common.unknown");
 	}
 	const dn = new Date(Date.now());
 	if (d.getFullYear() === dn.getFullYear()) {
 		if (d.getMonth() === dn.getMonth()) {
 			if (d.getDate() === dn.getDate()) {
-				return "Today";
+				return t("date.today");
 			}
 		}
-		return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]}`;
+		return formatShortDate(d, false);
 	}
-	return `${d.getDate()}${getOrdinalSuffix(d.getDate())} ${monthsShort[d.getMonth()]} ${d.getFullYear()}`;
+	return formatShortDate(d);
 }
 
 /**
@@ -240,15 +220,15 @@ export function toRelativeTime(s: number) {
 	const mins = totalMinutes % 60;
 	const secs = Math.floor(s % 60);
 	if (hours > 0) {
-		return `${hours} hours`;
+		return t("time.hours", { count: hours });
 	}
 	if (mins > 0) {
-		return `${mins} minutes`;
+		return t("time.minutes", { count: mins });
 	}
 	if (secs > 0) {
-		return `${secs} seconds`;
+		return t("time.seconds", { count: secs });
 	}
-	return "now";
+	return t("time.now");
 }
 
 /**
