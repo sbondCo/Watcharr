@@ -37,6 +37,7 @@
 	"type": "module",
 	"dependencies": {
 		"blurhash": "2.0.5",
+		"i18next": "26.7.2",
 		"papaparse": "5.4.1"
 	}
 }

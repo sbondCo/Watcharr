@@ -1,0 +1,51 @@
+{
+	"common": {
+		"experimental": "experimental"
+	},
+	"settings": {
+		"automateShowStatuses": {
+			"desc": "Do you want to automate show statuses (show, season, episode)?",
+			"title": "Automate Show Statuses"
+		},
+		"changePassword": "Change Password",
+		"country": {
+			"desc": "What country would you like to see available streaming providers for?",
+			"title": "Country"
+		},
+		"export": "Export",
+		"general": "General",
+		"hideSpoilers": {
+			"desc": "Do you want to hide episode info?",
+			"title": "Hide Spoilers"
+		},
+		"import": "Import",
+		"includePreviouslyWatched": {
+			"desc": "Should previously finished items be included in the 'Finished' status filter?",
+			"title": "Include Previously Watched"
+		},
+		"language": {
+			"automatic": "Automatic (browser language)",
+			"desc": "Which language would you like Watcharr to be shown in?",
+			"select": "Select a language",
+			"title": "Language"
+		},
+		"pageTitle": "Settings",
+		"private": {
+			"desc": "Hide your profile from others?",
+			"title": "Private"
+		},
+		"privateThoughts": {
+			"desc": "Hide your watched list thoughts from followers?",
+			"title": "Private Thoughts"
+		},
+		"services": "Services",
+		"settingsFor": "Settings for",
+		"syncWith": "Sync With {{service}}",
+		"theme": {
+			"dark": "dark",
+			"light": "light",
+			"system": "system",
+			"title": "Theme"
+		}
+	}
+}

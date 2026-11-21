@@ -276,6 +276,11 @@ export interface UserSettings {
 	 * Supported: 1, 0.5, 0.1 (must validate).
 	 */
 	ratingStep?: RatingStep;
+	/**
+	 * UI language code (eg: `en`, `it`).
+	 * Empty/unset means detect from the browser.
+	 */
+	language?: string;
 }
 
 export enum RatingSystem {

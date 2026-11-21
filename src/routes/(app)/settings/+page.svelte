@@ -13,6 +13,8 @@
 	import { toggleTheme } from "@/lib/util/theme";
 	import { resolve } from "$app/paths";
 	import UserServices from "./UserServices.svelte";
+	import LanguageDropDown from "@/lib/LanguageDropDown.svelte";
+	import { setLanguage, t } from "@/lib/i18n/index.svelte";
 
 	let user = $derived(store.userInfo);
 	let settings = $derived(store.userSettings);
@@ -23,6 +25,7 @@
 	let exportModalOpen = $state(false);
 	let hideSpoilersDisabled = $state(false);
 	let countryDisabled = $state(false);
+	let languageDisabled = $state(false);
 	let includePreviouslyWatchedDisabled = $state(false);
 	let automateShowStatusesDisabled = $state(false);
 	let pwChangeModalOpen = $state(false);
@@ -31,51 +34,70 @@
 </script>
 
 <svelte:head>
-	<title>Settings</title>
+	<title>{t("settings.pageTitle")}</title>
 </svelte:head>
 
 <div class="content">
 	<div class="inner">
 		<h2 title={user?.username}>
 			<span style="font-weight: normal; font-variant: all-small-caps;">
-				Settings for
+				{t("settings.settingsFor")}
 			</span>
 			{user?.username}
 		</h2>
 
 		<div class="settings">
-			<h3>General</h3>
+			<h3>{t("settings.general")}</h3>
 
 			<div class="theme">
-				<h4 class="norm">Theme</h4>
+				<h4 class="norm">{t("settings.theme.title")}</h4>
 				<div class="row">
 					<button
 						class={`plain${selectedTheme === "system" ? " selected" : ""}`}
 						id="system"
 						onclick={() => toggleTheme("system")}
 					>
-						<span>system</span>
+						<span>{t("settings.theme.system")}</span>
 					</button>
 					<button
 						class={`plain${selectedTheme === "light" ? " selected" : ""}`}
 						id="light"
 						onclick={() => toggleTheme("light")}
 					>
-						light
+						{t("settings.theme.light")}
 					</button>
 					<button
 						class={`plain${selectedTheme === "dark" ? " selected" : ""}`}
 						id="dark"
 						onclick={() => toggleTheme("dark")}
 					>
-						dark
+						{t("settings.theme.dark")}
 					</button>
 				</div>
 			</div>
 
 			<Setting
-				title="Country"
-				desc="What country would you like to see available streaming providers for?"
+				title={t("settings.language.title")}
+				desc={t("settings.language.desc")}
+			>
+				<LanguageDropDown
+					selectedLanguage={settings?.language ?? ""}
+					disabled={languageDisabled}
+					onChange={(l) => {
+						languageDisabled = true;
+						updateUserSetting("language", l, async () => {
+							// Apply whatever is now in the store (the setting
+							// is reverted there if the update failed).
+							await setLanguage(store.userSettings?.language);
+							languageDisabled = false;
+						});
+					}}
+				/>
+			</Setting>
+
+			<Setting
+				title={t("settings.country.title")}
+				desc={t("settings.country.desc")}
 			>
 				<RegionDropDown
 					selectedCountry={settings?.country}
@@ -89,7 +111,11 @@
 				/>
 			</Setting>
 
-			<Setting title="Private" desc="Hide your profile from others?" row>
+			<Setting
+				title={t("settings.private.title")}
+				desc={t("settings.private.desc")}
+				row
+			>
 				<Checkbox
 					name="private"
 					disabled={privateDisabled}
@@ -105,8 +131,8 @@
 
 			{#if !settings?.private}
 				<Setting
-					title="Private Thoughts"
-					desc="Hide your watched list thoughts from followers?"
+					title={t("settings.privateThoughts.title")}
+					desc={t("settings.privateThoughts.desc")}
 					row
 				>
 					<Checkbox
@@ -124,8 +150,8 @@
 			{/if}
 
 			<Setting
-				title="Hide Spoilers"
-				desc="Do you want to hide episode info?"
+				title={t("settings.hideSpoilers.title")}
+				desc={t("settings.hideSpoilers.desc")}
 				row
 			>
 				<Checkbox
@@ -142,9 +168,9 @@
 			</Setting>
 
 			<Setting
-				title="Automate Show Statuses"
-				desc="Do you want to automate show statuses (show, season, episode)?"
-				tag="experimental"
+				title={t("settings.automateShowStatuses.title")}
+				desc={t("settings.automateShowStatuses.desc")}
+				tag={t("common.experimental")}
 				row
 			>
 				<Checkbox
@@ -161,8 +187,8 @@
 			</Setting>
 
 			<Setting
-				title="Include Previously Watched"
-				desc="Should previously finished items be included in the 'Finished' status filter?"
+				title={t("settings.includePreviouslyWatched.title")}
+				desc={t("settings.includePreviouslyWatched.desc")}
 				row
 			>
 				<Checkbox
@@ -180,28 +206,34 @@
 
 			<RatingSetting />
 
-			<h3>Services</h3>
+			<h3>{t("settings.services")}</h3>
 
 			<UserServices />
 
 			<div class="row btns">
-				<button onclick={() => goto(resolve("/import"))}>Import</button>
-				<button onclick={() => (exportModalOpen = true)}>Export</button>
+				<button onclick={() => goto(resolve("/import"))}
+					>{t("settings.import")}</button
+				>
+				<button onclick={() => (exportModalOpen = true)}
+					>{t("settings.export")}</button
+				>
 				{#if user?.type == UserType.Watcharr}
 					<button
 						onclick={() => {
 							pwChangeModalOpen = true;
-						}}>Change Password</button
+						}}>{t("settings.changePassword")}</button
 					>
 				{/if}
 				{#if user?.type === UserType?.Jellyfin}
 					<button onclick={() => (jellyfinSyncModalOpen = true)}>
-						Sync With {localStorage.getItem("useEmby") ? "Emby" : "Jellyfin"}
+						{t("settings.syncWith", {
+							service: localStorage.getItem("useEmby") ? "Emby" : "Jellyfin",
+						})}
 					</button>
 				{/if}
 				{#if user?.type === UserType?.Plex}
 					<button onclick={() => (plexSyncModalOpen = true)}>
-						Sync With Plex
+						{t("settings.syncWith", { service: "Plex" })}
 					</button>
 				{/if}
 			</div>

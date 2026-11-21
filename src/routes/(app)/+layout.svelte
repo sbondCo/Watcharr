@@ -25,6 +25,7 @@
 	import { onMount } from "svelte";
 	import { SvelteURLSearchParams } from "svelte/reactivity";
 	import HandbookModal from "@/lib/handbook/HandbookModal.svelte";
+	import { setLanguage, t } from "@/lib/i18n/index.svelte";
 
 	interface Props {
 		children?: import("svelte").Snippet;
@@ -163,6 +164,7 @@
 		}
 		if (s) {
 			store.userSettings = s;
+			await setLanguage(s.language);
 		}
 		if (f) {
 			store.serverFeatures = f;
