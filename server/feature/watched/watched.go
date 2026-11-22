@@ -751,7 +751,10 @@ func (s *Service) UpdateWatched(
 // users list, eg content added by a Plex or Jellyfin sync, which often has no
 // rating on it.
 func (s *Service) UpdateWatchedRating(userId uint, watchedId uint, rating float64) error {
-	_, err := s.updateWatched(userId, watchedId, domain.WatchedUpdateRequest{Rating: rating})
+	_, err := s.UpdateWatched(userId, watchedId, domain.WatchedUpdateRequest{
+		Rating:            rating,
+		ActivityCreatedBy: entity.ActivityCreatedByGenericImport,
+	})
 	return err
 }
 
