@@ -1,10 +1,14 @@
 <script lang="ts">
+	import type { HandbookEntryId } from "../handbook/entries";
+	import HandbookLink from "../handbook/HandbookLink.svelte";
+
 	interface Props {
 		title?: string;
 		desc?: string;
 		row?: boolean;
 		tag?: string | undefined;
 		children?: import("svelte").Snippet;
+		handbook?: HandbookEntryId;
 	}
 
 	let {
@@ -13,31 +17,27 @@
 		row = false,
 		tag = undefined,
 		children,
+		handbook,
 	}: Props = $props();
 </script>
 
-<div class={[row ? "row" : "", "setting-ctr"].join(" ")}>
-	{#if row}
-		<div>
-			<h4 class="norm">
-				{title}
-				{#if tag}
-					<span class="tag">{tag}</span>
-				{/if}
-			</h4>
-			<h5 class="norm">{desc}</h5>
-		</div>
-	{:else}
+<div class="setting-ctr" class:row>
+	<div>
 		<h4 class="norm">
 			{title}
+			{#if handbook}
+				<HandbookLink {handbook} />
+			{/if}
 			{#if tag}
 				<span class="tag">{tag}</span>
 			{/if}
 		</h4>
 		<h5 class="norm">{desc}</h5>
-	{/if}
+	</div>
 
-	{@render children?.()}
+	<div class="childs">
+		{@render children?.()}
+	</div>
 </div>
 
 <style lang="scss">
@@ -77,6 +77,12 @@
 			h5 {
 				margin-bottom: 5px;
 			}
+		}
+
+		& > .childs {
+			display: flex;
+			flex-flow: column;
+			gap: 10px;
 		}
 	}
 </style>

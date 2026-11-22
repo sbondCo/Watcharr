@@ -8,6 +8,7 @@
 	import type { AllTasksResponse } from "@/types";
 	import { req } from "@/lib/util/api";
 	import { onMount } from "svelte";
+	import Icon from "@/lib/Icon.svelte";
 
 	interface Props {
 		onClose: () => void;
@@ -74,6 +75,21 @@
 		}
 	}
 
+	async function runTask(name: string) {
+		const nid = notify({ type: "loading", text: "Executing.." });
+		try {
+			await req.post(`/task/${name}/run`);
+			notify({ id: nid, type: "success", text: "Executed!" });
+		} catch (err) {
+			console.error("runTask failed!", err);
+			notify({
+				id: nid,
+				type: "error",
+				text: "Manual run failed!",
+			});
+		}
+	}
+
 	onMount(() => {
 		getAllTasks();
 		const nowInterval = setInterval(() => {
@@ -92,6 +108,7 @@
 <Modal
 	title="Tasks Schedule"
 	desc="Want a routine task to occur more or less frequently? Configure it below."
+	maxWidth="700px"
 	{onClose}
 >
 	<SettingsList>
@@ -103,18 +120,25 @@
 					(new Date(task.nextRun).getTime() - now) / 1000,
 				)}
 				<Setting title={task.name}>
-					Runs every&nbsp;
-					<input
-						type="number"
-						placeholder="60"
-						bind:value={task.seconds}
-						disabled={formDisabled}
-						onblur={() => {
-							rescheduleTask(task.name, task.seconds);
-						}}
-					/>
-					&nbsp;seconds. Next{nextRun === "now" ? "" : " in"}
-					{nextRun}.
+					<div class="entry">
+						<span>Runs every</span>
+						<input
+							type="number"
+							placeholder="60"
+							bind:value={task.seconds}
+							disabled={formDisabled}
+							onblur={() => {
+								rescheduleTask(task.name, task.seconds);
+							}}
+						/>
+						<span>
+							seconds. Next{nextRun === "now" ? "" : " in"}
+							{nextRun}.
+						</span>
+						<button onclick={() => runTask(task.name)}>
+							<Icon i="play" />
+						</button>
+					</div>
 				</Setting>
 			{/each}
 		{/if}
@@ -122,8 +146,20 @@
 </Modal>
 
 <style lang="scss">
-	input {
-		width: 200px;
-		margin-top: 5px;
+	.entry {
+		display: flex;
+		flex-flow: row;
+		align-items: center;
+		gap: 5px;
+
+		input {
+			width: 110px;
+		}
+
+		button {
+			width: min-content;
+			height: 100%;
+			margin-left: auto;
+		}
 	}
 </style>

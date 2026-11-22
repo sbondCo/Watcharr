@@ -82,7 +82,7 @@ func (s *TrustedHeaderService) LoginTrustedHeaderAuth(user *entity.User) (AuthRe
 			return AuthResponse{}, errors.New("error locating user in db")
 		}
 	}
-	token, err := s.authService.signJWT(dbUser)
+	token, err := s.authService.signJWT(dbUser.ID, dbUser.Username, entity.PROXY_USER)
 	if err != nil {
 		slog.Error("loginTrustedHeaderAuth: Failed to sign new jwt", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")

@@ -1,7 +1,9 @@
 package tmdb
 
 import (
+	"cmp"
 	"log/slog"
+	"slices"
 	"strings"
 	"time"
 
@@ -276,7 +278,6 @@ type ContentDetails struct {
 		Iso31661 string `json:"iso_3166_1"`
 		Name     string `json:"name"`
 	} `json:"production_countries"`
-	Status          string  `json:"status"`
 	Tagline         string  `json:"tagline"`
 	VoteAverage     float32 `json:"vote_average"`
 	VoteCount       uint32  `json:"vote_count"`
@@ -307,7 +308,6 @@ func (t *ContentDetails) AsMedia() domain.Media {
 		Rating:          uint(t.VoteAverage * 10),
 		RatingCount:     uint(t.VoteCount),
 		Homepage:        t.Homepage,
-		Status:          t.Status,
 	}
 	// Genres
 	for _, g := range t.Genres {
@@ -369,6 +369,8 @@ type MovieDetails struct {
 	Runtime             uint32 `json:"runtime"`
 	Title               string `json:"title"`
 	Video               bool   `json:"video"`
+
+	Status MovieStatus `json:"status"`
 
 	// Extra items because we use `append_to_response` on the request
 	ExternalIds ExternalIdsMovie `json:"external_ids"`
@@ -491,6 +493,8 @@ type ShowDetails struct {
 		SeasonNumber int    `json:"season_number"`
 	} `json:"seasons"`
 	Type string `json:"type"`
+
+	Status ShowStatus `json:"status"`
 
 	// Extra items because we use `append_to_response` on the request
 	ExternalIds ExternalIdsShow `json:"external_ids"`
@@ -661,7 +665,10 @@ type PersonDetails struct {
 	Homepage           string   `json:"homepage"`
 }
 
-func (t *PersonDetails) AsPersonDetailsResponse() domain.PersonDetailsResponse {
+func (t *PersonDetails) AsPersonDetailsResponse(
+	// Person full combined credits.
+	credits PersonCombinedCredits,
+) domain.PersonDetailsResponse {
 	m := domain.PersonDetailsResponse{
 		Name:               t.Name,
 		PlaceOfBirth:       t.PlaceOfBirth,
@@ -683,45 +690,105 @@ func (t *PersonDetails) AsPersonDetailsResponse() domain.PersonDetailsResponse {
 	}
 	// Age
 	m.Age = util.GetAge(m.Birthday, m.Deathday)
+
+	// If we have credits passed in, we can generate a fuller response.
+	slog.Debug("AsPersonDetailsResponse: Checking if we can make fuller resp.",
+		"credits_id", credits.ID)
+	if credits.ID != 0 {
+		// Just checking ID to make sure the struct passed isn't default value.
+		t.asPersonDetailsResponse_MakeRespFuller(&m, credits)
+	}
+
 	return m
 }
 
-//
-// Person Combined Credits
-//
+func (t *PersonDetails) asPersonDetailsResponse_MakeRespFuller(
+	m *domain.PersonDetailsResponse,
+	credits PersonCombinedCredits,
+) {
+	if m == nil {
+		slog.Error("asPersonDetailsResponse_MakeRespFuller: Didn't pass resp struct.")
+		return
+	}
 
-type PersonCombinedCredits struct {
-	ID   int                               `json:"id"`
-	Cast []PersonCombinedCreditsCastResult `json:"cast"`
-	// crew PersonCombinedCreditsCrew
+	// TODO This isn't unique, if a movie/tv exists multiple times, they are
+	// counted for each occurrance... is that good or bad?
+	// Possibly good if we want every credit to count or bad if multiple
+	// credits on one item should only count as one?
+	m.KnownCredits = len(credits.Cast) + len(credits.Crew)
+
+	setEarliestKnownCredit := func(id int, mediaType string, ds string) {
+		if ds == "" {
+			return
+		}
+		date, err := time.Parse("2006-01-02", ds)
+		if err != nil {
+			return
+		}
+		if m.FirstKnownCredit.Date.After(date) || m.FirstKnownCredit.Date.IsZero() {
+			m.FirstKnownCredit = domain.PersonDetailsFirstKnownCredit{
+				ID:   id,
+				Type: mediaType,
+				Date: date,
+			}
+		}
+	}
+
+	if len(credits.Cast) > 0 {
+		m.CreditTypes = append(m.CreditTypes, domain.CreditTypeActing)
+	}
+	for i := range credits.Cast {
+		c := &credits.Cast[i]
+
+		setEarliestKnownCredit(
+			c.ID, c.MediaType, cmp.Or(c.ReleaseDate, c.FirstCreditAirDate))
+	}
+	for i := range credits.Crew {
+		c := &credits.Crew[i]
+
+		if !slices.Contains(m.CreditTypes, c.Department) {
+			m.CreditTypes = append(m.CreditTypes, c.Department)
+		}
+
+		setEarliestKnownCredit(
+			c.ID, c.MediaType, cmp.Or(c.ReleaseDate, c.FirstCreditAirDate))
+	}
+
+	if m.FirstKnownCredit.ID != 0 {
+		m.FirstKnownCredit.Age = util.GetAge(m.Birthday, m.FirstKnownCredit.Date)
+	}
 }
 
-type PersonCombinedCreditsCastResult struct {
-	ID               int      `json:"id"`
-	OriginalLanguage string   `json:"original_language"`
-	EpisodeCount     int      `json:"episode_count"`
-	Overview         string   `json:"overview"`
-	OriginCountry    []string `json:"origin_country"`
-	OriginalName     string   `json:"original_name"`
-	GenreIDs         []int    `json:"genre_ids"`
-	Name             string   `json:"name"`
-	MediaType        string   `json:"media_type"`
-	PosterPath       string   `json:"poster_path"`
-	FirstAirDate     string   `json:"first_air_date"`
-	VoteAverage      float64  `json:"vote_average"`
-	VoteCount        uint32   `json:"vote_count"`
-	Character        string   `json:"character"`
-	BackdropPath     string   `json:"backdrop_path"`
-	Popularity       float64  `json:"popularity"`
-	CreditID         string   `json:"credit_id"`
-	OriginalTitle    string   `json:"original_title"`
-	Video            bool     `json:"video"`
-	ReleaseDate      string   `json:"release_date"`
-	Title            string   `json:"title"`
-	Adult            bool     `json:"adult"`
+//
+// Person Credits
+//
+
+type PersonCredit struct {
+	ID                 int      `json:"id"`
+	OriginalLanguage   string   `json:"original_language"`
+	EpisodeCount       int      `json:"episode_count"`
+	Overview           string   `json:"overview"`
+	OriginCountry      []string `json:"origin_country"`
+	OriginalName       string   `json:"original_name"`
+	GenreIDs           []int    `json:"genre_ids"`
+	Name               string   `json:"name"`
+	MediaType          string   `json:"media_type"`
+	PosterPath         string   `json:"poster_path"`
+	FirstAirDate       string   `json:"first_air_date"`
+	FirstCreditAirDate string   `json:"first_credit_air_date"`
+	VoteAverage        float64  `json:"vote_average"`
+	VoteCount          uint32   `json:"vote_count"`
+	BackdropPath       string   `json:"backdrop_path"`
+	Popularity         float64  `json:"popularity"`
+	CreditID           string   `json:"credit_id"`
+	OriginalTitle      string   `json:"original_title"`
+	Video              bool     `json:"video"`
+	ReleaseDate        string   `json:"release_date"`
+	Title              string   `json:"title"`
+	Adult              bool     `json:"adult"`
 }
 
-func (t *PersonCombinedCreditsCastResult) AsMedia() domain.Media {
+func (t *PersonCredit) AsMedia() domain.Media {
 	m := domain.Media{
 		IDs: domain.MediaIDs{
 			TMDB: t.ID,
@@ -753,6 +820,27 @@ func (t *PersonCombinedCreditsCastResult) AsMedia() domain.Media {
 		slog.Error("AsMedia: Failed to parse release date", "name", m.Name, "error", err)
 	}
 	return m
+}
+
+type PersonCreditCast struct {
+	PersonCredit
+	Character string `json:"character"`
+}
+
+type PersonCreditCrew struct {
+	PersonCredit
+	Department string `json:"department"`
+	Job        string `json:"job"`
+}
+
+//
+// Person Combined Credits
+//
+
+type PersonCombinedCredits struct {
+	ID   int                `json:"id"`
+	Cast []PersonCreditCast `json:"cast"`
+	Crew []PersonCreditCrew `json:"crew"`
 }
 
 //
@@ -985,6 +1073,28 @@ func (t *PopularPeopleResult) AsMedia() domain.Media {
 //
 //
 //
+
+type MovieStatus string
+
+const (
+	MovieStatusRumored        MovieStatus = "Rumored"
+	MovieStatusPlanned        MovieStatus = "Planned"
+	MovieStatusInProduction   MovieStatus = "In Production"
+	MovieStatusPostProduction MovieStatus = "Post Production"
+	MovieStatusReleased       MovieStatus = "Released"
+	MovieStatusCanceled       MovieStatus = "Canceled"
+)
+
+type ShowStatus string
+
+const (
+	ShowStatusReturningSeries ShowStatus = "Returning Series"
+	ShowStatusPlanned         ShowStatus = "Planned"
+	ShowStatusInProduction    ShowStatus = "In Production"
+	ShowStatusEnded           ShowStatus = "Ended"
+	ShowStatusCanceled        ShowStatus = "Canceled"
+	ShowStatusPilot           ShowStatus = "Pilot"
+)
 
 // Watch providers in one country
 type WatchProviders struct {
