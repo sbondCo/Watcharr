@@ -24,7 +24,7 @@ func NewRouter(br *router.BaseRouter, service *Service, traktService *TraktServi
 }
 
 func (r *Router) AddRoutes() {
-	imprt := r.br.Router.Group("/import").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	imprt := r.br.Router.Group("/import").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	imprt.POST("", r.ImportContent)
 	imprt.POST("/trakt", r.ImportTrakt)

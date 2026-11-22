@@ -11,6 +11,7 @@ import (
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/feature/watched/addedtocontent"
 	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/router"
@@ -45,18 +46,18 @@ func NewRouter(
 }
 
 func (r *Router) AddRoutes() {
-	content := r.br.Router.Group("/content").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	content := r.br.Router.Group("/content").Use(authmiddleware.AuthRequired(r.br.Cfg))
 	exp := time.Hour * 24
 
 	// NOTE: Some routes use `cache.CachePage`, but others that contain user watched data
 	// don't and rather have their caching on the TMDB methods directly.
 
 	// Get movie details (for movie page)
-	content.GET("/movie/:id", router.WhereaboutsRequired(r.br.Cfg), r.GetMovieDetails)
+	content.GET("/movie/:id", usermiddleware.WithUser(r.br.DB), router.WhereaboutsRequired(r.br.Cfg), r.GetMovieDetails)
 	// Get movie cast
 	content.GET("/movie/:id/credits", cache.CachePage(r.br.MemStore, exp, r.GetMovieCredits))
 	// Get tv details (for tv page)
-	content.GET("/tv/:id", router.WhereaboutsRequired(r.br.Cfg), r.GetTvDetails)
+	content.GET("/tv/:id", usermiddleware.WithUser(r.br.DB), router.WhereaboutsRequired(r.br.Cfg), r.GetTvDetails)
 	// Get tv cast
 	content.GET("/tv/:id/credits", cache.CachePage(r.br.MemStore, exp, r.GetTvCredits))
 	// Get season details
@@ -225,18 +226,29 @@ func (r *Router) GetSeasonDetails(c *gin.Context) {
 }
 
 func (r *Router) GetPerson(c *gin.Context) {
-	if c.Param("id") == "" {
+	personID := c.Param("id")
+	if personID == "" {
 		c.Status(400)
 		return
 	}
-	content, err := r.tmdb.PersonDetails(c.Param("id"))
+	person, err := r.tmdb.PersonDetails(personID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, content.AsPersonDetailsResponse())
+	credits, err := r.tmdb.PersonCredits(personID)
+	if err != nil {
+		// not fatal to response
+		slog.Error("GetPerson: Failed to get credits! Full response can't be created.",
+			"error", err)
+	}
+	c.JSON(http.StatusOK, person.AsPersonDetailsResponse(credits))
 }
 
+// Get person credits.
+// Accepts "type" (creditType) query parameter: Case sensitive. when empty
+// returns all, otherwise filters to the department specified. "Acting" = cast
+// credits.
 func (r *Router) GetPersonCredits(c *gin.Context) {
 	userId := c.MustGet("userId").(uint)
 	if c.Param("id") == "" {
@@ -248,10 +260,31 @@ func (r *Router) GetPersonCredits(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
 	}
+	creditType := c.Query("type")
+	slog.Debug("GetPersonCredits", "credit_type", creditType)
 	// Add content into response struct then add watched entries
 	resp := domain.PersonCreditsResponse{}
-	for i := range content.Cast {
-		resp.Credits = append(resp.Credits, content.Cast[i].AsMedia())
+	switch creditType {
+	case "":
+		// no filter = return all
+		for i := range content.Cast {
+			resp.Credits = append(resp.Credits, content.Cast[i].AsMedia())
+		}
+		for i := range content.Crew {
+			resp.Credits = append(resp.Credits, content.Crew[i].AsMedia())
+		}
+	case domain.CreditTypeActing:
+		for i := range content.Cast {
+			resp.Credits = append(resp.Credits, content.Cast[i].AsMedia())
+		}
+	default:
+		for i := range content.Crew {
+			v := &content.Crew[i]
+			if v.Department != creditType {
+				continue
+			}
+			resp.Credits = append(resp.Credits, v.AsMedia())
+		}
 	}
 	if err := addedtocontent.AddList(
 		r.wp,

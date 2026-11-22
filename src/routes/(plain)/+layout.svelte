@@ -21,8 +21,8 @@
 		position: relative;
 
 		h1 {
-			color: white;
-			-webkit-text-stroke: 1.5px black;
+			color: transparent;
+			-webkit-text-stroke: 1.5px $text-color;
 			font-size: 35px;
 			user-select: none;
 		}

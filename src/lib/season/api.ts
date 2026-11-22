@@ -3,8 +3,8 @@ import { notify } from "../util/notify";
 import type {
 	Activity,
 	Watched,
-	WatchedEpisodeAddResponse,
-	WatchedSeasonAddResponse,
+	WatchedEpisodeSetResponse,
+	WatchedSeasonSetResponse,
 	WatchedStatus,
 } from "@/types";
 
@@ -29,18 +29,74 @@ export async function updateWatchedSeason(
 	}
 	const nid = notify({ text: `Saving`, type: "loading" });
 	try {
-		const r = await req.post<WatchedSeasonAddResponse>(`/watched/season`, {
+		const r = await req.post<WatchedSeasonSetResponse>(`/watched/season`, {
 			watchedId: watchedItem.id,
 			seasonNumber: seasonNumber,
 			status: opts.status,
 			rating: opts.rating,
 		});
-		watchedItem.watchedSeasons = r.watchedSeasons;
-		if (watchedItem.activity && watchedItem.activity?.length > 0) {
-			watchedItem.activity.push(r.addedActivity);
+
+		if (!watchedItem.watchedSeasons) {
+			watchedItem.watchedSeasons = [r.watchedSeason];
 		} else {
-			watchedItem.activity = [r.addedActivity];
+			if (r.update) {
+				const idx = watchedItem.watchedSeasons.findIndex(
+					(e) => e.id == r.watchedSeason.id,
+				);
+				if (idx !== -1) {
+					watchedItem.watchedSeasons[idx] = r.watchedSeason;
+				} else {
+					console.error(
+						"updateWatchedSeason: Failed to find index for season to update.",
+						"r.watchedSeason:",
+						r.watchedSeason,
+					);
+					notify({
+						id: nid,
+						text: "Updated but failed to reflect in UI, please reload the page.",
+						type: "error",
+					});
+				}
+			} else {
+				watchedItem.watchedSeasons.push(r.watchedSeason);
+			}
 		}
+
+		if (!watchedItem.activity) {
+			watchedItem.activity = [];
+		}
+		if (r.addedActivities && r.addedActivities.length > 0) {
+			watchedItem.activity.push(...r.addedActivities);
+		}
+
+		try {
+			const hookResp = r?.statusChangedHookResponse;
+			if (hookResp && Object.keys(hookResp).length > 0) {
+				if (hookResp.errors && hookResp.errors.length > 0) {
+					console.error(
+						"statusChangedHookResponse contained errors! All possible automations may not have been completed.",
+						hookResp.errors,
+					);
+					notify({
+						type: "error",
+						text: "Some automations have failed, check console for more info.",
+					});
+				}
+				if (hookResp.addedActivities && hookResp.addedActivities.length > 0) {
+					watchedItem.activity.push(...hookResp.addedActivities);
+				}
+				if (hookResp.newShowStatus) {
+					watchedItem.status = hookResp.newShowStatus;
+				}
+			}
+		} catch (err) {
+			console.error("Failed to process statusChangedHookResponse", err);
+			notify({
+				type: "error",
+				text: "Failed to process automation response, check console for more info.",
+			});
+		}
+
 		notify({ id: nid, text: `Saved!`, type: "success" });
 	} catch (err) {
 		console.error("updateWatchedSeason: Failed!", err);
@@ -81,64 +137,90 @@ export async function updateWatchedEpisode(
 	}
 	const nid = notify({ text: `Saving`, type: "loading" });
 	try {
-		const r = await req.post<WatchedEpisodeAddResponse>(`/watched/episode`, {
+		const r = await req.post<WatchedEpisodeSetResponse>(`/watched/episode`, {
 			watchedId: watchedItem.id,
 			seasonNumber,
 			episodeNumber,
 			status: opts.status,
 			rating: opts.rating,
 		});
-		watchedItem.watchedEpisodes = r.watchedEpisodes;
-		if (watchedItem.activity && watchedItem.activity?.length > 0) {
-			watchedItem.activity.push(r.addedActivity);
+
+		if (!watchedItem.watchedEpisodes) {
+			watchedItem.watchedEpisodes = [r.watchedEpisode];
 		} else {
-			watchedItem.activity = [r.addedActivity];
-		}
-		try {
-			const epHookResp = r?.episodeStatusChangedHookResponse;
-			if (epHookResp && Object.keys(epHookResp).length > 0) {
-				if (epHookResp.errors && epHookResp.errors.length > 0) {
+			if (r.update) {
+				const idx = watchedItem.watchedEpisodes.findIndex(
+					(e) => e.id == r.watchedEpisode.id,
+				);
+				if (idx !== -1) {
+					watchedItem.watchedEpisodes[idx] = r.watchedEpisode;
+				} else {
 					console.error(
-						"episodeStatusChangedHookResponse contained errors! All possible automations may not have been completed.",
-						epHookResp.errors,
+						"updateWatchedEpisode: Failed to find index for episode to update.",
+						"r.watchedEpisode:",
+						r.watchedEpisode,
+					);
+					notify({
+						id: nid,
+						text: "Updated but failed to reflect in UI, please reload the page.",
+						type: "error",
+					});
+				}
+			} else {
+				watchedItem.watchedEpisodes.push(r.watchedEpisode);
+			}
+		}
+
+		if (!watchedItem.activity) {
+			watchedItem.activity = [];
+		}
+		if (r.addedActivities && r.addedActivities.length > 0) {
+			watchedItem.activity.push(...r.addedActivities);
+		}
+
+		try {
+			const hookResp = r?.statusChangedHookResponse;
+			if (hookResp && Object.keys(hookResp).length > 0) {
+				if (hookResp.errors && hookResp.errors.length > 0) {
+					console.error(
+						"episode: StatusChangedHookResponse contained errors! All possible automations may not have been completed.",
+						hookResp.errors,
 					);
 					notify({
 						type: "error",
 						text: "Some automations have failed, check console for more info.",
 					});
 				}
-				if (
-					epHookResp.addedActivities &&
-					epHookResp.addedActivities.length > 0
-				) {
-					watchedItem.activity.push(...epHookResp.addedActivities);
+				if (hookResp.addedActivities && hookResp.addedActivities.length > 0) {
+					watchedItem.activity.push(...hookResp.addedActivities);
 				}
-				if (epHookResp.watchedSeason) {
+				if (hookResp.watchedSeason) {
 					if (!watchedItem.watchedSeasons) {
-						watchedItem.watchedSeasons = [epHookResp.watchedSeason];
+						watchedItem.watchedSeasons = [hookResp.watchedSeason];
 					} else {
 						const watchedSeasonIdx = watchedItem.watchedSeasons.findIndex(
-							(s) => s.id === epHookResp.watchedSeason?.id,
+							(s) => s.id === hookResp.watchedSeason?.id,
 						);
 						if (watchedSeasonIdx === -1) {
-							watchedItem.watchedSeasons.push(epHookResp.watchedSeason);
+							watchedItem.watchedSeasons.push(hookResp.watchedSeason);
 						} else {
 							watchedItem.watchedSeasons[watchedSeasonIdx] =
-								epHookResp.watchedSeason;
+								hookResp.watchedSeason;
 						}
 					}
 				}
-				if (epHookResp.newShowStatus) {
-					watchedItem.status = epHookResp.newShowStatus;
+				if (hookResp.newShowStatus) {
+					watchedItem.status = hookResp.newShowStatus;
 				}
 			}
 		} catch (err) {
-			console.error("Failed to process episodeStatusChangedHookResponse", err);
+			console.error("Failed to process episode StatusChangedHookResponse", err);
 			notify({
 				type: "error",
 				text: "Failed to process automation response, check console for more info.",
 			});
 		}
+
 		notify({ id: nid, text: `Saved!`, type: "success" });
 	} catch (err) {
 		console.error("updateWatchedEpisode: Failed!", err);

@@ -23,7 +23,7 @@ func NewRouter(br *router.BaseRouter, service *Service) *Router {
 }
 
 func (r *Router) AddRoutes() {
-	f := r.br.Router.Group("/follow").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg))
+	f := r.br.Router.Group("/follow").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	// Get users follows
 	f.GET("", r.GetFollows)

@@ -9,6 +9,12 @@ description: Install and setup with Docker Compose.
 
 Installing Watcharr with a docker compose file is easy. You can copy the example below to get started:
 
+:::tip Environment Variables
+
+Need to change the internal port, etc? Watcharr supports these [environment variables you can add to your compose file](/docs/server_config/environment-variables).
+
+:::
+
 ```yaml title="docker-compose.yml"
 services:
   watcharr:

@@ -44,7 +44,7 @@ func (r *Router) AddRoutes() {
 	auth.GET("/available", r.GetAvailableAuthProviders)
 
 	// IMPORTANT: Routes below here must be authenticated.
-	auth.Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	auth.Use(authmiddleware.AuthRequired(r.br.Cfg))
 	{
 		// Request details for logout process for proxy users.
 		// Any proxy user can request this for logout.
@@ -75,7 +75,7 @@ func (r *Router) Login(c *gin.Context) {
 
 // Jellyfin login
 func (r *Router) LoginJellyfin(c *gin.Context) {
-	var user entity.User
+	var user UserLoginRequestJellyfin
 	if c.ShouldBindJSON(&user) == nil {
 		response, err := r.service.LoginJellyfin(&user)
 		if err != nil {

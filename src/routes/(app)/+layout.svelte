@@ -24,6 +24,8 @@
 	} from "@/types";
 	import { onMount } from "svelte";
 	import { SvelteURLSearchParams } from "svelte/reactivity";
+	import HandbookModal from "@/lib/handbook/HandbookModal.svelte";
+
 	interface Props {
 		children?: import("svelte").Snippet;
 	}
@@ -50,7 +52,10 @@
 		}
 	}
 
-	function handleSearch(ev: KeyboardEvent) {
+	/**
+	 * Handle KeyDown event on the search bar.
+	 */
+	function searchBarKeyDown(ev: KeyboardEvent) {
 		if (
 			ev.key === "ContextMenu" ||
 			ev.key === "Home" ||
@@ -71,42 +76,73 @@
 			ev.key === "AltGraph" ||
 			ev.key === "Shift" ||
 			ev.key === "Meta"
-		)
+		) {
 			return;
+		}
+
 		clearTimeout(searchTimeout);
-		searchTimeout = window.setTimeout(
-			() => {
-				const target = ev.target as HTMLInputElement;
-				const query = target?.value.trim();
-				if (!query) return;
-				const currentSearchType = page.url.searchParams.get("type");
-				const searchParams = new SvelteURLSearchParams({
-					query: encodeURIComponent(query),
-					preferMyList: "true",
-				});
-				if (page.route?.id === "/(app)/search" && currentSearchType) {
-					// If we are already on the search page, we can attempt
-					// to keep any existing type filter on the next query.
-					searchParams.set("type", currentSearchType);
-				}
-				// Enable autofocus before running `goto` because on chromium
-				// the .focus() call won't work, even after a timeout.
-				// Using autofocus seems to work. Disables after goto runs.
-				// https://github.com/sbondCo/Watcharr/issues/169
-				target.autofocus = true;
-				goto(resolve(`/search?${searchParams.toString()}`)).then(() => {
-					// Use mainSearchEl if nav not split, otherwise use ev target.
-					if (!document.body.classList.contains("split-nav") && mainSearchEl) {
-						mainSearchEl.focus();
-						mainSearchEl.autofocus = false;
-					} else {
-						target?.focus();
-					}
-					target.autofocus = false;
-				});
-			},
-			isTouch() ? 800 : 400,
-		);
+
+		if (ev.key === "Enter") {
+			handleSearch(ev);
+		} else {
+			searchTimeout = window.setTimeout(
+				() => {
+					handleSearch(ev);
+				},
+				isTouch() ? 800 : 400,
+			);
+		}
+	}
+
+	/**
+	 * Processes the query in search bar after a new query is input and
+	 * navigates us to the new search page.
+	 */
+	function handleSearch(ev: KeyboardEvent) {
+		const target = ev.target as HTMLInputElement;
+		if (!target) {
+			console.error("handleSearch: Event target doesn't exist!");
+			return;
+		}
+		if (!target.value.trim()) {
+			console.debug("handleSearch: Search box has no valid value.");
+			return;
+		}
+		// Only trim the start of the query incase the debounced search
+		// fires before the user finishes typing the full query (which
+		// would remove any last space if the query is multi-word).
+		let query = target.value.trimStart();
+		if (ev.key === "Enter") {
+			// If enter is the key that triggered the search, we will
+			// also trim the end of the query, since we can be sure
+			// the user was done typing.
+			query = query.trimEnd();
+		}
+		const currentSearchType = page.url.searchParams.get("type");
+		const searchParams = new SvelteURLSearchParams({
+			query: encodeURIComponent(query),
+			preferMyList: "true",
+		});
+		if (page.route?.id === "/(app)/search" && currentSearchType) {
+			// If we are already on the search page, we can attempt
+			// to keep any existing type filter on the next query.
+			searchParams.set("type", currentSearchType);
+		}
+		// Enable autofocus before running `goto` because on chromium
+		// the .focus() call won't work, even after a timeout.
+		// Using autofocus seems to work. Disables after goto runs.
+		// https://github.com/sbondCo/Watcharr/issues/169
+		target.autofocus = true;
+		goto(resolve(`/search?${searchParams.toString()}`)).then(() => {
+			// Use mainSearchEl if nav not split, otherwise use ev target.
+			if (!document.body.classList.contains("split-nav") && mainSearchEl) {
+				mainSearchEl.focus();
+				mainSearchEl.autofocus = false;
+			} else {
+				target?.focus();
+			}
+			target.autofocus = false;
+		});
 	}
 
 	async function getInitialData() {
@@ -251,7 +287,7 @@
 				type="text"
 				placeholder="Search"
 				bind:value={store.searchQuery}
-				onkeydown={handleSearch}
+				onkeydown={searchBarKeyDown}
 			/>
 			<Icon i="search" wh={19} />
 		</div>
@@ -373,7 +409,7 @@
 		type="text"
 		placeholder="Search"
 		bind:value={store.searchQuery}
-		onkeydown={handleSearch}
+		onkeydown={searchBarKeyDown}
 	/>
 </nav>
 
@@ -390,6 +426,10 @@
 		}}
 	/>
 {/await}
+
+{#if page.state.handbook}
+	<HandbookModal onClose={() => history.back()} />
+{/if}
 
 <style lang="scss">
 	nav {
@@ -465,7 +505,7 @@
 				&:hover,
 				&:focus-visible {
 					color: $bg-color;
-					-webkit-text-stroke: 3px $text-color;
+					-webkit-text-stroke: 1.5px $text-color;
 					font-weight: bold;
 				}
 
@@ -554,7 +594,10 @@
 			width: 100%;
 			font-weight: bold;
 			text-align: center;
+			color: black;
+			background-color: white;
 			box-shadow: 4px 4px 0px 0px $text-color;
+			border: 2px solid black;
 			text-overflow: ellipsis;
 			transition:
 				width 150ms ease,

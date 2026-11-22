@@ -1,12 +1,25 @@
+# This workflow releases a Watcharr image. Version based on pushed git tag.
+#
+# Multi arch support doc/guide:
+# https://docs.docker.com/build/ci/github-actions/multi-platform/
+# Workflow filter pattern cheat sheet:
+# https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet
+#
+# **NOTE:** Don't risk testing changes to this workflow in this repo directly!
+#           USE A TEST REPO!
+
 name: Release Watcharr Image
 
 on:
   push:
     tags:
-      - v*
+      - 'v[0-9]+.[0-9]+.[0-9]+'              # stable,  ex: v1.2.3
+      - 'v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'  # beta,    ex: v1.2.3-beta.1
 
 env:
   image: sbondco/watcharr
+  is_stable: ${{ !contains(github.ref_name, '-') }}
+  is_prerelease: ${{ contains(github.ref_name, '-') }}
 
 jobs:
   release-images:
@@ -46,6 +59,16 @@ jobs:
           images: |
             ${{ env.image }}
             ghcr.io/${{ env.image }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{raw}}
+            type=semver,pattern=v{{major}}.{{minor}},enable=${{ env.is_stable }}
+            type=raw,value=latest,enable=${{ env.is_stable }}
+            type=raw,value=beta,enable=${{ env.is_prerelease && contains(github.ref_name, '-beta') }}
+
+      - name: Tags decided
+        run: echo "${{ steps.meta.outputs.tags }}"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v7.3.0
