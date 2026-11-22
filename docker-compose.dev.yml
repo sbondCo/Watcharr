@@ -5,7 +5,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: watcharr-dev
+    environment:
+      - PORT=5505
     ports:
-      - 3081:3080
+      - 3081:5505
     volumes:
       - ./container_data:/data

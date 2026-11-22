@@ -24,7 +24,7 @@ func NewRouter(br *router.BaseRouter, ss *SyncService) *Router {
 func (r *Router) AddRoutes() {
 	plex := r.br.Router.Group("/plex").
 		Use(
-			authmiddleware.AuthRequired(r.br.DB, r.br.Cfg),
+			authmiddleware.AuthRequired(r.br.Cfg),
 			plexmiddleware.PlexAccessRequired(r.br.DB, r.br.Cfg),
 		)
 

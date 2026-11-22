@@ -10,22 +10,24 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/sbondCo/Watcharr/config"
-	"github.com/sbondCo/Watcharr/database/entity"
 )
 
 type JellyfinItemSearchResponse struct {
-	Items []JellyfinItems `json:"Items"`
+	Items []Item `json:"Items"`
 }
 
-type JellyfinItems struct {
+// A jellyfin item.
+// Eg: What `GET /Items/{id}` returns.
+type Item struct {
 	Name        string `json:"Name"`
 	Type        string `json:"Type"`
 	ServerID    string `json:"ServerId"`
 	Id          string `json:"Id"`
 	ProviderIds struct {
 		Tmdb string `json:"Tmdb"`
+		Tvdb string `json:"Tvdb"`
+		Imdb string `json:"Imdb"`
 	} `json:"ProviderIds"`
 	UserData struct {
 		Rating                float64   `json:"Rating"`
@@ -58,39 +60,23 @@ func NewService(cfg *config.ServerConfig) *Service {
 	}
 }
 
-// Jellyfin access middleware, ensures user is a jellyfin user.
-// To be ran after AuthRequired middleware with extra data.
-func (s *Service) JellyfinAccessRequired(cfg *config.ServerConfig) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userId := c.MustGet("userId").(uint)
-		slog.Debug("JellyfinAccessRequired middleware hit", "user_id", userId)
-		userType := c.MustGet("userType").(entity.UserType)
-		userThirdPartyId := c.MustGet("userThirdPartyId").(string)
-		userThirdPartyAuth := c.MustGet("userThirdPartyAuth").(string)
-		if cfg.JELLYFIN_HOST == "" {
-			slog.Error("JellyfinAccessRequired: Request made to login via Jellyfin, but JELLYFIN_HOST has not been configured.")
-			c.AbortWithStatus(401)
-			return
-		}
-		if userType != entity.JELLYFIN_USER || userThirdPartyId == "" {
-			slog.Error("JellyfinAccessRequired: User is not a jellyfin user..", "user_type", userType, "user_third_party_id", userThirdPartyId)
-			c.AbortWithStatus(401)
-			return
-		}
-		if userThirdPartyAuth == "" {
-			slog.Error("JellyfinAccessRequired: User has no thirdPartyAuth token..")
-			c.AbortWithStatus(401)
-			return
-		}
-	}
-}
-
-func (s *Service) JellyfinAPIRequest(method string, ep string, p map[string]string, username string, userToken string, resp interface{}) error {
+// Jellyfin API request using a users token.
+// This is for jellyfin calls that we want to do as a specific user.
+// Since we use the users token, jellyfin can handle access control, etc.
+func (s *Service) userAPIRequest(
+	method string,
+	ep string,
+	p map[string]string,
+	username string,
+	userToken string,
+	resp any,
+) error {
 	if s.cfg.JELLYFIN_HOST == "" {
-		slog.Error("jellyfinAPIRequest: JELLYFIN_HOST not configured.")
+		slog.Error("userAPIRequest: JELLYFIN_HOST not configured.")
 		return errors.New("jellyfin not enabled")
 	}
-	slog.Debug("jellyfinAPIRequest", "endpoint", ep, "params", p)
+	slog.Debug("userAPIRequest",
+		"for_user", username, "endpoint", ep, "params", p)
 	base, err := url.Parse(s.cfg.JELLYFIN_HOST)
 	if err != nil {
 		return errors.New("failed to parse api uri")
@@ -112,7 +98,7 @@ func (s *Service) JellyfinAPIRequest(method string, ep string, p map[string]stri
 	client := &http.Client{}
 	req, err := http.NewRequest(method, base.String(), bytes.NewBuffer([]byte{}))
 	if err != nil {
-		slog.Error("Creating request to jellyfin failed", "error", err)
+		slog.Error("userAPIRequest: Creating request failed!", "error", err)
 		return errors.New("request failed")
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -120,21 +106,24 @@ func (s *Service) JellyfinAPIRequest(method string, ep string, p map[string]stri
 	if userToken != "" {
 		authHeader += ", Token=\"" + userToken + "\""
 	}
-	req.Header.Add("X-Emby-Authorization", authHeader)
+	req.Header.Add("Authorization", authHeader)
 	res, err := client.Do(req)
 	if err != nil {
-		slog.Error("making request to jellyfin for auth failed", "error", err)
+		slog.Error("userAPIRequest: Request failed!", "error", err)
 		return errors.New("request failed")
 	}
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		slog.Error("Error reading jellyfin auth response", "error", err.Error())
+		slog.Error("userAPIRequest: Error reading response!", "error", err)
 		return err
 	}
 	if res.StatusCode != 200 {
-		slog.Error("Jellyfin auth non 200 status code", "status_code", res.StatusCode, "error", string(body))
-		return errors.New("incorrect details")
+		slog.Error("userAPIRequest: Jellyfin non 200 status code",
+			"for_user", username,
+			"status_code", res.StatusCode,
+			"error", string(body))
+		return errors.New("non 200")
 	}
 	// Unmarshal response
 	err = json.Unmarshal([]byte(body), &resp)
@@ -146,7 +135,6 @@ func (s *Service) JellyfinAPIRequest(method string, ep string, p map[string]stri
 
 func (s *Service) JellyfinContentFind(
 	userId uint,
-	userType entity.UserType,
 	username string,
 	userThirdPartyId string,
 	userThirdPartyAuth string,
@@ -163,7 +151,7 @@ func (s *Service) JellyfinContentFind(
 	}
 
 	resp := new(JellyfinItemSearchResponse)
-	err := s.JellyfinAPIRequest(
+	err := s.userAPIRequest(
 		"GET",
 		"/Users/"+userThirdPartyId+"/Items",
 		map[string]string{
@@ -200,4 +188,32 @@ func (s *Service) JellyfinContentFind(
 		}
 	}
 	return *ret, nil
+}
+
+// Get a series from Jellyfin by its jellyfin series item id.
+// Uses /Items/{id} endpoint, which is generic, but this function is specific
+// to series so we can easily change anything around later if needed.
+func (s *Service) GetSeriesByID(
+	id string,
+	username string,
+	userThirdPartyAuth string,
+) (Item, error) {
+	if id == "" {
+		return Item{}, errors.New("no id provided")
+	}
+
+	resp := new(Item)
+	err := s.userAPIRequest(
+		"GET",
+		"/Items/"+id,
+		map[string]string{},
+		username,
+		userThirdPartyAuth,
+		&resp,
+	)
+	if err != nil {
+		slog.Error("GetSeriesByID: Jellyfin API request failed", "error", err)
+		return Item{}, errors.New("failed to get jellyfin response")
+	}
+	return *resp, nil
 }

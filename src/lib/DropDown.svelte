@@ -13,6 +13,7 @@
 		disabled?: boolean;
 		onChange?: () => void;
 		showActiveElementsInOptions?: boolean;
+		minWidth?: string;
 	}
 
 	let {
@@ -24,6 +25,7 @@
 		disabled = false,
 		onChange = () => {},
 		showActiveElementsInOptions = false,
+		minWidth,
 	}: Props = $props();
 
 	let activeValue: string | undefined = $state();
@@ -80,6 +82,7 @@
 		blendIn ? "blend-in" : "",
 	].join(" ")}
 	bind:this={mainElement}
+	style:min-width={minWidth}
 >
 	<button onclick={() => (open = !open)} {disabled}>
 		{activeValue ? activeValue : placeholder}

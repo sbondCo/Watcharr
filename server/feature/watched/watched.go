@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"strconv"
 
+	"github.com/sbondCo/Watcharr/activity"
 	"github.com/sbondCo/Watcharr/database/dbmodel"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
@@ -27,25 +28,22 @@ type UserProvider interface {
 }
 
 type Service struct {
-	db               *gorm.DB
-	cp               ContentProvider
-	gameProvider     GameProvider
-	activityProvider domain.ActivityAddProvider
-	userProvider     UserProvider
+	db           *gorm.DB
+	cp           ContentProvider
+	gameProvider GameProvider
+	userProvider UserProvider
 }
 
 func NewService(
 	db *gorm.DB,
 	cp ContentProvider,
 	gameProvider GameProvider,
-	activityProvider domain.ActivityAddProvider,
 	userProvider UserProvider,
 ) *Service {
 	return &Service{
 		db,
 		cp,
 		gameProvider,
-		activityProvider,
 		userProvider,
 	}
 }
@@ -212,9 +210,40 @@ func (s *Service) GetWatchedItemById(userId uint, id uint) (entity.Watched, erro
 	return *watched, nil
 }
 
+// Get a watched list item ID by tmdb id for userID.
+func (s *Service) GetWatchedItemIDByTmdbID(
+	userId uint,
+	tmdbId uint,
+	contentType entity.ContentType,
+) (uint, error) {
+	slog.Debug("GetWatchedItemIDByTmdbID: Running.",
+		"userId", userId, "tmdbId", tmdbId)
+	var wID uint
+	err := s.db.
+		Model(&entity.Watched{}).
+		Joins("INNER JOIN contents Content ON watcheds.content_id = Content.id").
+		Select("watcheds.id").
+		Where("user_id = ? AND Content.tmdb_id = ? AND Content.type = ?",
+			userId, tmdbId, contentType).
+		Scan(&wID).
+		Error
+	if err != nil {
+		slog.Error("GetWatchedItemIDByTmdbID: Failed!", "error", err)
+		return 0, err
+	}
+	slog.Debug("GetWatchedItemIDByTmdbID: Done.",
+		"userId", userId, "tmdbId", tmdbId, "wID", wID)
+	return wID, nil
+}
+
 // Get a watched list item by content (tmdb) id (must be for `userId`).
-func (s *Service) GetWatchedItemByTmdbId(userId uint, tmdbId uint, contentType entity.ContentType) (entity.Watched, error) {
-	slog.Debug("GetWatchedItemByTmdbId: Running.", "userId", userId, "tmdbId", tmdbId)
+func (s *Service) GetWatchedItemByTmdbId(
+	userId uint,
+	tmdbId uint,
+	contentType entity.ContentType,
+) (entity.Watched, error) {
+	slog.Debug("GetWatchedItemByTmdbId: Running.",
+		"userId", userId, "tmdbId", tmdbId)
 	watched := new(entity.Watched)
 	res := s.db.Model(&entity.Watched{}).
 		Joins("Content").
@@ -222,13 +251,15 @@ func (s *Service) GetWatchedItemByTmdbId(userId uint, tmdbId uint, contentType e
 		Preload("WatchedSeasons").
 		Preload("WatchedEpisodes").
 		Preload("Tags").
-		Where("user_id = ? AND Content.tmdb_id = ? AND Content.type = ?", userId, tmdbId, contentType).
+		Where("user_id = ? AND Content.tmdb_id = ? AND Content.type = ?",
+			userId, tmdbId, contentType).
 		Take(&watched)
 	if res.Error != nil {
 		slog.Error("GetWatchedItemByTmdbId: Failed!", "error", res.Error)
 		return entity.Watched{}, res.Error
 	}
-	slog.Debug("GetWatchedItemByTmdbId: Done.", "userId", userId, "tmdbId", tmdbId, "watched_item", watched)
+	slog.Debug("GetWatchedItemByTmdbId: Done.",
+		"userId", userId, "tmdbId", tmdbId, "watched_item", watched)
 	return *watched, nil
 }
 
@@ -258,6 +289,33 @@ func (s *Service) GetWatchedItemsByTmdbIds(userId uint, c [][]any) ([]entity.Wat
 		// "wdev", *watched,
 	)
 	return *watched, nil
+}
+
+// Checks if Watched entry is of `ct`.
+//
+// This method is useful when we don't already have/need the whole Watched
+// object fetched from the db and only need to validate it exists and is linked
+// to a `Content` with a certain type.
+//
+// Returns error if query failed or type doesn't match.
+func (s *Service) IsWatchedItemContentType(userId uint, id uint, ct entity.ContentType) error {
+	var wc int64
+	err := s.db.
+		Model(&entity.Watched{}).
+		Joins(`INNER JOIN contents ON contents.id = watcheds.content_id
+			AND contents.type = ?`, ct).
+		Where("watcheds.id = ? AND watcheds.user_id = ?", id, userId).
+		Count(&wc).
+		Error
+	if err != nil {
+		slog.Error("IsWatchedItemContentType: Query failed!", "error", err)
+		return errors.New("failed when retrieving watched item")
+	}
+	if wc <= 0 {
+		slog.Debug("IsWatchedItemContentType: NO.", "wc", wc)
+		return errors.New("no show watched entry exists")
+	}
+	return nil
 }
 
 // Get a watched list item by game (igdb) id (must be for `userId`).
@@ -367,11 +425,6 @@ func (s *Service) AddWatched(
 		"add_request", ar,
 		"extra_props", extraProps)
 
-	if extraProps.ActivityType == "" {
-		// We ALWAYS require the ActivityType to be provided by any caller.
-		return entity.Watched{}, errors.New("extraProp ActivityType not specified")
-	}
-
 	watched := entity.Watched{
 		UserID: userId,
 	}
@@ -472,10 +525,14 @@ func (s *Service) AddWatched(
 	slog.Debug("AddWatched: Added watched list item", "item", watched)
 
 	// Finally add activity
-	activityAddReq := domain.ActivityAddProps{
-		WatchedID: watched.ID,
-		Type:      extraProps.ActivityType,
-	}
+	activityAddReq := activity.NewCreator(
+		s.db,
+		userId,
+		watched.ID,
+		entity.ADDED_WATCHED,
+		false,
+		extraProps.ActivityCreatedBy,
+	)
 	if activityJson, err := json.Marshal(map[string]any{
 		"status": ar.Status,
 		"rating": ar.Rating,
@@ -483,17 +540,12 @@ func (s *Service) AddWatched(
 		slog.Error("AddWatched: Failed to marshal json for add activity request, adding without data",
 			"error", err)
 	} else {
-		activityAddReq.Data = string(activityJson)
+		activityAddReq.SetData(string(activityJson))
 	}
-	countAsPlay := false
 	if ar.Status == entity.FINISHED {
-		countAsPlay = true
+		activityAddReq.SetCountAsPlay(true)
 	}
-	act, _ := s.activityProvider.AddActivity(
-		userId,
-		activityAddReq,
-		countAsPlay,
-	)
+	act, _ := activityAddReq.Create()
 	watched.Activity = append(watched.Activity, act)
 
 	return watched, nil
@@ -592,91 +644,105 @@ func (s *Service) restoreWatchedAfterDuplicatedKeyErr(
 	return nil
 }
 
-// this method is too ugly to look at please make him look better, future irhm
-func (s *Service) updateWatched(
+// Update Watched entry.
+func (s *Service) UpdateWatched(
 	userId uint,
 	id uint,
 	ar domain.WatchedUpdateRequest,
 ) (domain.WatchedUpdateResponse, error) {
 	slog.Debug("UpdateWatched", "request_data", ar)
+
 	if err := ar.Valid(); err != nil {
 		slog.Error("UpdateWatched: UpdateRequest struct is invalid.",
 			"id", id, "error", err)
 		return domain.WatchedUpdateResponse{}, err
 	}
+
 	upwat := entity.Watched{}
-	res := s.db.Model(&entity.Watched{}).Where("id = ? AND user_id = ?", id, userId).Take(&upwat)
-	if res.Error != nil {
-		slog.Error("Watched entry update failed:", "id", id, "error", res.Error.Error())
-		return domain.WatchedUpdateResponse{}, errors.New("failed to update watched entry")
+	err := s.db.
+		Model(&entity.Watched{}).
+		Where("id = ? AND user_id = ?", id, userId).
+		Take(&upwat).
+		Error
+	if err != nil {
+		slog.Error("UpdateWatched: Failed to get existing record.",
+			"id", id, "error", err)
+		return domain.WatchedUpdateResponse{},
+			errors.New("failed to get watched entry")
 	}
-	originalThoughts := upwat.Thoughts
-	if ar.Rating != 0 {
+
+	// If nothing changes, we won't save to db.
+	anythingChanged := false
+	// Activities are built and added to this list, then if saving the Watched
+	// changes succeeds, these activities are then saved too.
+	activityMC := activity.NewMultiCreator()
+
+	if ar.Rating != 0 && ar.Rating != upwat.Rating {
+		anythingChanged = true
 		upwat.Rating = ar.Rating
+
+		activity.
+			NewCreator(s.db, userId, id, entity.RATING_CHANGED, false, ar.ActivityCreatedBy).
+			SetData(strconv.Itoa(int(ar.Rating))).
+			AddToMultiCreator(activityMC)
 	}
-	if ar.Status != "" {
+	if ar.Status != "" && ar.Status != upwat.Status {
+		anythingChanged = true
 		upwat.Status = ar.Status
-	}
-	if ar.Thoughts != "" {
-		upwat.Thoughts = ar.Thoughts
-	}
-	if ar.RemoveThoughts {
-		upwat.Thoughts = ""
-	}
-	if ar.Pinned != nil {
-		upwat.Pinned = *ar.Pinned
-	}
-	res = s.db.Save(upwat)
-	if res.RowsAffected <= 0 {
-		return domain.WatchedUpdateResponse{}, errors.New("no watched entry found")
-	}
-	addedActivity := entity.Activity{}
-	if ar.Rating != 0 {
-		addedActivity, _ = s.activityProvider.AddActivity(
-			userId,
-			domain.ActivityAddProps{
-				WatchedID: id,
-				Type:      entity.RATING_CHANGED,
-				Data:      strconv.Itoa(int(ar.Rating)),
-			},
-			false,
-		)
-	}
-	if ar.Status != "" {
+
 		countAsPlay := false
 		if ar.Status == entity.FINISHED &&
 			util.Deref(ar.LetCountAsPlay, true) != false {
 			countAsPlay = true
 		}
-		addedActivity, _ = s.activityProvider.AddActivity(userId,
-			domain.ActivityAddProps{
-				WatchedID: id,
-				Type:      entity.STATUS_CHANGED,
-				Data:      string(ar.Status),
-			},
-			countAsPlay,
-		)
+		activity.
+			NewCreator(s.db, userId, id, entity.STATUS_CHANGED, countAsPlay, ar.ActivityCreatedBy).
+			SetData(string(ar.Status)).
+			AddToMultiCreator(activityMC)
 	}
-	if ar.Thoughts != "" {
-		addedActivity, _ = s.activityProvider.AddActivity(userId,
-			domain.ActivityAddProps{
-				WatchedID: id,
-				Type:      entity.THOUGHTS_CHANGED,
-			},
-			false,
-		)
+	if ar.Thoughts != "" && ar.Thoughts != upwat.Thoughts {
+		anythingChanged = true
+		upwat.Thoughts = ar.Thoughts
+
+		activity.
+			NewCreator(s.db, userId, id, entity.THOUGHTS_CHANGED, false, ar.ActivityCreatedBy).
+			AddToMultiCreator(activityMC)
 	}
 	if ar.RemoveThoughts {
-		addedActivity, _ = s.activityProvider.AddActivity(userId,
-			domain.ActivityAddProps{
-				WatchedID: id,
-				Type:      entity.THOUGHTS_REMOVED,
-				Data:      originalThoughts,
-			},
-			false,
-		)
+		anythingChanged = true
+		originalThoughts := upwat.Thoughts
+		upwat.Thoughts = ""
+
+		activity.
+			NewCreator(s.db, userId, id, entity.THOUGHTS_REMOVED, false, ar.ActivityCreatedBy).
+			SetData(originalThoughts).
+			AddToMultiCreator(activityMC)
 	}
-	return domain.WatchedUpdateResponse{NewActivity: addedActivity}, nil
+	if ar.Pinned != nil {
+		anythingChanged = true
+		upwat.Pinned = *ar.Pinned
+	}
+
+	if !anythingChanged {
+		slog.Info("UpdateWatched: Nothing changed.. skipping save.")
+		// NOTE: This is never an error (because idempotency but also it would
+		// likely break any existing callers around project, if a caller needs
+		// to know changed vs unchanged, make a bool in the Response struct).
+		return domain.WatchedUpdateResponse{}, nil
+	}
+
+	res := s.db.Save(upwat)
+	if res.Error != nil {
+		slog.Error("UpdateWatched: Update query failed!", "error", err)
+		return domain.WatchedUpdateResponse{}, errors.New("update failed")
+	} else if res.RowsAffected <= 0 {
+		slog.Error("UpdateWatched: Update query failed! No rows affected.")
+		return domain.WatchedUpdateResponse{}, errors.New("no watched entry found")
+	}
+
+	newActivities := activityMC.CreateAll()
+
+	return domain.WatchedUpdateResponse{NewActivities: newActivities}, nil
 }
 
 func (s *Service) UpdateWatchedLastViewedSeason(
@@ -727,13 +793,8 @@ func (s *Service) removeWatched(
 	if res.RowsAffected <= 0 {
 		return domain.WatchedRemoveResponse{}, errors.New("no watched entry found")
 	}
-	addedActivity, _ := s.activityProvider.AddActivity(
-		userId,
-		domain.ActivityAddProps{
-			WatchedID: id,
-			Type:      entity.REMOVED_WATCHED,
-		},
-		false,
-	)
+	addedActivity, _ := activity.
+		NewCreator(s.db, userId, id, entity.REMOVED_WATCHED, false, 0).
+		Create()
 	return domain.WatchedRemoveResponse{NewActivity: addedActivity}, nil
 }

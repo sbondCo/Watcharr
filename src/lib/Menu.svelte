@@ -91,12 +91,15 @@
 					padding: 8px 16px;
 					text-align: center;
 					cursor: pointer;
-					transition: background-color 200ms ease;
+					transition:
+						background-color 200ms ease,
+						border-radius 400ms ease-in-out;
 
 					&:hover,
 					&:focus-visible {
 						background-color: $text-color;
 						color: $bg-color;
+						border-radius: 5px;
 					}
 				}
 

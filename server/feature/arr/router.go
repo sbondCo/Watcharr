@@ -10,6 +10,7 @@ import (
 	"github.com/sbondCo/Watcharr/config/cfgmodel"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/router"
 )
 
@@ -37,7 +38,11 @@ func (r *Router) AddRoutes() {
 
 	// SONARR
 	{
-		s := r.br.Router.Group("/arr/son").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg))
+		s := r.br.Router.Group("/arr/son").
+			Use(
+				authmiddleware.AuthRequired(r.br.Cfg),
+				usermiddleware.WithUser(r.br.DB),
+			)
 
 		// Routes are manually given authmiddleware.AdminRequired or authmiddleware.PermRequired middleware.
 
@@ -63,7 +68,11 @@ func (r *Router) AddRoutes() {
 
 	// RADARR
 	{
-		s := r.br.Router.Group("/arr/rad").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg))
+		s := r.br.Router.Group("/arr/rad").
+			Use(
+				authmiddleware.AuthRequired(r.br.Cfg),
+				usermiddleware.WithUser(r.br.DB),
+			)
 
 		// Routes are manually given authmiddleware.AdminRequired or authmiddleware.PermRequired middleware.
 
@@ -84,7 +93,11 @@ func (r *Router) AddRoutes() {
 
 	// Request Management
 	{
-		s := r.br.Router.Group("/arr/request").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg))
+		s := r.br.Router.Group("/arr/request").
+			Use(
+				authmiddleware.AuthRequired(r.br.Cfg),
+				usermiddleware.WithUser(r.br.DB),
+			)
 
 		// Get all requests (for manage_requests view), only for admins.
 		s.GET("/", authmiddleware.AdminRequired(), r.GetAllRequests)
@@ -178,8 +191,9 @@ func (r *Router) CreateSonarrRequest(c *gin.Context) {
 	err := c.ShouldBindJSON(&ur)
 	if err == nil {
 		userId := c.MustGet("userId").(uint)
-		perms := c.GetInt("userPermissions")
-		response, err := createSonarrRequest(r.br.Cfg, r.br.DB, r.contentProvider, userId, perms, ur)
+		user := usermiddleware.UserFromContext(c)
+		response, err := createSonarrRequest(
+			r.br.Cfg, r.br.DB, r.contentProvider, userId, user.Permissions, ur)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 			return
@@ -338,8 +352,9 @@ func (r *Router) CreateRadarrRequest(c *gin.Context) {
 	err := c.ShouldBindJSON(&ur)
 	if err == nil {
 		userId := c.MustGet("userId").(uint)
-		perms := c.GetInt("userPermissions")
-		response, err := createRadarrRequest(r.br.Cfg, r.br.DB, r.contentProvider, userId, perms, ur)
+		user := usermiddleware.UserFromContext(c)
+		response, err := createRadarrRequest(
+			r.br.Cfg, r.br.DB, r.contentProvider, userId, user.Permissions, ur)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 			return

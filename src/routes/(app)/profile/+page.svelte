@@ -1,41 +1,19 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import Checkbox from "@/lib/Checkbox.svelte";
 	import Error from "@/lib/Error.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
-	import Setting from "@/lib/settings/Setting.svelte";
 	import Stat from "@/lib/stats/Stat.svelte";
 	import Stats from "@/lib/stats/Stats.svelte";
-	import { req, updateUserSetting } from "@/lib/util/api";
+	import { req } from "@/lib/util/api";
 	import { getOrdinalSuffix, monthsShort } from "@/lib/util/helpers";
 	import { store } from "@/store.svelte";
-	import { UserType, type Image, type Profile } from "@/types";
+	import { type Image, type Profile } from "@/types";
 	import { notify } from "@/lib/util/notify";
 	import UserAvatar from "@/lib/img/UserAvatar.svelte";
-	import PwChangeModal from "@/routes/(app)/profile/modals/PwChangeModal.svelte";
-	import SyncModal from "./modals/SyncModal.svelte";
-	import RegionDropDown from "@/lib/RegionDropDown.svelte";
-	import RatingSetting from "@/lib/rating/RatingSetting.svelte";
-	import { toggleTheme } from "@/lib/util/theme";
-	import ExportListModal from "./modals/ExportListModal.svelte";
 	import { ReqerError } from "@/lib/util/fetch";
 	import { resolve } from "$app/paths";
 
 	let user = $derived(store.userInfo);
-	let settings = $derived(store.userSettings);
-	let selectedTheme = $derived(store.appTheme);
-
-	let privateDisabled = $state(false);
-	let privateThoughtsDisabled = $state(false);
-	let exportModalOpen = $state(false);
-	let hideSpoilersDisabled = $state(false);
-	let countryDisabled = $state(false);
-	let includePreviouslyWatchedDisabled = $state(false);
-	let automateShowStatusesDisabled = $state(false);
-	let pwChangeModalOpen = $state(false);
 	let getProfilePromise = $state(getProfile());
-	let jellyfinSyncModalOpen = $state(false);
-	let plexSyncModalOpen = $state(false);
 
 	async function getProfile() {
 		return await req.get<Profile>(`/profile`);
@@ -172,185 +150,10 @@
 			{/await}
 		</Stats>
 
-		<div class="settings">
-			<h3 class="norm">Settings</h3>
-
-			<div class="theme">
-				<h4 class="norm">Theme</h4>
-				<div class="row">
-					<button
-						class={`plain${selectedTheme === "system" ? " selected" : ""}`}
-						id="system"
-						onclick={() => toggleTheme("system")}
-					>
-						<span>system</span>
-					</button>
-					<button
-						class={`plain${selectedTheme === "light" ? " selected" : ""}`}
-						id="light"
-						onclick={() => toggleTheme("light")}
-					>
-						light
-					</button>
-					<button
-						class={`plain${selectedTheme === "dark" ? " selected" : ""}`}
-						id="dark"
-						onclick={() => toggleTheme("dark")}
-					>
-						dark
-					</button>
-				</div>
-			</div>
-
-			<Setting
-				title="Country"
-				desc="What country would you like to see available streaming providers for?"
-			>
-				<RegionDropDown
-					selectedCountry={settings?.country}
-					disabled={countryDisabled}
-					onChange={(c) => {
-						countryDisabled = true;
-						updateUserSetting("country", c, () => {
-							countryDisabled = false;
-						});
-					}}
-				/>
-			</Setting>
-
-			<Setting title="Private" desc="Hide your profile from others?" row>
-				<Checkbox
-					name="private"
-					disabled={privateDisabled}
-					value={settings?.private}
-					toggled={(on) => {
-						privateDisabled = true;
-						updateUserSetting("private", on, () => {
-							privateDisabled = false;
-						});
-					}}
-				/>
-			</Setting>
-
-			{#if !settings?.private}
-				<Setting
-					title="Private Thoughts"
-					desc="Hide your watched list thoughts from followers?"
-					row
-				>
-					<Checkbox
-						name="privateThoughts"
-						disabled={privateThoughtsDisabled}
-						value={settings?.privateThoughts}
-						toggled={(on) => {
-							privateThoughtsDisabled = true;
-							updateUserSetting("privateThoughts", on, () => {
-								privateThoughtsDisabled = false;
-							});
-						}}
-					/>
-				</Setting>
-			{/if}
-
-			<Setting
-				title="Hide Spoilers"
-				desc="Do you want to hide episode info?"
-				row
-			>
-				<Checkbox
-					name="hideSpoilers"
-					disabled={hideSpoilersDisabled}
-					value={settings?.hideSpoilers}
-					toggled={(on) => {
-						hideSpoilersDisabled = true;
-						updateUserSetting("hideSpoilers", on, () => {
-							hideSpoilersDisabled = false;
-						});
-					}}
-				/>
-			</Setting>
-
-			<Setting
-				title="Automate Show Statuses"
-				desc="Do you want to automate show statuses (show, season, episode)?"
-				tag="experimental"
-				row
-			>
-				<Checkbox
-					name="automateShowStatusesDisabled"
-					disabled={automateShowStatusesDisabled}
-					value={settings?.automateShowStatuses}
-					toggled={(on) => {
-						automateShowStatusesDisabled = true;
-						updateUserSetting("automateShowStatuses", on, () => {
-							automateShowStatusesDisabled = false;
-						});
-					}}
-				/>
-			</Setting>
-
-			<Setting
-				title="Include Previously Watched"
-				desc="Should previously finished items be included in the 'Finished' status filter?"
-				row
-			>
-				<Checkbox
-					name="includePreviouslyWatched"
-					disabled={includePreviouslyWatchedDisabled}
-					value={settings?.includePreviouslyWatched}
-					toggled={(on) => {
-						includePreviouslyWatchedDisabled = true;
-						updateUserSetting("includePreviouslyWatched", on, () => {
-							includePreviouslyWatchedDisabled = false;
-						});
-					}}
-				/>
-			</Setting>
-
-			<RatingSetting />
-
-			<div class="row btns">
-				<button onclick={() => goto(resolve("/import"))}>Import</button>
-				<button onclick={() => (exportModalOpen = true)}>Export</button>
-				{#if user?.type !== UserType.Plex && user?.type !== UserType.Jellyfin}
-					<button
-						onclick={() => {
-							pwChangeModalOpen = true;
-						}}>Change Password</button
-					>
-				{/if}
-				{#if user?.type === UserType?.Jellyfin}
-					<button onclick={() => (jellyfinSyncModalOpen = true)}>
-						Sync With {localStorage.getItem("useEmby") ? "Emby" : "Jellyfin"}
-					</button>
-				{/if}
-				{#if user?.type === UserType?.Plex}
-					<button onclick={() => (plexSyncModalOpen = true)}>
-						Sync With Plex
-					</button>
-				{/if}
-			</div>
-			{#if exportModalOpen}
-				<ExportListModal
-					onClose={() => {
-						exportModalOpen = false;
-					}}
-				/>
-			{/if}
-			{#if pwChangeModalOpen}
-				<PwChangeModal
-					userName={user?.username}
-					onClose={() => {
-						pwChangeModalOpen = false;
-					}}
-				></PwChangeModal>
-			{/if}
-			{#if jellyfinSyncModalOpen}
-				<SyncModal onClose={() => (jellyfinSyncModalOpen = false)} />
-			{/if}
-			{#if plexSyncModalOpen}
-				<SyncModal type="plex" onClose={() => (plexSyncModalOpen = false)} />
-			{/if}
+		<div style="margin-top: 10px;">
+			<!-- Temporary link to settings, since we just moved them to
+			 another page, can remove this later. -->
+			<a href={resolve("/settings")}>Looking for settings?</a>
 		</div>
 	</div>
 </div>
@@ -402,88 +205,6 @@
 					border: 0;
 					padding: 0;
 					height: 32px;
-				}
-			}
-		}
-	}
-
-	.settings {
-		display: flex;
-		flex-flow: column;
-		gap: 20px;
-		width: 100%;
-
-		h3 {
-			font-variant: small-caps;
-		}
-
-		div {
-			&.row {
-				display: flex;
-				flex-flow: row;
-				gap: 10px;
-				align-items: center;
-
-				&.btns button {
-					width: max-content;
-				}
-			}
-		}
-
-		.theme {
-			display: flex;
-			flex-flow: column;
-			gap: 10px;
-
-			& .row {
-				margin: 0 5px;
-			}
-
-			& button {
-				width: 50%;
-				height: 80px;
-				border-radius: 10px;
-				outline: 3px solid;
-				font-size: 20px;
-				text-transform: uppercase;
-				font-family: "Rampart One";
-				color: transparent;
-				transition: all 200ms ease-in;
-
-				&#light {
-					background-color: white;
-					outline-color: $accent-color;
-					&:hover {
-						color: black;
-						-webkit-text-stroke: 0.5px black;
-					}
-				}
-
-				&#dark {
-					background-color: black;
-					outline-color: white;
-					&:hover {
-						color: white;
-						-webkit-text-stroke: 0.5px white;
-					}
-				}
-
-				&#system {
-					background: linear-gradient(to right bottom, white 50%, black 50.3%);
-					outline-color: black;
-
-					span {
-						mix-blend-mode: difference;
-					}
-
-					&:hover {
-						color: white;
-						-webkit-text-stroke: 0.5px white;
-					}
-				}
-
-				&.selected {
-					outline-color: gold !important;
 				}
 			}
 		}

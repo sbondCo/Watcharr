@@ -106,12 +106,41 @@ export interface Content {
 	first_air_date: string;
 }
 
+export type ActivityType =
+	| "ADDED_WATCHED"
+	| "REMOVED_WATCHED"
+	| "RATING_CHANGED"
+	| "STATUS_CHANGED"
+	| "THOUGHTS_CHANGED"
+	| "THOUGHTS_REMOVED"
+	| "IMPORTED_RATING"
+	| "IMPORTED_ADDED_WATCHED"
+	| "SEASON_ADDED"
+	| "SEASON_REMOVED"
+	| "SEASON_RATING_CHANGED"
+	| "SEASON_STATUS_CHANGED"
+	| "EPISODE_ADDED"
+	| "EPISODE_REMOVED"
+	| "EPISODE_RATING_CHANGED"
+	| "EPISODE_STATUS_CHANGED";
+
+export enum ActivityCreatedBy {
+	Watcharr = 1,
+	GenericImport,
+	JellyfinImport,
+	JellyfinWebhook,
+	PlexImport,
+}
+
 export interface Activity extends dbModel {
 	watchedId: number;
-	type: string;
+	type: ActivityType;
 	data: string;
-	customDate: string;
+	customDate?: string;
+	note?: string;
 	countAsPlay: boolean;
+	createdBy?: ActivityCreatedBy;
+	reason?: string;
 }
 
 export interface WatchedSeason {
@@ -175,7 +204,7 @@ export interface WatchedUpdateRequest {
 }
 
 export interface WatchedUpdateResponse {
-	newActivity: Activity;
+	newActivities: Activity[];
 }
 
 export type WatchedSort =
@@ -194,23 +223,33 @@ export interface WatchedGetPageRequest {
 }
 
 export interface ActivityUpdateRequest {
-	customDate: string;
+	customDate?: Date;
+	note?: string;
 }
 
-export interface WatchedSeasonAddResponse {
-	watchedSeasons: WatchedSeason[];
-	addedActivity: Activity;
+export interface WatchedSeasonSetResponse {
+	watchedSeason: WatchedSeason;
+	update: boolean;
+	addedActivities?: Activity[];
+	statusChangedHookResponse?: SeasonStatusChangedHookResponse;
 }
 
-export interface WatchedEpisodeAddResponse {
-	watchedEpisodes: WatchedEpisode[];
-	addedActivity: Activity;
-	episodeStatusChangedHookResponse?: EpisodeStatusChangedHookResponse;
+export interface WatchedEpisodeSetResponse {
+	watchedEpisode: WatchedEpisode;
+	update: boolean;
+	addedActivities?: Activity[];
+	statusChangedHookResponse?: EpisodeStatusChangedHookResponse;
 }
 
 export interface EpisodeStatusChangedHookResponse {
 	newShowStatus?: WatchedStatus;
 	watchedSeason?: WatchedSeason;
+	addedActivities?: Activity[];
+	errors?: string[];
+}
+
+export interface SeasonStatusChangedHookResponse {
+	newShowStatus?: WatchedStatus;
 	addedActivities?: Activity[];
 	errors?: string[];
 }
@@ -445,6 +484,16 @@ export interface PersonDetailsResponse {
 	biography?: string;
 	homepage?: string;
 	extPosterPath?: string;
+	knownCredits?: number;
+	firstKnownCredit?: PersonDetailsFirstKnownCredit;
+	creditTypes?: string[];
+}
+
+export interface PersonDetailsFirstKnownCredit {
+	id?: number;
+	type?: string;
+	date: string;
+	age?: number;
 }
 
 export interface PersonCreditsResponse {
@@ -584,6 +633,18 @@ export interface Filters {
 	status: string[];
 }
 
+export interface UserService extends UserServiceSettings {
+	id: number;
+	name: string;
+	createdAt: string;
+}
+
+export interface UserServiceSettings {
+	autoSync?: boolean;
+}
+
+export type AllUserServicesResponse = UserService[];
+
 export interface ManagedUser {
 	id: number;
 	createdAt: Date;
@@ -596,6 +657,8 @@ export interface ManagedUser {
 export interface ServerConfig {
 	DEFAULT_COUNTRY?: string;
 	JELLYFIN_HOST?: string;
+	JELLYFIN_WEBHOOK_ENABLED?: boolean;
+	JELLYFIN_WEBHOOK_KEY?: string;
 	USE_EMBY: boolean;
 	SIGNUP_ENABLED: boolean;
 	TMDB_KEY?: string;

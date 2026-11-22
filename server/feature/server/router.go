@@ -12,6 +12,7 @@ import (
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
 	"github.com/sbondCo/Watcharr/feature/plex"
+	"github.com/sbondCo/Watcharr/feature/user/usermiddleware"
 	"github.com/sbondCo/Watcharr/router"
 )
 
@@ -45,12 +46,19 @@ func NewRouter(
 }
 
 func (r *Router) AddRoutes() {
-	server := r.br.Router.Group("/server").Use(authmiddleware.AuthRequired(r.br.DB, r.br.Cfg), authmiddleware.AdminRequired())
+	server := r.br.Router.Group("/server").
+		Use(
+			authmiddleware.AuthRequired(r.br.Cfg),
+			usermiddleware.WithUser(r.br.DB),
+			authmiddleware.AdminRequired(),
+		)
 
 	// Get server config (minus very sensitive fields, like JWT_SECRET)
 	server.GET("/config", r.GetConfig)
 	// Update config
 	server.POST("/config", r.UpdateConfig)
+	// Update config: JELLYFIN_WEBHOOK_ENABLED
+	server.POST("/config/JELLYFIN_WEBHOOK_ENABLED", r.SetConfigJellyfinWebhookEnabled)
 	// Update plex host config
 	server.POST("/config/plex_host", r.UpdateConfigPlexHost)
 	// Get server stats
@@ -116,6 +124,21 @@ func (r *Router) UpdateConfig(c *gin.Context) {
 		return
 	}
 	c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
+}
+
+func (r *Router) SetConfigJellyfinWebhookEnabled(c *gin.Context) {
+	var ur router.ValueRequest
+	err := c.ShouldBindJSON(&ur)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
+		return
+	}
+	resp, err := r.br.Cfg.SetJellyfinWebhookEnabled(ur.Value.(bool))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, router.ErrorResponse{Error: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 // Update plex host config

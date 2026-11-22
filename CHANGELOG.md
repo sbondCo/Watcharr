@@ -2,6 +2,168 @@
 
 These changes are awaiting release:
 
+## Fixed
+
+- HorizontalList: Align items to left instead of adding space between. Ex: Fixes awkward space between when there are only 2 cast members. (thanks to [@Kiddo4993] for patching!)
+
+# [4.4.0] - 2026-11-18T17:07:00Z
+
+<img width="500" alt="example of Christopher Nolan's page correctly displaying the movies they have directed." src="./changelog/4.4.0/0.png" />
+
+## Added
+
+- Person:
+  - New filter for department of credit (fixes person pages for non-actors: https://github.com/sbondCo/Watcharr/issues/951).
+  - "Credits" title with a badge displaying total count of credits loaded.
+  - "Known Credits" detail showing count of all credits.
+  - "First Credit" detail showing date of earliest known credit (with link to visit it and tooltip showing the persons age at the time).
+- Activity: Support adding a `note` to activities.
+
+## Changed
+
+- Person: Load credits that match the persons main department first.
+- Activity: Moved count to component `CountBadge` (so it could be used on person page too).
+
+## Fixed
+
+- Person: Show error when loading credits fails instead of infinite loading.
+- Jellyfin: Login for password-less accounts (thanks [@Terence-D] for the patch!).
+- Browser UI: Set `color-scheme` to the theme being used.
+  - As a result, the browser renders the correct theme scroll bars.
+  - As a side effect, we have improved input stylings for dark theme (by making them dark too).
+- Setup/Login: Fix nav logo styling for dark theme.
+- Nav: Fix nav logo text-stroke for chromium (made it smaller so it still looks good on firefox/chrome, chromium text-stroke always seems to be bigger for some reason, so just set it to a middle ground).
+- GHSA-h3h6-g7fm-2v4x (thanks to [@kats1123] for reporting!)
+
+## Maintenance
+
+- ActivityEditor: Refactor date/time options (simplified logic and moved to new DateInput and TimeInput components).
+- Error: Support `string` errors being passed in and new `margin` prop for overriding default style.
+- `.small-scrollbar` style: Remove -webkit-scrollbar styling and just keep the scrollbar-width property since it is supported in chromium now (a long time ago).
+
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/orgs/sbondCo/packages/container/watcharr/1591225516?tag=v4.4.0) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.4.0/images/sha256-c8a26b6c62c1df08a3ec2b51c3e68b561ba6185c0fb3e733957c7dfae7f6f3da).
+
+# [4.3.0] - 2026-10-24T21:51:00Z
+
+## Added
+
+- Jellyfin: Automatic tracking via [jellyfin webhook](https://github.com/jellyfin/jellyfin-plugin-webhook).
+  - Enable support in your server settings!
+- Server Tasks: Task for doing sync with UserServices (Jellyfin & Plex).
+  - Enabled by default, new setting in your user settings to control it.
+- Activity:
+  - Created `created_by` & `reason` properties.
+  - Added UI element to display a count of activities.
+- ActivityEditor: Added expandable section for viewing full raw activity.
+- Handbook: A new way for Watcharr to help out when you aren't sure what to do. In beta stages, but the vision is all Watcharr documentation relating to usage/configuring will be directly accessible from where you are doing something that you may want further explanation on.
+  - The external documentation site will still exist, but be more for initial install guides.
+  - The new handbook will be accessible as a standalone page, or as small `help` buttons next to certain features that open up the related handbook entry in a popup modal.
+- Automation: Added season status change hook, which currently supports updating the series top-level status automatically depending on all season statuses.
+  - Series is PLANNED & new season set to WATCHING/FINISHED -> Series updated to WATCHING.
+  - All seasons in series are completed -> (if show ended: Series updated to FINISHED), (if show is continuing: Series updated to PLANNED).
+- UserService: New endpoints for listing connected accounts and updating settings.
+- User Settings: Display users' connected services (and allow configuring new Auto Sync setting).
+- TaskSchedule: Manually run task button.
+- Reqer: Add `signal` option and add a default `10s` request timeout.
+- Reqer: Add PATCH methods.
+- `PORT` environment variable.
+
+## Changed
+
+- (NEW MIGRATION) Migrate Jellyfin users to using `user_services` table for auth (deprecating the old ThirdPartyId and ThirdPartyAuth columns in the process).
+- (NEW MIGRATION) Activity: Migrate all `_AUTO`, `_JF` & `_PLEX` activities so that they now use the base activity type (affixes dropped), along with the new `created_by` property for telling the difference. `_AUTO` activities have had the `reason` properties that used to be in a JSON blob, moved to the new `reason` column (been normalized). This migration makes activities more flexible and easier to work with on the backend/frontend (I couldn't just keep adding a bunch of new activities for the same thing just to denote a new service created it!).
+- User: Changed Password gorm permission to "create only", to avoid loading pass hash into memory unnecessarily. Services that need to read the password field, now use their own specific single use struct.
+- Logging: When `debug` logging is enabled, all database queries will be logged to `stdout`.
+- Menu: Add border-radius to buttons on hover.
+- FaceMenu: Show $error color as bg when hovering over logout button.
+- Season & Episode: Add/Update Methods Refactored.
+  - The old logic and db queries were very gross, it now looks nicer and the queries have been optimized (rewritten to work with new logic and so that they don't include more data than necessary).
+  - Shared logic that was previously just duplicated between the methods has been moved to reusable funcs.
+  - (BREAKING FOR API USERS, probably no one!?) The Add/Update methods now only return the created/modified entry, rather than returning ALL entries (and a new `update` property is returned along with it to tell you if the item was created or updated). Also returns addedActivities (list, instead of old singular addedActivity).
+- Activities: Improve automated tooltip text readability by changing format and not capitalizing every word.
+- Search: Start the search instantly if "Enter" is pressed (skip the debounce).
+- Profile: Moved user settings to a new "Settings" page (accessible from same face menu). There's a temporary link on the Profile page to indicate that settings have moved.
+  - I moved it so in the future the profile page can be about your Profile, not settings.
+- Server Settings: Renamed face menu option from "Settings" to "Server" (since "Settings" is now for user settings page).
+- Gin: Disabled TrustedProxies feature.
+- runUI: Moved the UI server to listen on a unix socket (this adds better separation since the ui server should not be accidentally accessible directly; it's only meant for internal communication).
+- FaceMenu: Increase width by 10px to 150px, so the longer version strings (betas) fit on one line.
+
+## Fixed
+
+- Auth: UserChangePassword: Added `User.Type` check.
+- Watched: UpdateWatched now only saves actual changes (ignores same values) & now returns all created activities (if multiple are added). Activities are returned in a list now, so this may be a breaking change for you if you rely on manual api access and you look at this value.
+- PosterStatus: Icons being very small in minimal mode (Season/Episode Status Buttons).
+- SeasonListEpisode: Increase episode image resolution (so they aren't blurry) & use lazy loading. https://github.com/sbondCo/Watcharr/issues/1100
+- Allow View Trailer to be fullscreened (thanks to [@LeonNamowitz] in https://github.com/sbondCo/Watcharr/pull/1106)
+- Search: Don't trim the ending whitespace from query on debounced search (thanks to [@fjacques-2025] in https://github.com/sbondCo/Watcharr/pull/1078).
+- runUI: Fix flow and add scanner.Err check.
+- CleanupImages: Don't delete game images that are still in use (reported by [@fjacques-2025]).
+- GHSA-5g2m-mjff-5hjj (thanks to [@kats1123] for reporting!)
+- LoginJellyfin/LoginPlex: Update auth_token query now only updates auth_token(+2) instead of sending everything up again (also fixes logging in again resetting auto_sync setting to default value).
+
+## Maintenance
+
+- Organize user entity structs.
+- Moved JellyfinAccessRequired middleware to `authmiddleware` package.
+- Created `usermiddleware` package with `WithUser` and `WithUserService` middleware. These will help us migrate from the all-encompassing `AuthRequired` middleware (so that it can just stick to purely auth and any routes needing the User from database can add the extra middleware which is more modular).
+- Created `tri` package for representing "tribools". Helps us avoid using `*bool` when possible (for inter-watcharr communications).
+- Activity:
+  - Moved service code to a new top-level activity package (no longer injected into other services that need it).
+  - Made a builder API for creating activities (so the builder constructor can have required props, enabling compiler errors for this case & makes the call sites more readable).
+  - (frontend) Group component files in a new sub dir.
+- WatchedEpisode: Moved request/response structs to `domain` package.
+- WatchedSeason: Moved request/response structs to `domain` package.
+- Auth: Refactored UserChangePassword func.
+- Logging: Refactored func/var names (eg SetLevel -> Level).
+- Database: Renamed `New()` to `Open()` as it will no longer run `Setup()`. That will be done from caller after running New(). This lets us setup our logging for the db after New(), but before migrations are run in Setup().
+- Middleware: Removed "extra info" from `AuthRequired`. User from db is now fetched with new `WithUser` middleware.
+- Upgraded go: 1.26 -> 1.27.
+- Create activity MultiCreator to make it a bit easier to add multiple activities in a method.
+- Watched Season & Episode:
+  - Renamed Add* methods to Set* (AddWatchedSeason -> SetWatchedSeason) to better reflect their Add & Update functionality.
+  - Use reusable Set*Provider interfaces for every service that needs to inject either Set method (cutting down on some duplication).
+  - Refactored `hookStatusChanged` and move to its own file.
+    - Way less complicated logic and moved bits of logic that could be reused to its own function.
+    - Now uses `SetWatchedSeason` instead of updating it in db itself.
+- Upgraded @sveltejs/kit: 2.69.3 -> 2.70.3.
+- Tooltip: Improve action show() logic readability & add new styleNoCapitalize option for disabling text capitalization style.
+- Task: Moved tasks definition to `watcharr.go` main func so we can use all our services easily.
+- Setting.svelte: Refactor to make markup simpler.
+- CleanupImages: Refactored function. Now uses a new helper function that gets references from sqlite schema table directly so we don't have to manually keep track of the query.
+- workflow: container-release:
+  - Deleted container-dev.yml, its behavior has been incorporated into container-release (instead of `dev` tag, we will now use `beta` tag because it makes more sense).
+  - Improved on tag push filter to only let through valid git tags.
+  - Add `beta` tag to beta versions.
+  - Add `major.minor` tags to stable versions.
+
+## Docs
+
+- `server_config/environment-variables`: Add `PORT`.
+- `installation/docker-compose`: Added a tip pointing to supported environment variables.
+
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/orgs/sbondCo/packages/container/watcharr/1441074763?tag=v4.3.0) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.3.0/images/sha256-2541a57fa8991ab0081ceac3cdf889e80a4c4f7f50551db68d8b016fc5f54131).
+
+# [4.2.2] - 2026-09-12T21:00:01Z
+
+> [!NOTE]
+> Jellyfin 12 Support. Jellyfin servers should be v10.11+.
+>
+> Jellyfin auto/live sync is coming next! It's nearly ready.
+
+## Fixed
+
+- Jellyfin 12 Authentication (`X-Emby-Authorization` -> `Authorization`).
+  - **IMPORTANT** Jellyfin servers older than 10.11 may no longer work, but 10.11+ will function. For support, your Jellyfin server should be on 10.11+.
+
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/orgs/sbondCo/packages/container/watcharr/1241649007?tag=v4.2.2) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.2.2/images/sha256-ec4e21af085b9566e9c45d87d9ea4eb4d2aeb1fd9db20ae26a03f4f53a721cff).
+
 # [4.2.1] - 2026-08-04T00:40:00Z
 
 ## Fixed
@@ -1800,7 +1962,10 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 
 <!-- Version Changelog References (newest first) -->
 
-[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.4.0...HEAD
+[4.4.0]: https://github.com/sbondCo/Watcharr/compare/v4.3.0...v4.4.0
+[4.3.0]: https://github.com/sbondCo/Watcharr/compare/v4.2.2...v4.3.0
+[4.2.2]: https://github.com/sbondCo/Watcharr/compare/v4.2.1...v4.2.2
 [4.2.1]: https://github.com/sbondCo/Watcharr/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/sbondCo/Watcharr/compare/v4.1.1...v4.2.0
 [4.1.1]: https://github.com/sbondCo/Watcharr/compare/v4.1.0...v4.1.1
@@ -1910,3 +2075,8 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@goestav]: https://github.com/goestav
 [@tonghuaroot]: https://github.com/tonghuaroot
 [@KarpachMarko]: https://github.com/KarpachMarko
+[@LeonNamowitz]: https://github.com/LeonNamowitz
+[@fjacques-2025]: https://github.com/fjacques-2025
+[@kats1123]: https://github.com/kats1123
+[@Terence-D]: https://github.com/Terence-D
+[@Kiddo4993]: https://github.com/Kiddo4993

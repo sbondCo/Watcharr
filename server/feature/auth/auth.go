@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -36,6 +35,12 @@ type UserRegisterRequest struct {
 
 type UseAdminTokenRequest struct {
 	Token string `json:"token" binding:"required"`
+}
+
+type UserLoginRequestJellyfin struct {
+	Username string `json:"username" binding:"required"`
+	// NOTE: Password is optional.
+	Password string `json:"password"`
 }
 
 type JellyfinAuth struct {
@@ -96,7 +101,8 @@ func (s *Service) Register(ur *UserRegisterRequest, initialPerm int) (AuthRespon
 	slog.Info("Register: A user is registering", "username", user.Username)
 	hash, err := s.hashPassword(user.Password, entity.GetPassArgonParams())
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("Register: Hashing password failed!", "error", err)
+		return AuthResponse{}, errors.New("registering failed")
 	}
 
 	// Update user obj to replace the plaintext pass with hash
@@ -128,7 +134,7 @@ func (s *Service) Register(ur *UserRegisterRequest, initialPerm int) (AuthRespon
 		return AuthResponse{}, errors.New("failed to get user id, try login")
 	}
 
-	token, err := s.signJWT(&user)
+	token, err := s.signJWT(user.ID, user.Username, user.Type)
 	if err != nil {
 		slog.Error("Registration: Failed to sign new jwt", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
@@ -154,8 +160,18 @@ func (s *Service) RegisterFirstUser(urr *UserRegisterRequest) (AuthResponse, err
 
 func (s *Service) Login(userL *entity.User) (AuthResponse, error) {
 	slog.Debug("A User Is Logging In", "username", userL.Username)
-	dbUser := new(entity.User)
-	res := s.db.Where("username = ? AND (type IS NULL OR type = 0)", userL.Username).Take(&dbUser)
+
+	type WatcharrUser struct {
+		ID       uint
+		Username string
+		Password string
+	}
+
+	dbUser := new(WatcharrUser)
+	res := s.db.
+		Model(&entity.User{}).
+		Where("username = ? AND (type IS NULL OR type = 0)", userL.Username).
+		Take(&dbUser)
 	if res.Error != nil {
 		slog.Error("Failed to select user from database for login", "error", res.Error)
 		return AuthResponse{}, errors.New("User does not exist")
@@ -171,15 +187,15 @@ func (s *Service) Login(userL *entity.User) (AuthResponse, error) {
 		return AuthResponse{}, errors.New("incorrect details")
 	}
 
-	token, err := s.signJWT(dbUser)
+	token, err := s.signJWT(dbUser.ID, dbUser.Username, entity.WATCHARR_USER)
 	if err != nil {
-		slog.Error("Failed to sign new jwt", "error", err)
+		slog.Error("Failed to sign new jwt!", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
 }
 
-func (s *Service) LoginJellyfin(userL *entity.User) (AuthResponse, error) {
+func (s *Service) LoginJellyfin(userL *UserLoginRequestJellyfin) (AuthResponse, error) {
 	if s.cfg.JELLYFIN_HOST == "" {
 		slog.Error("Request made to login via Jellyfin, but JELLYFIN_HOST has not been configured.")
 		return AuthResponse{}, errors.New("jellyfin login not enabled")
@@ -205,7 +221,7 @@ func (s *Service) LoginJellyfin(userL *entity.User) (AuthResponse, error) {
 		return AuthResponse{}, errors.New("request failed")
 	}
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("X-Emby-Authorization", "MediaBrowser Client=\"Watcharr\", Device=\"HTTP\", DeviceId=\"WatcharrFor"+userL.Username+"\", Version=\"10.8.0\"")
+	req.Header.Add("Authorization", "MediaBrowser Client=\"Watcharr\", Device=\"HTTP\", DeviceId=\"WatcharrFor"+userL.Username+"\", Version=\"10.8.0\"")
 	res, err := client.Do(req)
 	if err != nil {
 		slog.Error("making request to jellyfin for auth failed", "error", err)
@@ -232,39 +248,88 @@ func (s *Service) LoginJellyfin(userL *entity.User) (AuthResponse, error) {
 	}
 
 	dbUser := new(entity.User)
-	dbRes := s.db.Where("third_party_id = ? AND type = ?", resp.User.ID, entity.JELLYFIN_USER).Take(&dbUser)
-	if dbRes.Error != nil {
-		if errors.Is(dbRes.Error, gorm.ErrRecordNotFound) {
-			// Record not found, so we should create the user
-			// dbUser will be empty, so we can just reuse it for this purpose.
-			dbUser.ThirdPartyID = resp.User.ID
-			dbUser.ThirdPartyAuth = resp.AccessToken
-			dbUser.Username = resp.User.Name
-			dbUser.Type = entity.JELLYFIN_USER
-			dbUser.Country = &s.cfg.DEFAULT_COUNTRY
 
-			dbRes = s.db.Create(&dbUser)
-			if dbRes.Error != nil {
-				slog.Error("Failed to create new user in db from jellyfin response", "error", dbRes.Error)
-				return AuthResponse{}, errors.New("failed to create new user from jellyfin")
+	userID, err := s.GetUserIDFromServiceClientId(
+		entity.UserServiceNameJellyfin,
+		resp.User.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// If the userID cant be found because the service doesn't exist,
+			// then the user must not exist either, so create one.
+			err := s.createJellyfinUser(dbUser, *resp)
+			if err != nil {
+				slog.Error("LoginJellyfin: Creating user failed.", "error", err)
+				return AuthResponse{},
+					errors.New("failed to create new user from jellyfin")
 			}
 		} else {
+			return AuthResponse{}, errors.New("couldn't find a user_id")
+		}
+	} else {
+		dbRes := s.db.
+			Where("id = ? AND type = ?",
+				userID,
+				entity.JELLYFIN_USER).
+			Preload("UserServices").
+			Take(dbUser)
+		if dbRes.Error != nil {
 			return AuthResponse{}, errors.New("error locating user in db")
+		} else if resp.AccessToken != "" {
+			// We got the user.. update their access token in db
+			slog.Debug("LoginJellyfin: Updating user with new access token")
+			for _, v := range dbUser.UserServices {
+				if v.Name != entity.UserServiceNameJellyfin ||
+					v.ClientID != resp.User.ID {
+					continue
+				}
+				slog.Info("LoginJellyfin: Found user service.. updating token.",
+					"user_service_id", v.ID, "client_id", resp.User.ID)
+				err := s.db.
+					Model(&entity.UserServices{}).
+					Where("id = ?", v.ID).
+					Update("auth_token", resp.AccessToken).
+					Error
+				if err != nil {
+					slog.Error("LoginJellyfin: Failed to update auth_token.", "error", err)
+				}
+				break
+			}
 		}
 	}
-	// If user exists.. update their access token in db
-	if resp.AccessToken != "" {
-		slog.Debug("Jellyfin user login - updating user with new access token")
-		dbUser.ThirdPartyAuth = resp.AccessToken
-		s.db.Save(&dbUser)
-	}
 
-	token, err := s.signJWT(dbUser)
+	token, err := s.signJWT(dbUser.ID, dbUser.Username, entity.JELLYFIN_USER)
 	if err != nil {
-		slog.Error("Failed to sign new (jellyfin login) jwt", "error", err)
+		slog.Error("LoginJellyfin: Failed to sign new jwt!", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
+}
+
+// Create Watcharr user from jellyfin auth response.
+// Only to be ran after verifying the user doesn't exist.
+func (s *Service) createJellyfinUser(
+	dbUser *entity.User,
+	resp JellyfinAuthResponse,
+) error {
+	if dbUser == nil {
+		slog.Error("createJellyfinUser: dbUser is nil")
+		return errors.New("dbUser is nil")
+	}
+	dbUser.UserServices = append(dbUser.UserServices, entity.UserServices{
+		Name:      entity.UserServiceNameJellyfin,
+		ClientID:  resp.User.ID,
+		AuthToken: resp.AccessToken,
+	})
+	dbUser.Username = resp.User.Name
+	dbUser.Type = entity.JELLYFIN_USER
+	dbUser.Country = &s.cfg.DEFAULT_COUNTRY
+
+	err := s.db.Create(&dbUser).Error
+	if err != nil {
+		slog.Error("createJellyfinUser: Create Failed!", "error", err)
+		return err
+	}
+	return nil
 }
 
 // Login via Plex.
@@ -283,6 +348,7 @@ func (s *Service) LoginPlex(lr *plex.PlexLoginRequest) (AuthResponse, error) {
 		slog.Error("loginPlex: Username or id missing from account response:", "username", account.Username, "id", account.Id)
 		return AuthResponse{}, errors.New("data is missing from the plex account response")
 	}
+	clientID := strconv.FormatUint(account.Id, 10)
 	// Get users auth token against our home plex server.
 	// If no auth token, assume they don't have access to our plex server.
 	homeAuthToken, err := s.plexProvider.GetPlexHomeServerAuthToken(lr.AuthToken, lr.ClientIdentifier)
@@ -300,7 +366,7 @@ func (s *Service) LoginPlex(lr *plex.PlexLoginRequest) (AuthResponse, error) {
 			dbUser.Type = entity.PLEX_USER
 			dbUser.UserServices = append(dbUser.UserServices, entity.UserServices{
 				Name:       "plex",
-				ClientID:   strconv.FormatUint(account.Id, 10),
+				ClientID:   clientID,
 				AuthToken:  lr.AuthToken,
 				AuthToken2: homeAuthToken,
 			})
@@ -316,21 +382,30 @@ func (s *Service) LoginPlex(lr *plex.PlexLoginRequest) (AuthResponse, error) {
 		}
 	} else {
 		// If user exists.. update their access tokens in db
-		for i, v := range dbUser.UserServices {
-			if v.Name == "plex" {
-				slog.Info("loginPlex: Found plex user service.. attemping to update")
-				dbUser.UserServices[i].AuthToken = lr.AuthToken
-				if homeAuthToken != "" {
-					dbUser.UserServices[i].AuthToken2 = homeAuthToken
-				}
-				break
+		for _, v := range dbUser.UserServices {
+			if v.Name != entity.UserServiceNamePlex ||
+				v.ClientID != clientID {
+				continue
 			}
+			slog.Info("loginPlex: Found user service.. updating tokens.",
+				"user_service_id", v.ID, "client_id", clientID)
+			err := s.db.
+				Model(&entity.UserServices{}).
+				Where("id = ?", v.ID).
+				Updates(entity.UserServices{
+					AuthToken:  lr.AuthToken,
+					AuthToken2: homeAuthToken,
+				}).
+				Error
+			if err != nil {
+				slog.Error("LoginJellyfin: Failed to update auth_token.", "error", err)
+			}
+			break
 		}
-		s.db.Save(&dbUser.UserServices)
 	}
-	token, err := s.signJWT(dbUser)
+	token, err := s.signJWT(dbUser.ID, dbUser.Username, entity.PLEX_USER)
 	if err != nil {
-		slog.Error("loginPlex: Failed to sign new jwt", "error", err)
+		slog.Error("loginPlex: Failed to sign new jwt!", "error", err)
 		return AuthResponse{}, errors.New("failed to get auth token")
 	}
 	return AuthResponse{Token: token}, nil
@@ -378,12 +453,57 @@ func (s *Service) UseAdminToken(req *UseAdminTokenRequest, userId uint) error {
 	return nil
 }
 
-func (s *Service) signJWT(user *entity.User) (token string, err error) {
+// Get user_id from UserServices by service name & client_id.
+func (s *Service) GetUserIDFromServiceClientId(
+	name entity.UserServiceName,
+	cid string,
+) (uint, error) {
+	if name == "" || cid == "" {
+		slog.Error("GetUserIDFromServiceClientId: name or cid empty",
+			"name", name,
+			"cid", cid)
+		return 0, errors.New("name or cid is empty")
+	}
+	var userId uint = 0
+	err := s.db.
+		Model(&entity.UserServices{}).
+		Select("user_id").
+		Where("name = ? AND client_id = ?", name, cid).
+		Take(&userId).
+		Error
+	if err != nil {
+		slog.Error("GetUserIDFromServiceClientId: Lookup failed.", "error", err)
+		// This importantly should always return `err` from gorm as dependants
+		// check for type of error (eg login caller needing to check
+		// gorm.ErrRecordNotFound to create a user in that case).
+		return 0, err
+	}
+	if userId == 0 {
+		slog.Error("GetUserIDFromServiceClientId: No user id.")
+		return 0, errors.New("didn't get a valid user id")
+	}
+	return userId, nil
+}
+
+func (s *Service) signJWT(
+	userID uint,
+	userName string,
+	userType entity.UserType,
+) (string, error) {
+	slog.Debug("signJWT: Signing a new token.",
+		"user_id", userID, "user_name", userName, "user_type", userType)
+
+	if userID == 0 {
+		return "", errors.New("no userID provided")
+	} else if userName == "" {
+		return "", errors.New("no userName provided")
+	}
+
 	// Create new jwt with claim data
 	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.TokenClaims{
-		UserID:   user.ID,
-		Username: user.Username,
-		Type:     user.Type,
+		UserID:   userID,
+		Username: userName,
+		Type:     userType,
 		RegisteredClaims: jwt.RegisteredClaims{
 			// ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
@@ -501,37 +621,67 @@ func (s *Service) decodeHash(encodedHash string) (p *entity.ArgonParams, salt, h
 	return p, salt, hash, nil
 }
 
-func (s *Service) UserChangePassword(pwds UserPasswordUpdateRequest, userId uint) error {
-	slog.Debug("userChangePassword request running", "user_id", userId)
-	user := new(entity.User)
-	res := s.db.Where("id = ?", userId).Select("password").Take(&user)
+func (s *Service) UserChangePassword(p UserPasswordUpdateRequest, userId uint) error {
+	slog.Debug("UserChangePassword: Running.", "user_id", userId)
+
+	type User struct {
+		ID       uint
+		Password string
+		Type     entity.UserType
+	}
+
+	user := new(User)
+	res := s.db.
+		Model(&entity.User{}).
+		Where("id = ?", userId).
+		Take(&user)
 	if res.Error != nil {
-		slog.Error("userChangePassword failed - failed to retrieve user from database", "user_id", userId, "error", res.Error)
+		slog.Error("UserChangePassword: Failed to retrieve user from database!",
+			"user_id", userId, "error", res.Error)
 		return errors.New("failed to retrieve user")
 	}
-	slog.Debug("userChangePassword user found", "user_id", userId)
-	match, err := s.compareHash(pwds.OldPassword, user.Password)
+	if user.Type != entity.WATCHARR_USER {
+		slog.Error("UserChangePassword: Only Watcharr users can change their password!",
+			"user_id", userId, "user_type", user.Type)
+		return errors.New("incorrect user type")
+	}
+	slog.Debug("UserChangePassword: User found.", "user_id", userId)
+
+	match, err := s.compareHash(p.OldPassword, user.Password)
 	if err != nil {
-		slog.Error("userChangePassword failed - failed to compare passwords", "user_id", userId, "error", err)
+		slog.Error("UserChangePassword: Failed to compare passwords!",
+			"user_id", userId, "error", err)
 		return errors.New("failed to compare passwords")
 	}
 	if !match {
-		slog.Error("userChangePassword failed - current password hash doesn't match password hash in database", "user_id", userId, "error", err)
-		return errors.New("current password provided doesn't match password in database")
+		slog.Error("UserChangePassword: Passwords do not match.",
+			"user_id", userId)
+		return errors.New("password incorrect")
 	}
-	slog.Debug("userChangePassword hash for current password matches hash in the database", "user_id", userId)
-	slog.Debug("userChangePassword hashing new password", "user_id", userId)
-	hash, err := s.hashPassword(pwds.NewPassword, entity.GetPassArgonParams())
+	slog.Debug("UserChangePassword: Password matched. Hashing new pass.",
+		"user_id", userId)
+
+	hash, err := s.hashPassword(p.NewPassword, entity.GetPassArgonParams())
 	if err != nil {
-		slog.Error("userChangePassword failed - failed to hash new password", "user_id", userId, "error", err)
+		slog.Error("UserChangePassword: Failed to hash new password!",
+			"user_id", userId, "error", err)
 		return errors.New("failed to hash new password")
 	}
-	slog.Debug("userChangePassword new password hashed", "user_id", userId)
-	if err := s.db.Model(&entity.User{}).Where("id = ?", userId).Update("password", hash).Error; err != nil {
-		slog.Error("userChangePassword failed - failed to update password in database", "user_id", userId, "error", err)
+	slog.Debug("UserChangePassword: New password hashed.", "user_id", userId)
+	err = s.db.
+		// Using `Table` instead of `Model` to get around the Password field
+		// create only gorm permission. This method doesn't seem to update the
+		// updated_at column automatically, but I'm not bothered about that rn.
+		Table("users").
+		Where("id = ?", userId).
+		Update("password", hash).
+		Error
+	if err != nil {
+		slog.Error("UserChangePassword: Update password query failed!",
+			"user_id", userId, "error", err)
 		return errors.New("failed to update password")
-	} else {
-		slog.Debug("userChangePassword password updated", "user_id", userId)
 	}
+	slog.Debug("UserChangePassword: Password updated.", "user_id", userId)
+
 	return nil
 }
