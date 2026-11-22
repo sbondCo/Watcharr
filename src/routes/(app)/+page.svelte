@@ -9,7 +9,11 @@
 	import { req } from "@/lib/util/api";
 	import infScroll from "@/lib/util/infScroll";
 	import paginatedLoader from "@/lib/util/paginatedLoader.svelte";
-	import { clearActiveFilters, store } from "@/store.svelte";
+	import {
+		clearActiveFilters,
+		setWatchedListMode,
+		store,
+	} from "@/store.svelte";
 	import { type Media, type PaginationResponse } from "@/types";
 	import { onDestroy, untrack } from "svelte";
 
@@ -44,6 +48,14 @@
 			return;
 		}
 		dataLoader.runFn();
+	}
+
+	// True when the type filter is set to exactly this single media type.
+	function isTypeOnly(t: string): boolean {
+		return (
+			store.activeFilters?.type?.length === 1 &&
+			store.activeFilters.type[0] === t
+		);
 	}
 
 	// NOTE: This effect also handles initial load of data.
@@ -87,6 +99,30 @@
 	{JSON.stringify(store.sortAndFiltersForQueryParams)}
 	paginatedLoader.state.meta: {JSON.stringify(dataLoader.state.meta)}
 </span> -->
+
+<div class="type-toggle">
+	<button
+		class="plain"
+		data-active={!store.activeFilters?.type?.length}
+		onclick={() => setWatchedListMode("all")}
+	>
+		All
+	</button>
+	<button
+		class="plain"
+		data-active={isTypeOnly("tv")}
+		onclick={() => setWatchedListMode("tv")}
+	>
+		<Icon i="tv" wh={18} /> TV Shows
+	</button>
+	<button
+		class="plain"
+		data-active={isTypeOnly("movie")}
+		onclick={() => setWatchedListMode("movie")}
+	>
+		<Icon i="film" wh={18} /> Movies
+	</button>
+</div>
 
 <PosterList>
 	{#if dataLoader.state.data?.length > 0}
@@ -142,6 +178,42 @@
 {/if} -->
 
 <style lang="scss">
+	.type-toggle {
+		display: flex;
+		flex-flow: row;
+		flex-wrap: wrap;
+		gap: 10px;
+		justify-content: center;
+		margin: 0 auto 15px auto;
+
+		button {
+			display: flex;
+			flex-flow: row;
+			align-items: center;
+			gap: 8px;
+			padding: 8px 14px;
+			border-radius: 8px;
+			font-size: 14px;
+			color: $text-color;
+			fill: $text-color;
+			transition:
+				background-color 150ms ease,
+				color 150ms ease,
+				outline 150ms ease;
+
+			&:hover,
+			&[data-active="true"] {
+				color: $bg-color;
+				fill: $bg-color;
+				background-color: $accent-color-hover;
+			}
+
+			&[data-active="true"] {
+				outline: 3px solid $accent-color;
+			}
+		}
+	}
+
 	.empty-list {
 		display: flex;
 		flex-flow: column;
