@@ -2,8 +2,11 @@
 	import { updateActivity, removeActivity } from "@/lib/util/api";
 	import Modal from "../Modal.svelte";
 	import type { Activity } from "@/types";
-	import { notify } from "../util/notify";
 	import ActivityEditorRawView from "./ActivityEditorRawView.svelte";
+	import DateInput from "../input/DateInput.svelte";
+	import { SvelteDate } from "svelte/reactivity";
+	import TimeInput from "../input/TimeInput.svelte";
+	import Error from "../Error.svelte";
 
 	interface Props {
 		activity: Activity;
@@ -16,72 +19,43 @@
 	let { activity, activityMessage, onClose, onRemoved, onUpdated }: Props =
 		$props();
 
-	let isDateTimeValid = $state(true);
-	let currentDateObject = new Date(
-		Date.parse(activity.customDate ?? activity.createdAt),
+	let initialDate = Date.parse(activity.customDate ?? activity.createdAt);
+
+	let error: string | undefined = $state();
+	let date = new SvelteDate(initialDate);
+	let note = $state(activity.note);
+	let anythingChanged: boolean = $derived(
+		date.getTime() != initialDate || note != activity.note,
 	);
-	let currentDateString = dateToInputDateString(currentDateObject);
-	let currentTimeString = dateToInputTimeString(currentDateObject);
-	let selectedDateString = $state(currentDateString);
-	let selectedTimeString = $state(currentTimeString);
-	let isDateTimeChanged: boolean = $derived(
-		currentDateString != selectedDateString ||
-			currentTimeString != selectedTimeString,
-	);
-
-	function dateToInputDateString(date: Date) {
-		const year = date.getFullYear();
-		const month = (date.getMonth() + 1).toString().padStart(2, "0");
-		const day = date.getDate().toString().padStart(2, "0");
-		return `${year}-${month}-${day}`;
-	}
-
-	function dateToInputTimeString(date: Date) {
-		const hours = date.getHours().toString().padStart(2, "0");
-		const minutes = date.getMinutes().toString().padStart(2, "0");
-		return `${hours}:${minutes}`;
-	}
-
-	function validateNewDate() {
-		try {
-			const epochMillis = Date.parse(
-				`${selectedDateString} ${selectedTimeString}`,
-			);
-			const dateObj = new Date(epochMillis);
-			if (isNaN(dateObj.getTime())) {
-				isDateTimeValid = false;
-				return;
-			}
-			isDateTimeValid = true;
-			return dateObj;
-		} catch (err) {
-			console.error("ActivityEditor: validateNewDate failed!", err);
-			isDateTimeValid = false;
-		}
-	}
 
 	async function update() {
-		const dateObj = validateNewDate();
-		if (dateObj && isDateTimeValid && isDateTimeChanged) {
-			const updatedActivity = await updateActivity(activity, dateObj);
-			if (!updatedActivity) {
-				// Failed..
-				return;
-			}
-			onUpdated(updatedActivity.id, updatedActivity);
-			onClose();
+		error = "";
+
+		if (!anythingChanged) {
+			error = "Nothing changed!";
 			return;
 		}
-		notify({ text: "Unable to try updating!", type: "error" });
-		console.error(
-			"ActivityEditor: Can't try updating, data missing/invalid:",
-			dateObj,
-			isDateTimeValid,
-			isDateTimeChanged,
-		);
+
+		if (isNaN(date.getTime()) || date.getTime() < 0) {
+			error = "Date is invalid!";
+			return;
+		}
+
+		const updatedActivity = await updateActivity(activity, {
+			customDate: date,
+			note: note,
+		});
+		if (!updatedActivity) {
+			// Failed..
+			return;
+		}
+		onUpdated(updatedActivity.id, updatedActivity);
+		onClose();
+		return;
 	}
 
 	async function remove() {
+		error = "";
 		const success = await removeActivity(activity.id);
 		if (!success) {
 			return;
@@ -92,32 +66,30 @@
 </script>
 
 <Modal title="Edit Activity" desc={activityMessage} maxWidth="400px" {onClose}>
+	{#if error}
+		<Error pretty="Update Failed" {error} margin="0 0 10px 0" />
+	{/if}
+
 	<div class="centered">
 		<h3>Date</h3>
-		<input
-			id="activity-date"
-			type="date"
-			bind:value={selectedDateString}
-			onchange={validateNewDate}
-			class:invalid={!isDateTimeValid}
-		/>
+		<DateInput {date} />
+
 		<h3>Time</h3>
-		<input
-			id="activity-time"
-			type="time"
-			bind:value={selectedTimeString}
-			onchange={validateNewDate}
-		/>
+		<TimeInput {date} />
+
+		<h3>Note</h3>
+		<textarea
+			name="note"
+			rows="3"
+			placeholder="Reasons, thoughts or whatever."
+			bind:value={note}></textarea>
 
 		<ActivityEditorRawView {activity} />
 
 		<div class="button-row">
 			<button class="danger" onclick={remove}>Delete</button>
 			<div>
-				<button
-					onclick={update}
-					disabled={!(isDateTimeChanged && isDateTimeValid)}>Update</button
-				>
+				<button onclick={update} disabled={!anythingChanged}>Update</button>
 			</div>
 		</div>
 	</div>

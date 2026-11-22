@@ -2,6 +2,49 @@
 
 These changes are awaiting release:
 
+## Fixed
+
+- HorizontalList: Align items to left instead of adding space between. Ex: Fixes awkward space between when there are only 2 cast members. (thanks to [@Kiddo4993] for patching!)
+
+# [4.4.0] - 2026-11-18T17:07:00Z
+
+<img width="500" alt="example of Christopher Nolan's page correctly displaying the movies they have directed." src="./changelog/4.4.0/0.png" />
+
+## Added
+
+- Person:
+  - New filter for department of credit (fixes person pages for non-actors: https://github.com/sbondCo/Watcharr/issues/951).
+  - "Credits" title with a badge displaying total count of credits loaded.
+  - "Known Credits" detail showing count of all credits.
+  - "First Credit" detail showing date of earliest known credit (with link to visit it and tooltip showing the persons age at the time).
+- Activity: Support adding a `note` to activities.
+
+## Changed
+
+- Person: Load credits that match the persons main department first.
+- Activity: Moved count to component `CountBadge` (so it could be used on person page too).
+
+## Fixed
+
+- Person: Show error when loading credits fails instead of infinite loading.
+- Jellyfin: Login for password-less accounts (thanks [@Terence-D] for the patch!).
+- Browser UI: Set `color-scheme` to the theme being used.
+  - As a result, the browser renders the correct theme scroll bars.
+  - As a side effect, we have improved input stylings for dark theme (by making them dark too).
+- Setup/Login: Fix nav logo styling for dark theme.
+- Nav: Fix nav logo text-stroke for chromium (made it smaller so it still looks good on firefox/chrome, chromium text-stroke always seems to be bigger for some reason, so just set it to a middle ground).
+- GHSA-h3h6-g7fm-2v4x (thanks to [@kats1123] for reporting!)
+
+## Maintenance
+
+- ActivityEditor: Refactor date/time options (simplified logic and moved to new DateInput and TimeInput components).
+- Error: Support `string` errors being passed in and new `margin` prop for overriding default style.
+- `.small-scrollbar` style: Remove -webkit-scrollbar styling and just keep the scrollbar-width property since it is supported in chromium now (a long time ago).
+
+## Etc
+
+- **Package**: [GitHub CR](https://github.com/orgs/sbondCo/packages/container/watcharr/1591225516?tag=v4.4.0) or [Docker Hub](https://hub.docker.com/layers/sbondco/watcharr/v4.4.0/images/sha256-c8a26b6c62c1df08a3ec2b51c3e68b561ba6185c0fb3e733957c7dfae7f6f3da).
+
 # [4.3.0] - 2026-10-24T21:51:00Z
 
 ## Added
@@ -1919,7 +1962,8 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 
 <!-- Version Changelog References (newest first) -->
 
-[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.3.0...HEAD
+[Unreleased]: https://github.com/sbondCo/Watcharr/compare/v4.4.0...HEAD
+[4.4.0]: https://github.com/sbondCo/Watcharr/compare/v4.3.0...v4.4.0
 [4.3.0]: https://github.com/sbondCo/Watcharr/compare/v4.2.2...v4.3.0
 [4.2.2]: https://github.com/sbondCo/Watcharr/compare/v4.2.1...v4.2.2
 [4.2.1]: https://github.com/sbondCo/Watcharr/compare/v4.2.0...v4.2.1
@@ -2034,3 +2078,5 @@ Welcome to Watcharr :popcorn:, hope it is enjoyed and improves anyone's experien
 [@LeonNamowitz]: https://github.com/LeonNamowitz
 [@fjacques-2025]: https://github.com/fjacques-2025
 [@kats1123]: https://github.com/kats1123
+[@Terence-D]: https://github.com/Terence-D
+[@Kiddo4993]: https://github.com/Kiddo4993

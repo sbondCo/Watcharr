@@ -8,7 +8,8 @@ import (
 
 type (
 	ActivityUpdateRequest struct {
-		CustomDate time.Time `json:"customDate" binding:"required"`
+		CustomDate *time.Time `json:"customDate"`
+		Note       *string    `json:"note"`
 	}
 )
 

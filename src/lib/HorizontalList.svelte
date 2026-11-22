@@ -36,6 +36,6 @@
 		gap: 10px;
 		list-style: none;
 		padding: 15px 30px;
-		justify-content: space-between;
+		justify-content: flex-start;
 	}
 </style>

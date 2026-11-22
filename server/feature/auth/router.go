@@ -75,7 +75,7 @@ func (r *Router) Login(c *gin.Context) {
 
 // Jellyfin login
 func (r *Router) LoginJellyfin(c *gin.Context) {
-	var user entity.User
+	var user UserLoginRequestJellyfin
 	if c.ShouldBindJSON(&user) == nil {
 		response, err := r.service.LoginJellyfin(&user)
 		if err != nil {

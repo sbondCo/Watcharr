@@ -136,7 +136,8 @@ export interface Activity extends dbModel {
 	watchedId: number;
 	type: ActivityType;
 	data: string;
-	customDate: string;
+	customDate?: string;
+	note?: string;
 	countAsPlay: boolean;
 	createdBy?: ActivityCreatedBy;
 	reason?: string;
@@ -228,7 +229,8 @@ export interface WatchedGetPageRequest {
 }
 
 export interface ActivityUpdateRequest {
-	customDate: string;
+	customDate?: Date;
+	note?: string;
 }
 
 export interface WatchedSeasonSetResponse {
@@ -488,6 +490,16 @@ export interface PersonDetailsResponse {
 	biography?: string;
 	homepage?: string;
 	extPosterPath?: string;
+	knownCredits?: number;
+	firstKnownCredit?: PersonDetailsFirstKnownCredit;
+	creditTypes?: string[];
+}
+
+export interface PersonDetailsFirstKnownCredit {
+	id?: number;
+	type?: string;
+	date: string;
+	age?: number;
 }
 
 export interface PersonCreditsResponse {

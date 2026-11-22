@@ -226,18 +226,29 @@ func (r *Router) GetSeasonDetails(c *gin.Context) {
 }
 
 func (r *Router) GetPerson(c *gin.Context) {
-	if c.Param("id") == "" {
+	personID := c.Param("id")
+	if personID == "" {
 		c.Status(400)
 		return
 	}
-	content, err := r.tmdb.PersonDetails(c.Param("id"))
+	person, err := r.tmdb.PersonDetails(personID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, content.AsPersonDetailsResponse())
+	credits, err := r.tmdb.PersonCredits(personID)
+	if err != nil {
+		// not fatal to response
+		slog.Error("GetPerson: Failed to get credits! Full response can't be created.",
+			"error", err)
+	}
+	c.JSON(http.StatusOK, person.AsPersonDetailsResponse(credits))
 }
 
+// Get person credits.
+// Accepts "type" (creditType) query parameter: Case sensitive. when empty
+// returns all, otherwise filters to the department specified. "Acting" = cast
+// credits.
 func (r *Router) GetPersonCredits(c *gin.Context) {
 	userId := c.MustGet("userId").(uint)
 	if c.Param("id") == "" {
@@ -249,10 +260,31 @@ func (r *Router) GetPersonCredits(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, router.ErrorResponse{Error: err.Error()})
 		return
 	}
+	creditType := c.Query("type")
+	slog.Debug("GetPersonCredits", "credit_type", creditType)
 	// Add content into response struct then add watched entries
 	resp := domain.PersonCreditsResponse{}
-	for i := range content.Cast {
-		resp.Credits = append(resp.Credits, content.Cast[i].AsMedia())
+	switch creditType {
+	case "":
+		// no filter = return all
+		for i := range content.Cast {
+			resp.Credits = append(resp.Credits, content.Cast[i].AsMedia())
+		}
+		for i := range content.Crew {
+			resp.Credits = append(resp.Credits, content.Crew[i].AsMedia())
+		}
+	case domain.CreditTypeActing:
+		for i := range content.Cast {
+			resp.Credits = append(resp.Credits, content.Cast[i].AsMedia())
+		}
+	default:
+		for i := range content.Crew {
+			v := &content.Crew[i]
+			if v.Department != creditType {
+				continue
+			}
+			resp.Credits = append(resp.Credits, v.AsMedia())
+		}
 	}
 	if err := addedtocontent.AddList(
 		r.wp,
