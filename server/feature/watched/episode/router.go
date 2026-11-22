@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
 	"github.com/sbondCo/Watcharr/router"
 )
@@ -25,7 +26,7 @@ func NewRouter(
 }
 
 func (r *Router) AddRoutes() {
-	episode := r.br.Router.Group("/watched/episode").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	episode := r.br.Router.Group("/watched/episode").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	episode.POST("", r.AddWatchedEpisode)
 	episode.DELETE(":id", r.DeleteWatchedEpisode)
@@ -33,10 +34,10 @@ func (r *Router) AddRoutes() {
 
 func (r *Router) AddWatchedEpisode(c *gin.Context) {
 	userId := c.MustGet("userId").(uint)
-	var ar WatchedEpisodeAddRequest
+	var ar domain.WatchedEpisodeSetRequest
 	err := c.ShouldBindJSON(&ar)
 	if err == nil {
-		response, err := r.s.AddWatchedEpisodes(userId, ar)
+		response, err := r.s.SetWatchedEpisode(userId, ar)
 		if err != nil {
 			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 			return

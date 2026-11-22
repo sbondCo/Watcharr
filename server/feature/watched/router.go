@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/auth/authmiddleware"
 	"github.com/sbondCo/Watcharr/router"
@@ -26,7 +25,7 @@ func NewRouter(br *router.BaseRouter, service *Service) *Router {
 }
 
 func (r *Router) AddRoutes() {
-	watched := r.br.Router.Group("/watched").Use(authmiddleware.AuthRequired(nil, r.br.Cfg))
+	watched := r.br.Router.Group("/watched").Use(authmiddleware.AuthRequired(r.br.Cfg))
 
 	watched.GET("", router.PaginatedRequest(false), r.GetWatchedList)
 	watched.GET(":id/:username", router.PaginatedRequest(true), r.GetPublicWatchedList)
@@ -116,9 +115,7 @@ func (r *Router) AddWatched(c *gin.Context) {
 		newWatched, err := r.s.AddWatched(
 			userId,
 			ar,
-			domain.WatchedAddExtraProps{
-				ActivityType: entity.ADDED_WATCHED,
-			},
+			domain.WatchedAddExtraProps{},
 		)
 		if err != nil {
 			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
@@ -141,7 +138,7 @@ func (r *Router) UpdateWatched(c *gin.Context) {
 	var ur domain.WatchedUpdateRequest
 	err = c.ShouldBindJSON(&ur)
 	if err == nil {
-		response, err := r.s.updateWatched(userId, uint(id), ur)
+		response, err := r.s.UpdateWatched(userId, uint(id), ur)
 		if err != nil {
 			c.JSON(http.StatusForbidden, router.ErrorResponse{Error: err.Error()})
 			return

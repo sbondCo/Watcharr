@@ -7,11 +7,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sbondCo/Watcharr/activity"
 	"github.com/sbondCo/Watcharr/database/entity"
 	"github.com/sbondCo/Watcharr/domain"
 	"github.com/sbondCo/Watcharr/feature/watched"
-	"github.com/sbondCo/Watcharr/feature/watched/episode"
-	"github.com/sbondCo/Watcharr/feature/watched/season"
 	"github.com/sbondCo/Watcharr/media/tmdb"
 	"github.com/sbondCo/Watcharr/util"
 	"gorm.io/gorm"
@@ -23,16 +22,8 @@ type WatchedProvider interface {
 	UpdateWatchedRating(userId uint, watchedId uint, rating float64) error
 }
 
-type WatchedSeasonProvider interface {
-	AddWatchedSeason(userId uint, ar season.WatchedSeasonAddRequest) (season.WatchedSeasonAddResponse, error)
-}
-
-type WatchedEpisodeProvider interface {
-	AddWatchedEpisodes(userId uint, ar episode.WatchedEpisodeAddRequest) (episode.WatchedEpisodeAddResponse, error)
-}
-
 type TagProvider interface {
-	AddTag(userId uint, tr domain.TagAddRequest) (entity.Tag, error)
+	Add(userId uint, tr domain.TagAddRequest) (entity.Tag, error)
 	GetTagByNameAndColor(userId uint, tagName string, tagColor string, tagBgColor string) (entity.Tag, error)
 }
 
@@ -41,23 +32,21 @@ type SearchProvider interface {
 }
 
 type Service struct {
-	db               *gorm.DB
-	wp               WatchedProvider
-	wsp              WatchedSeasonProvider
-	wep              WatchedEpisodeProvider
-	tmdb             *tmdb.TMDB
-	activityProvider domain.ActivityAddProvider
-	tagProvider      TagProvider
-	searchProvider   SearchProvider
+	db             *gorm.DB
+	wp             WatchedProvider
+	wsp            domain.SetWatchedSeasonProvider
+	wep            domain.SetWatchedEpisodeProvider
+	tmdb           *tmdb.TMDB
+	tagProvider    TagProvider
+	searchProvider SearchProvider
 }
 
 func NewService(
 	db *gorm.DB,
 	wp WatchedProvider,
-	wsp WatchedSeasonProvider,
-	wep WatchedEpisodeProvider,
+	wsp domain.SetWatchedSeasonProvider,
+	wep domain.SetWatchedEpisodeProvider,
 	tmdb *tmdb.TMDB,
-	activityProvider domain.ActivityAddProvider,
 	tagProvider TagProvider,
 	searchProvider SearchProvider,
 ) *Service {
@@ -67,7 +56,6 @@ func NewService(
 		wsp,
 		wep,
 		tmdb,
-		activityProvider,
 		tagProvider,
 		searchProvider,
 	}
@@ -219,7 +207,7 @@ func (s *Service) SuccessfulImport(
 		userId,
 		wAddReq,
 		domain.WatchedAddExtraProps{
-			ActivityType: entity.IMPORTED_WATCHED,
+			ActivityCreatedBy: entity.ActivityCreatedByGenericImport,
 		})
 	if err != nil {
 		if errors.Is(err, domain.ErrWatchedExists) {
@@ -240,27 +228,31 @@ func (s *Service) SuccessfulImport(
 				"rating":         ar.Rating,
 				"linkedActivity": w.Activity[0].ID,
 			})
-			addedActivity, _ = s.activityProvider.AddActivity(
-				userId,
-				domain.ActivityAddProps{
-					WatchedID:  w.ID,
-					Type:       entity.IMPORTED_RATING,
-					Data:       string(activityJson),
-					CustomDate: ar.RatingCustomDate,
-				},
-				false,
-			)
+			addedActivity, _ = activity.
+				NewCreator(
+					s.db,
+					userId,
+					w.ID,
+					entity.IMPORTED_RATING,
+					false,
+					entity.ActivityCreatedByGenericImport,
+				).
+				SetData(string(activityJson)).
+				SetCustomDate(ar.RatingCustomDate).
+				Create()
 		} else {
-			addedActivity, _ = s.activityProvider.AddActivity(
-				userId,
-				domain.ActivityAddProps{
-					WatchedID:  w.ID,
-					Type:       entity.IMPORTED_RATING,
-					Data:       strconv.Itoa(int(ar.Rating)),
-					CustomDate: ar.RatingCustomDate,
-				},
-				false,
-			)
+			addedActivity, _ = activity.
+				NewCreator(
+					s.db,
+					userId,
+					w.ID,
+					entity.IMPORTED_RATING,
+					false,
+					entity.ActivityCreatedByGenericImport,
+				).
+				SetData(strconv.Itoa(int(ar.Rating))).
+				SetCustomDate(ar.RatingCustomDate).
+				Create()
 		}
 		w.Activity = append(w.Activity, addedActivity)
 	}
@@ -278,15 +270,17 @@ func (s *Service) SuccessfulImport(
 					"DatesWatched to avoid duplicate play count with AddWatched activity.")
 			}
 			customDate := v
-			addedActivity, err := s.activityProvider.AddActivity(
-				userId,
-				domain.ActivityAddProps{
-					WatchedID:  w.ID,
-					Type:       entity.IMPORTED_ADDED_WATCHED,
-					CustomDate: &customDate,
-				},
-				countAsPlay,
-			)
+			addedActivity, err := activity.
+				NewCreator(
+					s.db,
+					userId,
+					w.ID,
+					entity.IMPORTED_ADDED_WATCHED,
+					countAsPlay,
+					entity.ActivityCreatedByGenericImport,
+				).
+				SetCustomDate(&customDate).
+				Create()
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
 			} else {
@@ -304,16 +298,11 @@ func (s *Service) SuccessfulImport(
 			if activityDate == nil || activityDate.IsZero() {
 				activityDate = &ar.Activity[i].CreatedAt
 			}
-			addedActivity, err := s.activityProvider.AddActivity(
-				userId,
-				domain.ActivityAddProps{
-					WatchedID:  w.ID,
-					Type:       v.Type,
-					Data:       v.Data,
-					CustomDate: activityDate,
-				},
-				v.CountAsPlay,
-			)
+			addedActivity, err := activity.
+				NewCreator(s.db, userId, w.ID, v.Type, v.CountAsPlay, 0).
+				SetData(v.Data).
+				SetCustomDate(activityDate).
+				Create()
 			if err == nil {
 				w.Activity = append(w.Activity, addedActivity)
 			} else {
@@ -326,7 +315,7 @@ func (s *Service) SuccessfulImport(
 	if len(ar.WatchedSeason) > 0 {
 		slog.Debug("successfulImport: Importing watched seasons")
 		for _, v := range ar.WatchedSeason {
-			ws, err := s.wsp.AddWatchedSeason(userId, season.WatchedSeasonAddRequest{
+			_, err := s.wsp.SetWatchedSeason(userId, domain.WatchedSeasonSetRequest{
 				WatchedID:       w.ID,
 				SeasonNumber:    v.SeasonNumber,
 				Status:          v.Status,
@@ -338,14 +327,13 @@ func (s *Service) SuccessfulImport(
 					"error", err)
 				continue
 			}
-			w.WatchedSeasons = ws.WatchedSeasons
 		}
 	}
 	// Import watched episodes, if any
 	if len(ar.WatchedEpisodes) > 0 {
 		slog.Debug("successfulImport: Importing watched episodes")
 		for _, v := range ar.WatchedEpisodes {
-			ws, err := s.wep.AddWatchedEpisodes(userId, episode.WatchedEpisodeAddRequest{
+			_, err := s.wep.SetWatchedEpisode(userId, domain.WatchedEpisodeSetRequest{
 				WatchedID:       w.ID,
 				SeasonNumber:    v.SeasonNumber,
 				EpisodeNumber:   v.EpisodeNumber,
@@ -358,7 +346,6 @@ func (s *Service) SuccessfulImport(
 					"error", err)
 				continue
 			}
-			w.WatchedEpisodes = ws.WatchedEpisodes
 		}
 	}
 	// Import watched episodes from a count, if that is all the source gave us.
@@ -383,7 +370,7 @@ func (s *Service) SuccessfulImport(
 				continue
 			}
 			if t.ID == 0 {
-				tag, err := s.tagProvider.AddTag(userId, domain.TagAddRequest{
+				tag, err := s.tagProvider.Add(userId, domain.TagAddRequest{
 					Name:    v.Name,
 					Color:   v.Color,
 					BgColor: v.BgColor,

@@ -108,18 +108,20 @@ async function _updateWatched(
 	if (rating) wEntry.rating = rating;
 	if (typeof thoughts !== "undefined") wEntry.thoughts = thoughts;
 	if (typeof pinned !== "undefined") wEntry.pinned = pinned;
-	if (resp?.newActivity && resp?.newActivity?.id) {
-		if (wEntry.activity && wEntry.activity.length > 0) {
-			wEntry.activity.push(resp.newActivity);
-		} else {
-			wEntry.activity = [resp.newActivity];
+	if (resp?.newActivities && resp.newActivities.length > 0) {
+		if (!wEntry.activity) {
+			wEntry.activity = [];
 		}
-		// If new activity counts as play, increment plays for local state.
-		if (resp.newActivity.countAsPlay) {
-			if (wEntry.plays) {
-				wEntry.plays++;
-			} else {
-				wEntry.plays = 1;
+		for (let i = 0; i < resp.newActivities.length; i++) {
+			const newAct = resp.newActivities[i];
+			wEntry.activity.push(newAct);
+			// If new activity counts as play, increment plays for local state.
+			if (newAct.countAsPlay) {
+				if (wEntry.plays) {
+					wEntry.plays++;
+				} else {
+					wEntry.plays = 1;
+				}
 			}
 		}
 	}
@@ -207,18 +209,17 @@ export async function removeWatched(id: number): Promise<boolean> {
 
 export async function updateActivity(
 	activity: Activity,
-	date: Date,
+	ureq: ActivityUpdateRequest,
 ): Promise<Activity | undefined> {
 	const nid = notify({ text: "Updating", type: "loading" });
-	console.debug("updateActivity:", activity, date);
+	console.debug("updateActivity:", activity, ureq);
 	try {
-		const resp = await req.putWhole(`/activity/${activity.id}`, {
-			customDate: date.toISOString(),
-		} as ActivityUpdateRequest);
-		console.log("updateActivity: Response status:", resp.status);
-		if (activity) {
-			activity.customDate = date.toISOString();
-		}
+		const resp = await req.put(`/activity/${activity.id}`, ureq);
+		console.log("updateActivity: Response:", resp);
+
+		activity.customDate = ureq.customDate?.toISOString();
+		activity.note = ureq.note;
+
 		notify({ id: nid, text: "Updated!", type: "success" });
 		return activity;
 	} catch (err) {

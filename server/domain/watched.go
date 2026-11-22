@@ -53,19 +53,6 @@ type WatchedGetPageExtraProps struct {
 	Query string
 }
 
-type WatchedAddExtraProps struct {
-	// The type of activity this is (will be added to db as this type).
-	ActivityType entity.ActivityType
-	// When watched entry to db, if a unique constraint is hit, should
-	// we skip the restoration logic (bring back soft deleted record)?
-	// - Syncing logic may use this field as it might not make sense to restore
-	// a record when doing a task like a regular sync, otherwise the user could
-	// soft delte a record and then have it come back when they next sync.
-	// - Importers however probably shouldn't use this flag as true because
-	// importing will always be a manual decision.
-	DontRestore bool
-}
-
 type WatchedDto struct {
 	// Properties that always exist in every watched dto below.
 
@@ -193,6 +180,19 @@ type WatchedAddRequest struct {
 	WatchedDate time.Time `json:"watchedDate,omitempty"`
 }
 
+type WatchedAddExtraProps struct {
+	// Set the CreatedBy value on the created activity.
+	ActivityCreatedBy entity.ActivityCreatedBy
+	// When watched entry to db, if a unique constraint is hit, should
+	// we skip the restoration logic (bring back soft deleted record)?
+	// - Syncing logic may use this field as it might not make sense to restore
+	// a record when doing a task like a regular sync, otherwise the user could
+	// soft delte a record and then have it come back when they next sync.
+	// - Importers however probably shouldn't use this flag as true because
+	// importing will always be a manual decision.
+	DontRestore bool
+}
+
 // Update watched entry request
 type WatchedUpdateRequest struct {
 	Status         entity.WatchedStatus `json:"status"`
@@ -203,6 +203,10 @@ type WatchedUpdateRequest struct {
 	// Allow the added activity count as play?
 	// If the activity was going to count, this can stop it.
 	LetCountAsPlay *bool `json:"letCountAsPlay"`
+
+	// Set the CreatedBy value on the created activity.
+	// Internal Only.
+	ActivityCreatedBy entity.ActivityCreatedBy `json:"-"`
 }
 
 // If the struct is valid for the Update Request.
@@ -228,7 +232,7 @@ func (w WatchedUpdateRequest) Valid() error {
 
 // Update response.
 type WatchedUpdateResponse struct {
-	NewActivity entity.Activity `json:"newActivity"`
+	NewActivities []entity.Activity `json:"newActivities"`
 }
 
 // Removal response.
