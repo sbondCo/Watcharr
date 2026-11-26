@@ -13,6 +13,7 @@
 	let { watchedItem }: Props = $props();
 
 	let menuOpen = $state(false);
+	let btnEl: HTMLButtonElement | undefined = $state();
 
 	onMount(() => {
 		const onScroll = () => {
@@ -55,6 +56,7 @@
 			text: `Add to a Tag`,
 			pos: "bot",
 		}}
+		bind:this={btnEl}
 	>
 		<Icon i="tag" wh={19} />
 	</button>
@@ -64,19 +66,8 @@
 			titleText="Add To Tag"
 			selectedTags={watchedItem.tags}
 			{onTagClick}
-			menuConfig={{
-				top: "50px",
-				right: "-78px",
-				arrowLeft: "87px",
-				/* The place where this button will be is always dark, so white works for both themes */
-				arrowColor: "white",
-			}}
+			arrowColor="white"
+			trackEl={btnEl}
 		/>
 	{/if}
 </div>
-
-<style lang="scss">
-	div {
-		position: relative;
-	}
-</style>

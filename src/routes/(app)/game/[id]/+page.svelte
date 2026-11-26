@@ -199,7 +199,6 @@
 	@use "../../../../lib/content/page.scss";
 
 	.content {
-		position: relative;
 		color: white;
 
 		.details-container .details {

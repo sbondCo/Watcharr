@@ -2,9 +2,37 @@
 
 These changes are awaiting release:
 
+## Added
+
+- Created RefinePageTitle to show title, total results, active sort, active filters and Sort/Filter buttons.
+- PosterList: float-in animation for posters.
+- GetWatchedPage: Return `hiddenResults` property (added to PaginationResponse) so frontend can display the number of hidden items because of active filters.
+- Created `dismissable` attachment so we can easily support dismissing menus (initially used on our nav/page menus).
+  - Clicking anywhere but the menu (ie into the page), pressing ESC, scrolling or navigating counts as a dismiss (our menus now have this support, clicking elsewhere and pressing ESC being new features).
+
+## Changed
+
+- Moved `Sort` and `Filter` nav menu buttons into the page.
+- ExtraDetails: Redesigned extra details for posters so each element is a chip. They now take up less room over the poster (compared to previous big box design) so there's less obstruction of art.
+- ExtraDetails: Don't show year on date details when it is the current year.
+- DetailedMenu: `Status & Rating` are now two separate `Status` and `Rating` toggles (If you used the removed dual option, you need to manually re-enable the `Rating` detail if you want it).
+
 ## Fixed
 
 - HorizontalList: Align items to left instead of adding space between. Ex: Fixes awkward space between when there are only 2 cast members. (thanks to [@Kiddo4993] for patching!)
+- Icon: Correct "filter" color and "sort" size.
+
+## Maintenance
+
+- Removed `stayInView` action.
+- CountBadge: Support passing `count` as string.
+- PageTitle: Support `countBadge`.
+- PageTitle: Support `middle` and `right` snippets and cleaner nav splitting that drops `middle` to newline.
+- Menu: Remove manual positioning props for `trackEl` replacement which tracks the opening button for us. Also simplified props.
+- Nav: Moved right buttons to their own component `Buttons`.
+- (app)/+layout.svelte: Remove media queries that never did anything.
+- Media Pages: Removed `position: relative;` from `.content` styles.
+- Sort: Make sort modes strictly typed (ts enum).
 
 # [4.4.0] - 2026-11-18T17:07:00Z
 

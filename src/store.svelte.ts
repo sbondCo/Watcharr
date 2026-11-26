@@ -1,21 +1,22 @@
-import type {
-	Filters,
-	Follow,
-	ImportedList,
-	PrivateUser,
-	ServerFeatures,
-	Tag,
-	Theme,
-	UserSettings,
-	WLDetailedViewOption,
+import {
+	Sorts,
+	type Filters,
+	type Follow,
+	type ImportedList,
+	type PrivateUser,
+	type ServerFeatures,
+	type Tag,
+	type Theme,
+	type UserSettings,
+	type WLDetailedViewOption,
 } from "./types";
 import type { Notification } from "./lib/util/notify";
 import { browser } from "$app/environment";
 import { toggleTheme } from "./lib/util/theme";
 
-type ActiveSort = [string, string | undefined] | [];
+type ActiveSort = [Sorts, string | undefined] | [];
 
-export const defaultSort: ActiveSort = ["DATEADDED", "DOWN"];
+export const defaultSort: ActiveSort = [Sorts.DateAdded, "DOWN"];
 
 interface Store {
 	userInfo: PrivateUser | undefined;

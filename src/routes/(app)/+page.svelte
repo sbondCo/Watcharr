@@ -9,6 +9,7 @@
 	import { req } from "@/lib/util/api";
 	import infScroll from "@/lib/util/infScroll";
 	import paginatedLoader from "@/lib/util/paginatedLoader.svelte";
+	import RefinePageTitle from "@/lib/watched/refine/RefinePageTitle.svelte";
 	import { clearActiveFilters, store } from "@/store.svelte";
 	import { type Media, type PaginationResponse } from "@/types";
 	import { onDestroy, untrack } from "svelte";
@@ -87,6 +88,11 @@
 	{JSON.stringify(store.sortAndFiltersForQueryParams)}
 	paginatedLoader.state.meta: {JSON.stringify(dataLoader.state.meta)}
 </span> -->
+
+<RefinePageTitle
+	totalResults={dataLoader.state.totalResults}
+	hiddenResults={dataLoader.state.hiddenResults}
+></RefinePageTitle>
 
 <PosterList>
 	{#if dataLoader.state.data?.length > 0}

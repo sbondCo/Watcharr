@@ -66,7 +66,7 @@ export type Icon =
 export type Theme = "light" | "dark" | "system";
 
 export type WLDetailedViewOption =
-	"statusRating" | "lastWatched" | "dateAdded" | "dateModified";
+	"statusRating" | "status" | "lastWatched" | "dateAdded" | "dateModified";
 
 export enum UserType {
 	Watcharr = 0,
@@ -91,6 +91,7 @@ export interface PaginationResponse<T, U> {
 	page: number;
 	totalPages: number;
 	totalResults: number;
+	hiddenResults: number;
 	results: T[] | null;
 	meta?: U;
 }
@@ -631,6 +632,15 @@ export interface ImportedList {
 export interface Filters {
 	type: string[];
 	status: string[];
+}
+
+export enum Sorts {
+	DateAdded = "DATEADDED",
+	LastChanged = "LASTCHANGED",
+	LastFinished = "LASTFIN",
+	Rating = "RATING",
+	Alphabetical = "ALPHA",
+	DateReleased = "DATERELEASED",
 }
 
 export interface UserService extends UserServiceSettings {

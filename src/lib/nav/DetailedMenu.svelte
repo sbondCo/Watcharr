@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { store } from "@/store.svelte";
 	import type { WLDetailedViewOption } from "@/types";
-	import { page } from "$app/state";
-	import Menu from "../Menu.svelte";
+	import Menu, { type MenuConfig } from "../Menu.svelte";
+
+	interface Props extends Pick<MenuConfig, "trackEl"> {}
+
+	let { trackEl }: Props = $props();
 
 	function detailClicked(d: WLDetailedViewOption) {
 		if (store.wlDetailedView.includes(d)) {
@@ -14,19 +17,19 @@
 	}
 </script>
 
-<Menu
-	conf={{
-		width: "200px",
-		right: "92px",
-		arrowLeft: page.url?.pathname.startsWith("/search") ? "84px" : "3px",
-	}}
->
+<Menu width="200px" {trackEl}>
 	<h4 class="norm sm-caps">Shown Details</h4>
 	<button
 		class={`plain ${store.wlDetailedView?.includes("statusRating") ? "on" : ""}`}
 		onclick={() => detailClicked("statusRating")}
 	>
-		Status & Rating
+		Rating
+	</button>
+	<button
+		class={`plain ${store.wlDetailedView?.includes("status") ? "on" : ""}`}
+		onclick={() => detailClicked("status")}
+	>
+		Status
 	</button>
 	<button
 		class={`plain ${store.wlDetailedView?.includes("lastWatched") ? "on" : ""}`}

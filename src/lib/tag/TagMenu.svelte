@@ -7,7 +7,7 @@
 	import DeleteTagModal from "./DeleteTagModal.svelte";
 	import Menu, { type MenuConfig } from "../Menu.svelte";
 
-	interface Props {
+	interface Props extends Pick<MenuConfig, "trackEl" | "arrowColor"> {
 		titleText?: string | undefined;
 		onTagClick?: (tag: TagT, remove: boolean) => void | undefined;
 		selectedTags?: TagT[] | undefined;
@@ -17,21 +17,15 @@
 		 * will trigger a deletion instead of `onTagClick()`.
 		 */
 		showManageBtn?: boolean;
-		menuConfig?: MenuConfig;
 	}
-
-	const defaultMenuConfig = {
-		width: "200px",
-		right: "47px",
-		arrowLeft: "78px",
-	};
 
 	let {
 		titleText = undefined,
 		onTagClick = undefined!,
 		selectedTags = undefined,
 		showManageBtn = false,
-		menuConfig = {},
+		trackEl,
+		arrowColor,
 	}: Props = $props();
 
 	let allTags = $derived(store.tags);
@@ -46,7 +40,7 @@
 	}
 </script>
 
-<Menu conf={Object.assign(defaultMenuConfig, menuConfig)}>
+<Menu width="200px" {trackEl} {arrowColor}>
 	<div class="title">
 		<h4 class="norm sm-caps">{titleText ? titleText : "my tags"}</h4>
 		{#if showManageBtn}

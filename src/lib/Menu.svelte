@@ -1,33 +1,77 @@
-<!-- A menu designed to pop up around a
- 	button after it is pressed. -->
+<!-- A menu designed to pop up around a button after it is pressed. -->
 <script lang="ts">
-	import stayInView from "./actions/stayInView";
-
-	export interface MenuConfig {
-		width?: string;
-		top?: string;
-		right?: string;
-		arrowRight?: string;
-		arrowLeft?: string;
-		arrowColor?: string;
-	}
+	export type MenuConfig = Omit<Props, "children">;
 
 	interface Props {
 		children: import("svelte").Snippet;
-		conf?: MenuConfig;
+		/**
+		 * Instead of `top` or `right` manual props, pass an element for the
+		 * menu to get positioning from.
+		 */
+		trackEl: HTMLElement;
+		/**
+		 * CSS Width.
+		 */
+		width?: string;
+		/**
+		 * Color of arrow.
+		 */
+		arrowColor?: string;
 	}
 
-	let { children, conf }: Props = $props();
+	let {
+		children,
+		width = "125px",
+		trackEl,
+		arrowColor = "unset",
+	}: Props = $props();
+
+	let menuEl: HTMLDivElement | undefined = $state();
+
+	let trackElBRect = $derived(trackEl?.getBoundingClientRect());
+	let pos = $derived.by(() => {
+		if (!trackElBRect || !menuEl) {
+			// If these don't exist, we can't do our calculations, just return
+			// this for now..
+			return { menu: { x: 10, y: 10 } };
+		}
+
+		let menuRect = menuEl.getBoundingClientRect();
+		const newRect = DOMRect.fromRect(menuRect);
+
+		console.log(trackElBRect);
+		const proposedY = trackElBRect.bottom + 10;
+		newRect.y = proposedY;
+
+		const mw = (menuRect?.width || 0) / 2;
+		// Menu centered to target
+		const proposedX =
+			window.innerWidth - trackElBRect.x - mw - trackElBRect.width / 2;
+		// Min right allowed (overflow protection on right)
+		newRect.x = Math.max(proposedX, 10);
+		// Max right allowed (overflow protection on left)
+		newRect.x = Math.min(newRect.x, window.innerWidth - menuRect.width - 10);
+
+		let arrow = mw - 12;
+		if (newRect.x != proposedX) {
+			// Move arrow the difference of our proposedX and X used to keep it
+			// under the targetEl.
+			let d = newRect.x - proposedX;
+			arrow -= d;
+		}
+
+		return { menu: newRect, arrow };
+	});
 </script>
 
 <div
 	class="menu"
-	style={`--w: ${conf?.width || "125px"}; --r: ${
-		conf?.right || "10px"
-	}; --t: ${conf?.top || "55px"}; --ar: ${
-		conf?.arrowRight || "unset"
-	}; --al: ${conf?.arrowLeft || "unset"}; --ac: ${conf?.arrowColor || "unset"};`}
-	use:stayInView={{ elToShiftSelector: "& > .arrow" }}
+	style:--w={width}
+	style:--r={`${pos.menu.x}px`}
+	style:--t={`${pos.menu.y}px`}
+	style:--ar={`${pos.arrow}px`}
+	style:--ac={arrowColor}
+	bind:this={menuEl}
 >
 	<i class="arrow"></i>
 	<div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { store } from "@/store.svelte";
-	import Menu from "../Menu.svelte";
+	import Menu, { type MenuConfig } from "../Menu.svelte";
 	import { parseTokenPayload, userHasPermission } from "../util/helpers";
 	import { UserPermission, UserType } from "@/types";
 	import ProxyUserLogoutModal from "../logout/ProxyUserLogoutModal.svelte";
@@ -9,6 +9,10 @@
 	import { notify } from "../util/notify";
 	import AboutModal from "./AboutModal.svelte";
 	import { resolve } from "$app/paths";
+
+	interface Props extends Pick<MenuConfig, "trackEl"> {}
+
+	let { trackEl }: Props = $props();
 
 	let user = $derived(store.userInfo);
 	let proxyUserLogoutShown = $state(false);
@@ -74,7 +78,7 @@
 	}
 </script>
 
-<Menu conf={{ width: "150px", arrowRight: "10px" }}>
+<Menu width="150px" {trackEl}>
 	{#if user?.username}
 		<h5 title={user.username}>Hi {user.username}!</h5>
 	{/if}

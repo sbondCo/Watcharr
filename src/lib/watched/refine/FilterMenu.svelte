@@ -1,9 +1,13 @@
 <script lang="ts">
+	import tooltip from "@/lib/actions/tooltip";
+	import Icon from "@/lib/Icon.svelte";
+	import Menu, { type MenuConfig } from "@/lib/Menu.svelte";
 	import { store, clearActiveFilters } from "@/store.svelte";
 	import type { Filters } from "@/types";
-	import Icon from "../Icon.svelte";
-	import tooltip from "../actions/tooltip";
-	import Menu from "../Menu.svelte";
+
+	interface Props extends Pick<MenuConfig, "trackEl"> {}
+
+	let { trackEl }: Props = $props();
 
 	function filterClicked(type: keyof Filters, f: string) {
 		if (store.activeFilters[type]?.includes(f)) {
@@ -18,7 +22,7 @@
 	}
 </script>
 
-<Menu conf={{ width: "200px", right: "47px", arrowLeft: "38px" }}>
+<Menu width="200px" {trackEl}>
 	<div class="title">
 		<h4 class="norm sm-caps">type</h4>
 		{#if store.activeFilters?.type?.length > 0 || store.activeFilters?.status?.length > 0}

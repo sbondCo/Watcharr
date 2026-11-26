@@ -60,6 +60,7 @@ func (r *Router) GetWatchedList(c *gin.Context) {
 			PaginationParams: wp.PaginationParams,
 			TotalPages:       wp.TotalPages,
 			TotalResults:     wp.TotalResults,
+			HiddenResults:    wp.HiddenResults,
 			Results:          domain.NewWatchedGetPageResponse(wp.Results),
 		}
 		c.JSON(http.StatusOK, dto)

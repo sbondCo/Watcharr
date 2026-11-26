@@ -24,7 +24,12 @@ type PaginationResponse[T any, U any] struct {
 	// Specifically an `int64` so we can use it
 	// directly in gorms Count function.
 	TotalResults int64 `json:"totalResults"`
-	Results      []T   `json:"results"`
+	// Maximum number of results (eg if query were unfiltered)
+	MaximumResults int64 `json:"-"`
+	// Number of hidden results (ex filters have caused x hidden rows).
+	HiddenResults int64 `json:"hiddenResults"`
+	// Results.
+	Results []T `json:"results"`
 	// Metadata, any service can use this to add extra properties that don't
 	// fit in the normal PaginationResponse struct (or in the Results slice).
 	Meta U `json:"meta,omitzero"`
@@ -34,6 +39,7 @@ type PaginationResponse[T any, U any] struct {
 // Performs final calculations.
 func (r *PaginationResponse[T, U]) Finished(p PaginationParams) {
 	r.PaginationParams = p
+
 	if r.TotalResults != 0 && r.Limit != 0 {
 		r.TotalPages = int(math.Ceil(float64(r.TotalResults) / float64(r.Limit)))
 	} else {
@@ -42,6 +48,10 @@ func (r *PaginationResponse[T, U]) Finished(p PaginationParams) {
 			"total_results", r.TotalResults,
 			"limit", r.Limit,
 		)
+	}
+
+	if r.MaximumResults > 0 {
+		r.HiddenResults = r.MaximumResults - r.TotalResults
 	}
 }
 

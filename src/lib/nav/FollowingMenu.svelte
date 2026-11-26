@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { store } from "@/store.svelte";
-	import Menu from "../Menu.svelte";
+	import Menu, { type MenuConfig } from "../Menu.svelte";
 	import { resolve } from "$app/paths";
 
-	interface Props {
+	interface Props extends Pick<MenuConfig, "trackEl"> {
 		close: () => void;
 	}
 
-	let { close }: Props = $props();
+	let { close, trackEl }: Props = $props();
 </script>
 
-<Menu conf={{ width: "180px", arrowRight: "53px" }}>
+<Menu width="180px" {trackEl}>
 	{#if store.follows?.length > 0}
 		<h4 class="norm sm-caps">following</h4>
 		<div class="list">

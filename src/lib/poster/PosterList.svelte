@@ -48,6 +48,31 @@
 		}
 
 		&:global(.wrapped li) {
+			position: relative;
+			animation: float-in 150ms ease both;
+			/* Incrementing animation delay, resetting each 40 elements (our
+				page size). Technically a bug if your viewport is really large
+				that multiple pages load at once, but mine isn't that big...
+				also not sure how to fix that without complicated js. */
+			animation-delay: calc(mod(sibling-index() - 1, 40) * 25ms);
+
+			&:hover {
+				z-index: 999;
+			}
+		}
+
+		@keyframes float-in {
+			0% {
+				top: 100px;
+				opacity: 0;
+			}
+			100% {
+				top: 0;
+				opacity: 1;
+			}
+		}
+
+		&:global(.wrapped li) {
 			@media screen and (max-width: 390px) {
 				flex: 0 48.5%;
 			}

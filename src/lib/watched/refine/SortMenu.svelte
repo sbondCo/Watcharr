@@ -1,8 +1,13 @@
 <script lang="ts">
+	import Menu, { type MenuConfig } from "@/lib/Menu.svelte";
 	import { store } from "@/store.svelte";
-	import Menu from "../Menu.svelte";
+	import { Sorts } from "@/types";
 
-	function sortClicked(type: string) {
+	interface Props extends Pick<MenuConfig, "trackEl"> {}
+
+	let { trackEl }: Props = $props();
+
+	function sortClicked(type: Sorts) {
 		window.scrollTo({ top: 0 });
 		let mode = "UP";
 		// If this sort is already the `activeSort`
@@ -33,40 +38,40 @@
 	}
 </script>
 
-<Menu conf={{ width: "180px", right: "90px", arrowLeft: "21px" }}>
+<Menu width="180px" {trackEl}>
 	<button
-		class={`plain ${getDirectionClass("DATEADDED")}`}
-		onclick={() => sortClicked("DATEADDED")}
+		class={`plain ${getDirectionClass(Sorts.DateAdded)}`}
+		onclick={() => sortClicked(Sorts.DateAdded)}
 	>
 		Date Added
 	</button>
 	<button
-		class={`plain ${getDirectionClass("LASTCHANGED")}`}
-		onclick={() => sortClicked("LASTCHANGED")}
+		class={`plain ${getDirectionClass(Sorts.LastChanged)}`}
+		onclick={() => sortClicked(Sorts.LastChanged)}
 	>
 		Last Changed
 	</button>
 	<button
-		class={`plain ${getDirectionClass("LASTFIN")}`}
-		onclick={() => sortClicked("LASTFIN")}
+		class={`plain ${getDirectionClass(Sorts.LastFinished)}`}
+		onclick={() => sortClicked(Sorts.LastFinished)}
 	>
 		Last Finished
 	</button>
 	<button
-		class={`plain ${getDirectionClass("RATING")}`}
-		onclick={() => sortClicked("RATING")}
+		class={`plain ${getDirectionClass(Sorts.Rating)}`}
+		onclick={() => sortClicked(Sorts.Rating)}
 	>
 		Rating
 	</button>
 	<button
-		class={`plain ${getDirectionClass("ALPHA")}`}
-		onclick={() => sortClicked("ALPHA")}
+		class={`plain ${getDirectionClass(Sorts.Alphabetical)}`}
+		onclick={() => sortClicked(Sorts.Alphabetical)}
 	>
 		Alphabetical
 	</button>
 	<button
-		class={`plain ${getDirectionClass("DATERELEASED")}`}
-		onclick={() => sortClicked("DATERELEASED")}
+		class={`plain ${getDirectionClass(Sorts.DateReleased)}`}
+		onclick={() => sortClicked(Sorts.DateReleased)}
 	>
 		Release Date
 	</button>

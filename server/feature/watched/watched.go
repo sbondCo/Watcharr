@@ -107,6 +107,7 @@ func (s *Service) GetWatchedPage(
 	}
 
 	res = res.
+		Count(&pRes.MaximumResults).
 		Joins("Content").
 		Joins("Game").
 		Preload("Game.Poster").

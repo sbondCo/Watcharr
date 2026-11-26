@@ -5,16 +5,9 @@
 	import Error from "@/lib/Error.svelte";
 	import Icon from "@/lib/Icon.svelte";
 	import Spinner from "@/lib/Spinner.svelte";
-	import tooltip from "@/lib/actions/tooltip";
-	import DetailedMenu from "@/lib/nav/DetailedMenu.svelte";
-	import FaceMenu from "@/lib/nav/FaceMenu.svelte";
-	import FilterMenu from "@/lib/nav/FilterMenu.svelte";
-	import FollowingMenu from "@/lib/nav/FollowingMenu.svelte";
-	import SortMenu from "@/lib/nav/SortMenu.svelte";
-	import TagMenu from "@/lib/tag/TagMenu.svelte";
 	import { req } from "@/lib/util/api";
 	import { isTouch } from "@/lib/util/helpers";
-	import { store, defaultSort } from "@/store.svelte";
+	import { store } from "@/store.svelte";
 	import type {
 		ServerFeatures,
 		Follow,
@@ -25,6 +18,7 @@
 	import { onMount } from "svelte";
 	import { SvelteURLSearchParams } from "svelte/reactivity";
 	import HandbookModal from "@/lib/handbook/HandbookModal.svelte";
+	import Buttons from "@/lib/nav/Buttons.svelte";
 
 	interface Props {
 		children?: import("svelte").Snippet;
@@ -35,22 +29,7 @@
 	let navEl: HTMLElement | undefined = $state();
 	let mainSearchEl: HTMLInputElement | undefined = $state();
 	let searchTimeout: number;
-	let subMenuShown = $state(false);
-	let filterMenuShown = $state(false);
-	let sortMenuShown = $state(false);
-	let followingMenuShown = $state(false);
-	let detailedMenuShown = $state(false);
-	let tagMenuShown = $state(false);
 	let scroll = window.scrollY;
-
-	function handleProfileClick() {
-		if (!localStorage.getItem("token")) {
-			goto(resolve("/login"));
-		} else {
-			closeAllSubMenus("sub");
-			subMenuShown = !subMenuShown;
-		}
-	}
 
 	/**
 	 * Handle KeyDown event on the search bar.
@@ -175,15 +154,6 @@
 		}
 	}
 
-	function closeAllSubMenus(except?: string) {
-		if (except !== "sub") subMenuShown = false;
-		if (except !== "filter") filterMenuShown = false;
-		if (except !== "sort") sortMenuShown = false;
-		if (except !== "following") followingMenuShown = false;
-		if (except !== "detailed") detailedMenuShown = false;
-		if (except !== "tag") tagMenuShown = false;
-	}
-
 	/**
 	 * Adds or removed `split-nav` tag to body depending
 	 * on how big the main search bar is.
@@ -216,7 +186,6 @@
 		} else {
 			navEl?.classList.add("scrolled-down");
 			document.body.classList.remove("nav-shown");
-			closeAllSubMenus();
 		}
 		scroll = window.scrollY;
 	}
@@ -250,7 +219,6 @@
 
 	afterNavigate(() => {
 		decideOnNavSplit();
-		closeAllSubMenus();
 	});
 
 	onMount(() => {
@@ -291,117 +259,8 @@
 			/>
 			<Icon i="search" wh={19} />
 		</div>
-		<div class="btns">
-			<!-- Detailed posters only supported on own watched list currently -->
-			{#if page.url?.pathname === "/" || page.url?.pathname.startsWith("/search")}
-				<button
-					class="plain other detailedView"
-					onclick={() => {
-						closeAllSubMenus("detailed");
-						detailedMenuShown = !detailedMenuShown;
-					}}
-					use:tooltip={{
-						text: "Detailed View",
-						pos: "bot",
-						condition: !detailedMenuShown,
-					}}
-				>
-					<Icon i="eye" />
-					{#if store.activeFilters?.type?.length > 0 || store.activeFilters?.status?.length > 0}
-						<div class="indicator"></div>
-					{/if}
-				</button>
-				{#if detailedMenuShown}
-					<DetailedMenu />
-				{/if}
-			{/if}
-			<!-- Show on watched list and shared/followed watched lists -->
-			{#if page.url?.pathname === "/" || page.url?.pathname.includes("/lists/") || page.url?.pathname.includes("/tag/")}
-				<button
-					class="plain other sort"
-					onclick={() => {
-						closeAllSubMenus("sort");
-						sortMenuShown = !sortMenuShown;
-					}}
-					use:tooltip={{ text: "Sort", pos: "bot", condition: !sortMenuShown }}
-				>
-					<Icon i="sort" />
-					<!-- Show indicator if not equal to default and second item in array is not falsy -->
-					{#if store.activeSort?.length === 2 && store.activeSort[1] && JSON.stringify(store.activeSort) !== JSON.stringify(defaultSort)}
-						<div class="indicator"></div>
-					{/if}
-				</button>
-				<button
-					class="plain other filter"
-					onclick={() => {
-						closeAllSubMenus("filter");
-						filterMenuShown = !filterMenuShown;
-					}}
-					use:tooltip={{
-						text: "Filter",
-						pos: "bot",
-						condition: !filterMenuShown,
-					}}
-				>
-					<Icon i="filter" />
-					{#if store.activeFilters?.type?.length > 0 || store.activeFilters?.status?.length > 0}
-						<div class="indicator"></div>
-					{/if}
-				</button>
-				{#if sortMenuShown}
-					<SortMenu />
-				{/if}
-				{#if filterMenuShown}
-					<FilterMenu />
-				{/if}
-			{/if}
-			<button
-				class="plain other tag"
-				onclick={() => {
-					closeAllSubMenus("tag");
-					tagMenuShown = !tagMenuShown;
-				}}
-				use:tooltip={{ text: "Tags", pos: "bot", condition: !tagMenuShown }}
-			>
-				<Icon i="tag" />
-			</button>
-			{#if tagMenuShown}
-				<TagMenu
-					onTagClick={(tag) => {
-						goto(resolve(`/tag/${tag.id}`));
-						tagMenuShown = false;
-					}}
-					showManageBtn={true}
-				/>
-			{/if}
-			<button
-				class="plain other discover"
-				onclick={() => goto(resolve("/discover"))}
-				use:tooltip={{ text: "Discover", pos: "bot" }}
-			>
-				<Icon i="compass" wh={26} />
-			</button>
-			<button
-				class="plain other following"
-				onclick={() => {
-					closeAllSubMenus("following");
-					followingMenuShown = !followingMenuShown;
-				}}
-				use:tooltip={{
-					text: "Following",
-					pos: "bot",
-					condition: !followingMenuShown,
-				}}
-			>
-				<Icon i="people" wh={26} />
-			</button>
-			{#if followingMenuShown}
-				<FollowingMenu close={() => (followingMenuShown = false)} />
-			{/if}
-			<button class="plain face" onclick={handleProfileClick}>:)</button>
-			{#if subMenuShown}
-				<FaceMenu />
-			{/if}
+		<div class="right-side">
+			<Buttons />
 		</div>
 	</div>
 	<input
@@ -456,7 +315,7 @@
 			align-items: center;
 
 			.left-side,
-			.btns {
+			.right-side {
 				/* This makes the logo on left and icons on right the same
 				width, ensuring the main search bar can stay truly centered
 				when possible. */
@@ -465,25 +324,6 @@
 
 			@media screen and (max-width: 435px) {
 				gap: 15px;
-			}
-
-			/* Slowly decrease the gap to ensure the main search bar doesn't get big enough again and pop back up in the nav. */
-			body.split-nav & {
-				@media screen and (max-width: 380px) {
-					gap: 10px;
-				}
-
-				@media screen and (max-width: 375px) {
-					gap: 8px;
-				}
-
-				@media screen and (max-width: 370px) {
-					gap: 5px;
-				}
-
-				@media screen and (max-width: 350px) {
-					gap: 0;
-				}
 			}
 		}
 
@@ -561,7 +401,7 @@
 					width: 100%;
 				}
 
-				&:focus-within + .btns button:not(.face) {
+				&:focus-within + .right-side {
 					display: none;
 				}
 			}
@@ -617,99 +457,6 @@
 			@media screen and (max-width: 290px) {
 				&.small {
 					width: 100%;
-				}
-			}
-		}
-
-		.btns {
-			display: flex;
-			flex-flow: row;
-			justify-content: end;
-			/* gap: 20px; */
-
-			button.other {
-				padding-top: 2px;
-				width: 28px;
-				transition:
-					fill 150ms ease,
-					stroke 150ms ease,
-					stroke-width 150ms ease;
-				fill: $text-color;
-
-				&:hover,
-				&:focus-visible {
-					:global(path) {
-						fill: none;
-						stroke: $text-color;
-						stroke-width: 30px;
-						stroke-linejoin: round;
-					}
-				}
-			}
-
-			button.filter {
-				&:hover,
-				&:focus-visible {
-					:global(path) {
-						stroke-width: 15px;
-					}
-				}
-			}
-
-			button.filter,
-			button.sort {
-				position: relative;
-
-				.indicator {
-					position: absolute;
-					top: 1px;
-					right: -6px;
-					width: 6px;
-					height: 6px;
-					background-color: $text-color;
-					border-radius: 50%;
-				}
-			}
-
-			button.discover {
-				transition:
-					fill 150ms ease,
-					stroke 150ms ease,
-					stroke-width 150ms ease,
-					transform 150ms ease;
-
-				&:hover,
-				&:focus-visible {
-					transform: rotate(60deg);
-				}
-			}
-
-			& > button:not(.face) {
-				margin-right: 12px;
-			}
-
-			button.following {
-				margin-right: 17px;
-			}
-
-			button.face {
-				font-family:
-					"Shrikhand",
-					system-ui,
-					-apple-system,
-					BlinkMacSystemFont;
-				font-size: 25px;
-				transform: rotate(90deg);
-				cursor: pointer;
-				margin-left: 3px;
-				transition:
-					-webkit-text-stroke 150ms ease,
-					color 150ms ease;
-
-				&:hover,
-				&:focus-visible {
-					color: $bg-color;
-					-webkit-text-stroke: 1.5px $text-color;
 				}
 			}
 		}

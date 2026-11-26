@@ -1,6 +1,6 @@
 <script lang="ts">
 	interface Props {
-		count: number;
+		count: number | string;
 	}
 
 	let { count }: Props = $props();
